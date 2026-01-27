@@ -1,0 +1,9 @@
+.env
+config/db.php
+uploads/
+storage/
+cache/
+logs/
+node_modules/
+vendor/
+*.log

@@ -1,0 +1,79 @@
+[26-Jan-2026 15:35:26 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 15:38:08 Asia/Bahrain] PHP Warning:  imagejpeg(uploads/'.driver.'/original/product_69776030130862.38411932.jpg): Failed to open stream: No such file or directory in /home/sandsl23/public_html/aacar.sandslab.com/controller/clients/upload_driver_document_compressed.php on line 30
+[26-Jan-2026 15:38:08 Asia/Bahrain] PHP Warning:  imagewebp(uploads/'.driver.'/webp/product_69776030130862.38411932.webp): Failed to open stream: No such file or directory in /home/sandsl23/public_html/aacar.sandslab.com/controller/clients/upload_driver_document_compressed.php on line 31
+[26-Jan-2026 15:38:08 Asia/Bahrain] PHP Warning:  imagejpeg(uploads/'.driver.'/thumb/product_69776030130862.38411932.jpg): Failed to open stream: No such file or directory in /home/sandsl23/public_html/aacar.sandslab.com/controller/clients/upload_driver_document_compressed.php on line 45
+[26-Jan-2026 15:42:22 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 15:44:12 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 15:46:38 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 15:55:49 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 15:58:55 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 15:59:39 Asia/Bahrain] PHP Warning:  mkdir(): File exists in /home/sandsl23/public_html/aacar.sandslab.com/controller/clients/upload_driver_documents.php on line 6
+[26-Jan-2026 16:08:20 Asia/Bahrain] PHP Warning:  mkdir(): File exists in /home/sandsl23/public_html/aacar.sandslab.com/controller/clients/upload_driver_documents.php on line 6
+[26-Jan-2026 16:19:51 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 16:21:35 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 16:26:34 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 16:30:14 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 16:40:39 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 16:40:46 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 16:42:16 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 16:42:49 Asia/Bahrain] PHP Warning:  Undefined variable $newFileName in /home/sandsl23/public_html/aacar.sandslab.com/controller/clients/upload_driver_document_compressed.php on line 106
+[26-Jan-2026 16:42:49 Asia/Bahrain] PHP Warning:  Undefined array key "driver_document_type" in /home/sandsl23/public_html/aacar.sandslab.com/controller/clients/upload_driver_document_compressed.php on line 107
+[26-Jan-2026 16:47:52 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 16:48:22 Asia/Bahrain] PHP Warning:  Undefined variable $newFileName in /home/sandsl23/public_html/aacar.sandslab.com/controller/clients/upload_driver_document_compressed.php on line 106
+[26-Jan-2026 16:49:34 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 16:50:06 Asia/Bahrain] PHP Warning:  Undefined variable $newFileName in /home/sandsl23/public_html/aacar.sandslab.com/controller/clients/upload_driver_document_compressed.php on line 106
+[26-Jan-2026 17:03:41 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 17:16:25 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 22:35:03 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 22:35:14 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 22:49:19 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 22:49:47 Asia/Bahrain] PHP Warning:  Undefined array key "driver_document_type" in /home/sandsl23/public_html/aacar.sandslab.com/controller/clients/upload_driver_document_compressed.php on line 106
+[26-Jan-2026 22:55:56 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 22:56:23 Asia/Bahrain] PHP Warning:  Undefined array key "driver_document_type" in /home/sandsl23/public_html/aacar.sandslab.com/controller/clients/upload_driver_document_compressed.php on line 106
+[26-Jan-2026 23:03:12 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 23:04:33 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 23:14:09 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 23:17:09 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 23:18:52 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 23:21:49 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 23:31:02 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[26-Jan-2026 23:38:12 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:05:29 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:06:15 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:25:20 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:25:33 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:27:09 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:28:06 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:38:58 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:42:17 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:44:35 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:45:52 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:46:56 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:47:39 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:48:10 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:48:40 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:52:32 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:53:02 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:53:21 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:59:22 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 10:59:48 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 11:01:57 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 11:03:38 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 11:04:01 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 11:04:36 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 11:05:04 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 11:06:26 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 11:07:19 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 11:08:20 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 11:12:08 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 11:43:27 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 12:33:09 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 13:02:40 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 13:06:49 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 13:38:10 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 13:39:07 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 13:47:59 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 13:49:29 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 18:05:33 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 22:02:03 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3
+[27-Jan-2026 22:07:18 Asia/Bahrain] PHP Warning:  Constant ROOT_PATH already defined in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 3

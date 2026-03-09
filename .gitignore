@@ -7,3 +7,5 @@ logs/
 node_modules/
 vendor/
 *.log
+*.zip
+backup/

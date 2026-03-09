@@ -126,6 +126,9 @@ class RoutingClass
 
             'AddUser' => 'AddUser',
             'AddUser/' => 'AddUser'
+			
+			'PushToServer' => 'PushToServer',
+            'PushToServer/' => 'PushToServer'
 
 
 
@@ -283,6 +286,10 @@ class RoutingClass
     private function logOut(...$params)
     {
         $this->includeWithParams("view/logout.php", $_GET);
+    }
+	private function PushToServer(...$params)
+    {
+        $this->includeWithParams("webhook.php", $_GET);
     }
 
 

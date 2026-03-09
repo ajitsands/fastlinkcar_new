@@ -3,3 +3,6 @@ Stack trace:
 #0 /home/sandsl23/public_html/aacar.sandslab.com/view/index.php(2): include()
 #1 {main}
   thrown in /home/sandsl23/public_html/aacar.sandslab.com/view/envinclude.php on line 4
+[09-Mar-2026 20:53:53 UTC] PHP Fatal error:  Using $this when not in object context in /home/sandsl23/public_html/aacar.sandslab.com/view/login_page.php on line 86
+[09-Mar-2026 20:54:15 UTC] PHP Parse error:  syntax error, unexpected '?' in /home/sandsl23/public_html/aacar.sandslab.com/view/index.php on line 299
+[09-Mar-2026 20:54:42 UTC] PHP Fatal error:  Using $this when not in object context in /home/sandsl23/public_html/aacar.sandslab.com/view/login_page.php on line 86

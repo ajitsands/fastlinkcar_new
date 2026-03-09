@@ -125,7 +125,7 @@ class RoutingClass
             'getRentalOptions/' => 'getRentalOptions',
 
             'AddUser' => 'AddUser',
-            'AddUser/' => 'AddUser'
+            'AddUser/' => 'AddUser',
 			
 			'PushToServer' => 'PushToServer',
             'PushToServer/' => 'PushToServer'

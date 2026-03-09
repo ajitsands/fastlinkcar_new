@@ -7,6 +7,7 @@ abstract class FunctionDefinitions
     abstract public function AddToTable($SQL);
     abstract public function UpdateTable($SQL);
     abstract public function DeleteFromTable($SQL);
+    abstract public function AddToTableAndReturnSpecifiedColumn($sql,$retColumnName,$tableName);
     abstract public function Begin();
     abstract public function Commit();
     abstract public function Rollback();
@@ -52,6 +53,11 @@ class CommonPDOModel extends FunctionDefinitions
     public function AddToTable($sql, $params = [])
     {
         try {
+            Logger::ActivityLog('AddToTable',$sql,$params);
+            $this->varDBPDO->setAttribute(
+                PDO::ATTR_ERRMODE,
+                PDO::ERRMODE_EXCEPTION
+            );
             $stmt = $this->varDBPDO->prepare($sql);
             $stmt->execute($params);
             Logger::ActivityLog('AddToTable',$sql,$params);
@@ -79,7 +85,44 @@ class CommonPDOModel extends FunctionDefinitions
         }
     }
     //$db->AddToTable("INSERT INTO tbl_users (name, email) VALUES (?, ?)",[$name, $email]);
+    public function AddToTableAndReturnSpecifiedColumn($sql,$retColumnName,$tableName,$params = [])
+    {
+        try {
+            $this->varDBPDO->setAttribute(
+                PDO::ATTR_ERRMODE,
+                PDO::ERRMODE_EXCEPTION
+            );
+            $stmt = $this->varDBPDO->prepare($sql);
+            $stmt->execute($params);
+            Logger::ActivityLog('Modal - AddToTableAndReturnSpecifiedColumn 97 ',$sql,$params);
+            
+            $returnColunValue = $this->ListFromTable('select '.$retColumnName.' from '.$tableName.' where ids=?',[$this->varDBPDO->lastInsertId()]);
+            
+            Logger::ActivityLog('Return Colum After ',$returnColunValue);
+            
+            return json_encode([
+                'status'  => true,
+                'message' => 'Record Returned successfully',
+                'data'    => [
+                    'return_'.$retColumnName.'_value' => $returnColunValue,
+                    'rows_affected' => $stmt->rowCount()
+                ]
+            ]);
     
+        } catch (PDOException $e) {
+    
+            Logger::dbError(
+                $e->getMessage(),
+                $sql,
+                $params
+            );
+    
+            return json_encode([
+                'status'  => false,
+                'message' => 'Failed to insert record'
+            ]);
+        }
+    }
     
     public function UpdateTable($sql, $params = [])
     {

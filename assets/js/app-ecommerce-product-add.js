@@ -49,11 +49,11 @@
   if (dropzoneBasic) {
     const myDropzone = new Dropzone(dropzoneBasic, {
       previewTemplate: previewTemplate,
-      parallelUploads: 1,
+      parallelUploads: 10,
       maxFilesize: 5,
       acceptedFiles: '.jpg,.jpeg,.png,.gif',
       addRemoveLinks: true,
-      maxFiles: 1
+      maxFiles: 10
     });
   }
 

@@ -1,7 +1,7 @@
 <!-- Modal -->
 <div class="modal fade" id="addNewCustomerModal" data-bs-backdrop="static" tabindex="-1" style="z-index: 10065 !important;">
     <div class="modal-dialog modal-xl">
-    <form id="addDriverDetails" enctype="multipart/form-data" class="modal-content">
+    <form id="addCustomerDetails" enctype="multipart/form-data" class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="backDropCustomerModalTitle">Add Customer Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -15,7 +15,7 @@
             <div class="col mb-0 mt-2">
                 <div class="mb-0">
                     <label for="" class="form-label">Customer Type</label>
-                    <select id="driver_document_type" name="driver_document_type" class="form-select form-select-sm">
+                    <select id="customer_type_onmodal" name="customer_type_onmodal" class="form-select form-select-sm">
                               <option value="" disabled="" selected="">Select</option>
                               <option value="Individual">Individual</option>
                               <option value="Corporate">Corporate</option>
@@ -66,7 +66,7 @@
                         </div>
                         <div class="col mb-0 mt-2">
                                 <label for="customerMobile" class="form-label">Mobile</label>
-                                <input class="form-control form-control-sm" id="customerMobile" name="customerHouse" type="text">
+                                <input class="form-control form-control-sm" id="customerMobile" name="customerMobile" type="text">
                         </div>
                        
                         <div class="col mb-0 mt-2">
@@ -116,7 +116,7 @@
                       
                                             <div class="row g-1 p-5 pt-0">
                                                 <a href="javascript:;" class="me-1 mt-1">
-                                                  <span class="badge bg-label-info rounded-pill openAttachmentModal">Add More</span>
+                                                  <span class="badge bg-label-info rounded-pill openAttachmentModal">Add Attachments</span>
                                                 </a>
                                             </div>
                                     </div>

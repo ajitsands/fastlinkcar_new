@@ -14,7 +14,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>Demo: Login Basic - Pages | Materialize - Bootstrap Dashboard PRO</title>
+    <title>AA Car Rental</title>
 
     <meta name="description" content="" />
 
@@ -83,7 +83,7 @@
 
             <div class="card-body mt-1">
 			
-              <form id="formAuthentication" class="mb-5" action="index.html" method="GET">
+              <form id="formAuthentication" class="mb-5" action="/Home?val=<?php echo $this->encryption->encrypt('1,1-1');?>" method="GET">
 			  
 				<div class="form-floating form-floating-outline mb-6">
 					<select class="form-select" id="selectCompanyDropDown">
@@ -101,9 +101,9 @@
                     class="form-control"
                     id="email"
                     name="email-username"
-                    placeholder="Enter your email or username"
+                    placeholder="Enter your username"
                     autofocus />
-                  <label for="email">Email or Username</label>
+                  <label for="email">Username</label>
                 </div>
                 <div class="mb-5">
                   <div class="form-password-toggle form-control-validation">
@@ -134,7 +134,8 @@
                   </a>
                 </div>
                 <div class="mb-5">
-                  <button class="btn btn-primary d-grid w-100" type="submit">Sign in</button>
+                    <button type="submit" class="btn btn-primary d-grid w-100" id="btn_login">Sign in</button>
+                 
                 </div>
               </form>
 
@@ -188,7 +189,8 @@
     <script src="../assets/js/main.js"></script>
 
     <!-- Page JS -->
-    <script src="../assets/js/pages-auth.js"></script>
+    <!--<script src="../assets/js/pages-auth.js"></script>-->
+     <!--<script src="../httpdocs/user_js/login.js"></script>-->
 	
 	<script>
 		const select = document.getElementById('selectCompanyDropDown');

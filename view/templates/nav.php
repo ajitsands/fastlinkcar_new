@@ -419,7 +419,7 @@
                     </li>
                     <li>
                       <div class="d-grid px-4 pt-2 pb-1">
-                        <a class="btn btn-sm btn-danger d-flex" href="auth-login-cover.html" target="_blank">
+                        <a class="btn btn-sm btn-danger d-flex" href="/Logout"  target="_blank">
                           <small class="align-middle">Logout</small>
                           <i class="icon-base ri ri-logout-box-r-line ms-2 icon-16px"></i>
                         </a>

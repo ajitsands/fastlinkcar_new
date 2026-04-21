@@ -62,6 +62,10 @@ class CustomerLedgerController
                 $this->handleUpdateChequeStatus();
                 break;
             
+            case 'DeleteTransaction':
+                $this->handleDeleteTransaction();
+                break;
+            
             case 'GetTransaction':
                 $id = $_GET['ids'] ?? 0;
                 $sql = "SELECT * FROM tbl_customer_ledger WHERE ids = ?";
@@ -98,9 +102,9 @@ class CustomerLedgerController
         $user_role = $_SESSION['user_role_name'] ?? 'User';
 
         if ($ids) {
-            // Edit mode - Check if Admin
-            if ($user_role !== 'Administrator') {
-                echo json_encode(['status' => false, 'message' => 'Only Administrators can edit ledger entries.']);
+            // Edit mode - Check permissions (Admin or Creator on same day)
+            if (!$this->canModify($ids)) {
+                echo json_encode(['status' => false, 'message' => 'You only have permission to edit your own entries on the same day they were created. Otherwise, only Administrators can edit.']);
                 return;
             }
             $sql = "UPDATE tbl_customer_ledger SET 
@@ -172,8 +176,44 @@ class CustomerLedgerController
         $status = $_POST['status'] ?? 'Collected';
         $collected_at = ($status == 'Collected') ? date('Y-m-d H:i:s') : null;
         
+        if (!$this->canModify($ids)) {
+            echo json_encode(['status' => false, 'message' => 'You only have permission to update status for your own entries on the same day. Otherwise, only Administrators can.']);
+            return;
+        }
+
         $sql = "UPDATE tbl_customer_ledger SET cheque_status = ?, collected_at = ? WHERE ids = ?";
         echo $this->varPDOModelObj->UpdateTable($sql, [$status, $collected_at, $ids]);
+    }
+
+    private function handleDeleteTransaction()
+    {
+        $ids = $_POST['ids'] ?? 0;
+        if (!$this->canModify($ids)) {
+            echo json_encode(['status' => false, 'message' => 'You only have permission to delete your own entries on the same day. Otherwise, only Administrators can.']);
+            return;
+        }
+        $sql = "DELETE FROM tbl_customer_ledger WHERE ids = ?";
+        echo $this->varPDOModelObj->DeleteFromTable($sql, [$ids]);
+    }
+
+    private function canModify($ids)
+    {
+        $user_role = $_SESSION['user_role_name'] ?? 'User';
+        $user_id = $_SESSION['user_id'] ?? 0;
+
+        if ($user_role === 'Administrator') return true;
+
+        $sql = "SELECT created_at, user_id FROM tbl_customer_ledger WHERE ids = ?";
+        $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$ids]), true);
+
+        if ($res['status'] && !empty($res['data'])) {
+            $row = $res['data'][0];
+            $isToday = date('Y-m-d', strtotime($row['created_at'])) === date('Y-m-d');
+            if ($isToday && $row['user_id'] == $user_id) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function handleGetLedger()

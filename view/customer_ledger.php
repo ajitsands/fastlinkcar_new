@@ -226,6 +226,8 @@ include ROOT_PATH . '/view/envinclude.php';
     <script>
     $(document).ready(function() {
         const userRole = '<?= $_SESSION['user_role_name'] ?? '' ?>';
+        const currentUserId = '<?= $_SESSION['user_id'] ?? 0 ?>';
+        const todayStr = '<?= date('Y-m-d') ?>';
         let ledgerTable = null;
 
         // Initialize Select2 for Customer
@@ -291,7 +293,10 @@ include ROOT_PATH . '/view/envinclude.php';
                     }
                 },
                 columns: [
-                    { data: 'trans_date' },
+                    { 
+                        data: 'trans_date',
+                        render: v => moment(v).format('DD-MM-YYYY')
+                    },
                     { 
                         data: null, 
                         render: r => `<div class="fw-bold">${r.trans_type}</div><small class="text-muted">${r.payment_method}</small>`
@@ -309,11 +314,29 @@ include ROOT_PATH . '/view/envinclude.php';
                     },
                     {
                         data: 'ids',
-                        render: id => {
-                            if(userRole === 'Administrator') {
-                                return `<button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-edit" data-id="${id}"><span class="ri-edit-line"></span></button>`;
+                        render: (id, type, row) => {
+                            const isToday = moment(row.created_at).format('YYYY-MM-DD') === todayStr;
+                            const canModify = (userRole === 'Administrator') || (row.user_id == currentUserId && isToday);
+                            
+                            if(!canModify) return '';
+
+                            let btns = `<div class="d-flex gap-1">
+                                <button type="button" class="btn btn-sm btn-icon text-primary btn-edit" data-id="${id}" title="Edit"><span class="ri ri-edit-line ri-xl"></span></button>
+                                <button type="button" class="btn btn-sm btn-icon text-danger btn-delete" data-id="${id}" title="Delete"><span class="ri ri-delete-bin-line ri-xl"></span></button>`;
+                            
+                            if (row.payment_method === 'Cheque') {
+                                if (row.cheque_status === 'Pending') {
+                                    btns += `
+                                        <button class="btn btn-sm btn-icon text-success btn-status-main" data-id="${id}" data-status="Collected" title="Collect Cheque"><span class="ri ri-check-line ri-xl"></span></button>
+                                        <button class="btn btn-sm btn-icon text-warning btn-status-main" data-id="${id}" data-status="Bounced" title="Bounce Cheque"><span class="ri ri-close-line ri-xl"></span></button>
+                                    `;
+                                } else {
+                                    btns += `<button class="btn btn-sm btn-icon text-secondary btn-status-main" data-id="${id}" data-status="Pending" title="Revoke Status"><span class="ri ri-refresh-line ri-xl"></span></button>`;
+                                }
                             }
-                            return '';
+                            
+                            btns += `</div>`;
+                            return btns;
                         }
                     }
                 ],
@@ -379,6 +402,38 @@ include ROOT_PATH . '/view/envinclude.php';
             $('#txtTransId').val('');
             $(this).addClass('d-none');
             $('#btnSave').text('Save Transaction');
+        });
+
+        // Delete Button Click
+        $(document).on('click', '.btn-delete', function() {
+            const id = $(this).data('id');
+            if(confirm('Are you sure you want to delete this transaction? This action cannot be undone.')) {
+                $.post('/CustomerLedgerController', { action: 'DeleteTransaction', ids: id }, function(res) {
+                    if(res.status) {
+                        ledgerTable.ajax.reload(null, false);
+                    } else {
+                        alert(res.message);
+                    }
+                }, 'json');
+            }
+        });
+
+        // Cheque Status Update from Main Table
+        $(document).on('click', '.btn-status-main', function() {
+            const id = $(this).data('id');
+            const status = $(this).data('status');
+            const msg = status === 'Pending' ? 'Revoke cheque status back to Pending?' : `Mark cheque as ${status}?`;
+            
+            if(confirm(msg)) {
+                $.post('/CustomerLedgerController', { action: 'UpdateChequeStatus', ids: id, status: status }, function(res) {
+                    if(res.status) {
+                        ledgerTable.ajax.reload(null, false);
+                        if(calendar) calendar.refetchEvents();
+                    } else {
+                        alert(res.message);
+                    }
+                }, 'json');
+            }
         });
 
         // --- Cheque Calendar Logic ---

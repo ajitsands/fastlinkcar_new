@@ -9,7 +9,7 @@ try {
     $db = new ClassDatabaseConnection();
     $pdo = $db->pdo;
 
-    $tables = ['customer_details', 'tbl_vehicle_bookings'];
+    $tables = ['tbl_customer_ledger'];
     
     foreach ($tables as $table) {
         echo "Schema for $table:\n";

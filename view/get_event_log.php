@@ -6,10 +6,10 @@
   dir="ltr"
   data-skin="default"
   data-bs-theme="light"
-  data-assets-path="../assets/"
+  data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/"
   data-template="horizontal-menu-template-no-customizer">
   <head>
-    <?php include('templates/head.php');?>
+    <?php include ROOT_PATH . '/view/templates/head.php'; ?>
 	<style>
 	    #logTable th:first-child,
         #logTable td:first-child {
@@ -26,7 +26,7 @@
     <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
       <div class="layout-container">
         <!-- Navbar -->
-			<?php include('templates/nav.php');?>
+			<?php include ROOT_PATH . '/view/templates/nav.php'; ?>
         <!-- / Navbar -->
 
         <!-- Layout container -->
@@ -34,7 +34,7 @@
           <!-- Content wrapper -->
           <div class="content-wrapper">
             <!-- Menu -->
-				<?php include('templates/menu.php');?>
+				<?php include ROOT_PATH . '/view/templates/menu.php'; ?>
             <!-- / Menu -->
 
             <!-- Content -->
@@ -68,7 +68,7 @@
             <!--/ Content -->
 
             <!-- Footer -->
-					<?php include('templates/footer.php');?>
+					<?php include ROOT_PATH . '/view/templates/footer.php'; ?>
             <!-- / Footer -->
 
             <div class="content-backdrop fade"></div>
@@ -114,20 +114,20 @@
 
     
     
-	<?php include('templates/scripts.php');?>
+	<?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
 
     <!-- Page JS -->
 <!-- jQuery first -->
 <!--<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>-->
 
 <!-- DataTables CSS/JS -->
-<link rel="stylesheet" href="../assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
-<link rel="stylesheet" href="../assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
-<link rel="stylesheet" href="../assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
-<link rel="stylesheet" href="../assets/vendor/libs/flatpickr/flatpickr.css" />
+<link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
+<link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
+<link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
+<link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/flatpickr/flatpickr.css" />
 <!-- Row Group CSS -->
-<link rel="stylesheet" href="../assets/vendor/libs/datatables-rowgroup-bs5/rowgroup.bootstrap5.css" />
-<script src="../assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+<link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-rowgroup-bs5/rowgroup.bootstrap5.css" />
+<script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
 
   </body>
  <script>

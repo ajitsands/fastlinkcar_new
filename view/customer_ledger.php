@@ -1,0 +1,490 @@
+<?php
+include ROOT_PATH . '/view/envinclude.php';
+?>
+<!doctype html>
+<html lang="en" class="layout-navbar-fixed layout-menu-fixed layout-wide" dir="ltr" data-skin="default" data-bs-theme="light" data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/" data-template="horizontal-menu-template-no-customizer">
+<head>
+    <?php include ROOT_PATH . '/view/templates/head.php'; ?>
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/fullcalendar/fullcalendar.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>alertmessage/css/sands_alert_style.css">
+    <style>
+        .ledger-card { height: 100%; }
+        .summary-card { border-left: 4px solid; }
+        .card-total-debit { border-left-color: #ff4d49; }
+        .card-total-credit { border-left-color: #72e128; }
+        .card-balance { border-left-color: #26c6f9; }
+        .row-collected { background-color: #e8fadf !important; }
+        .row-bounced { background-color: #ffe5e5 !important; }
+        .fc-event { cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
+        <div class="layout-container">
+            <?php include ROOT_PATH . '/view/templates/nav.php'; ?>
+            <div class="layout-page">
+                <div class="content-wrapper">
+                    <?php include ROOT_PATH . '/view/templates/menu.php'; ?>
+                    <div class="container-fluid flex-grow-1 container-p-y">
+                        <div class="row mb-4 g-3">
+                            <!-- Summary Cards -->
+                            <div class="col-md-4">
+                                <div class="card summary-card card-total-debit shadow-sm">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle text-muted mb-1">Total Debit (Owed)</h6>
+                                        <h4 class="card-title mb-0" id="lblTotalDebit">0.000</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card summary-card card-total-credit shadow-sm">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle text-muted mb-1">Total Credit (Paid)</h6>
+                                        <h4 class="card-title mb-0" id="lblTotalCredit">0.000</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card summary-card card-balance shadow-sm">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle text-muted mb-1">Current Balance</h6>
+                                        <h4 class="card-title mb-0" id="lblBalance">0.000</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            <!-- Search & Form Card -->
+                            <div class="col-lg-4">
+                                <div class="card ledger-card shadow-sm">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Customer Selection</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-4">
+                                            <label class="form-label">Search Customer (Name/Mobile)</label>
+                                            <select id="selCustomer" class="form-select select2"></select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Quotation Reference</label>
+                                            <select id="selQuotation" class="form-select select2" disabled><option value="">Select Quotation</option></select>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="form-label">Booking Reference</label>
+                                            <select id="selBooking" class="form-select select2" disabled><option value="">Select Booking</option></select>
+                                        </div>
+
+                                        <hr class="my-4">
+                                        
+                                        <h5 class="mb-3">New Transaction</h5>
+                                        <form id="frmTransaction">
+                                            <input type="hidden" name="action" value="SaveTransaction">
+                                            <input type="hidden" name="ids" id="txtTransId">
+                                            <input type="hidden" name="customer_code" id="txtCustomerCode">
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Transaction Date</label>
+                                                <input type="date" name="trans_date" id="txtDate" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Type</label>
+                                                <select name="trans_type" id="selTransType" class="form-select" required>
+                                                    <option value="Payment">Payment</option>
+                                                    <option value="Advance">Advance</option>
+                                                    <option value="Discount">Discount</option>
+                                                    <option value="Invoice">Invoice (Debit)</option>
+                                                    <option value="Opening Balance">Opening Balance</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3" id="divPaymentMethod">
+                                                <label class="form-label">Payment Method</label>
+                                                <select name="payment_method" id="selPaymentMethod" class="form-select">
+                                                    <option value="Cash">Cash</option>
+                                                    <option value="Cheque">Cheque</option>
+                                                    <option value="BankTransfer">Bank Transfer</option>
+                                                    <option value="CreditCard">Credit Card</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Amount</label>
+                                                <input type="number" step="0.001" name="amount" id="txtAmount" class="form-control" required placeholder="0.000">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Ref / Cheque No.</label>
+                                                <input type="text" name="ref_no" id="txtReference" class="form-control" placeholder="Optional">
+                                            </div>
+                                            <div class="mb-4">
+                                                <label class="form-label">Description</label>
+                                                <textarea name="description" id="txtDescription" class="form-control" rows="2"></textarea>
+                                            </div>
+                                            <div class="d-grid gap-2">
+                                                <button type="submit" class="btn btn-primary" id="btnSave">Save Transaction</button>
+                                                <button type="button" class="btn btn-outline-secondary d-none" id="btnCancelEdit">Cancel</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ledger Table Card -->
+                            <div class="col-lg-8">
+                                <div class="card ledger-card shadow-sm">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Ledger Statement</h5>
+                                        <button type="button" class="btn btn-outline-primary" id="btnOpenCalendar">
+                                            <span class="ri-calendar-line me-1"></span> Cheque Calendar
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table id="tblLedger" class="table table-hover border-top">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Type / Method</th>
+                                                        <th>Ref</th>
+                                                        <th class="text-end">Debit</th>
+                                                        <th class="text-end">Credit</th>
+                                                        <th class="text-end">Balance</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php include ROOT_PATH . '/view/templates/footer.php'; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Modal -->
+    <div class="modal fade" id="modalChequeCalendar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cheque Collection Calendar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Filter by Customer</label>
+                            <select id="selCalendarCustomer" class="form-select select2-modal"></select>
+                        </div>
+                    </div>
+                    <div id="chequeCalendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cheque Details Modal -->
+    <div class="modal fade" id="modalChequeDetails" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cheques for <span id="lblSelectedDate"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table id="tblChequeDetails" class="table table-sm border-top">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Reference</th>
+                                    <th class="text-end">Amount</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/moment/moment.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/fullcalendar/fullcalendar.js"></script>
+
+    <script>
+    $(document).ready(function() {
+        const userRole = '<?= $_SESSION['user_role_name'] ?? '' ?>';
+        let ledgerTable = null;
+
+        // Initialize Select2 for Customer
+        $('#selCustomer').select2({
+            placeholder: 'Search Customer by name or mobile...',
+            ajax: {
+                url: '/CustomerLedgerController',
+                dataType: 'json',
+                delay: 250,
+                data: params => ({ q: params.term, action: 'SearchCustomer' }),
+                processResults: data => ({ results: data.map(i => ({ id: i.customer_code, text: `${i.customer_name} (${i.customer_mobile})`, raw: i })) })
+            }
+        }).on('select2:select', function(e) {
+            const data = e.params.data.raw;
+            $('#txtCustomerCode').val(data.customer_code);
+            loadCustomerDependents(data.customer_code);
+            refreshLedger(data.customer_code);
+        });
+
+        // Toggle Payment Method select based on type
+        $('#selTransType').on('change', function() {
+            if($(this).val() === 'Invoice' || $(this).val() === 'Opening Balance') {
+                $('#divPaymentMethod').addClass('d-none');
+                $('#selPaymentMethod').val('N/A');
+            } else {
+                $('#divPaymentMethod').removeClass('d-none');
+            }
+        });
+
+        function loadCustomerDependents(code) {
+            // Load Quotations
+            $.get('/CustomerLedgerController', { action: 'GetQuotations', customer_code: code }, function(data) {
+                $('#selQuotation').empty().append('<option value="">Select Quotation</option>').attr('disabled', false);
+                data.forEach(q => $('#selQuotation').append(new Option(q.text, q.id)));
+            }, 'json');
+
+            // Load Bookings
+            $.get('/CustomerLedgerController', { action: 'GetBookings', customer_code: code }, function(data) {
+                $('#selBooking').empty().append('<option value="">Select Booking</option>').attr('disabled', false);
+                data.forEach(b => $('#selBooking').append(new Option(b.text, b.id)));
+            }, 'json');
+        }
+
+        function refreshLedger(code) {
+            if ($.fn.DataTable.isDataTable('#tblLedger')) {
+                $('#tblLedger').DataTable().destroy();
+            }
+
+            ledgerTable = $('#tblLedger').DataTable({
+                ajax: {
+                    url: '/CustomerLedgerController',
+                    data: { action: 'GetLedgerData', customer_code: code },
+                    dataSrc: function(json) {
+                        let totDebit = 0, totCredit = 0;
+                        json.data.forEach(r => {
+                            totDebit += parseFloat(r.debit);
+                            totCredit += parseFloat(r.credit);
+                        });
+                        $('#lblTotalDebit').text(totDebit.toFixed(3));
+                        $('#lblTotalCredit').text(totCredit.toFixed(3));
+                        $('#lblBalance').text((totDebit - totCredit).toFixed(3));
+                        return json.data;
+                    }
+                },
+                columns: [
+                    { data: 'trans_date' },
+                    { 
+                        data: null, 
+                        render: r => `<div class="fw-bold">${r.trans_type}</div><small class="text-muted">${r.payment_method}</small>`
+                    },
+                    { 
+                        data: null, 
+                        render: r => `<div class="small">${r.ref_no || '-'}</div><div style="font-size:10px" class="text-muted">${r.quotation_no || r.booking_no || ''}</div>`
+                    },
+                    { data: 'debit', className: 'text-end text-danger', render: v => v > 0 ? parseFloat(v).toFixed(3) : '-' },
+                    { data: 'credit', className: 'text-end text-success', render: v => v > 0 ? parseFloat(v).toFixed(3) : '-' },
+                    { 
+                        data: 'running_balance', 
+                        className: 'text-end fw-bold', 
+                        render: v => `<span class="${v >= 0 ? 'text-primary' : 'text-danger'}">${v.toFixed(3)}</span>`
+                    },
+                    {
+                        data: 'ids',
+                        render: id => {
+                            if(userRole === 'Administrator') {
+                                return `<button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-edit" data-id="${id}"><span class="ri-edit-line"></span></button>`;
+                            }
+                            return '';
+                        }
+                    }
+                ],
+                createdRow: function(row, data) {
+                    if (data.cheque_status === 'Collected') $(row).addClass('row-collected');
+                    else if (data.cheque_status === 'Bounced') $(row).addClass('row-bounced');
+                },
+                order: [[0, 'asc'], [5, 'asc']], // Sort by date then by id
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>>t<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+                pageLength: 25
+            });
+        }
+
+        // Form Submission
+        $('#frmTransaction').on('submit', function(e) {
+            e.preventDefault();
+            if(!$('#txtCustomerCode').val()) {
+                alert('Please select a customer first');
+                return;
+            }
+            
+            const formData = $(this).serialize() + '&quotation_no=' + $('#selQuotation').val() + '&booking_no=' + $('#selBooking').val();
+            
+            $.post('/CustomerLedgerController', formData, function(res) {
+                if(res.status) {
+                    $('#frmTransaction')[0].reset();
+                    $('#txtTransId').val('');
+                    $('#btnCancelEdit').addClass('d-none');
+                    $('#btnSave').text('Save Transaction');
+                    refreshLedger($('#txtCustomerCode').val());
+                    alert(res.message);
+                } else {
+                    alert(res.message);
+                }
+            }, 'json');
+        });
+
+        // Edit Button Click
+        $(document).on('click', '.btn-edit', function() {
+            const id = $(this).data('id');
+            $.get('/CustomerLedgerController', { action: 'GetTransaction', ids: id }, function(res) {
+                if(res.status && res.data.length > 0) {
+                    const row = res.data[0];
+                    $('#txtTransId').val(row.ids);
+                    $('#txtDate').val(row.trans_date);
+                    $('#selTransType').val(row.trans_type).trigger('change');
+                    $('#selPaymentMethod').val(row.payment_method);
+                    $('#txtAmount').val(row.debit > 0 ? row.debit : row.credit);
+                    $('#txtReference').val(row.ref_no);
+                    $('#txtDescription').val(row.description);
+                    $('#selQuotation').val(row.quotation_no);
+                    $('#selBooking').val(row.booking_no);
+                    
+                    $('#btnSave').text('Update Transaction');
+                    $('#btnCancelEdit').removeClass('d-none');
+                    $('html, body').animate({ scrollTop: $('#frmTransaction').offset().top - 100 }, 500);
+                }
+            }, 'json');
+        });
+
+        $('#btnCancelEdit').on('click', function() {
+            $('#frmTransaction')[0].reset();
+            $('#txtTransId').val('');
+            $(this).addClass('d-none');
+            $('#btnSave').text('Save Transaction');
+        });
+
+        // --- Cheque Calendar Logic ---
+        let calendar = null;
+        let detailsTable = null;
+
+        $('#btnOpenCalendar').on('click', function() {
+            $('#modalChequeCalendar').modal('show');
+            setTimeout(() => {
+                if (!calendar) initCalendar();
+                else calendar.render();
+            }, 300);
+        });
+
+        function initCalendar() {
+            const calendarEl = document.getElementById('chequeCalendar');
+            calendar = new Calendar(calendarEl, {
+                plugins: [ dayGridPlugin ],
+                initialView: 'dayGridMonth',
+                events: function(info, successCallback, failureCallback) {
+                    $.get('/CustomerLedgerController', { 
+                        action: 'GetChequeCalendarEvents',
+                        customer_code: $('#selCalendarCustomer').val()
+                    }, data => successCallback(data), 'json');
+                },
+                eventClick: function(info) {
+                    showChequeDetails(info.event.extendedProps.date);
+                }
+            });
+            calendar.render();
+        }
+
+        $('#selCalendarCustomer').select2({
+            dropdownParent: $('#modalChequeCalendar'),
+            placeholder: 'Filter by Customer...',
+            allowClear: true,
+            ajax: {
+                url: '/CustomerLedgerController',
+                dataType: 'json',
+                delay: 250,
+                data: params => ({ q: params.term, action: 'SearchCustomer' }),
+                processResults: data => ({ results: data.map(i => ({ id: i.customer_code, text: i.customer_name })) })
+            }
+        }).on('change', () => calendar.refetchEvents());
+
+        function showChequeDetails(date) {
+            $('#lblSelectedDate').text(moment(date).format('DD MMM YYYY'));
+            if (detailsTable) detailsTable.destroy();
+
+            detailsTable = $('#tblChequeDetails').DataTable({
+                ajax: {
+                    url: '/CustomerLedgerController',
+                    data: { action: 'GetChequesByDate', date: date, customer_code: $('#selCalendarCustomer').val() },
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { data: 'customer_name' },
+                    { data: 'ref_no' },
+                    { 
+                        data: 'credit', 
+                        className: 'text-end fw-bold',
+                        render: v => parseFloat(v).toFixed(3)
+                    },
+                    { 
+                        data: 'cheque_status',
+                        render: v => `<span class="badge ${v === 'Collected' ? 'bg-success' : (v === 'Bounced' ? 'bg-danger' : 'bg-warning')}">${v}</span>`
+                    },
+                    {
+                        data: 'ids',
+                        render: (id, type, row) => {
+                            if (row.cheque_status === 'Pending') {
+                                return `
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-success btn-status px-2" data-id="${id}" data-status="Collected">Collect</button>
+                                        <button class="btn btn-sm btn-danger btn-status px-2" data-id="${id}" data-status="Bounced">Bounce</button>
+                                    </div>
+                                `;
+                            } else {
+                                return `<button class="btn btn-sm btn-outline-secondary btn-status" data-id="${id}" data-status="Pending"><span class="ri-refresh-line me-1"></span>Revert</button>`;
+                            }
+                        }
+                    }
+                ],
+                paging: false,
+                info: false,
+                searching: false,
+                createdRow: function(row, data) {
+                    if (data.cheque_status === 'Collected') $(row).addClass('row-collected');
+                    else if (data.cheque_status === 'Bounced') $(row).addClass('row-bounced');
+                }
+            });
+            $('#modalChequeDetails').modal('show');
+        }
+
+        $(document).on('click', '.btn-status', function() {
+            const id = $(this).data('id');
+            const status = $(this).data('status');
+            $.post('/CustomerLedgerController', { action: 'UpdateChequeStatus', ids: id, status: status }, function(res) {
+                if(res.status) {
+                    detailsTable.ajax.reload();
+                    calendar.refetchEvents();
+                    if(ledgerTable) ledgerTable.ajax.reload();
+                }
+            }, 'json');
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 <?php
-include('envinclude.php');
+include ROOT_PATH . '/view/envinclude.php';
 ?>
 <!doctype html>
 
@@ -9,7 +9,7 @@ include('envinclude.php');
   dir="ltr"
   data-skin="default"
   data-bs-theme="light"
-  data-assets-path="../assets/"
+  data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/"
   data-template="horizontal-menu-template-no-customizer">
   <head>
     <meta charset="utf-8" />
@@ -18,31 +18,29 @@ include('envinclude.php');
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
     
-    <?php include('templates/title.php'); ?>
-    <meta name="description" content="" />
-
-    <?php include('templates/head.php'); ?>
+    <?php include ROOT_PATH . '/view/templates/title.php'; ?>
+    <?php include ROOT_PATH . '/view/templates/head.php'; ?>
 
     <!-- Vendors CSS -->
 
-    <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
 
     <!-- endbuild -->
 
-    <link rel="stylesheet" href="../assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/select2/select2.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.css" />
 
     <!-- Page CSS -->
 
     <!-- Helpers -->
-    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
 
     <!--? Config: Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file. -->
 
-    <script src="../assets/js/config.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/config.js"></script>
     <style>
         
         .spin {
@@ -59,7 +57,7 @@ include('envinclude.php');
     <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
       <div class="layout-container">
         <!-- Navbar -->
-            <?php include('templates/nav.php'); ?>
+            <?php include ROOT_PATH . '/view/templates/nav.php'; ?>
         <!-- / Navbar -->
 
         <!-- Layout container -->
@@ -67,7 +65,7 @@ include('envinclude.php');
           <!-- Content wrapper -->
           <div class="content-wrapper">
             <!-- Menu -->
-                <?php include('templates/menu.php'); ?>
+                <?php include ROOT_PATH . '/view/templates/menu.php'; ?>
            <!-- / Menu -->
 
             <!-- Content -->
@@ -169,7 +167,7 @@ include('envinclude.php');
               <div class="onboarding-media">
                 <div class="mx-2">
                   <img
-                    src="../../assets/img/illustrations/girl-with-laptop-light.png"
+                    src="../<?= $_ENV['BASE_URL'] ?>assets/img/illustrations/girl-with-laptop-light.png"
                     alt="girl-with-laptop-light"
                     width="335"
                     class="img-fluid"
@@ -186,7 +184,7 @@ include('envinclude.php');
               <div class="onboarding-media">
                 <div class="mx-2">
                   <img
-                    src="../../assets/img/illustrations/boy-with-laptop-light.png"
+                    src="../<?= $_ENV['BASE_URL'] ?>assets/img/illustrations/boy-with-laptop-light.png"
                     alt="boy-with-laptop-light"
                     width="300"
                     class="img-fluid"
@@ -207,7 +205,7 @@ include('envinclude.php');
               <div class="onboarding-media">
                 <div class="mx-2">
                   <img
-                    src="../../assets/img/illustrations/girl-verify-password-light.png"
+                    src="../<?= $_ENV['BASE_URL'] ?>assets/img/illustrations/girl-verify-password-light.png"
                     alt="girl-verify-password-light"
                     width="300"
                     class="img-fluid"
@@ -254,7 +252,7 @@ include('envinclude.php');
 
  
             <!-- Footer -->
-                <?php include('templates/footer.php'); ?>
+                <?php include ROOT_PATH . '/view/templates/footer.php'; ?>
             <!-- / Footer -->
 
             <div class="content-backdrop fade"></div>
@@ -277,20 +275,20 @@ include('envinclude.php');
     <!-- Core JS -->
 
     <!-- build:js assets/vendor/js/theme.js  -->
-    <?php include('templates/scripts.php'); ?>
+    <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
 
     <!-- endbuild -->
 
     <!-- Vendors JS -->
-    <script src="../assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
-    <script src="../assets/vendor/libs/select2/select2.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.js"></script>
 
     <!-- Main JS -->
 
-    <!--<script src="../assets/js/main.js"></script>-->
+    <!--<script src="<?= $_ENV['BASE_URL'] ?>assets/js/main.js"></script>-->
 
     <!-- Page JS -->
-    <!--<script src="../assets/js/app-ecommerce-product-list.js"></script>-->
+    <!--<script src="<?= $_ENV['BASE_URL'] ?>assets/js/app-ecommerce-product-list.js"></script>-->
     <!-- jQuery first -->
 <script>
 $(document).ready(function() {

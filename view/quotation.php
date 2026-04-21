@@ -7,7 +7,7 @@
 ?>
 
 <?php
-include('envinclude.php');
+include ROOT_PATH . '/view/envinclude.php';
 $decimals = $_ENV['DECIMALS'];
 ?>
 <!doctype html>
@@ -18,11 +18,11 @@ $decimals = $_ENV['DECIMALS'];
     dir="ltr"
     data-skin="default"
     data-bs-theme="light"
-    data-assets-path="../assets/"
+    data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/"
     data-template="horizontal-menu-template-no-customizer">
 
 <head>
-    <?php include('templates/head.php'); ?>
+    <?php include ROOT_PATH . '/view/templates/head.php'; ?>
 
 
    
@@ -31,38 +31,38 @@ $decimals = $_ENV['DECIMALS'];
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 
-    <link rel="stylesheet" href="../assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
 
-    <link rel="stylesheet" href="../assets/vendor/libs/select2/select2.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/tagify/tagify.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/bootstrap-select/bootstrap-select.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/typeahead-js/typeahead.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/spinkit/spinkit.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/tagify/tagify.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/bootstrap-select/bootstrap-select.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/typeahead-js/typeahead.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/spinkit/spinkit.css" />
     
-    <link rel="stylesheet" href="../assets/vendor/libs/quill/typography.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/quill/katex.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/quill/editor.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/typography.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/katex.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/editor.css" />
     
-    <link rel="stylesheet" href="../assets/sands/sands_popup.css" />
-    <link rel="stylesheet" href="alertmessage/css/sands_alert_style.css">
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>alertmessage/css/sands_alert_style.css">
     
         <!-- Ladda CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda-themeless.min.css" />
     
-    <link rel="stylesheet" href="../assets/vendor/libs/quill/typography.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/highlight/highlight.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/quill/katex.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/quill/editor.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/typography.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/highlight/highlight.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/katex.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/editor.css" />
     
      <!-- Helpers -->
-    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
 
     <!--? Config: Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file. -->
 
-    <script src="../assets/js/config.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/config.js"></script>
 
     
     
@@ -259,7 +259,7 @@ div.dt-container div.dt-search input {
     <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
         <div class="layout-container">
             <!-- Navbar -->
-            <?php include('templates/nav.php'); ?>
+            <?php include ROOT_PATH . '/view/templates/nav.php'; ?>
             <!-- / Navbar -->
 
             <!-- Layout container -->
@@ -267,7 +267,7 @@ div.dt-container div.dt-search input {
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
                     <!-- Menu -->
-                    <?php include('templates/menu.php'); ?>
+                    <?php include ROOT_PATH . '/view/templates/menu.php'; ?>
                     <!-- / Menu -->
 
                     <!-- Content -->
@@ -275,14 +275,14 @@ div.dt-container div.dt-search input {
                         <!-- Layout Demo -->
                         <?php //echo "DB NAME : ".$_ENV['DB_NAME'];
                         ?>
-                        <?php include('templates/quotation/quotation_body.php'); ?>
+                        <?php include ROOT_PATH . '/view/templates/quotation/quotation_body.php'; ?>
                         
                         <!--/ Layout Demo -->
                     </div>
                     <!--/ Content -->
 
                     <!-- Footer -->
-                    <?php include('templates/footer.php'); ?>
+                    <?php include ROOT_PATH . '/view/templates/footer.php'; ?>
                     <!-- / Footer -->
 
                     <div class="content-backdrop fade"></div>
@@ -302,55 +302,55 @@ div.dt-container div.dt-search input {
 
 
 <!-- Modal -->
- <?php include('templates/quotation/quotation_help_modal.php'); ?>
+ <?php include ROOT_PATH . '/view/templates/quotation/quotation_help_modal.php'; ?>
 
  <!--Off Canvas for Diplsy The Quotation List -->
-  <?php include('templates/quotation/quotation_list_modal.php'); ?>
+  <?php include ROOT_PATH . '/view/templates/quotation/quotation_list_modal.php'; ?>
 
 <!--// Modal For Alart -->
 <!-- Modal -->
 
-<?php include('templates/quotation/quotation_introduction_modal.php'); ?>
-<?php include('templates/quotation/add_new_customer_modal.php'); ?>
- <?php include('templates/quotation/quotation_save_choice_modal.php'); ?>
+<?php include ROOT_PATH . '/view/templates/quotation/quotation_introduction_modal.php'; ?>
+<?php include ROOT_PATH . '/view/templates/quotation/add_new_customer_modal.php'; ?>
+ <?php include ROOT_PATH . '/view/templates/quotation/quotation_save_choice_modal.php'; ?>
 
 
 <!--Print Settings Modal-->
-<?php include('templates/quotation/quotation_print_settings_modal.php'); ?>
+<?php include ROOT_PATH . '/view/templates/quotation/quotation_print_settings_modal.php'; ?>
 
 
 <!--Terms and Condition Modal-->
-<?php include('templates/quotation/quotation_terms_condition_modal.php'); ?>
+<?php include ROOT_PATH . '/view/templates/quotation/quotation_terms_condition_modal.php'; ?>
 
 <!--search Items -->
-<?php include('templates/quotation/quotation_item_search_modal.php'); ?>
+<?php include ROOT_PATH . '/view/templates/quotation/quotation_item_search_modal.php'; ?>
 
 
-    <?php include('templates/scripts.php'); ?>
+    <?php include ROOT_PATH . '/view/templates/scripts.php'); ?>
 <!-- jQuery UI JS -->
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-    <script src="../assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
 
-    <script src="../assets/vendor/libs/select2/select2.js"></script>
-    <script src="../assets/js/forms-selects.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/forms-selects.js"></script>
     
-    <script src="../assets/sands/settings.js"></script>
-    <script src="../assets/sands/sands_popup.js"></script>
-    <script src="../alertmessage/js/sandsalert.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/settings.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>alertmessage/js/sandsalert.js"></script>
         <!-- Ladda & Spin.js JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda.min.js"></script>
     
     
-    <script src="../assets/vendor/libs/quill/katex.js"></script>
-    <script src="../assets/vendor/libs/highlight/highlight.js"></script>
-    <script src="../assets/vendor/libs/quill/quill.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/katex.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/highlight/highlight.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/quill.js"></script>
    
        <!-- Page JS -->
-    <script src="../../assets/js/ui-popover.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/ui-popover.js"></script>
 
-    <!--<script src="../assets/js/forms-editors.js"></script>-->
+    <!--<script src="<?= $_ENV['BASE_URL'] ?>assets/js/forms-editors.js"></script>-->
 <script>
      $(document).ready(function() {
           $('#quotation_id').val('');

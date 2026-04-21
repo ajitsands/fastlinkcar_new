@@ -235,6 +235,11 @@ class RoutingClass
             'LoadDriverSelect' => 'LoadDriverSelect',
             'LoadDriverSelect/' => 'LoadDriverSelect',
             
+            'CustomerLedger' => 'CustomerLedger',
+            'CustomerLedger/' => 'CustomerLedger',
+            
+            'CustomerLedgerController' => 'CustomerLedgerController',
+            'CustomerLedgerController/' => 'CustomerLedgerController',
        
 
         );
@@ -536,6 +541,14 @@ class RoutingClass
       private function LoadDriverSelect(...$params)
     {
         $this->includeWithParams("controller/VehicleContractGeneration/loadDriverSelect.php", $_GET);
+    }
+    private function CustomerLedger(...$params)
+    {
+        $this->includeWithParams("view/customer_ledger.php", $_GET);
+    }
+    private function CustomerLedgerController(...$params)
+    {
+        $this->includeWithParams("controller/ledger/CustomerLedgerController.php", $_GET);
     }
     private function includeWithParams($file, $params)
     {

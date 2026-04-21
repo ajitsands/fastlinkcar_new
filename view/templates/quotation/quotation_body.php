@@ -17,7 +17,7 @@
                           data-bs-target="#accordionWithIcon-1"
                           aria-expanded="true">
                           <i class="icon-base ri ri-bar-chart-fill me-2"></i>
-                          Customer Information
+                           Quotation Information
                         </button>
                       </h2>
 
@@ -25,6 +25,7 @@
                         <div class="accordion-body">
                             <!--Client Information-->
                                         <input type="hidden" id="quotation_id" name="quotation_id">
+                                        <input type="hidden" id="quotation_number" name="quotation_number">
                                         <input type="hidden" id="original_draft" name="original_draft">
                                         <input type="hidden" id="save_type_hidden" name="save_type_hidden">
 
@@ -33,27 +34,39 @@
                                             <div class="col-2 col-xl-2">
                                                 <div class="form-floating form-floating-outline mb-6">
                                                     <input class="form-control form-control-sm" id="quotation_date" name ="quotation_date" type="date" placeholder="dd-mm-yyyy" >
-                                                    <label for="html5-text-input">Date</label>
+                                                    <label for="quotation_date">Date</label>
                                                   </div>
                                             </div>
                                             <div class="col-2 col-xl-2">
                                                 <div class="form-floating form-floating-outline mb-6" >
-                                                    <input class="form-control form-control-sm" id="reference_number" name ="reference_number" type="text" placeholder="Reference Number" >
-                                                    <label for="html5-text-input">Quotation Prefix</label>
+                                                    <input class="form-control form-control-sm" id="quotation_prefix" name ="quotation_prefix" type="text" placeholder="Eg: CMN or LS" >
+                                                    <label for="Quotation Prefix">Quotation Prefix</label>
                                                   </div>
                                             </div>
                                             <div class="col-8 col-xl-8">
-                                                <div class="form-floating form-floating-outline mb-6" style="padding-right:25px;">
-                                                    <!--<div class="input-group">-->
-                                                    <!--    <input class="form-control form-control-sm" id="customer_name" name ="customer_name" type="text" placeholder="">-->
-                                                    <!--    <button class="btn btn-outline-primary waves-effect" type="button" id="button-addon2"><span class="ri ri-user-search-line"></span></button>-->
-                                                    <!--  </div>-->
-                                                    <!--<label for="html5-text-input">Customer Name</label>-->
-                                                    <select id="selectCustomerFromSelect2" name ="customer_name" class="select2 form-select " data-allow-clear="true" style="width:100%"></select>
+                                                <div class="d-flex align-items-stretch gap-2">
+                                            
+                                                    <div class="form-floating form-floating-outline flex-grow-1">
+                                                        <select id="selectCustomerFromSelect2"
+                                                                name="customer_name"
+                                                                class="select2 form-select"
+                                                                data-allow-clear="true"
+                                                                style="width:100%">
+                                                        </select>
+                                                        <label>Select Customer</label>
+                                                    </div>
+                                            
+                                                    <button type="button"
+                                                            id="addCustomerBtn"
+                                                            class="btn btn-primary d-flex align-items-center justify-content-center"
+                                                            title="Add New Customer">
+                                                        <i class="ri ri-user-add-line" style="font-size:20px;"></i>
+                                                    </button>
+                                            
                                                 </div>
-                                                  
-                                                 
+                                                 <input type="hidden" id="customer_code" name="customer_code">
                                             </div>
+                                           
                                             <div class="row">
 
                                                 <!-- LEFT COLUMN -->
@@ -62,8 +75,8 @@
                                                         <div class="col-12">
                                                              <!--<div class="col-1 col-xl-1">-->
                                                                 <div class="form-floating form-floating-outline mb-6">
-                                                                    <input class="form-control form-control-sm" id="customer_phone" name ="customer_phone" type="text" placeholder="Mobile" >
-                                                                    <label for="html5-text-input">Telephone</label>
+                                                                    <input class="form-control form-control-sm" id="customer_phone" name ="customer_phone" type="text" placeholder="Telephone" >
+                                                                    <label for="Telephone">Telephone</label>
                                                                   </div>
                                                             <!--</div>-->
                                                         </div>
@@ -71,8 +84,16 @@
                                                         <div class="col-12">
                                                            <!--<div class="col-3 col-xl-3">-->
                                                                 <div class="form-floating form-floating-outline mb-6">
-                                                                    <input class="form-control form-control-sm" id="customer_email" name ="customer_email" type="email" placeholder="Mobile" >
-                                                                    <label for="html5-text-input">Email</label>
+                                                                    <input class="form-control form-control-sm" id="customer_email" name ="customer_email" type="email" placeholder="Email" >
+                                                                    <label for="Email">Email</label>
+                                                                  </div>
+                                                            <!--</div>-->
+                                                        </div>
+                                                        <div class="col-12">
+                                                           <!--<div class="col-3 col-xl-3">-->
+                                                                <div class="form-floating form-floating-outline mb-6">
+                                                                    <input class="form-control form-control-sm" id="quotation_attention" name ="quotation_attention" type="text" placeholder="Attention" >
+                                                                    <label for="Attention">Attention</label>
                                                                   </div>
                                                             <!--</div>-->
                                                         </div>
@@ -81,23 +102,39 @@
                                             
                                                 <!-- RIGHT COLUMN -->
                                                 <div class="col-8">
-                                                    <!--<div class="col-12 col-xl-12">-->
+                                                   <div class="col-12">
                                                         <div class="form-floating form-floating-outline mb-6">
-                                                            <textarea class="form-control form-control-sm h-px-120" id="customer_address" name="customer_address" placeholder="Address"></textarea>
-                                                            <label for="html5-text-input">Address</label>
+                                                            <textarea class="form-control form-control-sm h-px-100" id="customer_address" name="customer_address" placeholder="Address"></textarea>
+                                                            <label for="Address">Address</label>
                                                           </div>
-                                                    <!--</div>-->
+                                                    </div>
+                                                    
+                                                    <div class="col-12">
+                                                    
+                                                        <div class="form-floating form-floating-outline mb-3 position-relative">
+
+                                                            <div class="input-group align-items-start">
+                                                                <textarea 
+                                                                    class="form-control form-control-sm pe-5"
+                                                                    id="quoation_introduction"
+                                                                    name="quoation_introduction"
+                                                                    rows="4"
+                                                                    placeholder="Enter introduction or click 🔍 to choose template"></textarea>
+                                                                <button id="btn_open_intn_modal"
+                                                                    type="button"
+                                                                    class="btn  btn-outline-primary position-absolute"
+                                                                    style="top:6px; right:6px; z-index:5;"
+                                                                    title="Select Introduction">
+                                                                    <i class="ri ri-search-line text-danger" ></i>
+                                                                </button>
+                                                            </div>
+                                                           
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             
                                             </div>
-                                            <div class="row">
-                                                <div class="col-12">
-                                                    <div class="form-floating form-floating-outline mb-6">
-                                                        <input class="form-control form-control-sm" id="quotationAttention" name ="quotationAttention" type="text" placeholder="Attention" >
-                                                        <label for="html5-text-input">Attention</label>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                           
                                             
                                             
                                            
@@ -159,18 +196,18 @@
                                             <td colspan="10" style="text-align:right;"><strong>Subtotal before VAT</strong></td>
                                             <td colspan="2"><span id="subtotal">0.00</span></td>
                                         </tr>
-                                        <tr>
-                                            <td colspan="10" style="text-align:right;"><strong>Discount%</strong></td>
-                                            <td colspan="2"><input class="form-control form-control-sm text-center total_discount" id="total_discount" name ="total_discount" type="text" placeholder="Discount%" ></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="10" style="text-align:right;"><strong>Discount Amount</strong></td>
-                                            <td colspan="2"><span id="total_discount_amount">0.00</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="10" style="text-align:right;"><strong>After Discount</strong></td>
-                                            <td colspan="2"><span id="after_discount_amount">0.00</span></td>
-                                        </tr>
+                                        <!--<tr>-->
+                                        <!--    <td colspan="10" style="text-align:right;"><strong>Discount%</strong></td>-->
+                                        <!--    <td colspan="2"><input class="form-control form-control-sm text-center total_discount" id="total_discount" name ="total_discount" type="text" placeholder="Discount%" ></td>-->
+                                        <!--</tr>-->
+                                        <!--<tr>-->
+                                        <!--    <td colspan="10" style="text-align:right;"><strong>Discount Amount</strong></td>-->
+                                        <!--    <td colspan="2"><span id="total_discount_amount">0.00</span></td>-->
+                                        <!--</tr>-->
+                                        <!--<tr>-->
+                                        <!--    <td colspan="10" style="text-align:right;"><strong>After Discount</strong></td>-->
+                                        <!--    <td colspan="2"><span id="after_discount_amount">0.00</span></td>-->
+                                        <!--</tr>-->
                                         
                                         <tr>
                                             <td colspan="10" style="text-align:right;"><strong>VAT Total</strong></td>
@@ -229,12 +266,7 @@
                                     <span class="ri ri-add-box-line icon-18px"></span>
                                     &nbsp;&nbsp;Drafts (Q+2)
                                 </button>
-                                <button type="button"
-                                    class="btn btn-sm btn-warning waves-effect waves-light"
-                                    id="generatePO">
-                                    <span class="ri ri-add-box-line icon-18px"></span>
-                                    &nbsp;&nbsp;Generate PO
-                                </button>
+                                
                                 </div>
                                 <!-- Right: Save buttons -->
                                 <div>

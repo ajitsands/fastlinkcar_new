@@ -1,5 +1,5 @@
 <?php
-include('envinclude.php');
+include ROOT_PATH . '/view/envinclude.php';
 ?>
 <!doctype html>
 
@@ -9,33 +9,33 @@ include('envinclude.php');
     dir="ltr"
     data-skin="default"
     data-bs-theme="light"
-    data-assets-path="../assets/"
+    data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/"
     data-template="horizontal-menu-template-no-customizer">
 
 <head>
-    <?php include('templates/head.php'); ?>
+    <?php include ROOT_PATH . '/view/templates/head.php'; ?>
 
 
     <!-- Helpers -->
-    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
 
     <!--? Config: Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file. -->
 
-    <script src="../assets/js/config.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/config.js"></script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
 
 
-    <link rel="stylesheet" href="../assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
 
-    <link rel="stylesheet" href="../assets/vendor/libs/select2/select2.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/tagify/tagify.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/bootstrap-select/bootstrap-select.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/typeahead-js/typeahead.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/spinkit/spinkit.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/tagify/tagify.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/bootstrap-select/bootstrap-select.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/typeahead-js/typeahead.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/spinkit/spinkit.css" />
     <style>
         .swiper {
             width: 400px;
@@ -89,7 +89,7 @@ include('envinclude.php');
     <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
         <div class="layout-container">
             <!-- Navbar -->
-            <?php include('templates/nav.php'); ?>
+            <?php include ROOT_PATH . '/view/templates/nav.php'; ?>
             <!-- / Navbar -->
 
             <!-- Layout container -->
@@ -97,7 +97,7 @@ include('envinclude.php');
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
                     <!-- Menu -->
-                    <?php include('templates/menu.php'); ?>
+                    <?php include ROOT_PATH . '/view/templates/menu.php'; ?>
                     <!-- / Menu -->
 
                     <!-- Content -->
@@ -105,13 +105,13 @@ include('envinclude.php');
                         <!-- Layout Demo -->
                         <?php //echo "DB NAME : ".$_ENV['DB_NAME'];
                         ?>
-                        <?php include('templates/home/home_body.php'); ?>
+                        <?php include ROOT_PATH . '/view/templates/home/home_body.php'; ?>
                         <!--/ Layout Demo -->
                     </div>
                     <!--/ Content -->
 
                     <!-- Footer -->
-                    <?php include('templates/footer.php'); ?>
+                    <?php include ROOT_PATH . '/view/templates/footer.php'; ?>
                     <!-- / Footer -->
 
                     <div class="content-backdrop fade"></div>
@@ -122,24 +122,24 @@ include('envinclude.php');
             <!--/ Layout container -->
         </div>
     </div>
-    <?php include('templates/home/image_slider_modal.php'); ?>
-    <?php include('templates/home/customer_attachments_upload_modal.php'); ?>
-    <?php include('templates/home/list_of_booking_off_canvas.php'); ?>
-    <?php include('templates/home/book_car_off_canvas.php'); ?>
-    <?php include('templates/home/add_driver_modal.php'); ?>
-    <?php include('templates/home/add_rental_car_image_modal.php'); ?>
-    <?php include('templates/home/preview_attachments_modal.php'); ?>
-    <?php include('templates/home/add_customer_modal.php'); ?>
-    <?php include('templates/home/more_info_modal.php'); ?>
+    <?php include ROOT_PATH . '/view/templates/home/image_slider_modal.php'; ?>
+    <?php include ROOT_PATH . '/view/templates/home/customer_attachments_upload_modal.php'; ?>
+    <?php include ROOT_PATH . '/view/templates/home/list_of_booking_off_canvas.php'; ?>
+    <?php include ROOT_PATH . '/view/templates/home/book_car_off_canvas.php'; ?>
+    <?php include ROOT_PATH . '/view/templates/home/add_driver_modal.php'; ?>
+    <?php include ROOT_PATH . '/view/templates/home/add_rental_car_image_modal.php'; ?>
+    <?php include ROOT_PATH . '/view/templates/home/preview_attachments_modal.php'; ?>
+    <?php include ROOT_PATH . '/view/templates/home/add_customer_modal.php'; ?>
+    <?php include ROOT_PATH . '/view/templates/home/more_info_modal.php'; ?>
 
 
-    <?php include('templates/scripts.php'); ?>
+    <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-    <script src="../assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
 
-    <script src="../assets/vendor/libs/select2/select2.js"></script>
-    <script src="../assets/js/forms-selects.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/forms-selects.js"></script>
 
     <!-- Page JS -->
     <script>

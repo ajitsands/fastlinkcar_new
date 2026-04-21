@@ -11,38 +11,34 @@
         
         <!-- Full Editor -->
                 <div class="col-12">
-                  <div class="card">
-                    <div class="card-body">
+                 
                       <div id="full-editor">
                             
                       </div>
-                    </div>
-                  </div>
+                   
                 </div>
                 <div class="col-12">
-                  <div class="card">
-                    <div class="card-body" style="padding-top:0px;">
-                        <table id="termsTable" class="table table-bordered table-striped">
-                            <thead>
+                     <div class="table-responsive">
+                            <table id="termsTable" class="table table-bordered  table-hover table-sm align-middle">
+                                <thead class="table-light">
+                  
                                 <tr>
                                     <th>ID</th>
                                     <th>Title</th>
                                     <th>Content</th>
-                                    <!--<th>Created At</th>-->
-                                    <th>Status</th>
+                                    
                                     <th>Delete</th>
                                     <th>Show</th>
                                 </tr>
                             </thead>
                         </table>
-                    </div>
-                  </div>
+                   
                 </div>
         <!-- /Full Editor -->
        
       </div>
 
-        <div class="modal-footer">
+        <div class="modal-footer border-top d-flex">
 
             <!-- Left Side -->
             <div class="d-flex align-items-center me-auto">
@@ -53,7 +49,7 @@
         
                
                 <div class="input-group">
-                        <input class="form-control form-control-sm"   type="text"  placeholder="Name"   id="t_c_name"   name="t_c_name">
+                        <input class="form-control form-control-sm"   type="text"  placeholder="Title"   id="t_c_name"   name="t_c_name">
                         <button class="btn btn-primary waves-effect me-2" id="saveTermsAndConditions" type="button" >Save</button>
                   </div>
         
@@ -65,7 +61,7 @@
             <!--<button class="btn btn-info me-2" id="loadTerms">Show</button>-->
         
             <button type="button"
-                id="copyContentBtn"
+                id="copyTCBtn"
                 class="btn btn-warning btn-sm">
                 Apply
             </button>

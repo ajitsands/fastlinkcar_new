@@ -43,6 +43,15 @@ include('envinclude.php');
     <!--? Config: Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file. -->
 
     <script src="../assets/js/config.js"></script>
+    <style>
+        
+        .spin {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+    </style>
   </head>
 
   <body>
@@ -63,154 +72,56 @@ include('envinclude.php');
 
             <!-- Content -->
             <div class="container-fluid flex-grow-1 container-p-y">
-              <!-- Product List Widget -->
-              <div class="card mb-6">
-                <div class="card-widget-separator-wrapper">
-                  <div class="card-body card-widget-separator">
-                    <div class="row gy-4 gy-sm-1">
-                         <div class="col-sm-6 col-lg-2">
-                        <div
-                          class="d-flex justify-content-between align-items-start card-widget-1 border-end pb-4 pb-sm-0">
-                          <div>
-                            <p class="mb-1">Total Categories</p>
-                            <h4 class="mb-1">10</h4>
-                            <p class="mb-0">
-                              
-                              <span class="badge rounded-pill bg-label-info">View</span>
-                            </p>
-                          </div>
-                          <div class="avatar me-sm-6">
-                            <span class="avatar-initial rounded-3 text-heading">
-                              <i class="icon-base ri ri-home-6-line icon-28px text-info"></i>
-                            </span>
-                          </div>
-                        </div>
-                        <hr class="d-none d-sm-block d-lg-none me-6" />
-                      </div>
-                      <div class="col-sm-6 col-lg-2">
-                        <div
-                          class="d-flex justify-content-between align-items-start card-widget-1 border-end pb-4 pb-sm-0">
-                          <div>
-                            <p class="mb-1">Total Vehicles</p>
-                            <h4 class="mb-1">500</h4>
-                            <p class="mb-0">
-                              
-                              <span class="badge rounded-pill bg-label-info">View</span>
-                            </p>
-                          </div>
-                          <div class="avatar me-sm-6">
-                            <span class="avatar-initial rounded-3 text-heading">
-                              <i class="icon-base ri ri-car-line icon-28px text-info"></i>
-                            </span>
-                          </div>
-                        </div>
-                        <hr class="d-none d-sm-block d-lg-none me-6" />
-                      </div>
-                      <div class="col-sm-6 col-lg-2">
-                        <div
-                          class="d-flex justify-content-between align-items-start card-widget-2 border-end pb-4 pb-sm-0">
-                          <div>
-                            <p class="mb-1">Available</p>
-                            <h4 class="mb-1">250</h4>
-                            <p class="mb-0">
-                             
-                              <span class="badge rounded-pill bg-label-success">View</span>
-                            </p>
-                          </div>
-                          <div class="avatar me-lg-6">
-                            <span class="avatar-initial rounded-3 text-heading">
-                              <i class="icon-base ri ri-car-washing-line icon-28px text-success"></i>
-                            </span>
-                          </div>
-                        </div>
-                        <hr class="d-none d-sm-block d-lg-none" />
-                      </div>
-                      <div class="col-sm-6 col-lg-2">
-                        <div
-                          class="d-flex justify-content-between align-items-start border-end pb-4 pb-sm-0 card-widget-3">
-                          <div>
-                            <p class="mb-1">On Rent</p>
-                            <h4 class="mb-1">100</h4>
-                            <p class="mb-0">
-                             
-                              <span class="badge rounded-pill bg-label-primary">View</span>
-                            </p>
-                          </div>
-                          <div class="avatar me-sm-6">
-                            <span class="avatar-initial rounded-3 text-heading">
-                              <i class="icon-base ri ri-settings-2-line icon-28px text-primary"></i>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-sm-6 col-lg-2">
-                        <div
-                          class="d-flex justify-content-between align-items-start border-end pb-4 pb-sm-0 card-widget-3">
-                          <div>
-                            <p class="mb-1">In Maintenance</p>
-                            <h4 class="mb-1">100</h4>
-                            <p class="mb-0">
-                             
-                              <span class="badge rounded-pill bg-label-warning">View</span>
-                            </p>
-                          </div>
-                          <div class="avatar me-sm-6">
-                            <span class="avatar-initial rounded-3 text-heading">
-                              <i class="icon-base ri ri-home-gear-line icon-28px text-warning"></i>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-sm-6 col-lg-2">
-                        <div
-                          class="d-flex justify-content-between align-items-start border-end pb-4 pb-sm-0 card-widget-3">
-                          <div>
-                            <p class="mb-1">Blocked</p>
-                            <h4 class="mb-1">50</h4>
-                            <p class="mb-0">
-                             
-                              <span class="badge rounded-pill bg-label-danger">View</span>
-                            </p>
-                          </div>
-                          <div class="avatar me-sm-6">
-                            <span class="avatar-initial rounded-3 text-heading">
-                              <i class="icon-base ri ri-prohibited-line icon-28px text-danger"></i>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      
-                    </div>
-                  </div>
-                </div>
-              </div>
-
+             
               <!-- Product List Table -->
               <div class="card">
                 <div class="card-header border-bottom">
                   <h5 class="card-title mb-4">Filter</h5>
-                  <div class="d-flex justify-content-between align-items-center row gap-5 gx-6 gap-md-0">
-                    <div class="col-md-4 product_status"></div>
-                    <div class="col-md-4 product_category"></div>
-                    <div class="col-md-4 product_stock"></div>
-                  </div>
+                 <div class="row align-items-end g-2">
+
+    <!-- Date -->
+    <div class="col-md-2">
+        <div class="form-floating form-floating-outline">
+            <input class="form-control form-control-sm"
+                   id="filter_date"
+                   name="filter_date"
+                   type="date"
+                   placeholder="dd-mm-yyyy">
+            <label for="filter_date">Filter By</label>
+        </div>
+    </div>
+
+    <!-- Dropdown -->
+    <div class="col-md-4">
+        <div class="form-floating form-floating-outline">
+        <div id="dropdownContaineravail" class=" w-100">
+         <label for="vehicleModelLbl">Select Vehicle Model</label>
+        </div>
+        </div>
+    </div>
+
+    <!-- Search Button -->
+    <div class="col-md-1">
+        <button class="btn btn-primary w-100 rounded-pill" id="btnSearch">
+    <i class="ri ri-search-line me-1"></i> Search
+</button>
+    </div>
+
+</div>
                 </div>
                 <div class="card-datatable table-responsive">
                   <table class="datatables-products table" id="vehicleTable">
                     <thead>
                       <tr>
                           
-                    <th>Image</th>
-                       <th>Vehicle</th>
+                    <th>Sn</th>
+                       <th>Model</th>
                     <th>Number</th>
-                    <th>Model</th>
-                    <th>Category</th>
-                    <th>Fuel</th>
-                    <th>Cost/Day</th>
+                    <th>Details</th>
                     <th>Status</th>
                     <th>Next Passing </th>
                     <th>Next Insurance </th>
+                    <th>Next Maintenance </th>
                     <th>Purchase On</th>
                     <th>Actions</th>
                       </tr>
@@ -382,230 +293,257 @@ include('envinclude.php');
     <!--<script src="../assets/js/app-ecommerce-product-list.js"></script>-->
     <!-- jQuery first -->
 <script>
-function openVehicleModal(images) {
-            const carouselInner = document.querySelector('#modalCarouselControls .carousel-inner');
-            const carouselIndicators = document.querySelector('#modalCarouselControls .carousel-indicators');
-        
-            carouselInner.innerHTML = ''; // Clear previous slides
-            carouselIndicators.innerHTML = ''; // Clear previous indicators
-        
-            images.forEach((img, index) => {
-                // Slide
-                const activeClass = index === 0 ? 'active' : '';
-                const slide = `
-                    <div class="carousel-item ${activeClass}">
-                        <div class="onboarding-media">
-                            <div class="mx-2">
-                                <img src="uploads/vehicleImages/${img}" class="img-fluid" style="max-height:500px; object-fit:contain;" />
-                            </div>
-                        </div>
-                        <div class="onboarding-content">
-                            
-                        </div>
-                    </div>
-                `;
-                carouselInner.insertAdjacentHTML('beforeend', slide);
-        
-                // Indicator
-                const indicatorActive = index === 0 ? 'active' : '';
-                const indicator = `
-                    <button type="button" data-bs-target="#modalCarouselControls" data-bs-slide-to="${index}" class="${indicatorActive}"></button>
-                `;
-                carouselIndicators.insertAdjacentHTML('beforeend', indicator);
-            });
-        
-            // Reset carousel to first slide
-            const carousel = new bootstrap.Carousel(document.getElementById('modalCarouselControls'));
-            carousel.to(0);
-        
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('modalvehicleimages'));
-            modal.show();
-        }
-    $(document).ready(function () {
-       
-        $('#vehicleTable').DataTable({
-            pageLength: 100,
-            ajax: {
-                url: '/LoadVehicleByUserSellection',
-                type: 'POST',
-                data: function(d) {
-                    return JSON.stringify({
-                        action: 'LoadVehicleToMasterList'
-                    });
-                },
-                dataSrc: 'data',
-                error: function (xhr, error, code) {
-                    console.log(xhr.responseText);
-                }
+$(document).ready(function() {
+
+  $('#vehicleModelAvail').select2({
+    dropdownParent: $('#dropdownContaineravail'),
+    width: '100%',
+     allowClear: true
+}); 
+
+
+    modelloadDropdown();
+
+    function modelloadDropdown() {
+       $('#dropdownContaineravail').html(`
+            <div class="text-center p-3">
+                <div class="spinner-border text-primary" role="status"></div>
+                <div class="mt-2">Loading models...</div>
+            </div>
+        `);
+        $.ajax({
+            url: '/LoadVehicleModelReservationAvail',
+            type: 'GET',
+            success: function (response) {
+                $('#dropdownContaineravail').html(response);
+
+                $('#vehicleModelAvail').select2({
+                    placeholder: "Select Model",
+                    allowClear: true,
+                    width: '100%'
+                });
             },
-             columns: [
-                {
-                    data: 'all_vehicle_images',
-                    title: 'Images',
-                    render: function(data, type, row) {
-                        if (!data) return '';
-                
-                        // Parse the JSON array of images
-                        let images = [];
-                        try {
-                            images = JSON.parse(data); // data is like '["img1.jpg","img2.jpg"]'
-                        } catch(e) {
-                            console.error('Invalid JSON', e, data);
-                            return '';
-                        }
-                
-                        if (images.length === 0) return '';
-                
-                        // Show first image as clickable thumbnail
-                        return `<div class="avatar me-2"><img src="uploads/vehicleImages/${images[0]}" class="rounded-circle" style="cursor:pointer;" onclick='openVehicleModal(${JSON.stringify(images)})'></div>`;
-                    }
-                },
-               
-                { data: 'vehicles_name', title: 'Vehicle' },
-                { data: 'vehicles_number', title: 'Number' },
-                { data: 'vehicles_modal', title: 'Model' },
-                { data: 'category', title: 'Category' },
-                { data: 'fuel_type', title: 'Fuel' },
-                { data: 'cost_per_day', title: 'Cost/Day' },
-                { data: 'vehicles_status', title: 'Status',
-                
-                    render: function(data, type, row) {
+        error: function (xhr, status, error) {
+            $('#dropdownContaineravail').html(`
+            <div class="text-center p-3">
+                <div class="mt-2">Error loading data</div>
+            </div>`);
+            
+            console.error(error);
+        }
+        });
+    }
+    
+// ✅ Set default date = today
+    let today = new Date().toISOString().split('T')[0];
+    $('#filter_date').val(today);
 
-                        switch (data) {
-                            case 'Available':
-                                return '<span class="badge rounded-pill bg-label-success">Available</span>';
-                
-                            case 'On Rent':
-                                return '<span class="badge rounded-pill bg-label-primary">On Rent</span>';
-                
-                            case 'On Maintenance':
-                                return '<span class="badge rounded-pill bg-label-warning">On Maintenance</span>';
-                
-                            case 'Blocked':
-                                return '<span class="badge rounded-pill bg-label-danger">Blocked</span>';
-                
-                            default:
-                                return '<span class="badge rounded-pill bg-label-secondary">' + data + '</span>';
-                        }
-                    }
-                },
-                { data: 'passing_date', title: 'Passing Date' ,
-                    render: function(data, type, row) {
+    // ✅ Initialize DataTable
+    var table = $('#vehicleTable').DataTable({
+        pageLength: 100,
+        processing: true,
+        ajax: {
+            url: '/LoadVehicleByUserSellection',
+            type: 'POST',
+            contentType: 'application/json',
+            data: function (d) {
+                return JSON.stringify({
+                    action: 'ListVehicleMaster_Due_days',
+                    filter_date: $('#filter_date').val(),
+                    vehicle_model: $('#vehicleModelAvail').val()
+                });
+            },
+            dataSrc: 'data',
+            error: function (xhr) {
+                console.log(xhr.responseText);
+            }
+        },
 
-                        if (!data) return '';
-                
-                        const diffDays = parseInt(row.passing_age_days);
-                
-                         // Determine label and color
-                        let label = '';
-                        let colorClass = ''; 
-                        let maincolorClass = ''; 
-                
-                         if (diffDays < 0) {
-                            // overdue → entire text red
-                            label = `${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? 's' : ''} overdue`;
-                            colorClass = 'text-danger';
-                            maincolorClass = 'text-danger';
-                        } else if (diffDays <= 30) {
-                            // due soon → danger
-                            label = `Due in ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
-                            colorClass = 'text-danger';
-                            maincolorClass = '';
-                        } else if (diffDays <= 90) {
-                            // warning
-                            label = `Due in ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
-                            colorClass = 'text-warning';
-                             maincolorClass = '';
-                        } else {
-                            // safe
-                            label = `Due in ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
-                            colorClass = '';
-                             maincolorClass = '';
-                        }
-                         return `
-                            <span class="${maincolorClass}">
-                                <div style="line-height:1; margin-bottom:0;">${data}</div>
-                                <small style="font-size:0.7em; line-height:1;" class="fst-italic ${colorClass}">${label}</small>
-                            </span>
-                        `;
-                        
-                    }
-                },
-                { data: 'insurance_date', title: 'Insurance Date',
-                
-                    render: function(data, type, row) {
+        columns: [
 
-                        if (!data) return '';
-                
-                        const insdiffDays = parseInt(row.insurance_age_days);
-                
-                         // Determine label and color
-                        let label1 = '';
-                        let colorClass1 = ''; 
-                        let maincolorClass1 = ''; 
-                 if (insdiffDays < 0) {
-                            // overdue → entire text red
-                            label1 = `${Math.abs(insdiffDays)} day${Math.abs(insdiffDays) !== 1 ? 's' : ''} overdue`;
-                            colorClass1 = 'text-danger';
-                            maincolorClass1 = 'text-danger';
-                        } else if (insdiffDays <= 30) {
-                            // due soon → danger
-                            label1 = `Due in ${insdiffDays} day${insdiffDays !== 1 ? 's' : ''}`;
-                            colorClass1 = 'text-danger';
-                            maincolorClass1 = '';
-                        } else if (insdiffDays <= 90) {
-                            // warning
-                            label1 = `Due in ${insdiffDays} day${insdiffDays !== 1 ? 's' : ''}`;
-                            colorClass1 = 'text-warning';
-                             maincolorClass1 = '';
-                        } else {
-                            // safe
-                            label1 = `Due in ${insdiffDays} day${insdiffDays !== 1 ? 's' : ''}`;
-                            colorClass1 = '';
-                             maincolorClass1 = '';
-                        }
-                         return `
-                            <span class="${maincolorClass1}">
-                                <div style="line-height:1; margin-bottom:0;">${data}</div>
-                                <small style="font-size:0.7em; line-height:1;" class="fst-italic ${colorClass1}">${label1}</small>
-                            </span>
-                        `;
-                        
-                        
-                    }
-                    
-                },
-                { data: 'purchase_date', title: 'Purchase Date' },
-                {
-                data: null, // since this is action, not bound to a field
-                title: 'Actions',
+            // ✅ Serial Number
+            {
+                data: null,
+                title: '#',
                 orderable: false,
                 searchable: false,
                 className: 'text-center',
-                render: function(data, type, row) {
+                render: function (data, type, row, meta) {
+                    return meta.row + meta.settings._iDisplayStart + 1;
+                }
+            },
+
+            { data: 'model_names' },
+            { data: 'vehicle_number' },
+
+            // ✅ Details Column (Icons)
+            {
+                data: null,
+                title: 'Details',
+                render: function (data, type, row) {
+
+                    let details = {};
+                    try {
+                        details = JSON.parse(row.other_details_json || '{}');
+                    } catch (e) {}
+
                     return `
-                    <div class="dropdown">
-                        <button type="button" class="btn dropdown-toggle hide-arrow p-0" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="icon-base ri ri-more-2-line icon-22px text-body-secondary"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item waves-effect" href="javascript:void(0);" onclick="shareTeams(${row.ids})">Change Status</a></li>
-                            <li><a class="dropdown-item waves-effect" href="javascript:void(0);" onclick="suggestEdits(${row.ids})">Suggest Edits</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item waves-effect" href="javascript:void(0);" onclick="reportBug(${row.ids})">View Details</a></li>
-                        </ul>
-                    </div>`;
+                        <div class="d-flex flex-column gap-1">
+
+                            <div>
+                                <i class="ri-calendar-line text-primary me-1"></i>
+                                <small>${row.vehicle_year ?? '-'}</small>
+                            </div>
+
+                            <div>
+                                <i class="ri-palette-line text-warning me-1"></i>
+                                <small>${row.vehicle_color ?? '-'}</small>
+                            </div>
+
+                            <div>
+                                <i class="ri-gas-station-line text-success me-1"></i>
+                                <small>${details.vehicleFuelType ?? '-'}</small>
+                            </div>
+
+                            <div>
+                                <i class="ri-settings-3-line text-info me-1"></i>
+                                <small>${details.vehicleGearType ?? '-'}</small>
+                            </div>
+
+                        </div>
+                    `;
+                }
+            },
+
+            // ✅ Status Badge
+            {
+                data: 'vehicle_status',
+                render: function (data) {
+                    switch (data) {
+                        case 'Available':
+                            return '<span class="badge rounded-pill bg-label-success">Available</span>';
+                        case 'Rent Out':
+                            return '<span class="badge rounded-pill bg-label-primary">On Rent</span>';
+                        case 'On Maintenance':
+                            return '<span class="badge rounded-pill bg-label-warning">On Maintenance</span>';
+                        case 'On Parking':
+                            return '<span class="badge rounded-pill bg-label-warning">On Parking</span>';
+                        case 'Blocked':
+                            return '<span class="badge rounded-pill bg-label-danger">Blocked</span>';
+                        default:
+                            return `<span class="badge rounded-pill bg-label-secondary">${data}</span>`;
+                    }
+                }
+            },
+
+            // ✅ Passing Date
+            {
+                data: 'next_passing_date',
+                render: function (data, type, row) {
+
+                    if (!data) return '';
+
+                    const diffDays = parseInt(row.passing_age_days);
+                    let label = '', colorClass = '', maincolorClass = '';
+
+                    if (diffDays < 0) {
+                        label = `${Math.abs(diffDays)} day(s) overdue`;
+                        colorClass = 'text-danger';
+                        maincolorClass = 'text-danger';
+                    } else if (diffDays <= 30) {
+                        label = `Due in ${diffDays} day(s)`;
+                        colorClass = 'text-danger';
+                    } else if (diffDays <= 90) {
+                        label = `Due in ${diffDays} day(s)`;
+                        colorClass = 'text-warning';
+                    } else {
+                        label = `Due in ${diffDays} day(s)`;
+                    }
+
+                    return `
+                        <span class="${maincolorClass}">
+                            <div>${data}</div>
+                            <small class="fst-italic ${colorClass}">${label}</small>
+                        </span>
+                    `;
+                }
+            },
+
+            // ✅ Insurance Date
+            {
+                data: 'next_insurance_date',
+                render: function (data, type, row) {
+
+                    if (!data) return '';
+
+                    const diffDays = parseInt(row.insurance_age_days);
+                    let label = '', colorClass = '', maincolorClass = '';
+
+                    if (diffDays < 0) {
+                        label = `${Math.abs(diffDays)} day(s) overdue`;
+                        colorClass = 'text-danger';
+                        maincolorClass = 'text-danger';
+                    } else if (diffDays <= 30) {
+                        label = `Due in ${diffDays} day(s)`;
+                        colorClass = 'text-danger';
+                    } else if (diffDays <= 90) {
+                        label = `Due in ${diffDays} day(s)`;
+                        colorClass = 'text-warning';
+                    } else {
+                        label = `Due in ${diffDays} day(s)`;
+                    }
+
+                    return `
+                        <span class="${maincolorClass}">
+                            <div>${data}</div>
+                            <small class="fst-italic ${colorClass}">${label}</small>
+                        </span>
+                    `;
+                }
+            },
+
+            { data: 'next_maintenance_date' },
+            { data: 'vehicle_purchase_date' },
+
+            // ✅ Actions
+            {
+                data: null,
+                orderable: false,
+                searchable: false,
+                className: 'text-center',
+                render: function (data, type, row) {
+                    return `
+                        <div class="dropdown">
+                            <button class="btn p-0" data-bs-toggle="dropdown">
+                                <i class="ri-more-2-line"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="reportBug(${row.ids})">View Details</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="shareTeams(${row.ids})">Change Status</a></li>
+                            </ul>
+                        </div>
+                    `;
                 }
             }
-               
-                
-            ]
+
+        ]
+    });
+
+    // ✅ Search Button Click
+    $('#btnSearch').on('click', function () {
+
+        let btn = $(this);
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line spin"></i>');
+
+        table.ajax.reload(function () {
+            btn.prop('disabled', false).html('<i class="ri-search-line"></i> Search');
         });
+    });
         
         
 
-    });
+    
+});
 
 </script>
 

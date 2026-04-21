@@ -6,7 +6,7 @@
   dir="ltr"
   data-skin="default"
   data-bs-theme="light"
-  data-assets-path="../assets/"
+  data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/"
   data-template="horizontal-menu-template-no-customizer">
   <head>
     <meta charset="utf-8" />
@@ -19,7 +19,7 @@
     <meta name="description" content="" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="<?= $_ENV['BASE_URL'] ?>assets/img/favicon/favicon.ico" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -28,38 +28,46 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap"
       rel="stylesheet" />
 
-    <link rel="stylesheet" href="../assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/fonts/iconify-icons.css" />
 
     <!-- Core CSS -->
     <!-- build:css assets/vendor/css/theme.css -->
 
-    <link rel="stylesheet" href="../assets/vendor/libs/node-waves/node-waves.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/node-waves/node-waves.css" />
 
-    <script src="../assets/vendor/libs/@algolia/autocomplete-js.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/@algolia/autocomplete-js.js"></script>
 
-    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
-    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/css/demo.css" />
 
     <!-- Vendors CSS -->
 
-    <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
 
     <!-- endbuild -->
 
     <!-- Vendor -->
-    <link rel="stylesheet" href="../assets/vendor/libs/@form-validation/form-validation.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/@form-validation/form-validation.css" />
 
     <!-- Page CSS -->
     <!-- Page -->
-    <link rel="stylesheet" href="../assets/vendor/css/pages/page-auth.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/css/pages/page-auth.css" />
 
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>alertmessage/css/sands_alert_style.css">
+    
     <!-- Helpers -->
-    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
 
     <!--? Config: Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file. -->
 
-    <script src="../assets/js/config.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/config.js"></script>
+    
+    
+
+    
+    
 	<style>
 		.app-logo {
 		  transition: opacity 0.3s ease;
@@ -68,6 +76,11 @@
   </head>
 
   <body>
+          <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
+        <div class="layout-container">
+    <!-- SaNDS Popup -->
+    <div id="dropdownContent" style="text-align:center;"></div>    
     <!-- Content -->
 
     <div class="position-relative">
@@ -77,7 +90,7 @@
           <div class="card p-md-7 p-1">
             <!-- Logo -->
             <div class="app-brand justify-content-center mt-5">
-              <img src="../assets/img/logo/logo.png" id="companyLogo" class="img-fluid app-logo" alt="Logo">
+              <img src="<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo.png" id="companyLogo" class="img-fluid app-logo" alt="Logo">
             </div>
             <!-- /Logo -->
 
@@ -86,7 +99,7 @@
               <form id="formAuthentication" class="mb-5" action="/Home?val=<?php echo $this->encryption->encrypt('1,1-1');?>" method="GET">
 			  
 				<div class="form-floating form-floating-outline mb-6">
-					<select class="form-select" id="selectCompanyDropDown">
+					<select class="form-select" id="selectCompanyDropDown" name="selectCompanyDropDown">
 					  <option value="" selected disabled>Choose Company</option>
 					  <option value="1">AA Car Rental</option>
 					  <option value="2">Class Rental Car</option>
@@ -99,11 +112,11 @@
                   <input
                     type="text"
                     class="form-control"
-                    id="email"
-                    name="email-username"
+                    id="userName"
+                    name="userName"
                     placeholder="Enter your username"
                     autofocus />
-                  <label for="email">Username</label>
+                  <label for="userName">Username</label>
                 </div>
                 <div class="mb-5">
                   <div class="form-password-toggle form-control-validation">
@@ -111,12 +124,12 @@
                       <div class="form-floating form-floating-outline">
                         <input
                           type="password"
-                          id="password"
+                          id="current-password"
                           class="form-control"
-                          name="password"
+                          name="current-password"
                           placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
-                          aria-describedby="password" />
-                        <label for="password">Password</label>
+                          aria-describedby="current-password" />
+                        <label for="current-password">Password</label>
                       </div>
                       <span class="input-group-text cursor-pointer"
                         ><i class="icon-base ri ri-eye-off-line icon-20px"></i
@@ -126,7 +139,7 @@
                 </div>
                 <div class="mb-5 d-flex justify-content-between mt-5">
                   <div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" id="remember-me" />
+                    <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me" />
                     <label class="form-check-label" for="remember-me"> Remember Me </label>
                   </div>
                   <a href="auth-forgot-password-basic.html" class="float-end mb-1 mt-2">
@@ -134,7 +147,11 @@
                   </a>
                 </div>
                 <div class="mb-5">
-                    <button type="submit" class="btn btn-primary d-grid w-100" id="btn_login">Sign in</button>
+                    <button type="button" class="btn btn-primary d-grid w-100" id="btn_login">Sign in</button>
+                 
+                </div>
+                <div class="mb-5">
+                    <button type="button" class="btn btn-primary d-grid w-100" id="btn_CheckLogin">Sign in</button>
                  
                 </div>
               </form>
@@ -147,7 +164,7 @@
           <!-- /Login -->
           <img
             alt="mask"
-            src="../assets/img/illustrations/auth-basic-login-mask-light.png"
+            src="<?= $_ENV['BASE_URL'] ?>assets/img/illustrations/auth-basic-login-mask-light.png"
             class="authentication-image d-none d-lg-block"
             data-app-light-img="illustrations/auth-basic-login-mask-light.png"
             data-app-dark-img="illustrations/auth-basic-login-mask-dark.png" />
@@ -161,35 +178,40 @@
 
     <!-- build:js assets/vendor/js/theme.js  -->
 
-    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/jquery/jquery.js"></script>
 
-    <script src="../assets/vendor/libs/popper/popper.js"></script>
-    <script src="../assets/vendor/js/bootstrap.js"></script>
-    <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/popper/popper.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/js/bootstrap.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/node-waves/node-waves.js"></script>
 
-    <script src="../assets/vendor/libs/@algolia/autocomplete-js.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/@algolia/autocomplete-js.js"></script>
 
-    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
 
-    <script src="../assets/vendor/libs/hammer/hammer.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/hammer/hammer.js"></script>
 
-    <script src="../assets/vendor/libs/i18n/i18n.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/i18n/i18n.js"></script>
 
-    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/js/menu.js"></script>
 
     <!-- endbuild -->
 
     <!-- Vendors JS -->
-    <script src="../assets/vendor/libs/@form-validation/popular.js"></script>
-    <script src="../assets/vendor/libs/@form-validation/bootstrap5.js"></script>
-    <script src="../assets/vendor/libs/@form-validation/auto-focus.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/@form-validation/popular.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/@form-validation/bootstrap5.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/@form-validation/auto-focus.js"></script>
 
     <!-- Main JS -->
 
-    <script src="../assets/js/main.js"></script>
-
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/main.js"></script>
+    
+    
     <!-- Page JS -->
-    <!--<script src="../assets/js/pages-auth.js"></script>-->
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/settings.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>alertmessage/js/sandsalert.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/sands_auth.js"></script>
+    <!--<script src="<?= $_ENV['BASE_URL'] ?>assets/js/pages-auth.js"></script>-->
      <!--<script src="../httpdocs/user_js/login.js"></script>-->
 	
 	<script>
@@ -201,11 +223,11 @@
 
 			setTimeout(() => {
 				const logoPath = (this.value === "2")
-					? "../assets/img/logo/logo_classic.png"
-					: "../assets/img/logo/logo.png";
+					? "<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo_classic.png"
+					: "<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo.png";
 				const logoPathSmall = (this.value === "2")
-					? "../assets/img/logo/logo_classic_small.png"
-					: "../assets/img/logo/logo_small.png";
+					? "<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo_classic_small.png"
+					: "<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo_small.png";
 			
 				logo.src = logoPath;
 				logo.style.opacity = 1;
@@ -215,6 +237,56 @@
 
 			}, 200);
 		});
+		
+		$('#btn_login').click(function(e){
+		    e.preventDefault();
+		       $.ajax({
+                url: "/LoginController",
+                type: "POST",
+                data: { companyId: $('#selectCompanyDropDown').val(),userName : $('#userName').val(),passWord : $('#current-password').val() ,action : 'Authenticate' },
+                success: function(response) {
+    
+                    let res = JSON.parse(response);
+    
+                    if (res.status === true) {
+                        localStorage.setItem('aacar_jwt_token', res.data);
+                        if (typeof setupDropdown === 'function') {
+                            setupDropdown('dropdownContent','success','(v) Login Successful','click');
+                        }
+                        
+                        setTimeout(function() {
+                            window.location.href = "/Home?val=" + encodeURIComponent("<?php echo $this->encryption->encrypt('1,1-1');?>");
+                        }, 1000);
+                    } else {
+                        if (typeof setupDropdown === 'function') {
+                            setupDropdown('dropdownContent','error', res.message,'click');
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                }
+            });
+		})
+		
+		$('#btn_CheckLogin').click(function(e){
+		    e.preventDefault();
+		    let formData = Object.fromEntries(
+                new FormData(document.getElementById("formAuthentication")).entries()
+            );
+            
+            //formData.userName = "Ajit Kumar";
+		    validateJWT(function(status){
+                if(!status){
+                    //window.location.href="/Login";
+                    console.log(status);
+                }
+            }, "Validate", "aacar_jwt_token", "LoginController",formData);
+            // Action , Token Name in LocalStorage , Which Controller you send
+		})
+		
+		
+		
+		
 	</script>
 
   </body>

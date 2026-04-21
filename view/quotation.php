@@ -218,6 +218,26 @@ div.dt-container div.dt-search input {
     font-size: 13px;               /* smaller text */
     vertical-align: middle;
 }
+#introTable th,
+#introTable td {
+    padding: 4px 8px !important;   /* reduce padding */
+    font-size: 13px;               /* smaller text */
+    vertical-align: middle;
+}
+#introTable td.description,
+#termsTable td.description {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;         /* show only 3 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+    max-width: 400px;              /* optional: adjust column width */
+}
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding-top: 25px;
+}
 .vehicle_category {
     font-family: "Arial", sans-serif;
     font-size: 14px;
@@ -285,33 +305,13 @@ div.dt-container div.dt-search input {
  <?php include('templates/quotation/quotation_help_modal.php'); ?>
 
  <!--Off Canvas for Diplsy The Quotation List -->
-<div class="offcanvas offcanvas-end offcanvas-half" tabindex="-1" id="quotationCanvas">
-    <div class="offcanvas-header pb-0">
-        <h5 id="canvasTitle">Quotations</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-    </div>
-
-    <div class="offcanvas-body pt-0">
-        <table class="table table-bordered" id="quotationList">
-            <thead>
-                <tr class="bg-primary">
-                    <th>No</th>
-                    <th>Date</th>
-                    <th>Customer</th>
-                    <th>Subtotal</th>
-                    <th>VAT</th>
-                    <th>Total</th>
-                    <th>Action</th>
-                    <th>Print</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-</div>
+  <?php include('templates/quotation/quotation_list_modal.php'); ?>
 
 <!--// Modal For Alart -->
 <!-- Modal -->
+
+<?php include('templates/quotation/quotation_introduction_modal.php'); ?>
+<?php include('templates/quotation/add_new_customer_modal.php'); ?>
  <?php include('templates/quotation/quotation_save_choice_modal.php'); ?>
 
 
@@ -353,7 +353,9 @@ div.dt-container div.dt-search input {
     <!--<script src="../assets/js/forms-editors.js"></script>-->
 <script>
      $(document).ready(function() {
-         
+          $('#quotation_id').val('');
+          $('#original_draft').val('');
+          $('#quotation_number').val('');
         
             let today = new Date().toISOString().split('T')[0];
             $('#quotation_date').val(today);    
@@ -382,9 +384,8 @@ div.dt-container div.dt-search input {
 
             row.find('.vehicle_category').val(ui.item.value);
             row.find('.vehicle_category_id').val(ui.item.id);
-            row.find('.vehicle_category_cost').val(ui.item.cost);
-            row.find('.vehicle_category_max_dis_cost').val(ui.item.max_dis_cost);
-            row.find('.price').val(ui.item.cost);
+            row.find('.vehicle_modal_pic').val(ui.item.vehicle_modal_pic);
+            
 
             return false;
         }
@@ -392,7 +393,7 @@ div.dt-container div.dt-search input {
 
 }
 
-function initserviceload(element) {
+function initserviceload(element,selectedId = null) {
     $.ajax({
         url: "/getRentalOptions",
         method: "GET",
@@ -410,6 +411,11 @@ function initserviceload(element) {
                                     ${item.value}
                                 </option>`);
             });
+            
+            if (selectedId) {
+                element.val(String(selectedId)).trigger('change');
+            }
+           
         },
         error: function(xhr, status, error) {
             console.error("Failed to load services:", error);
@@ -503,7 +509,7 @@ $(document).on('blur','.to_datetime',function(){
               ];
               const fullEditor = new Quill('#full-editor', {
                 bounds: '#full-editor',
-                placeholder: 'Type Something...',
+                placeholder: 'Terms & Condition',
                 modules: {
                   syntax: true,
                   toolbar: fullToolbar
@@ -512,13 +518,22 @@ $(document).on('blur','.to_datetime',function(){
               });
               const fullEditorOnBody = new Quill('#full-editor-onbody', {
                 bounds: '#full-editor-onbody',
-                placeholder: 'Type Something...',
+                placeholder: 'Terms & Condition',
                 modules: {
                   syntax: true,
                   toolbar: fullToolbar
                 },
                 theme: 'snow'
-              });      
+              });
+              const fullEditorIndroduction = new Quill('#full-editor-introduction', {
+                bounds: '#full-editor-introduction',
+                placeholder: 'Introduction',
+                modules: {
+                  syntax: true,
+                  toolbar: fullToolbar
+                },
+                theme: 'snow'
+              });
       
       let qPressed = false;
         function addRow() {
@@ -527,25 +542,27 @@ $(document).on('blur','.to_datetime',function(){
             <tr>
                 <td class="slno"></td>
                 <td>
-                    <input type="text" class="vehicle_category form-control form-control-sm" style="text-align: left;">
+                    <input type="text" class="vehicle_category form-control form-control-sm watch-field" style="text-align: left;">
                     <input type="hidden" class="vehicle_category_id">
-                    <input type="hidden" class="vehicle_category_cost">
-                    <input type="hidden" class="vehicle_category_max_dis_cost">
+                    <input type="hidden" class="vehicle_modal_pic">
+                     <input type="hidden" class="minprice">
+              
                 </td>
                 <td>
-                    <select class="service form-control form-control-sm ">
+                    <select class="service form-control form-control-sm watch-field">
                     </select>
                 </td>
                  <td>
-                    <select class="rate_type form-control form-control-sm">
+                    <select class="rate_type form-control form-control-sm watch-field">
                         <option value="0">Select</option>
-                        <option value="hour">Per Hour</option>
-                        <option value="day">Per Day</option>
-                        <option value="month">Per Month</option>
+                        <option value="hour">Hourly</option>
+                         <option value="week">Weekly</option>
+                        <option value="day">Daily</option>
+                        <option value="month">Monthly</option>
                     </select>
                 </td>
                 <td>
-                    <input type="datetime-local" class="from_datetime form-control form-control-sm datetime_col" >
+                    <input type="datetime-local" class="from_datetime form-control form-control-sm datetime_col " >
                 </td>
         
                 <td>
@@ -553,7 +570,23 @@ $(document).on('blur','.to_datetime',function(){
                 </td>
                 <td><input type="number" class="duration nav form-control form-control-sm" step="any" value="0"></td>
                 <td><input type="number" class="qty nav form-control form-control-sm" step="any" value="1"></td>
-                <td><input type="number" class="price nav form-control form-control-sm" step="any" value="0"></td>
+                <td>
+                    <div style="position:relative; display:inline-block; width:100%;">
+                        
+                        <!-- ✅ Badge TOP-LEFT -->
+                        <span class="min-price-text badge bg-danger"
+                              style="position:absolute; top:-8px; left:6px; font-size:10px; z-index:2; padding:2px 6px;">
+                            0.000
+                        </span>
+                
+                        <!-- Input -->
+                        <input type="number"
+                               class="price nav form-control form-control-sm mb-0"
+                               step="any"
+                               value="0"
+                               style="padding-top:12px;">
+                    </div>
+                </td>
                 <td><input type="number" class="vat nav form-control form-control-sm" step="0.1" value="<?echo $_ENV['TAX_PERCENTAGE']?>"></td>
                 <td class="line_total">0.00</td>
                 <td>
@@ -574,9 +607,122 @@ $(document).on('blur','.to_datetime',function(){
 
 $(document).on('blur','.from_datetime, .to_datetime, .rate_type, .price, .vat .qty', line_item_calculation);
 $(document).on('keyup change', '.rate_type, .price, .vat .qty', line_item_calculation);
+$(document).on('input change', '.watch-field', function () {
+  recalculate($(this));
+     
+});
+
+
+function getPriceList(response) {
+    try {
+        // Step 1: Check if data exists
+        if (!response?.data || !response.data[0]?.price_json) {
+            return [];
+        }
+
+        // Step 2: Parse JSON string
+        let priceArray = JSON.parse(response.data[0].price_json);
+
+        // Step 3: Normalize values
+        return priceArray.map(item => ({
+            id: item.ids || '',
+            item: item.item || '',
+            amount: item.amount && item.amount !== '' 
+                ? parseFloat(item.amount).toFixed(3) 
+                : '0.000'
+        }));
+
+    } catch (error) {
+        console.error("Error parsing price_json:", error);
+        return [];
+    }
+}
+function getAmount(data, keyword) {
+
+    let list = getPriceList(data);
+
+    let found = list.find(x =>
+        x.item.toLowerCase().includes(keyword.toLowerCase())
+    );
+
+    return found ? parseFloat(found.amount) : 0;
+}
+function recalculate($el)
+{
+    let row = $el.closest('tr');
+    let service = row.find('.service').val();
+    let service_text = $.trim(row.find('.service option:selected').text());
+    let rateType = row.find('.rate_type').val();
+    let modelId = row.find('.vehicle_category_id').val();
+    if( modelId && modelId !== 'All' && service && service!='0' && rateType && rateType!='0')
+    {
+         $.ajax({
+        url: '/VehicleStatusController',
+        type: 'POST',
+        data: {
+            modelId: modelId,
+            action: 'get_model_price_details'
+        },
+        success: function (response) {
+            let search_keyword=rateType+" " +service_text;
+          console.log(search_keyword);
+            let unit_amt = getAmount(response, search_keyword);
+           row.find('.min-price-text').text(unit_amt.toFixed(3));
+
+                // ✅ store hidden
+                row.find('.minprice').val(unit_amt);
+                // ✅ optional: store in price input for validation
+                row.find('.price').data('min', unit_amt);
+                let price_min = parseFloat(row.find('.price').data('min')) || 0;
+                let price = parseFloat(row.find('.price').val()) || 0;
+                if(price!=0 && price<price_min)
+                {
+                    row.find('.price').val(0);
+                    setupDropdown(
+                            'dropdownContent',
+                            'warning',
+                            svgSuccess + ' Price is below minimum. Please increase the unit price.',
+                            'click'
+                        );
+                        return;
+                }
+        },
+        error: function () {
+            alert('Server error occurred');
+        }
+    });
+        
+    }
+   
+    
+}
+
+function validatePrice($el)
+{
+  let row = $el.closest('tr');
+  
+     let price_min = parseFloat(row.find('.price').data('min')) || 0;
+     let price = parseFloat(row.find('.price').val()) || 0;
+        if(price!=0 && price<price_min)
+        {
+            row.find('.price').val(0);
+            setupDropdown(
+                    'dropdownContent',
+                    'warning',
+                    svgSuccess + ' Price is below minimum. Please increase the unit price.',
+                    'click'
+                );
+                return;
+        }
+}
+
+$(document).on('blur', '.price', function () {
+    validatePrice($(this));
+});
+
 function line_item_calculation()
 {
-    
+   
     let row = $(this).closest('tr');
     let from = new Date(row.find('.from_datetime').val());
     let to = new Date(row.find('.to_datetime').val());
@@ -589,9 +735,14 @@ function line_item_calculation()
 
         if(rateType == 'hour'){
             duration_count = Math.ceil(diffMs / (1000*60*60)); // hours
-        } else if(rateType == 'day'){
+        }
+        else if(rateType == 'day'){
             duration_count = Math.ceil(diffMs / (1000*60*60*24)); // days
-        } else if(rateType == 'month'){
+        }
+        else if (rateType == 'week') {
+        duration_count = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 7)); // weeks
+        }
+        else if(rateType == 'month'){
             duration_count = Math.ceil(diffMs / (1000*60*60*24*30)); // months
         }
 
@@ -599,14 +750,526 @@ function line_item_calculation()
 
         
         let price = parseFloat(row.find('.price').val()) || 0;
+          
+       
         let qty = parseFloat(row.find('.qty').val()) || 0;
         let vat = parseFloat(row.find('.vat').val()) || 0;
 
         let total = (price * qty * duration_count) * (1 + vat/100);
-        row.find('.line_total').text(total.toFixed(2));
+        row.find('.line_total').text(total.toFixed(DecimalPositions));
+        calculateTotals();
 
+    }
 }
+function renumberRows() {
+    $('#itemTable tbody tr').each(function(index) {
+        $(this).find('.slno').text(index + 1);
+    });
 }
+
+$(document).on('wheel', 'input[type=number]', function(e) {
+    $(this).blur();
+});
+
+
+function calculateTotals() {
+    let subtotal = 0;
+    let vat_total = 0;
+
+ $('#itemTable tbody tr').each(function() {
+        let qty = parseFloat($(this).find('.qty').val()) || 0;
+        let price = parseFloat($(this).find('.price').val()) || 0;
+        let vat = parseFloat($(this).find('.vat').val()) || 0;
+        let duration = parseFloat($(this).find('.duration').val()) || 0;
+     
+        let line = qty * price * duration;
+        let vat_amt = line * vat / 100;
+        let total = line + vat_amt;
+
+        subtotal += line;
+        vat_total += vat_amt;
+
+        //$(this).find('.line_total').text(total.toFixed(DecimalPositions));
+    });
+    
+    // let total_discount = (subtotal*$('#total_discount').val()/100);
+    // $('#total_discount_amount').text(total_discount.toFixed(DecimalPositions));
+    // let after_discount = subtotal - (subtotal*$('#total_discount').val()/100);
+    // $('#after_discount_amount').text(after_discount.toFixed(DecimalPositions));
+    // let vatAmount = after_discount * 10/100;
+    let grand = subtotal + vat_total;
+    //let grand = after_discount + vatAmount;
+    
+    
+    let subtotals = parseFloat(subtotal);
+    let vat_totals = parseFloat(vat_total);
+    
+    let allItemSubTotal = (subtotals + vat_totals).toFixed(DecimalPositions);
+    
+    $('#allItemSubtotal').text(allItemSubTotal);
+    $('#subtotal').text(subtotal.toFixed(DecimalPositions));
+    $('#vat_total').text(vat_total.toFixed(DecimalPositions));
+    // $('#vat_total').text(vatAmount.toFixed(DecimalPositions));
+    $('#grand_total').text(grand.toFixed(DecimalPositions));
+}
+
+  $('#addCustomerBtn').click(function () {
+       
+        $('#QtnAddNewCustomerModal').modal('show');
+  });
+ function saveCustomer(action)
+{
+    let customerData = {
+        action: action,
+        customer_type: $("#customer_type_onmodal").val(),
+        customer_name: $("#bookingCustomerName_onmodal").val(),
+        telephone: $("#customerMobile_onmodal").val(),
+        email: $("#customerEmail_onmodal").val(),
+        attention: $("#bookingCustomerAttn_onmodal").val(),
+        cprcr: $("#customerCprCr_onmodal").val(),
+        address: $("#bookingCustomerAddress_onmodal").val(),
+        clientsDoc: [] 
+    };
+
+    $.ajax({
+        url: "/SaveCustomerDetails",
+        type: "POST",
+       data: JSON.stringify(customerData), 
+        contentType: "application/json",   
+        success: function(res) {
+    
+            //let res = JSON.parse(response); 
+    
+            if (res.status) {
+                setupDropdown(
+                    'dropdownContent',
+                    'success',
+                    svgSuccess + ' Customer saved successfully',
+                    'click'
+                );
+    
+                $("#QtnAddNewCustomerModal").modal("hide");
+    
+    
+            } else {
+                setupDropdown(
+                    'dropdownContent',
+                    'danger',
+                    svgDanger + res.message,
+                    'click'
+                );
+            }
+    
+        },
+        error: function() {
+            setupDropdown(
+                'dropdownContent',
+                'danger',
+                svgDanger + ' Error saving customer',
+                'click'
+            );
+        }
+    });
+    }
+  $(document).on("click", "#btn_add_new_customer", function () {
+
+    saveCustomer('AddNewCustomer');
+
+});
+
+ $('#saveintroduction').click(function () {
+    var laddaBtn = Ladda.create(document.querySelector('#saveintroduction'));
+    laddaBtn.start();
+    let htmlContentIndroduction = fullEditorIndroduction.root.innerHTML;
+
+    $.ajax({
+        url: "/QuotationController",
+        type: "POST",
+        data: { action: 'SaveIntroduction',intrn_content: htmlContentIndroduction, intrn_title: $('#int_name').val() },
+        success: function (response) { 
+            setupDropdown('dropdownContent','success',svgSuccess+ ' Introduction Saved Successfully','click');
+            laddaBtn.stop();
+            $('#introTable').DataTable().ajax.reload(null, false);
+           
+        },
+        error: function () {
+            setupDropdown('dropdownContent','danger',svgSuccess+ ' Error saving data','click');
+            laddaBtn.stop();
+        }
+    });
+
+});                   
+
+$('#btn_open_intn_modal').click(function(){
+    $('#introTable').DataTable().ajax.reload(null, false);
+  
+    fullEditorIndroduction.root.innerHTML ='';
+     $('#int_name').val('');
+    $('#QtnIntroductionModal').modal('show');
+})
+
+    $('#introTable').DataTable({
+        "ajax": {
+            "url": "/QuotationController",
+            "type": "POST",
+            "data": {
+                "action": "LoadIntroduction"
+            }
+        },  
+        "processing": true,
+        "serverSide": false,
+        "columns": [
+            { 
+                "data": null, 
+                "render": function (data, type, row, meta) {
+                    return meta.row + 1; 
+                },
+                "orderable": false
+            },
+            { "data": "intrn_title" },
+            { 
+                "data": "intrn_content",
+                "className": "description", // add the class for CSS
+            },
+           // { "data": "intrn_content" },
+            { 
+                "data": null,
+                "render": function(data, type, row){
+                    return `<i class="ri ri-delete-bin-line text-danger deleteRowIntroduction" 
+                             style="cursor:pointer; font-size: 1.5rem;" 
+                             data-id="${row.ids}" 
+                             title="Delete this entry"></i>`;
+                },
+                "orderable": false
+            },
+            {
+                "data": null,
+                "render": function(data, type, row){
+                    return `<i class="ri ri-eye-line text-primary showRowIntroduction" 
+                             style="cursor:pointer; font-size: 1.5rem;" 
+                             data-id="${row.ids}" 
+                             title="View this entry"></i>`;
+                },
+                "orderable": false
+            }
+        ]
+    }); 
+
+                     
+let varDeleteInt;
+$(document).on("click", ".deleteRowIntroduction", function() {
+
+    varDeleteInt = $(this).data("id");
+    SaNDSAlert('Are you sure you want to delete this entry?','DeleteIntroduction','danger','#C70039','Yes, I am sure');
+    
+});
+
+function deleteIntroduction()
+{
+    $.ajax({
+        url: "/QuotationController",
+        type: "POST",
+        data: { id: varDeleteInt,action:"deleteIntroduction" },
+        success: function(res) {
+
+            if (res.status === true) {
+                setupDropdown('dropdownContent','success',svgSuccess+'Deleted successfully','click');
+                $('#introTable').DataTable().ajax.reload(null, false);
+               
+            } else {
+                setupDropdown('dropdownContent','error',svgError+res.message,'click');
+            }
+        }
+    });
+}
+
+$(document).on("click", ".showRowIntroduction", function() {
+
+    var showIntrnId = $(this).data("id");
+
+    var laddaBtn = Ladda.create(this);
+    laddaBtn.start();
+
+    $.ajax({
+        url: "/QuotationController",   
+        type: "POST",
+        data: { id: showIntrnId,action:"LoadIntroductionToEditor" }, 
+        success: function (response) {
+
+            fullEditorIndroduction.root.innerHTML = response.html;
+
+            setupDropdown(
+                'dropdownContent',
+                'success',
+                svgSuccess + ' Loaded Successfully',
+                'click'
+            );
+
+            laddaBtn.stop();
+        },
+        error: function () {
+
+            setupDropdown(
+                'dropdownContent',
+                'danger',
+                svgSuccess + ' Error loading data',
+                'click'
+            );
+
+            laddaBtn.stop();
+        }
+    });
+
+});
+
+$('#intcopyContentBtn').click(function () {
+                
+    var content = fullEditorIndroduction.root.innerHTML;
+    
+    $('#quoation_introduction').val(content);
+    $('#QtnIntroductionModal').modal('hide');
+
+});
+
+$('#selectCustomerFromSelect2').select2({
+    placeholder: 'Search customer by name or mobile',
+    allowClear: true,
+    minimumInputLength: 2,
+    tags: true, 
+    createTag: function (params) {
+        let term = $.trim(params.term);
+
+        if (term === '') {
+            return null;
+        }
+
+    },
+
+    ajax: {
+        url: '/SearchCustomerDetails',
+        dataType: 'json',
+        delay: 300,
+
+        data: function (params) {
+            return {
+                q: params.term,
+                action: 'SearchCustomer'
+            };
+        },
+
+        processResults: function (data) {
+            return {
+                results: data.map(item => ({
+                    id: item.id,
+                    text: item.customer_name,
+                    customer_name: item.customer_name,
+                    customer_mobile: item.customer_mobile,
+                    customer_id: item.customer_name,
+                    customer_address: item.customer_addr,
+                    customer_email: item.customer_email,
+                    customer_code: item.customer_code,
+                    customer_attn: item.customer_attn
+                }))
+            };
+        }
+    },
+
+    templateResult: formatCustomer,
+    templateSelection: formatCustomerSelection
+});
+
+function formatCustomer(customer) {
+    if (!customer.id) return customer.text;
+
+    return $(`
+        <div>
+            <strong>${customer.customer_name} | ${customer.customer_mobile}</strong>
+        </div>
+    `);
+}
+
+function formatCustomerSelection(customer) {
+    return customer.customer_name
+        ? `${customer.customer_name}`
+        : customer.text;
+}
+
+
+$('#selectCustomerFromSelect2').on('select2:select', function (e) {
+    let data = e.params.data;
+    $('#customer_code').val(data.customer_code);
+    $('#customer_name').val(data.customer_name);
+    $('#customer_phone').val(data.customer_mobile);
+    $('#customer_email').val(data.customer_email);
+    $('#customer_address').val(data.customer_address);
+    $('#quotation_attention').val(data.customer_attn);
+    
+});
+
+
+$('#selectCustomerFromSelect2').on('select2:clear', function () {
+    $('#customer_name').val('');
+    $('#customer_code').val('');
+    $('#customer_phone').val('');
+    $('#customer_email').val('');
+    $('#customer_address').val('');
+    $('#quotation_attention').val('');
+}); 
+
+
+ $('#termsTable').DataTable({
+        "ajax": {
+            "url": "/QuotationController",
+            "type": "POST",
+            "data": {
+                "action": "LoadTermsCondition"
+            }
+        },  
+        "processing": true,
+        "serverSide": false,
+        "columns": [
+            { 
+                "data": null, 
+                "render": function (data, type, row, meta) {
+                    return meta.row + 1; 
+                },
+                "orderable": false
+            },
+            { "data": "t_c_name" },
+            { "data": "terms_condition",
+            "className": "description"},
+            { 
+                "data": null,
+                "render": function(data, type, row){
+                    return `<i class="ri ri-delete-bin-line text-danger deleteRowTermsCondition" 
+                             style="cursor:pointer; font-size: 1.5rem;" 
+                             data-id="${row.ids}" 
+                             title="Delete this entry"></i>`;
+                },
+                "orderable": false
+            },
+            {
+                "data": null,
+                "render": function(data, type, row){
+                    return `<i class="ri ri-eye-line text-primary showRowTermsCondition" 
+                             style="cursor:pointer; font-size: 1.5rem;" 
+                             data-id="${row.ids}" 
+                             title="View this entry"></i>`;
+                },
+                "orderable": false
+            }
+        ]
+    }); 
+$('#saveTermsAndConditions').click(function () {
+    var laddaBtn = Ladda.create(document.querySelector('#saveintroduction'));
+    laddaBtn.start();
+    let htmlContentTC = fullEditor.root.innerHTML;
+
+    $.ajax({
+        url: "/QuotationController",
+        type: "POST",
+        data: { action: 'SaveTermsCondition',terms_condition: htmlContentTC, t_c_name: $('#t_c_name').val() },
+        success: function (response) { 
+            setupDropdown('dropdownContent','success',svgSuccess+ ' Terms & Condition Saved Successfully','click');
+            laddaBtn.stop();
+            $('#termsTable').DataTable().ajax.reload(null, false);
+           
+        },
+        error: function () {
+            setupDropdown('dropdownContent','danger',svgSuccess+ ' Error saving data','click');
+            laddaBtn.stop();
+        }
+    });
+
+});                   
+
+
+
+$('#btn_terms_condition').click(function(){
+    $('#termsTable').DataTable().ajax.reload(null, false);
+  
+    fullEditor.root.innerHTML ='';
+    $('#t_c_name').val('');
+    $('#termsAndConditionModal').modal('show');
+})
+
+                     
+let varDeleteTC;
+$(document).on("click", ".deleteRowTermsCondition", function() {
+
+    varDeleteTC = $(this).data("id");
+    SaNDSAlert('Are you sure you want to delete this entry?','DeleteTerms','danger','#C70039','Yes, I am sure');
+    
+});
+
+function deleteTermsAndCondition()
+{
+    $.ajax({
+        url: "/QuotationController",
+        type: "POST",
+        data: { id: varDeleteTC,action:"deleteTermsCondition" },
+        success: function(res) {
+
+            if (res.status === true) {
+                setupDropdown('dropdownContent','success',svgSuccess+'Deleted successfully','click');
+                $('#termsTable').DataTable().ajax.reload(null, false);
+               
+            } else {
+                setupDropdown('dropdownContent','error',svgError+res.message,'click');
+            }
+        }
+    });
+}
+
+$(document).on("click", ".showRowTermsCondition", function() {
+
+    var showTCId = $(this).data("id");
+
+    var laddaBtn = Ladda.create(this);
+    laddaBtn.start();
+
+    $.ajax({
+        url: "/QuotationController",   
+        type: "POST",
+        data: { id: showTCId,action:"LoadTermsConditionToEditor" }, 
+        success: function (response) {
+
+            fullEditor.root.innerHTML = response.html;
+
+            setupDropdown(
+                'dropdownContent',
+                'success',
+                svgSuccess + ' Loaded Successfully',
+                'click'
+            );
+
+            laddaBtn.stop();
+        },
+        error: function () {
+
+            setupDropdown(
+                'dropdownContent',
+                'danger',
+                svgSuccess + ' Error loading data',
+                'click'
+            );
+
+            laddaBtn.stop();
+        }
+    });
+
+});
+
+$('#copyTCBtn').click(function () {
+                
+    var content = fullEditor.root.innerHTML;
+    fullEditorOnBody.root.innerHTML = content;
+    $('#termsAndConditionModal').modal('hide');
+
+});
+
+
+
 $(document).on('keydown', '.nav', function(e) {
     let inputs = $('.nav');
     let index = inputs.index(this);
@@ -694,23 +1357,23 @@ $(document).keydown(function(e) {
      // ALT + Q → Quotation List
     if (e.altKey && e.key.toLowerCase() === 'q') {
         e.preventDefault();
-        loadQuotationList('No');
+        $('#from_date_filter').val('');
+        $('#to_date_filter').val('');
+        openQuotationCanvas('No');
         qPressed = false;
         return;
     }
      // ALT + l → Draft List
     if (e.altKey && e.key.toLowerCase() === 'l') {
         e.preventDefault();
-        loadQuotationList('Yes');
+        $('#from_date_filter').val('');
+        $('#to_date_filter').val('');
+        openQuotationCanvas('Yes');
         qPressed = false;
         return;
     }
     // ALT + i → Draft List
-    if (e.altKey && e.key.toLowerCase() === 'i') {
-        e.preventDefault();
-        $('#termsAndConditionModal').modal('show');
-        return;
-    }
+   
 
 
     // Delete → remove current row
@@ -750,7 +1413,9 @@ $(document).keydown(function(e) {
     // Q + 1 → Final quotations
     if (qPressed && e.key === '1') {
         e.preventDefault();
-        loadQuotationList('No');
+         $('#from_date_filter').val('');
+         $('#to_date_filter').val('');
+        openQuotationCanvas('No');
         qPressed = false;
         return;
     }
@@ -758,156 +1423,156 @@ $(document).keydown(function(e) {
     // Q + 2 → Draft quotations
     if (qPressed && e.key === '2') {
         e.preventDefault();
-        loadQuotationList('Yes');
+        $('#from_date_filter').val('');
+        $('#to_date_filter').val('');
+        openQuotationCanvas('Yes');
         qPressed = false;
         return;
     }
-
+ if (e.altKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+        $('#termsTable').DataTable().ajax.reload(null, false);
+        fullEditor.root.innerHTML ='';
+        $('#t_c_name').val('');
+        $('#termsAndConditionModal').modal('show');
+        return;
+    }
     // Reset Q state if other key pressed
     qPressed = false;
 });
 
+$('#btn_filter').click(function () {
+                
+   var draft= $('#txt_qtn_draft').val();
+   var startDate= $('#from_date_filter').val();
+   var endDate= $('#to_date_filter').val();
+   
+    loadQuotationList(draft,startDate,endDate);
 
-function loadQuotationList(draft) {
+});
 
-    let title = (draft === "Yes") ? "Draft Quotations" : "Final Quotations";
+
+function openQuotationCanvas(draft, startDate = '', endDate = '') {
+    let title = (draft === "Yes") ? "Draft Quotations" : "Quotations";
     $('#canvasTitle').text(title);
-    $.get('/GetQuotations', { draft: draft }, function(data) {
-        
-         // Destroy old DataTable if exists
-        if ($.fn.DataTable.isDataTable('#quotationList')) {
-            $('#quotationList').DataTable().destroy();
-        }
-        
-         // Fill table body first
-        $('#quotationList tbody').html(data);
-        
-        // Reinitialize DataTable AFTER data load
+    $('#txt_qtn_draft').val(draft);
+
+    // Initialize DataTable if not already
+    if (!$.fn.DataTable.isDataTable('#quotationList')) {
         quotationTable = $('#quotationList').DataTable({
-            pageLength: 10,
+            data: [],
+            pageLength: 50,
             lengthChange: false,
             searching: true,
             ordering: false,
-            info: false,
+            info: true,
             autoWidth: false
         });
-      
-        // Now show offcanvas
-        let canvas = new bootstrap.Offcanvas('#quotationCanvas');
-        canvas.show();
-    });
+    }
+
+    // Show offcanvas
+    let canvas = new bootstrap.Offcanvas('#quotationCanvas');
+    canvas.show();
+
+    // Load initial data
+    loadQuotationList(draft,startDate,endDate);
 }
 
+function loadQuotationList(draft, startDate = '', endDate = '') {
+    $.post('/QuotationController', 
+    { 
+        draft: draft,
+        startDate: startDate,
+        endDate: endDate,
+        action: 'GetQuotations'
+    }, 
+    function(response) {
 
+        let res = typeof response === "string" ? JSON.parse(response) : response;
+
+        // Clear old data and add new rows
+        quotationTable.clear();
+        quotationTable.rows.add(res.data);
+        quotationTable.draw();
+    });
+}
 
 
 $(document).on('click', '.viewQuotation', function() {
     let id = $(this).data('id');
+ $.post('/QuotationController', 
+{ 
+    action: 'GetQuotationsDetails',
+    quotation_id: id
+}, 
+function(response) {
 
-    $.get('/GetQuotationDetails', { id: id }, function(data) {
-        let q = JSON.parse(data);
+    let res = typeof response === "string" ? JSON.parse(response) : response;
 
-        // store quotation id
-        $('#quotation_id').val(q.id);
+    if (!res.data || res.data.length === 0) {
+        alert("No data found");
+        return;
+    }
 
-        $('#quotationNumber').text(q.quotation_no);
-        $('#quotation_date').val(q.quotation_date);
-        
-        let option = new Option(q.customer_name, q.customer_name, true, true);
-        $('#selectCustomerFromSelect2').append(option).trigger('change');
-        // $('input[name=customer_name]').val(q.customer_name);
-        $('input[name=customer_phone]').val(q.customer_phone);
-        $('input[name=customer_email]').val(q.customer_email);
-        $('textarea[name=customer_address]').val(q.customer_address);
-        $('input[name=total_discount]').val(q.total_discount);
-        $('input[name=reference_number]').val(q.reference_number);
-        $('input[name=quotationAttention]').val(q.attention);
-        
-        
-        fullEditorOnBody.clipboard.dangerouslyPasteHTML(q.terms || 'Sample');
+    let q = res.data[0]; // ✅ FIX: get first record
 
-        $('#itemTable tbody').empty();
+    // store quotation id
+    $('#quotation_id').val(q.id);
+    $('#original_draft').val(q.draft);
+    $('#quotation_number').val(q.quotation_no);
 
-        q.items.forEach(function(item) {
-            addRow();
-            let row = $('#itemTable tbody tr:last');
-            row.find('.item_name').val(item.item_name);
-            row.find('.qty').val(item.qty);
-            row.find('.price').val(item.price);
-            row.find('.discount').val(item.discount);
-            row.find('.vat').val(item.vat);
-            row.find('.line_total').text(item.total);
-        });
+    $('#quotationNumber').text(q.quotation_no);
+    $('#quotation_date').val(q.quotation_date);
+    
+    let option = new Option(q.customer_name, q.customer_name, true, true);
+    $('#selectCustomerFromSelect2').append(option).trigger('change');
 
-        renumberRows();
-        calculateTotals();
-         // close offcanvas
-        let canvas = bootstrap.Offcanvas.getInstance(
-            document.getElementById('quotationCanvas')
-        );
-        canvas.hide();
+    $('input[name=customer_code]').val(q.customer_code);
+    $('input[name=customer_phone]').val(q.customer_phone);
+    $('input[name=customer_email]').val(q.customer_email);
+    $('textarea[name=customer_address]').val(q.customer_address);
+    $('input[name=total_discount]').val(q.total_discount);
+    $('input[name=quotation_prefix]').val(q.user_prefix);
+    $('input[name=quotation_attention]').val(q.attention);
+    $('textarea[name=quoation_introduction]').val(q.introduction);
+    fullEditorOnBody.clipboard.dangerouslyPasteHTML(q.terms || '');
+    $('#itemTable tbody').empty();
+
+  
+    let items = typeof q.items === "string" ? JSON.parse(q.items) : q.items;
+  
+    items.forEach(function(item) {
+        addRow();
+        let row = $('#itemTable tbody tr:last');
+        row.find('.vehicle_category').val(item.item_name);
+        row.find('.vehicle_category_id').val(item.item_model_id);
+        row.find('.vehicle_modal_pic').val(item.item_model_pic);
+        initserviceload(row.find('.service'), item.service_id);
+        row.find('.service').val(item.service_id).trigger('change');
+        row.find('.rate_type').val(item.rate_type_id).trigger('change');
+        row.find('.from_datetime').val(item.period_from).trigger('change');
+        row.find('.to_datetime').val(item.period_to).trigger('change');
+        row.find('.qty').val(item.qty);
+        row.find('.price').val(item.price);
+        row.find('.duration').val(item.duration);
+        row.find('.vat').val(item.vat);
+        row.find('.line_total').text(item.total);
     });
+
+    renumberRows();
+    calculateTotals();
+
+    // close offcanvas
+       
+    let canvas = bootstrap.Offcanvas.getInstance(
+        document.getElementById('quotationCanvas')
+    );
+    if (canvas) canvas.hide();
+});
+   
 });
 
 
-function renumberRows() {
-    $('#itemTable tbody tr').each(function(index) {
-        $(this).find('.slno').text(index + 1);
-    });
-}
-
-$(document).on('wheel', 'input[type=number]', function(e) {
-    $(this).blur();
-});
-
-
-function calculateTotals() {
-    let subtotal = 0;
-    let vat_total = 0;
-
-    $('#itemTable tbody tr').each(function() {
-        let qty = parseFloat($(this).find('.qty').val()) || 0;
-        let price = parseFloat($(this).find('.price').val()) || 0;
-        let vat = parseFloat($(this).find('.vat').val()) || 0;
-        let discount = parseFloat($(this).find('.discount').val()) || 0;
-        price = price - (price * discount /100);
-        let line = qty * price;
-        let vat_amt = line * vat / 100;
-        let total = line + vat_amt;
-
-        subtotal += line;
-        vat_total += vat_amt;
-
-        $(this).find('.line_total').text(total.toFixed(DecimalPositions));
-    });
-    
-    let total_discount = (subtotal*$('#total_discount').val()/100);
-    $('#total_discount_amount').text(total_discount.toFixed(DecimalPositions));
-    let after_discount = subtotal - (subtotal*$('#total_discount').val()/100);
-    $('#after_discount_amount').text(after_discount.toFixed(DecimalPositions));
-    let vatAmount = after_discount * 10/100;
-    //let grand = subtotal + vat_total;
-    let grand = after_discount + vatAmount;
-    
-    let subtotals = parseFloat(subtotal);
-    let vat_totals = parseFloat(vat_total);
-    let allItemSubTotal = (subtotals + vat_totals).toFixed(DecimalPositions);
-    
-    $('#allItemSubtotal').text(allItemSubTotal);
-    $('#subtotal').text(subtotal.toFixed(DecimalPositions));
-    $('#vat_total').text(vat_total.toFixed(DecimalPositions));
-    // $('#vat_total').text(vatAmount.toFixed(DecimalPositions));
-    $('#grand_total').text(grand.toFixed(DecimalPositions));
-}
-
-//$(document).on('keyup change', '.qty, .price, .vat, .discount, .total_discount', calculateTotals);
-
-// $(document).on('click', '.remove', function() {
-//     $(this).closest('tr').remove();
-//     renumberRows();
-//     calculateTotals();
-// });
-// Delete the table Row 
         let row=0;
          document.querySelectorAll('.popup-buttons button').forEach(function(button) {
                     button.addEventListener('click', function() {
@@ -926,6 +1591,10 @@ function calculateTotals() {
                             case 'DeleteTerms':
                                 deleteTermsAndCondition();
                             break;
+                            case 'DeleteIntroduction':
+                                deleteIntroduction();
+                            break;
+                            
                             default:
                                 setupDropdown('dropdownContent','error',svgSuccess+'No action defined for this message.','click');
                         }
@@ -943,13 +1612,6 @@ function calculateTotals() {
         
             row.addClass('row-highlight');
         
-            // if (confirm("Delete this item?")) {
-            //     row.remove();
-            //     renumberRows();
-            //     calculateTotals();
-            // } else {
-            //     row.removeClass('row-highlight');
-            // }
             
              SaNDSAlert('Are you Sure you want to delete the Item..!','DeleteData','danger','#C70039','Yes I am Sure');
             
@@ -967,17 +1629,13 @@ function calculateTotals() {
         }
 
 
-// Delete Process Complete
-
-
 $('#addRow').click(addRow);
 
-// add first row
 addRow();
 
-let saveType = "final"; // default
+let saveType = "final"; 
 
-// Detect which button was clicked
+
 $('button[name="save_type"]').click(function(){
     saveType = $(this).val(); // 'final' or 'draft'
 });
@@ -989,38 +1647,68 @@ $('#quotationForm').submit(function(e){
     }
     let quotationId = $('#quotation_id').val();
     let originalDraft = $('#original_draft').val();
+    
 
     if(quotationId){ 
-        // Existing quotation → show modal for options
-        $('#saveChoiceModal').modal('show');
+        
+        if(saveType === 'final') {
+            $('#saveChoiceModal').modal('show');
+        } else if(saveType === 'draft') {
+            $('#saveChoiceModalDraft').modal('show');
+        }
 
-        // Handle Update Original
-        $('#updateOriginal').off('click').on('click', function(){
-            $('#saveChoiceModal').modal('hide');
-            saveQuotation('update');
-        });
-
-        // Handle Save as Draft
-        $('#saveAsDraft').off('click').on('click', function(){
-            $('#saveChoiceModal').modal('hide');
-            saveQuotation('update_draft');
-        });
-
-        // Handle Create New
-        $('#createNew').off('click').on('click', function(){
+        
+         $('#createNewQuote').off('click').on('click', function(){
             $('#saveChoiceModal').modal('hide');
             saveQuotation('new');
         });
+       
+        
+        $('#updateOriginal').off('click').on('click', function(){
+            if(originalDraft === 'Yes')
+            {
+               setupDropdown('dropdownContent', 'error', svgError + "You can either convert this quotation to draft instead of saving. ", 'click');
+                return false;
+            }
+            else
+            {
+                $('#saveChoiceModal').modal('hide');
+                saveQuotation('update');
+            }
+            
+        });
+
+        // Handle Save as Draft
+        $('#updateOriginaldraft').off('click').on('click', function(){
+             if(originalDraft === 'No')
+            {
+               setupDropdown('dropdownContent', 'error', svgError + "You can either convert this draft to quotation instead of saving. ", 'click');
+                return false;
+            }
+            else
+            {
+              
+                $('#saveChoiceModalDraft').modal('hide');
+                saveQuotation('update');
+            }
+            
+        });
+
+        $('#createNewdraft').off('click').on('click', function(){
+            $('#saveChoiceModalDraft').modal('hide');
+            saveQuotation('new');
+        });
+        
+        
 
     } else {
-        // New quotation → directly save
+        
         saveQuotation('new');
     }
 });
 
 function saveQuotation(action_type){
-    
-
+   
     var laddaBtn = Ladda.create(document.querySelector('#btn_save_quotation'));
     var laddaBtnDraft = Ladda.create(document.querySelector('#btn_save_quotation_draft'));
         laddaBtn.start();
@@ -1028,25 +1716,34 @@ function saveQuotation(action_type){
     let items = [];
     $('#itemTable tbody tr').each(function() {
         items.push({
-            item_name: $(this).find('.item_name').val(),
+            item_name: $(this).find('.vehicle_category').val(),
+            item_model_id: $(this).find('.vehicle_category_id').val(),
+            item_model_pic: $(this).find('.vehicle_modal_pic').val(),
+            service_id: $(this).find('.service').val(),
+            service_name: $(this).find('.service option:selected').text(),
+            rate_type_id: $(this).find('.rate_type ').val(),
+            rate_type_name: $(this).find('.rate_type option:selected').text(),
+            period_from: $(this).find('.from_datetime').val(),
+            period_to: $(this).find('.to_datetime').val(),
             qty: $(this).find('.qty').val(),
             price: $(this).find('.price').val(),
-            discount: $(this).find('.discount').val(),
+            duration: $(this).find('.duration').val(),
             vat: $(this).find('.vat').val(),
             total: $(this).find('.line_total').text()
         });
     });
 
-                    var loginData = JSON.parse(localStorage.getItem("quotationLoginData"));
-                    //if (loginData) {
-                        let storageloginStatus = loginData.status;
-                        let storagecompany_id = loginData.company_id;
-                        let storagecompany_name = loginData.company_name;
-                        let storagecustomer_emails = loginData.customer_emails;
-                        let storageusername = loginData.username;
-                        let storageuserid = loginData.userid;
-                    //}
-                        var termsContent = fullEditorOnBody.root.innerHTML;
+                    // var loginData = JSON.parse(localStorage.getItem("quotationLoginData"));
+                   
+                    //     let storageloginStatus = loginData.status;
+                    //     let storagecompany_id = loginData.company_id;
+                    //     let storagecompany_name = loginData.company_name;
+                    //     let storagecustomer_emails = loginData.customer_emails;
+                    //     let storageusername = loginData.username;
+                    //     let storageuserid = loginData.userid;
+                   
+      var termsContent = fullEditorOnBody.root.innerHTML;
+      var introContent = $('#quoation_introduction').val(); 
 
 
     let data = {
@@ -1055,47 +1752,68 @@ function saveQuotation(action_type){
         action_type: action_type,
         save_type: saveType,
         customer_name: $('#selectCustomerFromSelect2').find(':selected').text(),
+        customer_code: $('input[name=customer_code]').val(),
         customer_phone: $('input[name=customer_phone]').val(),
         customer_email: $('input[name=customer_email]').val(),
         customer_address: $('textarea[name=customer_address]').val(),
         quotation_date: $('#quotation_date').val(),
+        quotation_prefix: $('#quotation_prefix').val(),
         items: items,
         subtotal: $('#subtotal').text(),
         vat_total: $('#vat_total').text(),
         grand_total: $('#grand_total').text(),
-        reference_number : $('#reference_number').val(),
-        total_discount : $('#total_discount').val(),
-        total_discount_amount : $('#total_discount_amount').text(),
-        after_discount_amount : $('#after_discount_amount').text(),
-        storage_company_id : storagecompany_id,
-        storage_company_name : storagecompany_name,
-        storage_customer_emails : storagecustomer_emails,
-        storage_username : storageusername,
-        storage_userid : storageuserid,
+        reference_number : 0,
+        total_discount : 0,
+        total_discount_amount : 0,
+        after_discount_amount : 0,
+        storage_company_id : 1,
+        storage_company_name : 'AA Car Rental',
+        storage_username : 'Admin',
+        storage_userid : 1,
         allItemSubtotal : $('#allItemSubtotal').text(),
         termsContentValue : termsContent,
-        attentionValue : $('#quotationAttention').val()
+        introContentValue : introContent,
+        attentionValue : $('#quotation_attention').val(),
+        quotation_number : $('#quotation_number').val(),
+        action : 'SaveQuotation'
     };
-    $.post('/SaveQuotation', data, function(res){
-        setupDropdown('dropdownContent','success',svgSuccess+res,'click');
-        // alert(res);
-        laddaBtn.stop();
-        laddaBtnDraft.stop();
-        setTimeout(function() {
-                location.reload();
-        }, 3000);
-    });
+     $.post('/QuotationController', data)
+        .done(function(res) {
+            try {
+                var jsonData = (typeof res === 'string') ? JSON.parse(res) : res;
+
+                if (jsonData.status && jsonData.status.toLowerCase() === "success") {
+                    setupDropdown('dropdownContent', 'success', svgSuccess + jsonData.message+" : " + jsonData.msg_text, 'click');
+                    setTimeout(function() {
+                       location.reload();
+                    }, 3000);
+                } else {
+                    setupDropdown('dropdownContent', 'error', svgError + (jsonData.message || 'Unknown error'), 'click');
+                }
+
+            } catch (err) {
+                setupDropdown('dropdownContent', 'error', svgError + 'Invalid server response', 'click');
+                console.error('JSON parse error:', err);
+            }
+        })
+        .fail(function(xhr, status, error) {
+            setupDropdown('dropdownContent', 'error', svgError + 'Server error: ' + error, 'click');
+            console.error('AJAX error:', status, error);
+        })
+        .always(function() {
+            // Stop loading buttons no matter what
+            laddaBtn.stop();
+            laddaBtnDraft.stop();
+        });
 }
+    
+   
 
 function validateQuotationForm() {
     let valid = true;
     let message = "";
 
-    // Customer validation
-    // if (!$('input[name=customer_name]').val()) {
-    //     message = "Customer name is required.";
-    //     valid = false;
-    // }
+    
     if (!$('#selectCustomerFromSelect2').val()) {
         message = "Customer name is required.";
         valid = false;
@@ -1105,21 +1823,26 @@ function validateQuotationForm() {
         message = "Quotation date is required.";
         valid = false;
     }
-
+     if (!$('#quotation_prefix').val()) {
+        message = "Quotation prefix is required.";
+        valid = false;
+    }
     // Item rows validation
     let rowCount = $('#itemTable tbody tr').length;
     if (rowCount === 0) {
-        message = "Please add at least one item.";
+        message = "Please add atleast one row item.";
         valid = false;
     }
 
     $('#itemTable tbody tr').each(function(index) {
-        let item = $(this).find('.item_name').val();
+        let item = $(this).find('.vehicle_category_id').val();
         let qty = $(this).find('.qty').val();
         let price = $(this).find('.price').val();
+        let duration = $(this).find('.duration').val();
+        let vat = $(this).find('.vat').val();
 
-        if (!item || !qty || !price) {
-            message = "Please fill all item details in row " + (index + 1);
+        if (!item || !qty || !price || !duration || !vat) {
+            message = "Please fill the details in item row " + (index + 1);
             valid = false;
             return false; // break loop
         }
@@ -1138,43 +1861,76 @@ $('#printQT').click(function() {
     printQuotation(quotationId);           // call your function
 });  
 
+$('.qtnprint').on('click', function () {
+
+    let id = $(this).data('id');
+    let ref = $(this).data('ref');
+alert(ref);
+    window.open(`generate_quotation.php?id=${id}&ref_no=${ref}`, '_blank');
+
+});
 $('#openPrintSettings').click(function () {
-    let saved = localStorage.getItem('printSettings');
+    // let saved = localStorage.getItem('printSettings');
 
-    if (saved) {
-        let settings = JSON.parse(saved);
+    // if (saved) {
+    //     let settings = JSON.parse(saved);
 
-        $('#printDecimals').val(settings.decimals);
-        $('#printColor').val(settings.color);
-        $('#printFontSize').val(settings.size);
-        $('#lineItemGap').val(settings.lineItemGap);
-        $('#fontColor').val(settings.fontColor);
-        // new fields
-        $('#printAlign').val(settings.align);
+    //     $('#printDecimals').val(settings.decimals);
+    //     $('#printColor').val(settings.color);
+    //     $('#printFontSize').val(settings.size);
+    //     $('#lineItemGap').val(settings.lineItemGap);
+    //     $('#fontColor').val(settings.fontColor);
+    //     // new fields
+    //     $('#printAlign').val(settings.align);
         
-        $('#currencyName').val(settings.currencyName);
-        $('#decimalName').val(settings.decimalName);
+    //     $('#currencyName').val(settings.currencyName);
+    //     $('#decimalName').val(settings.decimalName);
         
-        $('#preparedName').val(settings.preparedName);
-        $('#pageOrientation').val(settings.pageOrientation);
+    //     $('#preparedName').val(settings.preparedName);
+    //     $('#pageOrientation').val(settings.pageOrientation);
 
         
-        $('#vat_status').val(settings.vat_status);
-        $('#sig_possition').val(settings.sig_possition);
-        $('#onPage').val(settings.onPage);
-        $('#vALign').val(settings.vALign);
-        $('#sealLeft').val(settings.sealLeft);
-        $('#sealTop').val(settings.sealTop);
+    //     $('#vat_status').val(settings.vat_status);
+    //     $('#sig_possition').val(settings.sig_possition);
+    //     $('#onPage').val(settings.onPage);
+    //     $('#vALign').val(settings.vALign);
+    //     $('#sealLeft').val(settings.sealLeft);
+    //     $('#sealTop').val(settings.sealTop);
         
-        // show logo file name (if you have a label/span)
-        if (settings.logoFileName) {
-            $('#logoFileNameDisplay').text(settings.logoFileName);
-        }
-    }
+    //     // show logo file name (if you have a label/span)
+    //     if (settings.logoFileName) {
+    //         $('#logoFileNameDisplay').text(settings.logoFileName);
+    //     }
+    // }
+    
+   // $('#id').val($('#quotation_id').val());
+   // $('#QtnRef').val($('#quotation_number').val());
+    
+   // $('#quotationModal').modal('show');
+    let id = $('#quotation_id').val();
+    let ref = $('#quotation_number').val();
 
-    $('#printSettingsModal').modal('show');
+    window.open(`pdf/configure_quotation.php?id=${id}&ref_no=${ref}`, '_blank');
+});
+$('#btnStandard').on('click', function () {
+    let form = $('#configForm');
+
+    // Set action dynamically
+    form.attr('action', '/QuotationPrintV1');
+
+    // Submit form
+    form.submit();
 });
 
+$('#btnV2').on('click', function () {
+    let form = $('#configForm');
+
+    // Set action dynamically
+   form.attr('action', '/QuotationPrintV2');
+
+    // Submit form
+    form.submit();
+});
 // print button inside modal PrintQuotation
 let fileName = '';
 $('#printLogo').on('change', function () {
@@ -1182,254 +1938,106 @@ $('#printLogo').on('change', function () {
     console.log(fileName);
 });
   
-$('#confirmPrint').click(function () {
+// $('#confirmPrint').click(function () {
 
-    // get existing settings first
-    let saved = localStorage.getItem('printSettings');
-    let oldSettings = saved ? JSON.parse(saved) : {};
+//     // get existing settings first
+//     let saved = localStorage.getItem('printSettings');
+//     let oldSettings = saved ? JSON.parse(saved) : {};
 
-    let logoInput = $('#printLogo');
-    let newFileName = oldSettings.logoFileName || '';
+//     let logoInput = $('#printLogo');
+//     let newFileName = oldSettings.logoFileName || '';
 
-    // if new file selected, update filename
-    if (logoInput[0].files.length > 0) {
-        newFileName = logoInput[0].files[0].name;
-    }
+//     // if new file selected, update filename
+//     if (logoInput[0].files.length > 0) {
+//         newFileName = logoInput[0].files[0].name;
+//     }
 
-    let settings = {
-        decimals: $('#printDecimals').val(),
-        color: $('#printColor').val(),
-        size: $('#printFontSize').val(),
-        align: $('#printAlign').val(),
-        lineItemGap : $('#lineItemGap').val(),
-        fontColor : $('#fontColor').val(),
-        logoFileName: newFileName,
-        currencyName: $('#currencyName').val(),
-        decimalName : $('#decimalName').val(),
-        preparedName : $('#preparedName').val(),
-        pageOrientation : $('#pageOrientation').val(),
-        countryCode : $('#countryCode').val(),
-        vat_status : $('#vat_status').val(),
-        grand_total_inclusive_val : $('#grand_total_inclusive_val').val(),
-        sig_possition : $('#sig_possition').val(),
-        onPage : $('#onPage').val(),
-        vALign : $('#vALign').val(),
-        nameStyle : $('#nameStyle').val(),
-        sealLeft : $('#sealLeft').val(),
-        sealTop : $('#sealTop').val()
-    };
+//     let settings = {
+//         decimals: $('#printDecimals').val(),
+//         color: $('#printColor').val(),
+//         size: $('#printFontSize').val(),
+//         align: $('#printAlign').val(),
+//         lineItemGap : $('#lineItemGap').val(),
+//         fontColor : $('#fontColor').val(),
+//         logoFileName: newFileName,
+//         currencyName: $('#currencyName').val(),
+//         decimalName : $('#decimalName').val(),
+//         preparedName : $('#preparedName').val(),
+//         pageOrientation : $('#pageOrientation').val(),
+//         countryCode : $('#countryCode').val(),
+//         vat_status : $('#vat_status').val(),
+//         grand_total_inclusive_val : $('#grand_total_inclusive_val').val(),
+//         sig_possition : $('#sig_possition').val(),
+//         onPage : $('#onPage').val(),
+//         vALign : $('#vALign').val(),
+//         nameStyle : $('#nameStyle').val(),
+//         sealLeft : $('#sealLeft').val(),
+//         sealTop : $('#sealTop').val()
+//     };
 
-    // save updated settings
-    localStorage.setItem('printSettings', JSON.stringify(settings));
+//     // save updated settings
+//     localStorage.setItem('printSettings', JSON.stringify(settings));
 
-    // create form
-    let form = $('<form>', {
-        action: '/PrintQuotation',
-        method: 'POST',
-        target: '_blank',
-        enctype: 'multipart/form-data'
-    });
+//     // create form
+//     let form = $('<form>', {
+//         action: '/PrintQuotation',
+//         method: 'POST',
+//         target: '_blank',
+//         enctype: 'multipart/form-data'
+//     });
 
-    form.append('<input type="hidden" name="id" value="' + $('#quotation_id').val() + '">');
-    form.append('<input type="hidden" name="decimals" value="' + settings.decimals + '">');
-    form.append('<input type="hidden" name="color" value="' + settings.color.replace("#", "") + '">');
-    form.append('<input type="hidden" name="size" value="' + settings.size + '">');
-    form.append('<input type="hidden" name="align" value="' + settings.align + '">');
-    form.append('<input type="hidden" name="lineItemGap" value="' + settings.lineItemGap + '">');
-    form.append('<input type="hidden" name="fontColor" value="' + settings.fontColor + '">');
-    form.append('<input type="hidden" name="currencyName" value="' + settings.currencyName + '">');
-    form.append('<input type="hidden" name="decimalName" value="' + settings.decimalName + '">');
-    form.append('<input type="hidden" name="preparedName" value="' + settings.preparedName + '">');
-    form.append('<input type="hidden" name="pageOrientation" value="' + settings.pageOrientation + '">');
-    form.append('<input type="hidden" name="countryCode" value="' + settings.countryCode + '">');
-    form.append('<input type="hidden" name="vat_status" value="' + settings.vat_status + '">');
-    form.append('<input type="hidden" name="grand_total_inclusive_val" value="' + settings.grand_total_inclusive_val + '">');
-    form.append('<input type="hidden" name="sig_possition" value="' + settings.sig_possition + '">');
-    form.append('<input type="hidden" name="onPage" value="' + settings.onPage + '">');
-    form.append('<input type="hidden" name="vALign" value="' + settings.vALign + '">');
-    form.append('<input type="hidden" name="nameStyle" value="' + settings.nameStyle + '">');
-    form.append('<input type="hidden" name="sealLeft" value="' + settings.sealLeft + '">');
-    form.append('<input type="hidden" name="sealTop" value="' + settings.sealTop + '">');
+//     form.append('<input type="hidden" name="id" value="' + $('#quotation_id').val() + '">');
+//     form.append('<input type="hidden" name="decimals" value="' + settings.decimals + '">');
+//     form.append('<input type="hidden" name="color" value="' + settings.color.replace("#", "") + '">');
+//     form.append('<input type="hidden" name="size" value="' + settings.size + '">');
+//     form.append('<input type="hidden" name="align" value="' + settings.align + '">');
+//     form.append('<input type="hidden" name="lineItemGap" value="' + settings.lineItemGap + '">');
+//     form.append('<input type="hidden" name="fontColor" value="' + settings.fontColor + '">');
+//     form.append('<input type="hidden" name="currencyName" value="' + settings.currencyName + '">');
+//     form.append('<input type="hidden" name="decimalName" value="' + settings.decimalName + '">');
+//     form.append('<input type="hidden" name="preparedName" value="' + settings.preparedName + '">');
+//     form.append('<input type="hidden" name="pageOrientation" value="' + settings.pageOrientation + '">');
+//     form.append('<input type="hidden" name="countryCode" value="' + settings.countryCode + '">');
+//     form.append('<input type="hidden" name="vat_status" value="' + settings.vat_status + '">');
+//     form.append('<input type="hidden" name="grand_total_inclusive_val" value="' + settings.grand_total_inclusive_val + '">');
+//     form.append('<input type="hidden" name="sig_possition" value="' + settings.sig_possition + '">');
+//     form.append('<input type="hidden" name="onPage" value="' + settings.onPage + '">');
+//     form.append('<input type="hidden" name="vALign" value="' + settings.vALign + '">');
+//     form.append('<input type="hidden" name="nameStyle" value="' + settings.nameStyle + '">');
+//     form.append('<input type="hidden" name="sealLeft" value="' + settings.sealLeft + '">');
+//     form.append('<input type="hidden" name="sealTop" value="' + settings.sealTop + '">');
   
 
-    // Case 1: new file selected
-    if (logoInput[0].files.length > 0) {
-        logoInput.attr('name', 'logo');
-        form.append(logoInput);
-    } 
-    // Case 2: use old filename
-    else if (settings.logoFileName) {
-        form.append('<input type="hidden" name="fileName" value="' + settings.logoFileName + '">');
-    }
+//     // Case 1: new file selected
+//     if (logoInput[0].files.length > 0) {
+//         logoInput.attr('name', 'logo');
+//         form.append(logoInput);
+//     } 
+//     // Case 2: use old filename
+//     else if (settings.logoFileName) {
+//         form.append('<input type="hidden" name="fileName" value="' + settings.logoFileName + '">');
+//     }
 
-    $('body').append(form);
-    form.submit();
-});
+//     $('body').append(form);
+//     form.submit();
+// });
 
 
 
     $('#openQuotations, #MenuListOfQuotations').click(function () {
-            loadQuotationList('No');
+           $('#from_date_filter').val('');
+           $('#to_date_filter').val('');
+           openQuotationCanvas('No');
+            
     });
     
     $('#openDraftQuotations, #MenuListOfDraftQuotations').click(function () {
-            loadQuotationList('Yes');
+           $('#from_date_filter').val('');
+           $('#to_date_filter').val('');
+           openQuotationCanvas('Yes');
     });
 
 
-//   Select Customer using Select2
-
-            // $('#selectCustomerFromSelect2').select2({
-            //     placeholder: 'Search customer by name or mobile',
-            //     allowClear: true,
-            //     dropdownParent: $('#customerOffcanvas'), // 🔥 THIS IS THE KEY
-            //     width: '100'
-            // });
-
-            // Select2 Customer DropDown
-           $('#selectCustomerFromSelect2').select2({
-                placeholder: 'Search customer by name or mobile',
-                allowClear: true,
-                minimumInputLength: 2,
-                tags: true,   // allow new values
-                createTag: function (params) {
-                    let term = $.trim(params.term);
-            
-                    if (term === '') {
-                        return null;
-                    }
-            
-                    return {
-                        id: term,
-                        text: term,
-                        customer_name: term,
-                        newTag: true
-                    };
-                },
-            
-                ajax: {
-                    url: '/SearchCustomerDetails',
-                    dataType: 'json',
-                    delay: 300,
-            
-                    data: function (params) {
-                        return {
-                            q: params.term,
-                            action: 'SearchCustomer'
-                        };
-                    },
-            
-                    processResults: function (data) {
-                        return {
-                            results: data.map(item => ({
-                                id: item.customer_name,
-                                text: item.customer_name,
-                                customer_name: item.customer_name,
-                                customer_mobile: item.customer_phone,
-                                customer_id: item.customer_name,
-                                customer_address: item.customer_address,
-                                customer_email: item.customer_email
-                            }))
-                        };
-                    }
-                },
-            
-                templateResult: formatCustomer,
-                templateSelection: formatCustomerSelection
-            });
- 
-            function formatCustomer(customer) {
-                if (!customer.id) return customer.text;
-            
-                return $(`
-                    <div>
-                        <strong>${customer.customer_id} | ${customer.customer_email}</strong><br>
-                        <small class="text-muted">${customer.customer_mobile} | ${customer.customer_address}</small>
-                    </div>
-                `);
-            }
-            
-            function formatCustomerSelection(customer) {
-                return customer.customer_name
-                    ? `${customer.customer_name}`
-                    : customer.text;
-            }
-
-
-            // Select Customer /Client from the Select2 DropDown
-            $('#selectCustomerFromSelect2').on('select2:select', function (e) {
-                let data = e.params.data;
-            
-                $('#customer_name').val(data.customer_name);
-                $('#customer_phone').val(data.customer_mobile);
-                $('#customer_email').val(data.customer_email);
-                $('#customer_address').val(data.customer_address);
-            });
-            
-            
-            $('#selectCustomerFromSelect2').on('select2:clear', function () {
-                $('#customer_name').val('');
-                $('#customer_phone').val('');
-                $('#customer_email').val('');
-                $('#customer_address').val('');
-            });
-
-
-
- // Quill Editor
-              $('#copyContentBtn').click(function () {
-                
-                    var content = fullEditor.root.innerHTML;
-                    fullEditorOnBody.root.innerHTML = content;
-                
-              });
- 
-             $('#saveTermsAndConditions').click(function () {
-                var laddaBtn = Ladda.create(document.querySelector('#saveTermsAndConditions'));
-                laddaBtn.start();
-                let htmlContent = fullEditor.root.innerHTML;
-            
-                $.ajax({
-                    url: "/SaveTerms",
-                    type: "POST",
-                    data: { terms_condition: htmlContent, t_c_name: $('#t_c_name').val() },
-                    success: function (response) {
-                        setupDropdown('dropdownContent','success',svgSuccess+ ' Saved Successfully','click');
-                        laddaBtn.stop();
-                         $('#termsTable').DataTable().ajax.reload(null, false);
-                    },
-                    error: function () {
-                        setupDropdown('dropdownContent','danger',svgSuccess+ ' Error saving data','click');
-                        laddaBtn.stop();
-                    }
-                });
-            
-            });                    
-
-            // $('#loadTerms').click(function () {
-            //      var laddaBtn = Ladda.create(document.querySelector('#loadTerms'));
-            //     laddaBtn.start();
-            //     $.ajax({
-            //         url: "/GetTerms",
-            //         type: "GET",
-            //         success: function (response) {
-            
-            //             // Assign HTML back to Quill
-            //             fullEditor.root.innerHTML = response;
-            //             setupDropdown('dropdownContent','success',svgSuccess+ ' Loaded Successfully','click');
-            //             laddaBtn.stop();
-            //         },
-            //         error: function () {
-            //             setupDropdown('dropdownContent','danger',svgSuccess+ ' Error loading data','click');
-            //             laddaBtn.stop();
-            //         }
-            //     });
-            
-            // });
-
-            $('#btn_terms_condition').click(function(){
-                $('#termsAndConditionModal').modal('show');
-            })
             
             
             // Loading Item from Item Tables 
@@ -1527,126 +2135,10 @@ $('#confirmPrint').click(function () {
 
 
 
-    $('#termsTable').DataTable({
-        "ajax": "/GetAllTermsAndConditions",
-        "processing": true,
-        "serverSide": false
-    });
-
-let varDeleteTC;
-$(document).on("click", ".deleteBtn", function() {
-
-    varDeleteTC = $(this).data("id");
-    //deleteTermsAndCondition(id)
-    SaNDSAlert('Are you Sure you want to delete the Item..!','DeleteTerms','danger','#C70039','Yes I am Sure');
-    
-});
-$(document).on("click", ".showBtn", function() {
-
-    var showId = $(this).data("id");
-
-    var laddaBtn = Ladda.create(this);
-    laddaBtn.start();
-
-    $.ajax({
-        url: "/GetTerms",   // better use PHP file directly
-        type: "GET",
-        data: { id: showId },  // ✅ SEND ID HERE
-        success: function (response) {
-
-            fullEditor.root.innerHTML = response;
-
-            setupDropdown(
-                'dropdownContent',
-                'success',
-                svgSuccess + ' Loaded Successfully',
-                'click'
-            );
-
-            laddaBtn.stop();
-        },
-        error: function () {
-
-            setupDropdown(
-                'dropdownContent',
-                'danger',
-                svgSuccess + ' Error loading data',
-                'click'
-            );
-
-            laddaBtn.stop();
-        }
-    });
-
-});
-
-function deleteTermsAndCondition()
-{
-    
-    //if (confirm("Are you sure you want to delete this record?")) {
-
-        $.ajax({
-            url: "/DeleteTerms",
-            type: "POST",
-            data: { id: varDeleteTC },
-            success: function(response) {
-
-                let res = JSON.parse(response);
-
-                if (res.status === "success") {
-                 
-                    setupDropdown('dropdownContent','success',svgSuccess+'Deleted successfully','click');
-                    // Reload DataTable
-                    $('#termsTable').DataTable().ajax.reload(null, false);
-                } else {
-                   
-                    setupDropdown('dropdownContent','error',svgSuccess+res.message,'click');
-                }
-            }
-        });
-        
-        
-   // }
-}
-
-
-$('#generatePO').click(function(e){
-     $.ajax({
-            url: "/GeneratePO",
-            type: "POST",
-            data: { quotation_no: $('#quotationNumber').text() },
-            success: function(response) {
-
-                let res = JSON.parse(response);
-
-                if (res.status === "success") {
-                 
-                    setupDropdown('dropdownContent','success',svgSuccess+'PO Created successfully','click');
-                    // Reload DataTable
-                   // $('#termsTable').DataTable().ajax.reload(null, false);
-                } else {
-                   
-                    setupDropdown('dropdownContent','error',svgSuccess+res.message,'click');
-                }
-            }
-        });
-})
-
-
 });// CLose of Jquery
 
-function printQuotation(id) {
-    // Open the PDF in a new window
-    let printWindow = window.open('pdf/quotation_print.php?id=' + id, '_blank');
 
-    // Wait for the PDF to load, then trigger print
-    printWindow.onload = function() {
-        printWindow.focus();
-        printWindow.print();
-    };
-}
-
-</script>
+    </script>
 </body>
 
 </html>

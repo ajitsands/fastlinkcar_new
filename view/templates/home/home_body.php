@@ -48,13 +48,13 @@
                     </ul>
                     <div class="tab-content">
                       <div class="tab-pane fade show active" id="navs-pills-top-home" role="tabpanel">
-                            <?php include('avl_vehicle_list.php');?>
+                        <?php include ROOT_PATH . '/view/templates/home/avl_vehicle_list.php';?>
                       </div>
                       <div class="tab-pane fade" id="navs-pills-top-profile" role="tabpanel">
-                        <?php include('avl_list.php');?>
+                        <?php include ROOT_PATH . '/view/templates/home/avl_list.php';?>
                       </div>
                       <div class="tab-pane fade" id="navs-pills-top-messages" role="tabpanel">
-                        <?php include('avl_list.php');?>
+                        <?php include ROOT_PATH . '/view/templates/home/avl_list.php';?>
                       </div>
                     </div>
                   </div>

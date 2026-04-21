@@ -10,21 +10,21 @@
 
     <!-- build:js assets/vendor/js/theme.js  -->
 
-    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/jquery/jquery.js"></script>
 
-    <script src="../assets/vendor/libs/popper/popper.js"></script>
-    <script src="../assets/vendor/js/bootstrap.js"></script>
-    <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/popper/popper.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/js/bootstrap.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/node-waves/node-waves.js"></script>
 
-    <script src="../assets/vendor/libs/@algolia/autocomplete-js.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/@algolia/autocomplete-js.js"></script>
 
-    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
 
-    <script src="../assets/vendor/libs/hammer/hammer.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/hammer/hammer.js"></script>
 
-    <script src="../assets/vendor/libs/i18n/i18n.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/i18n/i18n.js"></script>
 
-    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/js/menu.js"></script>
 
     <!-- endbuild -->
 
@@ -32,7 +32,7 @@
 
     <!-- Main JS -->
 
-    <script src="../assets/js/main.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/main.js"></script>
 
 
 	<script>

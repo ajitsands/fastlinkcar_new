@@ -62,4 +62,8 @@ class EncryptionHelper {
         return openssl_decrypt($ciphertext, $this->cipher, $secretKey, $this->options, $iv);
     }
 }
+
+
+
+
 ?>

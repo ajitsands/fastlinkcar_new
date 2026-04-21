@@ -10,27 +10,6 @@ class CustomerController
 	{
 	    $this->varPDOModelObj = new CommonPDOModel();
 	    
-	
-        //$this->json = file_get_contents("php://input");
-        
-        
-        // if (!$this->json) {
-        //     echo json_encode([
-        //         "status" => "error",
-        //         "message" => "No input data received"
-        //     ]);
-        //     exit;
-        // }
-        
-        // $data = json_decode($this->json, true);
-        
-        // if (json_last_error() !== JSON_ERROR_NONE) {
-        //     echo json_encode([
-        //         "status" => "error",
-        //         "message" => "Invalid JSON"
-        //     ]);
-        //     exit;
-        // }
         
         $this->search = $_GET['q'] ?? null;
        
@@ -44,21 +23,17 @@ class CustomerController
 		$array =  array();
         
         
-            $array[0] = "SELECT customer_id AS id, customer_name, customer_mobile, customer_type
+            $array[0] = "SELECT customer_id AS id,customer_id AS customer_code, customer_name, customer_mobile, customer_type,customer_address,customer_email,customer_addr,customer_attn
                         FROM customer_details
                         WHERE
                             customer_name LIKE ?
                             OR customer_mobile LIKE ?
-                            OR customer_id LIKE ?
-                            OR customer_type LIKE ?
                         LIMIT 20";
             $search = '%' . $this->search . '%';
             $this->params[0] = 
                 [
                     $search,
                     $search,
-                    $search,
-                    $search
                 ];
 
 
@@ -80,11 +55,7 @@ class CustomerController
                 Logger::ActivityLog('Action',"AddNewCustomer",['CustomerController: SearchCustomer',"Customer ID : ".$this->ReturnData]);
 			    $response = json_decode($this->ReturnData, true);
                 echo json_encode($response['data']);
-			 //   echo json_encode([
-    //                 'status'  => true,
-    //                 'message' => "Customer Added Successfully",
-    //                 'customerId' => $customer_id
-    //             ]);
+		
           
 		    break;
 			default:

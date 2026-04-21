@@ -6,7 +6,7 @@
                 <span class="app-brand-logo demo">
                   <span class="text-primary">
 						<!--Logo Should Come Here-->
-						<img src="../assets/img/logo/small_logos_blank.png" id="companyLogo" class="img-fluid app-logo" alt="Logo">
+						<img src="<?= $_ENV['BASE_URL'] ?>assets/img/logo/small_logos_blank.png" id="companyLogo" class="img-fluid app-logo" alt="Logo">
 				  </span>
                 </span>
                 <span class="app-brand-text demo menu-text fw-semibold ms-1" style="color: #ffffff">CarRental Portal</span>
@@ -162,7 +162,7 @@
                           <div class="d-flex">
                             <div class="flex-shrink-0 me-3">
                               <div class="avatar">
-                                <img src="../assets/img/avatars/1.png" alt="avatar" class="rounded-circle" />
+                                <img src="<?= $_ENV['BASE_URL'] ?>assets/img/avatars/1.png" alt="avatar" class="rounded-circle" />
                               </div>
                             </div>
                             <div class="flex-grow-1">
@@ -206,7 +206,7 @@
                           <div class="d-flex">
                             <div class="flex-shrink-0 me-3">
                               <div class="avatar">
-                                <img src="../assets/img/avatars/2.png" alt="avatar" class="rounded-circle" />
+                                <img src="<?= $_ENV['BASE_URL'] ?>assets/img/avatars/2.png" alt="avatar" class="rounded-circle" />
                               </div>
                             </div>
                             <div class="flex-grow-1">
@@ -252,7 +252,7 @@
                           <div class="d-flex">
                             <div class="flex-shrink-0 me-3">
                               <div class="avatar">
-                                <img src="../assets/img/avatars/9.png" alt="avatar" class="rounded-circle" />
+                                <img src="<?= $_ENV['BASE_URL'] ?>assets/img/avatars/9.png" alt="avatar" class="rounded-circle" />
                               </div>
                             </div>
                             <div class="flex-grow-1">
@@ -300,7 +300,7 @@
                           <div class="d-flex">
                             <div class="flex-shrink-0 me-3">
                               <div class="avatar">
-                                <img src="../assets/img/avatars/5.png" alt="avatar" class="rounded-circle" />
+                                <img src="<?= $_ENV['BASE_URL'] ?>assets/img/avatars/5.png" alt="avatar" class="rounded-circle" />
                               </div>
                             </div>
                             <div class="flex-grow-1">
@@ -322,7 +322,7 @@
                           <div class="d-flex">
                             <div class="flex-shrink-0 me-3">
                               <div class="avatar">
-                                <img src="../assets/img/avatars/6.png" alt="avatar" class="rounded-circle" />
+                                <img src="<?= $_ENV['BASE_URL'] ?>assets/img/avatars/6.png" alt="avatar" class="rounded-circle" />
                               </div>
                             </div>
                             <div class="flex-grow-1">
@@ -383,7 +383,7 @@
                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                   <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                      <img src="../assets/img/avatars/1.png" alt="avatar" class="rounded-circle" />
+                      <img src="<?= $_ENV['BASE_URL'] ?>assets/img/avatars/1.png" alt="avatar" class="rounded-circle" />
                     </div>
                   </a>
                   <ul class="dropdown-menu dropdown-menu-end mt-3 py-2">
@@ -393,7 +393,7 @@
                           <div class="flex-shrink-0 me-2">
                             <div class="avatar avatar-online">
                               <img
-                                src="../assets/img/avatars/1.png"
+                                src="<?= $_ENV['BASE_URL'] ?>assets/img/avatars/1.png"
                                 alt="alt"
                                 class="w-px-40 h-auto rounded-circle" />
                             </div>

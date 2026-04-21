@@ -1,148 +1,107 @@
-<div class="modal fade" id="printSettingsModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      
-      <div class="modal-header">
-        <h5 class="modal-title">Print Settings</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
+<div class="modal fade" id="quotationModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
 
-      <div class="modal-body row">
-        
-        <!-- Decimal places -->
-        <div class="col-2 mb-3">
-          <label>Decimal</label>
-          <input type="number" id="printDecimals" class="form-control" value="3" min="0" max="5">
-        </div>
-        <!-- Gap Between Lines  -->
-        <div class="col-2 mb-3">
-          <label>Gaps</label>
-          <input type="number" id="lineItemGap" class="form-control" value="8" min="8" max="30">
-        </div>
-        
-        <!-- Font Size -->
-        <div class="col-2 mb-3">
-          <label>Font</label>
-          <input type="number" id="printFontSize" class="form-control" value="10" min="8" max="25">
-        </div>
-        <!-- Font Color -->
-        <div class="col-2 mb-3">
-          <label>Color</label>
-           <input type="color" id="fontColor" class="form-control form-control-color" value="#000000">
-        </div>
-         
-        <!-- Title Color -->
-        <div class="col-2 mb-3">
-          <label>Title</label>
-           <input type="color" id="printColor" class="form-control form-control-color" value="#eeeeee">
-        </div>
-        
-        <!-- Logo Upload -->
-        <div class="mb-3">
-          <label>Logo</label>
-          <input type="file" id="printLogo" class="form-control" accept="image/*">
-          <small id="logoFileNameDisplay" class="text-muted"></small>
-        </div>
-        <div class="col-3 mb-2">
-            <label>Logo Alignment</label>
-            <select id="printAlign" class="form-control">
-                <option value="left">Left</option>
-                <option value="center">Center</option>
-                <option value="right">Right</option>
-            </select>
+            <div class="modal-header">
+                <h5 class="modal-title">Quotation Configurator</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <!--<form action="generate_quotation.php" method="POST" target="_blank" id="configForm">-->
+                  <form id="configForm" target="_blank">
+                    <div class="row g-3">
+                        
+                        <!-- ID -->
+                        <div class="col-12">
+                            <label class="form-label">Quotation ID</label>
+                            <input type="hidden" name="id" id="id" class="form-control" placeholder="e.g. 2939" required>
+                            <input type="text" name="QtnRef" id="QtnRef" class="form-control"  required>
+                        </div>
+
+                        <!-- Orientation -->
+                        <div class="col-md-6">
+                            <label class="form-label">Page Orientation</label>
+                            <select name="orientation" id="orientation" class="form-select">
+                                <option value="L">Landscape</option>
+                                <option value="P">Portrait</option>
+                            </select>
+                        </div>
+
+                        <!-- Table Font -->
+                        <div class="col-md-6">
+                            <label class="form-label">Table Font Size</label>
+                            <input type="number" step="0.5" name="font_size_table" id="font_size_table"
+                                class="form-control" value="8">
+                        </div>
+
+                        <!-- Footer Logo X -->
+                        <div class="col-md-6">
+                            <label class="form-label">Footer Logo X (mm)</label>
+                            <input type="number" name="footer_logo_x" id="footer_logo_x"
+                                class="form-control" value="15">
+                        </div>
+
+                        <!-- Footer Logo Y -->
+                        <div class="col-md-6">
+                            <label class="form-label">Footer Logo Y (mm)</label>
+                            <input type="number" name="footer_logo_y" id="footer_logo_y"
+                                class="form-control" value="-35">
+                        </div>
+
+                        <!-- Page Break -->
+                        <div class="col-md-6">
+                            <label class="form-label">Page Break Threshold</label>
+                            <input type="number" name="page_break_threshold" id="page_break_threshold"
+                                class="form-control" value="30">
+                        </div>
+
+                        <!-- Seal Section -->
+                        <div class="col-12 mt-3 border-top pt-3">
+                            <h6 class="text-danger">Seal & Signature (Last Page)</h6>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Seal Placement</label>
+                            <select name="seal_last_pg" id="seal_last_pg" class="form-select">
+                                <option value="none">None</option>
+                                <option value="last_left">Bottom Left</option>
+                                <option value="last_center">Bottom Center</option>
+                                <option value="last_right">Bottom Right</option>
+                                <option value="last_custom">Custom</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6" id="seal_last_x_group">
+                            <label class="form-label">Seal X</label>
+                            <input type="number" name="seal_last_x" id="seal_last_x"
+                                class="form-control" value="160">
+                        </div>
+
+                        <div class="col-md-6" id="seal_last_y_group">
+                            <label class="form-label">Seal Y</label>
+                            <input type="number" name="seal_last_y" id="seal_last_y"
+                                class="form-control" value="0">
+                        </div>
+
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="button" id="btnStandard" class="btn btn-danger w-100">
+                            Generate Standard Quotation
+                        </button>
+
+                        <button type="button" 
+                            class="btn btn-secondary w-100 mt-2" id="btnV2">
+                            Generate Quotation V2 (With Images)
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
 
         </div>
-        <div class="col-2 mb-3">
-          <label>Currency </label>
-          <!--<input type="text" id="currencyName" class="form-control" value="">-->
-           <select id="countryCode" class="form-control">
-                <option value="BHD">BHD</option>
-                <option value="UAE">UAE</option>
-                <option value="KSA">KSA</option>
-                <option value="KWT">KWT</option>
-            </select>
-        </div>
-        <!-- Gap Between Lines  -->
-        <!--<div class="col-4 mb-3">-->
-        <!--  <label>Decimal Name</label>-->
-        <!--  <input type="text" id="decimalName" class="form-control" value="">-->
-        <!--</div>-->
-        <div class="col-2 mb-3">
-            <label> Style</label>
-            <select id="nameStyle" class="form-control">
-                <option value="normal">Normal</option>
-                <option value="italic">Italic</option>
-                <option value="bold">Bold</option>
-                <option value="bold_italic">Bold Italic</option>
-            </select>
-        </div>
-        <div class="col-5 mb-3">
-          <label>Prepared By</label>
-          <input type="text" id="preparedName" class="form-control" value="">
-        </div>
-        <div class="col-3 mb-3">
-         
-          <label>Page Orientation</label>
-            <select id="pageOrientation" class="form-control">
-                <option value="landscape">Landscape</option>
-                <option value="portrait">Portrait</option>
-            </select>
-        </div>
-        <div class="col-2 mb-3">
-         
-          <label>VAT</label>
-            <select id="vat_status" class="form-control">
-                <option value="YES">YES</option>
-                <option value="NO">NO</option>
-            </select>
-        </div>
-        <div class="col-3 mb-3">
-         
-          <label>Signature Position</label>
-            <select id="sig_possition" class="form-control">
-                <option value="left">Left</option>
-                <option value="center">Center</option>
-                <option value="right">Right</option>
-            </select>
-        </div>
-        <div class="col-2 mb-3">
-         
-          <label>On Page
-          <a href="javascript:void(0);"
-               data-bs-toggle="popover"
-               data-bs-placement="top"
-               data-bs-custom-class="popover-dark"
-               data-bs-content="Enter 0 to place the seal and signature on the last page. Alternatively, enter the specific page number (e.g., 2, 3, or 4) where the seal and signature should appear."
-               title="On Page">
-                <span class="ri ri-question-line"></span>
-            </a>
-          
-          </label>
-            <input type="text" id="onPage" class="form-control" value="">
-        </div>
-        <div class="col-2 mb-3">
-         
-          <label>V Align(120)</label>
-            <input type="text" id="vALign" class="form-control" value="">
-        </div>
-        
-        <div class="col-2 mb-3">
-         
-          <label>Seal Left(100)</label>
-            <input type="text" id="sealLeft" class="form-control" value="">
-        </div>
-        <div class="col-2 mb-3">
-         
-          <label>Seal Top(100)</label>
-            <input type="text" id="sealTop" class="form-control" value="">
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" id="confirmPrint">Print</button>
-      </div>
-
     </div>
-  </div>
 </div>

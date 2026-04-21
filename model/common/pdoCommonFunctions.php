@@ -1,6 +1,4 @@
 <?php
-
-
 abstract class FunctionDefinitions
 {
     abstract public function ListFromTable($SQL);
@@ -8,9 +6,15 @@ abstract class FunctionDefinitions
     abstract public function UpdateTable($SQL);
     abstract public function DeleteFromTable($SQL);
     abstract public function AddToTableAndReturnSpecifiedColumn($sql,$retColumnName,$tableName);
+    abstract public function callProcedure($procedureName);
     abstract public function Begin();
     abstract public function Commit();
     abstract public function Rollback();
+    abstract public function validateUser($data);
+    abstract public function executeQuery($sql);
+    abstract public function selectexecuteQuery($sql);
+    
+    
 }
 class CommonPDOModel extends FunctionDefinitions
 {
@@ -183,7 +187,44 @@ class CommonPDOModel extends FunctionDefinitions
         }
     }
 
-    //$db->delete("DELETE FROM tbl_users WHERE id = ?",[$id]);
+    public function callProcedure($procedureName, $inputParams = [], $outputParams = [])
+    {
+        try {
+            
+            $inputPlaceholders = array_fill(0, count($inputParams), "?");
+    
+            $outputPlaceholders = array_map(function($p) { return "@$p"; }, $outputParams);
+    
+            $allPlaceholders = array_merge($inputPlaceholders, $outputPlaceholders);
+            $placeholders = '';
+            if (!empty($allPlaceholders)) {
+                $placeholders = implode(", ", $allPlaceholders);
+            }
+    
+            $callStatement = "CALL $procedureName" . (!empty($placeholders) ? "($placeholders)" : "()");
+    
+            $stmt = $this->varDBPDO->prepare($callStatement);
+    
+            foreach ($inputParams as $i => $value) {
+                $stmt->bindValue($i + 1, $value); // PDO is 1-based for bindValue
+            }
+    
+            $stmt->execute();
+            $stmt->closeCursor();
+    
+            $outputValues = array();
+            if (!empty($outputParams)) {
+                $selectOutput = "SELECT " . implode(", ", array_map(function($p) { return "@$p AS $p"; }, $outputParams));
+                $result = $this->varDBPDO->query($selectOutput);
+                $outputValues = $result->fetch(PDO::FETCH_ASSOC);
+            }
+    
+            return $outputValues;
+    
+        } catch (Exception $e) {
+            throw new Exception("Error calling procedure '$procedureName': " . $e->getMessage());
+        }
+    }
     
     public function Begin()
     {
@@ -192,17 +233,128 @@ class CommonPDOModel extends FunctionDefinitions
     
     public function Commit()
     {
+        if ($this->varDBPDO->inTransaction()) {
         $this->varDBPDO->commit();
+        }
+        
     }
     
     public function Rollback()
     {
+        if ($this->varDBPDO->inTransaction()) {
         $this->varDBPDO->rollBack();
     }
+        
+    }
+    public function executeQuery($sql, $params = [])
+        {
+            $stmt = $this->varDBPDO->prepare($sql);
+            return $stmt->execute($params);
+        }
+    public function selectexecuteQuery($sql, $params = [])
+    {
+        $stmt = $this->varDBPDO->prepare($sql);
+        $stmt->execute($params);
+        return $stmt; // ✅ FIX
+    }
+    public function JWTokenToRealJSON($JWTokenFromClient,$user_name)
+    {
+                $this->JWT = new JWTClass($_ENV['JWTKEY'],$_ENV['MAINSERVER'],$user_name); 
+			    $JWToken=  $this->JWT->ReadJWToken($JWTokenFromClient);
+			    if($JWToken['status'] === true){
+                    $password = $JWToken['data']->token->password;
+                    $encryption = new EncryptionHelper($_ENV['ENCRIPTION_KEY']);
+                    $decriptPassword = $encryption->decrypt($password);
+                    $JWToken['data']->token->password = $decriptPassword;
+                    // Now $JWToken['data']->token->password contains decrypted password
+                    // You can return it as JSON
+                    return json_encode($JWToken);
+                    
+                } else {
+                    return json_encode([
+                        'status'  => false,
+                        'message' => "Error : ".$JWToken['message']
+                    ]);
+                }
+    }
     
+    public function validateUser($data)
+    {
+        
+                $username   = $data['data']['token']['username'];
+                $password   = $data['data']['token']['password'];
+                $company_id = $data['data']['token']['company_id'];
+                $user_id    = $data['data']['token']['user_id'];
+                
+        $sql = "SELECT user_name, user_passkey, company_json
+                FROM tbl_users
+                WHERE user_id = :user_id
+                AND user_name = :username
+                AND user_status = 'Active'
+                LIMIT 1";
+    
+        $stmt = $this->varDBPDO->prepare($sql);
+    
+        $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+        $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+    
+        $stmt->execute();
+    
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        if (!$row) {
+            return ["status"=>false,"message"=>"User not found"];
+        }
+    
+        // Check password
+        if ($row['user_passkey'] != $password) {
+            return ["status"=>false,"message"=>"Invalid password"];
+        }
+    
+        // Decode company JSON
+        $companies = json_decode($row['company_json'], true);
+    
+        foreach ($companies as $company) {
+            if ($company['ids'] == $company_id) {
+                return [
+                    "status"=>true,
+                    "message"=>"Login success"
+                ];
+            }
+        }
+    
+        return ["status"=>false,"message"=>"Company not allowed"];
+    }
+    public function UserStatus($JWTokenFromClient)
+	{
+	     
+			    $return = $this->JWTokenToRealJSON($JWTokenFromClient,'user');
+			    $data = json_decode($return, true);
+			   
+			    $username   = $data['data']['token']['username'];
+                $password   = $data['data']['token']['password'];
+                $company_id = $data['data']['token']['company_id'];
+                $user_id    = $data['data']['token']['user_id'];
+			   
+			    $validateStatus = $this->validateUser($data);
+                $status = $validateStatus['status'];
+                if($status==false){
+                    return json_encode([
+                        'status'  => false,
+                        'message' => $validateStatus['message']
+                    ]);
+                }
+                else
+                {
+                    return json_encode([
+                        'status'  => true,
+                        'message' => 'Validated'
+                    ]);
+                }
+	}
   
     
-}
+}// Close of Class
 
 
 

@@ -19,7 +19,7 @@ include('envinclude.php');
     <!-- Helpers -->
     <script src="../assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!--? Config: Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file. -->
 
     <script src="../assets/js/config.js"></script>
@@ -43,6 +43,9 @@ include('envinclude.php');
     <link rel="stylesheet" href="../assets/vendor/libs/quill/editor.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/dropzone/dropzone.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/flatpickr/flatpickr.css" />
+    <link rel="stylesheet" href="../assets/sands/sands_popup.css" />
+    <link rel="stylesheet" href="alertmessage/css/sands_alert_style.css">
+
 
 
     <style>
@@ -131,6 +134,7 @@ include('envinclude.php');
 </head>
 
 <body>
+    <div id="dropdownContent" style="text-align:center;"></div>
     <!-- Layout wrapper -->
     <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
         <div class="layout-container">
@@ -169,14 +173,14 @@ include('envinclude.php');
         </div>
     </div>
 
-
+    <div id="dropdownContent" style="text-align:center;"></div>
     <!--Cropping image Before Upload Modal-->
     <!-- Crop Modal -->
     <div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Crop Vehicle Image</h5>
+                    <h5 class="modal-title">Crop User Image</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center">
@@ -210,7 +214,9 @@ include('envinclude.php');
     <script src="../assets/vendor/libs/jquery-repeater/jquery-repeater.js"></script>
     <script src="../assets/vendor/libs/flatpickr/flatpickr.js"></script>
     <script src="../assets/vendor/libs/tagify/tagify.js"></script>
-
+    <script src="../assets/sands/settings.js"></script>
+    <script src="../assets/sands/sands_popup.js"></script>
+    <script src="../alertmessage/js/sandsalert.js"></script>
     <!--<script src="../assets/js/app-ecommerce-product-add.js"></script>-->
     <script src="../assets/js/vehicles_add.js"></script>
 
@@ -220,252 +226,909 @@ include('envinclude.php');
     <!-- Page JS -->
     <script>
         $(document).ready(function() {
-            /*       let uploadedImages = [];
 
-        $('#vehicleImages').on('change', function () {
-        
-            let files = this.files;
-        
-            let formData = new FormData();
-        
-            // append all files
-            for (let i = 0; i < files.length; i++) {
-                formData.append('images[]', files[i]);
-            }
-        
-            $.ajax({
-                url: '/UploadVehicleImages',
-                type: 'POST',
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function (res) {
-        
-                    let response = JSON.parse(res);
-        
-                    if (response.status === 'success') {
-        
-                        // store filenames
-                        response.files.forEach(function (fileName) {
-        
-                            uploadedImages.push(fileName);
-        
-                            // preview
-                            $('#imagePreview').append(`
-                            
-                                <li
-                                    data-file="${fileName}"
-                                    data-img="${fileName}"
-                                    data-bs-toggle="tooltip"
-                                    data-popup="tooltip-custom"
-                                    data-bs-placement="top"
-                                    title=""
-                                    class="avatar avatar-lg pull-up img-box">
-                                    <img class="rounded-circle"
-                                         src="uploads/vehicleImages/${fileName}"
-                                         alt="" />
-                                    <a class="btn rounded-pill btn-icon btn-primary btn-fab demo waves-effect waves-light remove-img" style="color:white;"><span class="icon-base ri ri-close-line icon-15px"></span></a>
-                                </li>
-                            
-                            `);
+            loadRoles();
+            loadCompanies();
+
+            //let userTable = $('#userTable').DataTable({});
+
+            // let svgSuccess = '';
+            // let svgError = '';
+
+            // function setupDropdown(containerId, type, message, trigger) {
+
+            //     let color = '';
+
+            //     if (type === 'success') color = 'green';
+            //     if (type === 'warning') color = 'orange';
+            //     if (type === 'error') color = 'red';
+
+            //     $('#' + containerId).html(
+            //         `<div style="padding:10px;border-radius:5px;background:${color};color:white;">
+            //             ${message}
+            //         </div>`
+            //     );
+
+            //     if (trigger === 'click') {
+            //         $('#' + containerId).fadeIn().delay(3000).fadeOut();
+            //     }
+            // }
+
+            // Load Roles from DB
+            function loadRoles() {
+
+                $.ajax({
+                    url: '/LoadRoles', // your controller route
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        action: 'LoadRoles'
+                    }),
+
+                    success: function(response) {
+
+                        let roles = response.data;
+
+                        $('#select2Basic').empty();
+                        $('#select2Basic').append('<option value="">Select Role</option>');
+
+                        roles.forEach(function(role) {
+
+                            $('#select2Basic').append(
+                                `<option value="${role.role_id}">${role.role_name}</option>`
+                            );
+
                         });
-                    }
-                }
-            });
-        });
-*/
-            let uploadedImages = [];
 
+                    },
+
+                    error: function() {
+                        setupDropdown(
+                            'dropdownContent',
+                            'error',
+                            svgError + 'Error loading roles',
+                            'click'
+                        );
+                    }
+
+                });
+
+            }
+            // Load Companies from DB
+            function loadCompanies() {
+
+                $.ajax({
+                    url: '/LoadCompanies',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        action: 'LoadCompanies'
+                    }),
+
+                    success: function(response) {
+
+                        let companies = response.data;
+
+                        $('#select2Multiple').empty();
+
+                        companies.forEach(function(company) {
+
+                            $('#select2Multiple').append(
+                                `<option value="${company.ids}">
+                        ${company.company_name}
+                    </option>`
+                            );
+
+                        });
+
+                        // refresh select2
+                        $('#select2Multiple').trigger('change');
+
+                    },
+
+                    error: function() {
+                        setupDropdown(
+                            'dropdownContent',
+                            'error',
+                            svgError + 'Error loading companies',
+                            'click'
+                        );
+                    }
+
+                });
+
+            }
+            // ResetForm
+            function resetUserForm() {
+
+                // reset form fields
+                $('#UserDetailsForm')[0].reset();
+
+                $('#select2Basic').val('').trigger('change');
+
+                // reset company multi select2
+                $('#select2Multiple').val(null).trigger('change');
+
+                $('#userName').val('').prop('disabled', false);
+                $('#userPassword').val('').prop('disabled', false);
+
+                // clear images
+                uploadedImages = [];
+                $('#imagePreview').html('<img id="previewImg" src="assets/img/users/default.jpg" alt="Preview" style="width:100%; height:100%; object-fit:cover;">');
+            }
+
+            function insertUser(profileName, roleId, roleName, username, password, email, phoneNumber, companies, userImage) {
+                let postData = {
+                    name: profileName,
+                    role_id: roleId,
+                    role_name: roleName,
+                    username: username,
+                    password: password,
+                    email: email,
+                    phoneNumber: phoneNumber,
+                    companies: companies,
+                    image: userImage,
+                    action: 'InsertUserInformation'
+                };
+
+                // Insert user
+                $.ajax({
+                    url: '/InsertUser',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(postData),
+
+                    success: function(response) {
+                        setupDropdown('dropdownContent', 'success', svgSuccess + 'User saved successfully', 'click');
+                        resetUserForm();
+                        $('#imagePreview').html('<img id="previewImg" src="assets/img/users/default.jpg" alt="Preview" style="width:100%; height:100%; object-fit:cover;">');
+                        $('#userTable').DataTable().ajax.reload(null, false);
+                    },
+
+                    error: function() {
+                        setupDropdown('dropdownContent', 'error', svgError + 'Error saving user', 'click');
+                    }
+                });
+
+            }
+
+            let uploadedImage = '';
             let cropper;
             let selectedFile;
 
-            $('#vehicleImages').on('change', function() {
+            $('#userImages').on('change', function() {
+
                 const file = this.files[0];
                 if (!file) return;
+
                 selectedFile = file;
 
                 const reader = new FileReader();
+
                 reader.onload = function(e) {
+
                     const img = document.getElementById('cropImage');
                     img.src = e.target.result;
 
-                    // Destroy previous cropper if exists
                     if (cropper) cropper.destroy();
 
                     const cropModalEl = document.getElementById('cropModal');
                     const modal = new bootstrap.Modal(cropModalEl);
+
                     modal.show();
 
-                    // Initialize cropper **after modal is fully shown**
                     cropModalEl.addEventListener('shown.bs.modal', function() {
+
                         cropper = new Cropper(img, {
-                            aspectRatio: 16 / 9,
+                            aspectRatio: 1, // square for profile
                             viewMode: 1,
-                            dragMode: 'move', // only move image
-                            cropBoxResizable: false, // crop box fixed
-                            cropBoxMovable: true, // user can move crop box
+                            dragMode: 'move',
+                            cropBoxResizable: false,
+                            cropBoxMovable: true,
                             zoomable: true,
-                            scalable: false,
                             autoCropArea: 0.8,
                             background: false
                         });
+
                     }, {
                         once: true
                     });
+
                 };
 
                 reader.readAsDataURL(file);
+
             });
 
+            $('#saveUserData').on('click', function(e) {
+                e.preventDefault();
+
+                let profileName = $('#userProfileName').val().trim();
+                let roleId = $('#select2Basic').val();
+                let roleName = $('#select2Basic option:selected').text();
+                let phoneNumber = $('#userPhoneNumber').val().trim();
+                let username = $('#userName').val().trim();
+                let password = $('#userPassword').val().trim();
+
+                let userImage = $('#uploadedImageName').val() || 'default.jpg';
+
+                let companies = [];
+
+                $('#select2Multiple option:selected').each(function() {
+
+                    companies.push({
+                        ids: $(this).val(),
+                        company_name: $(this).text().trim()
+                    });
+
+                });
+
+                // Profile Name validation
+                if (profileName === '') {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Name is Required', 'click');
+                    $('#userProfileName').focus();
+                    return;
+                }
+
+                // Role validation
+                if (roleId === '' || roleId === null) {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Please select a user role', 'click');
+                    $('#select2Basic').focus();
+                    return;
+                }
+                // Email Validation
+                let email = $('#userEmail').val().trim();
+                let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (!emailPattern.test(email)) {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Please enter a valid email address', 'click');
+                    $('#userEmail').focus();
+                    return;
+                }
+
+                // Phone Number validation
+                if (phoneNumber === '') {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Phone number is required', 'click');
+                    $('#userPhoneNumber').focus();
+                    return;
+                }
+
+                if (username === '') {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Username is required', 'click');
+                    $('#userName').focus();
+                    return;
+                }
+
+                // Password validation
+                if (password === '') {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Password is required', 'click');
+                    $('#userPassword').focus();
+                    return;
+                }
+
+                // Company validation
+                if (companies.length === 0) {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Please select at least one company', 'click');
+                    $('#select2Multiple').focus();
+                    return;
+                }
+
+                insertUser(profileName, roleId, roleName, username, password, email, phoneNumber, companies, userImage);
+                // JSON Data
+
+            });
+
+            // Phone number check
+            $('#userPhoneNumber').on('keyup', function() {
+
+                let phoneNumber = $(this).val().trim();
+                let phonePattern = /^[0-9+\-() ]+$/;
+
+                if (!phonePattern.test(phoneNumber)) {
+
+                    setupDropdown('dropdownContent', 'warning', svgError + 'Phone number is invalid', 'click');
+                    $(this).focus();
+                    $(this).val('');
+
+                }
+
+            });
+            // Username duplication check
+            $('#userName').on('blur', function() {
+
+                let username = $(this).val().trim();
+
+                if (username === '') {
+                    return;
+                }
+
+                $.ajax({
+                    url: '/CheckUsername',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        username: username,
+                        action: 'CheckUsername'
+                    }),
+
+                    success: function(response) {
+
+                        if (response.exists === true) {
+
+                            setupDropdown('dropdownContent', 'warning', svgError + 'Username already exists', 'click');
+                            $('#userName').val('').focus();
+
+                        }
+
+                    },
+
+                    error: function() {
+                        setupDropdown('dropdownContent', 'error', svgError + 'Error checking username', 'click');
+                    }
+
+                });
+
+            });
+            // Jquery Close
 
             $('#cropAndUpload').on('click', function() {
 
                 let canvas = cropper.getCroppedCanvas({
-                    width: 1280,
-                    height: 720
+                    width: 400,
+                    height: 400
                 });
 
                 canvas.toBlob(function(blob) {
 
                     let formData = new FormData();
-                    formData.append('images[]', blob, 'cropped.jpg');
+                    formData.append('image', blob, 'default.jpg');
 
                     $.ajax({
-                        url: '/UploadVehicleImages',
+                        url: '/UploadUserImages',
                         type: 'POST',
                         data: formData,
                         contentType: false,
                         processData: false,
+
                         success: function(res) {
 
                             let response = JSON.parse(res);
 
                             if (response.status === 'success') {
 
-                                response.files.forEach(function(fileName) {
+                                uploadedImage = response.file;
 
-                                    uploadedImages.push(fileName);
+                                $('#imagePreview').html(`
+                        <li>
+                            <img src="assets/img/users/${uploadedImage}" 
+                            style="width:45px;height:45px;border-radius:70%;object-fit:cover;border:1px solid #ddd;">
+                        </li>
+                    `);
 
-                                    $('#imagePreview').append(`
-                            <li data-file="${fileName}" data-img="${fileName}" 
-                                data-bs-toggle="tooltip" 
-                                data-popup="tooltip-custom" 
-                                data-bs-placement="top" title="" 
-                                class="avatar avatar-lg pull-up img-box"> 
-                                <img class="rounded-circle" src="uploads/vehicleImages/${fileName}" alt="" /> 
-                                <a class="btn rounded-pill btn-icon btn-primary btn-fab demo waves-effect waves-light remove-img" style="color:white;">
-                                <span class="icon-base ri ri-close-line icon-15px"></span></a> 
-                            </li>
-                        `);
-                                });
+                                $('#uploadedImageName').val(uploadedImage);
                             }
 
-                            // close modal
                             bootstrap.Modal.getInstance(
                                 document.getElementById('cropModal')
                             ).hide();
+
                         }
+
                     });
 
                 }, 'image/jpeg', 0.9);
+
             });
 
 
+            // clear function
+            $('#clearUserData').on('click', function() {
+                resetUserForm();
+            });
 
 
+            // user table list
 
-            $(document).on('click', '.remove-img', function() {
+            let table = $('#userTable').DataTable({
+                //pageLength: 100,
+                searching: true,
+                lengthChange: false,
+                dom: "<'row mb-2'<'col-sm-6'l><'col-sm-6 d-flex justify-content-end'>>" + // top row: entries left, empty right
+                    "<'row'<'col-sm-12'tr>>" + // table
+                    "<'row mt-2'<'col-sm-6'i><'col-sm-6 d-flex justify-content-end'p>>",
 
-                let box = $(this).closest('.img-box');
-                let fileName = box.data('file');
+                columnDefs: [{
+                    targets: [0, 1, 9],
+                    className: "text-center"
+                }],
 
-                $.ajax({
-                    url: '/DeleteUploadVehicleImages',
+                ajax: {
+                    url: '/ListOfUsers',
                     type: 'POST',
-                    data: {
-                        file: fileName
+                    data: function(d) {
+                        return JSON.stringify({
+                            action: 'LoadUserList'
+                        });
                     },
-                    success: function() {
-
-                        uploadedImages = uploadedImages.filter(f => f !== fileName);
-                        box.remove();
+                    contentType: "application/json",
+                    dataSrc: 'data',
+                    error: function(xhr) {
+                        console.log(xhr.responseText);
                     }
-                });
+                },
+
+                columns: [
+
+                    {
+                        data: null,
+                        title: 'S.No',
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1;
+                        },
+                        orderable: false,
+                        searchable: false
+                    },
+
+                    {
+                        data: 'profile_image',
+                        title: 'Image',
+                        render: function(data) {
+
+                            if (!data || data === '') {
+                                data = 'default.jpg';
+                            }
+
+                            return `<img src="assets/img/users/${data}" 
+                            width="40" 
+                            height="40" 
+                            style="border-radius:50%;object-fit:cover;">`;
+                        }
+
+                    },
+                    {
+                        data: 'profile_name',
+                        title: 'Name',
+                        width: '200px'
+                    },
+                    {
+                        data: 'user_name',
+                        title: 'Username'
+                    },
+                    {
+                        data: 'user_passkey',
+                        visible: false
+                    },
+                    {
+                        data: 'user_email',
+                        title: 'Email'
+                    },
+                    {
+                        data: 'user_mobile',
+                        title: 'Phone'
+                    },
+                    {
+                        data: 'user_role_name',
+                        title: 'Role'
+                    },
+                    {
+                        data: 'company_json',
+                        title: 'Companies',
+                        render: function(data) {
+
+                            if (!data) return '';
+
+                            let companies = [];
+
+                            try {
+                                let jsonData = JSON.parse(data);
+
+                                jsonData.forEach(function(item) {
+                                    companies.push(item.company_name);
+                                });
+
+                            } catch (e) {
+                                console.log(e);
+                            }
+
+                            return companies.join(', ');
+                        }
+                    },
+                    {
+                        data: 'user_status',
+                        title: 'Status',
+
+                        render: function(data, type, row) {
+
+                            switch (data) {
+
+                                case 'Active':
+                                    return '<span class="badge rounded-pill bg-label-success">Active</span>';
+
+                                case 'Deactive':
+                                    return '<span class="badge rounded-pill bg-label-danger">Deactive</span>';
+
+                                default:
+                                    return '<span class="badge rounded-pill bg-label-secondary">' + data + '</span>';
+                            }
+
+                        }
+                    },
+
+                    {
+                        data: null,
+                        title: 'Actions',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center',
+                        render: function(data, type, row) {
+                            return `
+                        <div class="dropdown">
+                            <button type="button" class="btn dropdown-toggle hide-arrow p-0" data-bs-toggle="dropdown">
+                                <i class="icon-base ri ri-more-2-line icon-22px text-body-secondary"></i>
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+
+                                <li>
+                                    <a class="dropdown-item edit-user"
+                                    href="javascript:void(0);"
+                                    data-row='${JSON.stringify(row)}'>
+                                    Edit
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item change-status"
+                                    href="javascript:void(0);"
+                                    data-id="${row.user_id}"
+                                    data-status="${row.user_status}">
+                                    Change Status
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item reset-password"
+                                    href="javascript:void(0);"
+                                    data-id="${row.user_id}">
+                                    Reset Password
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </div>`;
+                        }
+                    }
+
+                ]
+
             });
 
-            function resetVehicleForm() {
+            $('#searchUser').on('keyup', function() {
 
-                // reset form fields
-                $('#VehicleDetailsForm')[0].reset();
+                table.search(this.value).draw();
 
-                // clear quill
-                $('.ql-editor').html('');
+            });
 
-                // clear images
-                uploadedImages = [];
-                $('#imagePreview').html('');
+            // Edit user form details
+            $(document).on('click', '.edit-user', function() {
+
+                $('#saveUserData').hide();
+                $('#updateUserData').show();
+
+                let rowData = $(this).data('row');
+
+                fillUserForm(rowData);
+
+            });
+
+            function fillUserForm(data) {
+
+                $('#editUserId').val(data.user_id);
+
+                $('#userProfileName').val(data.profile_name);
+                $('#userName').val(data.user_name).prop('disabled', true);
+                $('#userPassword').val(data.user_password).prop('disabled', true);;
+                $('#userEmail').val(data.user_email);
+                $('#userPhoneNumber').val(data.user_mobile);
+
+                // Role select
+                $('#select2Basic').val(data.user_role_id).trigger('change');
+
+                // Companies JSON
+                let companies = JSON.parse(data.company_json);
+
+                let companyIds = companies.map(c => c.ids);
+                $('#select2Multiple').val(companyIds).trigger('change');
+
+                if (data.profile_image) {
+
+                    $('#imagePreview').html(`
+                    <img src="assets/img/users/${data.profile_image}"
+                    width="50"
+                    height="50"
+                    style="border-radius:50%; object-fit:cover; border:2px solid #ddd;">
+                `);
+                    //$('#fileNameDisplay').text(data.profile_image);
+                    $('#uploadedImageName').val(data.profile_image);
+                }
+
+
             }
 
 
-            $('#saveVehicleData').on('click', function(e) {
-                e.preventDefault();
+            function updateUser(data) {
 
-                // Description from Quill editor
-                let description = $('#VehicleDiscription .ql-editor').html();
-
-                // Image array
-                // let images = [];
-                // $('.dz-preview img').each(function () {
-                //     images.push($(this).attr('src'));
-                // });
-
-                // Build JSON details
-                let vehicleDetails = {
-                    vehicleCostPerDay: $('#vehicleCostPerDay').val(),
-                    vehicleMaxDiscountPrice: $('#vehicleMaxDiscountPrice').val(),
-                    description: description,
-                    vehicleFuelType: $('#vehicleFuelType').val(),
-                    chargeTax: $('#price-charge-tax').is(':checked') ? 1 : 0,
-                    images: uploadedImages
-                };
-
-                // Full JSON object
                 let postData = {
-                    vehicleName: $('#vehicleName').val(),
-                    vehicleRegNumber: $('#vehicleRegNumber').val(),
-                    vehicleModal: $('#vehicleModal').val(),
-                    vehiclePurchaseDate: $('#vehiclePurchaseDate').val(),
-                    vehiclePassingDate: $('#vehiclePassingDate').val(),
-                    vehicleInsuranceExpDate: $('#vehicleInsuranceExpDate').val(),
-                    vehicleStatus: $('input[type="checkbox"][class="form-check-input"]:last').is(':checked') ? 'Available' : 'Unavailable',
-                    category: $('#category-org').val(),
-                    vehicleDetails: vehicleDetails,
-                    belongsToCompanyID: $('#belongsToCompany').val(),
-                    belongsToCompanyName: $('#belongsToCompany option:selected').text(),
-                    action: 'AddVehicleInformation'
+                    user_id: data.userId,
+                    name: data.profileName,
+                    username: data.username,
+                    password: data.password,
+                    email: data.email,
+                    phoneNumber: data.phoneNumber,
+                    role_id: data.roleId,
+                    role_name: data.roleName,
+                    companies: data.companies,
+                    image: data.userImage,
+                    action: 'UpdateUserInformation'
                 };
 
                 $.ajax({
-                    url: '/AddVehicles',
+                    url: '/UpdateUserInformation',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(postData),
+
                     success: function(response) {
-                        alert('Vehicle saved successfully');
+                        //let res = JSON.parse(response);
                         console.log(response);
-                        resetVehicleForm();
-                    },
-                    error: function() {
-                        alert('Error saving vehicle');
+                        if (response.status === true) {
+
+                            setupDropdown('dropdownContent', 'success', svgSuccess + 'User updated successfully', 'click');
+                            resetUserForm();
+                            $('#userTable').DataTable().ajax.reload(null, false);
+
+                            $('#saveUserData').show();
+                            $('#updateUserData').hide();
+
+                        } else {
+                            setupDropdown('dropdownContent', 'error', svgError + 'Update Failed', 'click');
+                        }
+
                     }
                 });
+            }
+
+            $('#updateUserData').click(function(e) {
+                e.preventDefault();
+
+                let userId = $('#editUserId').val();
+                let profileName = $('#userProfileName').val().trim();
+                let username = $('#userName').val().trim();
+                let password = $('#userPassword').val().trim();
+                let email = $('#userEmail').val().trim();
+                let phoneNumber = $('#userPhoneNumber').val().trim();
+                let roleId = $('#select2Basic').val();
+                let roleName = $('#select2Basic option:selected').text();
+                let companies = [];
+
+                $('#select2Multiple option:selected').each(function() {
+
+                    companies.push({
+                        ids: $(this).val(),
+                        company_name: $(this).text().trim()
+                    });
+                });
+
+                // Profile Name validation
+                if (profileName === '') {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Name is Required', 'click');
+                    $('#userProfileName').focus();
+                    return;
+                }
+
+                // Role validation
+                if (roleId === '' || roleId === null) {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Please select a user role', 'click');
+                    $('#select2Basic').focus();
+                    return;
+                }
+
+                // Email validation
+                let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (!emailPattern.test(email)) {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Please enter a valid email address', 'click');
+                    $('#userEmail').focus();
+                    return;
+                }
+
+                // Phone validation
+                if (phoneNumber === '') {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Phone number is required', 'click');
+                    $('#userPhoneNumber').focus();
+                    return;
+                }
+
+                // Password validation
+                if (password === '') {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Password is required', 'click');
+                    $('#userPassword').focus();
+                    return;
+                }
+
+                // Company validation
+                if (companies.length === 0) {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Please select at least one company', 'click');
+                    $('#select2Multiple').focus();
+                    return;
+                }
+
+                let formData = {
+                    userId: userId,
+                    profileName: $('#userProfileName').val(),
+                    username: $('#userName').val(),
+                    password: $('#userPassword').val(),
+                    email: $('#userEmail').val(),
+                    phoneNumber: $('#userPhoneNumber').val(),
+                    roleId: $('#select2Basic').val(),
+                    roleName: $('#select2Basic option:selected').text(),
+                    companies: companies,
+                    userImage: $('#uploadedImageName').val()
+                };
+
+                updateUser(formData);
 
             });
-            resetVehicleForm();
 
-        }); // Jquery Close
+            // change status click function
+            let userId = null;
+            let currentStatus = null;
+
+            $(document).on('click', '.change-status', function() {
+
+                userId = $(this).data('id');
+                currentStatus = $(this).data('status');
+
+                SaNDSAlert(
+                    'Are you sure you want to change the status?',
+                    'ChangeStatus',
+                    'warning',
+                    '#f39c12',
+                    'Yes Change',
+                    'Cancel',
+                    'Change Status'
+                );
+
+            });
+
+            $(document).on('click', '#msg_popup_confirmed', function() {
+
+                let action = $('#message_matter').attr('data-switch-values');
+
+                if (action === 'ChangeStatus') {
+
+                    changeStatus(userId, currentStatus);
+
+                }
+
+                closePopup();
+
+            });
+
+            $(document).on('click', '#msg_popup_canceled', function() {
+
+                closePopup();
+
+            });
+
+            function closePopup() {
+
+                $('#popupOverlay').hide();
+                $('#popupContainer').hide();
+
+            }
+
+            function changeStatus(userId, currentStatus) {
+                // Toggle status
+                let newStatus = currentStatus === 'Active' ? 'Deactive' : 'Active';
+                //alert(userId + '' + currentStatus);
+                $.ajax({
+                    url: '/UpdateUserStatus',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        user_id: userId,
+                        status: newStatus,
+                        action: 'ChangeUserStatus'
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            setupDropdown(
+                                'dropdownContent',
+                                'success',
+                                svgSuccess + 'Status Changed Successfully',
+                                'click'
+                            );
+
+                            // Update the row in DataTable dynamically
+                            $('#userTable').DataTable().ajax.reload(null, false);
+                        } else {
+                            setupDropdown(
+                                'dropdownContent',
+                                'error',
+                                svgError + 'Failed to update status',
+                                'click'
+                            );
+                        }
+                    },
+                    error: function() {
+                        setupDropdown(
+                            'dropdownContent',
+                            'warning',
+                            svgError + 'Error updating status',
+                            'click'
+                        );
+                    }
+                });
+            }
+
+            $(document).on('click', '.reset-password', function() {
+
+                let userId = $(this).data('id');
+                //alert('hi' + userId);
+                resetUserPassword(userId);
+            });
+
+            function resetUserPassword(userId) {
+                let randomPassword = Math.floor(10000 + Math.random() * 90000).toString();
+                $.ajax({
+                    url: '/ResetUserPassword',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        user_id: userId,
+                        password: randomPassword,
+                        action: 'ResetPassword'
+                    }),
+
+                    success: function(response) {
+                        //console.log(response);
+                        if (response.success) {
+                            setupDropdown(
+                                'dropdownContent',
+                                'success',
+                                svgSuccess + 'Password reset to '+randomPassword+' successfully',
+                                'click'
+                            );
+                            $('#userTable').DataTable().ajax.reload(null, false);
+                        } else {
+                            setupDropdown(
+                                'dropdownContent',
+                                'error',
+                                svgError + 'Password reset failed',
+                                'click'
+                            );
+                        }
+
+                    },
+
+                    error: function() {
+                        setupDropdown(
+                            'dropdownContent',
+                            'error',
+                            svgError + 'Server error',
+                            'click'
+                        );
+                    }
+
+                });
+
+            }
+
+        });
     </script>
 
 </body>
+
 
 </html>

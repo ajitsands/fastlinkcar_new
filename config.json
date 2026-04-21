@@ -1,0 +1,26 @@
+{
+    "server": {
+        "host": "aacar.sandslab.com",
+        "username": "sandsl23",
+        "password": "#^sVx(Cfo676X5O*",
+        "port": 22,
+        "remote_path": "/home/sandsl23/public_html/aacar.sandslab.com/"
+    },
+    "database": {
+        "remote": {
+            "host": "localhost",
+            "name": "sandsl23_aa_car_rental",
+            "user": "sandsl23_aa_car_user",
+            "pass": "S@nds1@b"
+        },
+        "local": {
+            "host": "localhost",
+            "name": "aacar_local",
+            "user": "root",
+            "pass": "S@nds1@b"
+        }
+    },
+    "github": {
+        "repo_url": "https://github.com/ajitsands/aacar.git"
+    }
+}

@@ -101,3 +101,8 @@
   text-align: center;
   margin-top: 1.25rem;
 }
+
+/* Custom styles for icon buttons */
+.btn-icon.btn-sm, .btn-group-sm > .btn-icon.btn {
+  font-size: 1.3025rem !important;
+}

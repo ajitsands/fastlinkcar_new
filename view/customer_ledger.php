@@ -9,6 +9,8 @@ include ROOT_PATH . '/view/envinclude.php';
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.css" />
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/fullcalendar/fullcalendar.css" />
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>alertmessage/css/sands_alert_style.css">
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/notyf/notyf.css" />
+    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/sweetalert2/sweetalert2.css" />
     <style>
         .ledger-card { height: 100%; }
         .summary-card { border-left: 4px solid; }
@@ -109,6 +111,13 @@ include ROOT_PATH . '/view/envinclude.php';
                                                     <option value="CreditCard">Credit Card</option>
                                                     <option value="Other">Other</option>
                                                 </select>
+                                            </div>
+                                            <div class="mb-3 d-none" id="divBank">
+                                                <label class="form-label">Deposited Bank</label>
+                                                <div class="input-group">
+                                                    <select class="form-select" id="selBank" name="bank_id"></select>
+                                                    <button class="btn btn-outline-primary" type="button" id="btnAddBank"><i class="ri ri-add-line ri-xl"></i></button>
+                                                </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Amount</label>
@@ -217,11 +226,38 @@ include ROOT_PATH . '/view/envinclude.php';
         </div>
     </div>
 
+    <!-- Modal: Add Bank -->
+    <div class="modal fade" id="modalAddBank" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Bank</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="frmAddBank">
+                        <div class="mb-3">
+                            <label class="form-label">Bank Name</label>
+                            <input type="text" class="form-control" id="txtNewBankName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Account Number (Optional)</label>
+                            <input type="text" class="form-control" id="txtNewAccountNo">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Save Bank</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/moment/moment.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/fullcalendar/fullcalendar.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/notyf/notyf.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
 
     <script>
     $(document).ready(function() {
@@ -229,6 +265,61 @@ include ROOT_PATH . '/view/envinclude.php';
         const currentUserId = '<?= $_SESSION['user_id'] ?? 0 ?>';
         const todayStr = '<?= date('Y-m-d') ?>';
         let ledgerTable = null;
+
+        // Initialize Notyf
+        const notyf = new Notyf({
+            duration: 3000,
+            position: { x: 'right', y: 'top' },
+            types: [
+                { type: 'success', background: '#72e128', icon: { className: 'ri-checkbox-circle-fill', tagName: 'i', color: 'white' } },
+                { type: 'error', background: '#ff4d49', icon: { className: 'ri-close-circle-fill', tagName: 'i', color: 'white' } }
+            ]
+        });
+
+        function showToast(msg, type = 'success') {
+            notyf.open({ type: type, message: msg });
+        }
+
+        // Handle Payment Method change for Bank visibility
+        $('#selPaymentMethod').on('change', function() {
+            const method = $(this).val();
+            if(method === 'Cheque' || method === 'BankTransfer') {
+                $('#divBank').removeClass('d-none');
+                loadBanks();
+            } else {
+                $('#divBank').addClass('d-none');
+                $('#selBank').val(null).trigger('change');
+            }
+        });
+
+        function loadBanks(selectedId = null) {
+            $.get('/CustomerLedgerController', { action: 'GetBanks' }, function(data) {
+                $('#selBank').empty().append('<option value="">Select Bank</option>');
+                if(data.status && data.data) {
+                    data.data.forEach(bank => {
+                        const option = new Option(bank.text, bank.id, false, bank.id == selectedId);
+                        $('#selBank').append(option);
+                    });
+                    $('#selBank').trigger('change');
+                }
+            }, 'json');
+        }
+
+        // Add Bank Modal logic
+        $('#btnAddBank').on('click', () => $('#modalAddBank').modal('show'));
+        $('#frmAddBank').on('submit', function(e) {
+            e.preventDefault();
+            const name = $('#txtNewBankName').val();
+            const acc = $('#txtNewAccountNo').val();
+            $.post('/CustomerLedgerController', { action: 'SaveBank', bank_name: name, account_no: acc }, function(res) {
+                if(res.status) {
+                    showToast('Bank added successfully', 'success');
+                    $('#modalAddBank').modal('hide');
+                    $('#frmAddBank')[0].reset();
+                    loadBanks(res.last_id); 
+                }
+            }, 'json');
+        });
 
         // Initialize Select2 for Customer
         $('#selCustomer').select2({
@@ -303,7 +394,14 @@ include ROOT_PATH . '/view/envinclude.php';
                     },
                     { 
                         data: null, 
-                        render: r => `<div class="small">${r.ref_no || '-'}</div><div style="font-size:10px" class="text-muted">${r.quotation_no || r.booking_no || ''}</div>`
+                        render: r => {
+                            let out = `<div class="small">${r.ref_no || '-'}</div>`;
+                            if(r.bank_name) {
+                                out += `<div style="font-size:10px" class="text-primary"><i class="ri-bank-line me-1"></i>${r.bank_name} ${r.account_no ? '('+r.account_no+')' : ''}</div>`;
+                            }
+                            out += `<div style="font-size:10px" class="text-muted">${r.quotation_no || r.booking_no || ''}</div>`;
+                            return out;
+                        }
                     },
                     { data: 'debit', className: 'text-end text-danger', render: v => v > 0 ? parseFloat(v).toFixed(3) : '-' },
                     { data: 'credit', className: 'text-end text-success', render: v => v > 0 ? parseFloat(v).toFixed(3) : '-' },
@@ -315,8 +413,9 @@ include ROOT_PATH . '/view/envinclude.php';
                     {
                         data: 'ids',
                         render: (id, type, row) => {
+                            const isAdmin = userRole.toLowerCase().includes('admin');
                             const isToday = moment(row.created_at).format('YYYY-MM-DD') === todayStr;
-                            const canModify = (userRole === 'Administrator') || (row.user_id == currentUserId && isToday);
+                            const canModify = isAdmin || (row.user_id == currentUserId && isToday);
                             
                             if(!canModify) return '';
 
@@ -354,7 +453,7 @@ include ROOT_PATH . '/view/envinclude.php';
         $('#frmTransaction').on('submit', function(e) {
             e.preventDefault();
             if(!$('#txtCustomerCode').val()) {
-                alert('Please select a customer first');
+                showToast('Please select a customer first', 'error');
                 return;
             }
             
@@ -367,9 +466,9 @@ include ROOT_PATH . '/view/envinclude.php';
                     $('#btnCancelEdit').addClass('d-none');
                     $('#btnSave').text('Save Transaction');
                     refreshLedger($('#txtCustomerCode').val());
-                    alert(res.message);
+                    showToast(res.message, 'success');
                 } else {
-                    alert(res.message);
+                    showToast(res.message, 'error');
                 }
             }, 'json');
         });
@@ -383,10 +482,13 @@ include ROOT_PATH . '/view/envinclude.php';
                     $('#txtTransId').val(row.ids);
                     $('#txtDate').val(row.trans_date);
                     $('#selTransType').val(row.trans_type).trigger('change');
-                    $('#selPaymentMethod').val(row.payment_method);
+                    $('#selPaymentMethod').val(row.payment_method).trigger('change');
                     $('#txtAmount').val(row.debit > 0 ? row.debit : row.credit);
                     $('#txtReference').val(row.ref_no);
                     $('#txtDescription').val(row.description);
+                    if(row.bank_id) {
+                        setTimeout(() => loadBanks(row.bank_id), 100);
+                    }
                     $('#selQuotation').val(row.quotation_no);
                     $('#selBooking').val(row.booking_no);
                     
@@ -400,6 +502,7 @@ include ROOT_PATH . '/view/envinclude.php';
         $('#btnCancelEdit').on('click', function() {
             $('#frmTransaction')[0].reset();
             $('#txtTransId').val('');
+            $('#divBank').addClass('d-none');
             $(this).addClass('d-none');
             $('#btnSave').text('Save Transaction');
         });
@@ -407,15 +510,26 @@ include ROOT_PATH . '/view/envinclude.php';
         // Delete Button Click
         $(document).on('click', '.btn-delete', function() {
             const id = $(this).data('id');
-            if(confirm('Are you sure you want to delete this transaction? This action cannot be undone.')) {
-                $.post('/CustomerLedgerController', { action: 'DeleteTransaction', ids: id }, function(res) {
-                    if(res.status) {
-                        ledgerTable.ajax.reload(null, false);
-                    } else {
-                        alert(res.message);
-                    }
-                }, 'json');
-            }
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You want to delete this transaction? This action cannot be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/CustomerLedgerController', { action: 'DeleteTransaction', ids: id }, function(res) {
+                        if(res.status) {
+                            ledgerTable.ajax.reload(null, false);
+                            showToast('Transaction deleted successfully', 'success');
+                        } else {
+                            showToast(res.message, 'error');
+                        }
+                    }, 'json');
+                }
+            });
         });
 
         // Cheque Status Update from Main Table
@@ -424,16 +538,27 @@ include ROOT_PATH . '/view/envinclude.php';
             const status = $(this).data('status');
             const msg = status === 'Pending' ? 'Revoke cheque status back to Pending?' : `Mark cheque as ${status}?`;
             
-            if(confirm(msg)) {
-                $.post('/CustomerLedgerController', { action: 'UpdateChequeStatus', ids: id, status: status }, function(res) {
-                    if(res.status) {
-                        ledgerTable.ajax.reload(null, false);
-                        if(calendar) calendar.refetchEvents();
-                    } else {
-                        alert(res.message);
-                    }
-                }, 'json');
-            }
+            Swal.fire({
+                title: 'Are you sure?',
+                text: msg,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, proceed!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/CustomerLedgerController', { action: 'UpdateChequeStatus', ids: id, status: status }, function(res) {
+                        if(res.status) {
+                            ledgerTable.ajax.reload(null, false);
+                            if(calendar) calendar.refetchEvents();
+                            showToast('Status updated successfully', 'success');
+                        } else {
+                            showToast(res.message, 'error');
+                        }
+                    }, 'json');
+                }
+            });
         });
 
         // --- Cheque Calendar Logic ---
@@ -536,6 +661,9 @@ include ROOT_PATH . '/view/envinclude.php';
                     detailsTable.ajax.reload();
                     calendar.refetchEvents();
                     if(ledgerTable) ledgerTable.ajax.reload();
+                    showToast('Status updated successfully', 'success');
+                } else {
+                    showToast(res.message, 'error');
                 }
             }, 'json');
         });

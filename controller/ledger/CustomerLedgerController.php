@@ -72,6 +72,19 @@ class CustomerLedgerController
                 echo $this->varPDOModelObj->ListFromTable($sql, [$id]);
                 break;
 
+            case 'GetBanks':
+                $sql = "SELECT ids AS id, bank_name AS text, account_no FROM tbl_banks ORDER BY bank_name ASC";
+                echo $this->varPDOModelObj->ListFromTable($sql, []);
+                break;
+
+            case 'SaveBank':
+                $bank_name = $_POST['bank_name'] ?? '';
+                $account_no = $_POST['account_no'] ?? null;
+                $company_id = $_SESSION['company_id'] ?? 1;
+                $sql = "INSERT INTO tbl_banks (bank_name, account_no, company_id) VALUES (?, ?, ?)";
+                echo $this->varPDOModelObj->AddToTable($sql, [$bank_name, $account_no, $company_id]);
+                break;
+
             default:
                 echo json_encode(['status' => false, 'message' => 'Invalid Action']);
                 break;
@@ -90,6 +103,7 @@ class CustomerLedgerController
         $description = $_POST['description'] ?? '';
         $quotation_no = $_POST['quotation_no'] ?? null;
         $booking_no = $_POST['booking_no'] ?? null;
+        $bank_id = $_POST['bank_id'] ?? null;
 
         // Logic for debit/credit
         // Invoices are Debits (Customer owes)
@@ -109,16 +123,16 @@ class CustomerLedgerController
             }
             $sql = "UPDATE tbl_customer_ledger SET 
                     customer_code = ?, quotation_no = ?, booking_no = ?, trans_date = ?, 
-                    trans_type = ?, payment_method = ?, debit = ?, credit = ?, 
+                    trans_type = ?, payment_method = ?, bank_id = ?, debit = ?, credit = ?, 
                     ref_no = ?, description = ? WHERE ids = ?";
-            $params = [$customer_code, $quotation_no, $booking_no, $trans_date, $trans_type, $payment_method, $debit, $credit, $ref_no, $description, $ids];
+            $params = [$customer_code, $quotation_no, $booking_no, $trans_date, $trans_type, $payment_method, $bank_id, $debit, $credit, $ref_no, $description, $ids];
             echo $this->varPDOModelObj->UpdateTable($sql, $params);
         } else {
             // New entry
             $sql = "INSERT INTO tbl_customer_ledger 
-                    (customer_code, quotation_no, booking_no, trans_date, trans_type, payment_method, debit, credit, ref_no, cheque_status, description, user_id, company_id) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)";
-            $params = [$customer_code, $quotation_no, $booking_no, $trans_date, $trans_type, $payment_method, $debit, $credit, $ref_no, $description, $user_id, $company_id];
+                    (customer_code, quotation_no, booking_no, trans_date, trans_type, payment_method, bank_id, debit, credit, ref_no, cheque_status, description, user_id, company_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)";
+            $params = [$customer_code, $quotation_no, $booking_no, $trans_date, $trans_type, $payment_method, $bank_id, $debit, $credit, $ref_no, $description, $user_id, $company_id];
             echo $this->varPDOModelObj->AddToTable($sql, $params);
         }
     }
@@ -198,10 +212,10 @@ class CustomerLedgerController
 
     private function canModify($ids)
     {
-        $user_role = $_SESSION['user_role_name'] ?? 'User';
+        $user_role = strtolower($_SESSION['user_role_name'] ?? 'User');
         $user_id = $_SESSION['user_id'] ?? 0;
 
-        if ($user_role === 'Administrator') return true;
+        if (strpos($user_role, 'admin') !== false) return true;
 
         $sql = "SELECT created_at, user_id FROM tbl_customer_ledger WHERE ids = ?";
         $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$ids]), true);
@@ -219,7 +233,11 @@ class CustomerLedgerController
     private function handleGetLedger()
     {
         $customer_code = $_GET['customer_code'] ?? '';
-        $sql = "SELECT * FROM tbl_customer_ledger WHERE customer_code = ? ORDER BY trans_date ASC, ids ASC";
+        $sql = "SELECT l.*, b.bank_name, b.account_no 
+                FROM tbl_customer_ledger l 
+                LEFT JOIN tbl_banks b ON l.bank_id = b.ids 
+                WHERE l.customer_code = ? 
+                ORDER BY l.trans_date ASC, l.ids ASC";
         $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$customer_code]), true);
         
         if ($res['status']) {

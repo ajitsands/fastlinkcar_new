@@ -42,29 +42,39 @@ class LoginController
 		switch($action)
 		{
 			case 'Authenticate':
-			     // Please Write Authentication Code here with DB 
-			     //if Success Below Code Has to Execute, Belocode G=Generate a JWT Token to Client to Store in Local Storage
+			     $userName = $_POST['userName'] ?? '';
+			     $passWord = $_POST['passWord'] ?? '';
+			     $companyId = $_POST['companyId'] ?? 1;
 			     
-			     $authentication ='success';
-			     $EncPassword = $this->encryption->encrypt($_POST['passWord']);
-			     if($authentication = 'success')
+			     // Authenticate against database (Plain Text as requested)
+			     $sql = "SELECT user_id, user_name, user_role_name FROM tbl_users WHERE user_name = ? AND user_passkey = ? AND user_status = 'Active'";
+			     $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$userName, $passWord]), true);
+			     
+			     if($res['status'] && !empty($res['data']))
 			     {
-			            $this->JWT = new JWTClass($_ENV['JWTKEY'],$_ENV['MAINSERVER'],$this->user_name); 
-        			    $JWToken=  $this->JWT->CreateJWToken($_POST['companyId'], $_POST['userName'], $this->userID, $EncPassword, $this->status, (60 * 60 * 24 * 7)); // Token for 7 Days
-        			    //$this->login_result = $this->varPDOModelObj->ListFromTable($var[0],[1]);
+			            $user = $res['data'][0];
+			            
+			            // Populate Session
+			            $_SESSION['user_id'] = $user['user_id'];
+			            $_SESSION['user_role_name'] = $user['user_role_name'];
+			            $_SESSION['company_id'] = $companyId;
+			            
+			            $this->JWT = new JWTClass($_ENV['JWTKEY'], $_ENV['MAINSERVER'], $userName); 
+        			    $JWToken = $this->JWT->CreateJWToken($companyId, $userName, $user['user_id'], $passWord, 'Active', (60 * 60 * 24 * 7)); // Token for 7 Days
+        			    
         			    echo json_encode([
                             'status'  => true,
-                            'data' => $JWToken
+                            'data' => $JWToken,
+                            'message' => 'Login Successful'
                         ]);
 			     }
 			     else
 			     {
 			         echo json_encode([
                             'status'  => false,
-                            'message' => 'User Authentication Failed Please check your username or password / contact your administrator'
+                            'message' => 'Authentication Failed. Please check your username or password.'
                         ]);
 			     }
-			   
 			break;
 			case 'Validate':
 

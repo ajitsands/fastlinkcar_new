@@ -148,11 +148,6 @@
                 </div>
                 <div class="mb-5">
                     <button type="button" class="btn btn-primary d-grid w-100" id="btn_login">Sign in</button>
-                 
-                </div>
-                <div class="mb-5">
-                    <button type="button" class="btn btn-primary d-grid w-100" id="btn_CheckLogin">Sign in</button>
-                 
                 </div>
               </form>
 
@@ -245,17 +240,18 @@
                 type: "POST",
                 data: { companyId: $('#selectCompanyDropDown').val(),userName : $('#userName').val(),passWord : $('#current-password').val() ,action : 'Authenticate' },
                 success: function(response) {
-    
+                    console.log("Login Response:", response);
                     let res = JSON.parse(response);
     
                     if (res.status === true) {
                         localStorage.setItem('aacar_jwt_token', res.data);
                         if (typeof setupDropdown === 'function') {
-                            setupDropdown('dropdownContent','success','(v) Login Successful','click');
+                            setupDropdown('dropdownContent','success','Login Successful','click');
                         }
                         
                         setTimeout(function() {
-                            window.location.href = "/Home?val=" + encodeURIComponent("<?php echo $this->encryption->encrypt('1,1-1');?>");
+                            // Redirect to home. User logic often uses a val param for session context.
+                            window.location.href = "/Home";
                         }, 1000);
                     } else {
                         if (typeof setupDropdown === 'function') {
@@ -266,22 +262,6 @@
                     }
                 }
             });
-		})
-		
-		$('#btn_CheckLogin').click(function(e){
-		    e.preventDefault();
-		    let formData = Object.fromEntries(
-                new FormData(document.getElementById("formAuthentication")).entries()
-            );
-            
-            //formData.userName = "Ajit Kumar";
-		    validateJWT(function(status){
-                if(!status){
-                    //window.location.href="/Login";
-                    console.log(status);
-                }
-            }, "Validate", "aacar_jwt_token", "LoginController",formData);
-            // Action , Token Name in LocalStorage , Which Controller you send
 		})
 		
 		

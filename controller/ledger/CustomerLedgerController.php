@@ -85,6 +85,19 @@ class CustomerLedgerController
                 echo $this->varPDOModelObj->AddToTable($sql, [$bank_name, $account_no, $company_id]);
                 break;
 
+            case 'GetLedgerHeads':
+                $sql = "SELECT ids AS id, head_name AS text, head_type FROM tbl_ledger_heads ORDER BY head_name ASC";
+                echo $this->varPDOModelObj->ListFromTable($sql, []);
+                break;
+
+            case 'SaveLedgerHead':
+                $head_name = $_POST['head_name'] ?? '';
+                $head_type = $_POST['head_type'] ?? 'Credit';
+                $company_id = $_SESSION['company_id'] ?? 1;
+                $sql = "INSERT INTO tbl_ledger_heads (head_name, head_type, company_id) VALUES (?, ?, ?)";
+                echo $this->varPDOModelObj->AddToTable($sql, [$head_name, $head_type, $company_id]);
+                break;
+
             default:
                 echo json_encode(['status' => false, 'message' => 'Invalid Action']);
                 break;
@@ -105,11 +118,25 @@ class CustomerLedgerController
         $booking_no = $_POST['booking_no'] ?? null;
         $bank_id = $_POST['bank_id'] ?? null;
 
-        // Logic for debit/credit
-        // Invoices are Debits (Customer owes)
-        // Payments, Advances, Discounts are Credits (Customer paid)
-        $debit = ($trans_type == 'Invoice') ? $amount : 0;
-        $credit = ($trans_type != 'Invoice') ? $amount : 0;
+        // Dynamic logic for debit/credit based on head_type
+        $debit = 0;
+        $credit = 0;
+        
+        $sqlHead = "SELECT head_type FROM tbl_ledger_heads WHERE head_name = ?";
+        $resHead = json_decode($this->varPDOModelObj->ListFromTable($sqlHead, [$trans_type]), true);
+        
+        if ($resHead['status'] && !empty($resHead['data'])) {
+            $type = $resHead['data'][0]['head_type'];
+            if ($type === 'Debit') {
+                $debit = $amount;
+            } else {
+                $credit = $amount;
+            }
+        } else {
+            // Fallback for legacy data or if head not found
+            $debit = ($trans_type == 'Invoice' || $trans_type == 'Opening Balance') ? $amount : 0;
+            $credit = ($debit == 0) ? $amount : 0;
+        }
 
         $user_id = $_SESSION['user_id'] ?? 1;
         $company_id = $_SESSION['company_id'] ?? 1;

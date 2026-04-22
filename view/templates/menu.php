@@ -91,8 +91,8 @@
                         
                           <i class="menu-icon icon-base ri ri-list-unordered"></i>
                           <div data-i18n="List of Vehicles">List of Vehicles</div>
-                        </a>
-                      </li> -->
+                         </a>
+                       </li> -->
 
          </ul>
        </li>
@@ -131,6 +131,27 @@
 
                <i class="menu-icon icon-base ri ri-draft-line"></i>
                <div data-i18n="Contract Generation">Contract Generation</div>
+             </a>
+           </li>
+         </ul>
+       </li>
+
+       <li class="menu-item <?php if ($decrypt[0] == '5') { echo 'active'; } ?>">
+         <a href="javascript:void(0)" class="menu-link menu-toggle">
+           <i class="menu-icon icon-base ri ri-wallet-line"></i>
+           <div data-i18n="Accounting">Accounting</div>
+         </a>
+         <ul class="menu-sub">
+           <li class="menu-item <?php if ($decrypt[0] == '5-1') { echo 'active'; } ?>">
+             <a href="/CustomerLedger?val=<?php echo $this->encryption->encrypt('5,5-1'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
+               <div data-i18n="Customer Ledger">Customer Ledger</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($decrypt[0] == '5-2') { echo 'active'; } ?>">
+             <a href="/FundFlow?val=<?php echo $this->encryption->encrypt('5,5-2'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-line-chart-line"></i>
+               <div data-i18n="Fund Flow Report">Fund Flow Report</div>
              </a>
            </li>
          </ul>

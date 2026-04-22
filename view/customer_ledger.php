@@ -93,14 +93,10 @@ include ROOT_PATH . '/view/envinclude.php';
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Type</label>
-                                                <select name="trans_type" id="selTransType" class="form-select" required>
-                                                    <option value="Payment">Payment</option>
-                                                    <option value="Advance">Advance</option>
-                                                    <option value="Discount">Discount</option>
-                                                    <option value="Invoice">Invoice (Debit)</option>
-                                                    <option value="Opening Balance">Opening Balance</option>
-                                                    <option value="Other">Other</option>
-                                                </select>
+                                                <div class="input-group">
+                                                    <select name="trans_type" id="selTransType" class="form-select" required></select>
+                                                    <button class="btn btn-outline-primary" type="button" id="btnAddHead"><i class="ri ri-add-line ri-xl"></i></button>
+                                                </div>
                                             </div>
                                             <div class="mb-3" id="divPaymentMethod">
                                                 <label class="form-label">Payment Method</label>
@@ -251,6 +247,34 @@ include ROOT_PATH . '/view/envinclude.php';
         </div>
     </div>
 
+    <!-- Modal: Add Head -->
+    <div class="modal fade" id="modalAddHead" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Head</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="frmAddHead">
+                        <div class="mb-3">
+                            <label class="form-label">Head Name</label>
+                            <input type="text" class="form-control" id="txtNewHeadName" required placeholder="e.g. Refund">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="selNewHeadType" required>
+                                <option value="Credit">Credit (Money Received)</option>
+                                <option value="Debit">Debit (Charge/Invoice)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Save Head</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.js"></script>
@@ -295,6 +319,7 @@ include ROOT_PATH . '/view/envinclude.php';
         function loadBanks(selectedId = null) {
             $.get('/CustomerLedgerController', { action: 'GetBanks' }, function(data) {
                 $('#selBank').empty().append('<option value="">Select Bank</option>');
+                // res is already parsed if dataType is 'json'
                 if(data.status && data.data) {
                     data.data.forEach(bank => {
                         const option = new Option(bank.text, bank.id, false, bank.id == selectedId);
@@ -304,6 +329,38 @@ include ROOT_PATH . '/view/envinclude.php';
                 }
             }, 'json');
         }
+
+        function loadHeads(selectedName = null) {
+            $.get('/CustomerLedgerController', { action: 'GetLedgerHeads' }, function(data) {
+                $('#selTransType').empty().append('<option value="">Select Type</option>');
+                if(data.status && data.data) {
+                    data.data.forEach(head => {
+                        const option = new Option(head.text, head.text, false, head.text == selectedName);
+                        $(option).attr('data-head-type', head.head_type);
+                        $('#selTransType').append(option);
+                    });
+                    $('#selTransType').trigger('change');
+                }
+            }, 'json');
+        }
+        
+        loadHeads(); // Initial load
+
+        // Add Head Modal logic
+        $('#btnAddHead').on('click', () => $('#modalAddHead').modal('show'));
+        $('#frmAddHead').on('submit', function(e) {
+            e.preventDefault();
+            const name = $('#txtNewHeadName').val();
+            const type = $('#selNewHeadType').val();
+            $.post('/CustomerLedgerController', { action: 'SaveLedgerHead', head_name: name, head_type: type }, function(res) {
+                if(res.status) {
+                    showToast('Head added successfully', 'success');
+                    $('#modalAddHead').modal('hide');
+                    $('#frmAddHead')[0].reset();
+                    loadHeads(name);
+                }
+            }, 'json');
+        });
 
         // Add Bank Modal logic
         $('#btnAddBank').on('click', () => $('#modalAddBank').modal('show'));
@@ -319,6 +376,17 @@ include ROOT_PATH . '/view/envinclude.php';
                     loadBanks(res.last_id); 
                 }
             }, 'json');
+        });
+
+        // Toggle Payment Method select based on type
+        $('#selTransType').on('change', function() {
+            const headType = $(this).find(':selected').data('head-type');
+            if(headType === 'Debit') {
+                $('#divPaymentMethod').addClass('d-none');
+                $('#selPaymentMethod').val('N/A').trigger('change');
+            } else {
+                $('#divPaymentMethod').removeClass('d-none');
+            }
         });
 
         // Initialize Select2 for Customer
@@ -338,15 +406,6 @@ include ROOT_PATH . '/view/envinclude.php';
             refreshLedger(data.customer_code);
         });
 
-        // Toggle Payment Method select based on type
-        $('#selTransType').on('change', function() {
-            if($(this).val() === 'Invoice' || $(this).val() === 'Opening Balance') {
-                $('#divPaymentMethod').addClass('d-none');
-                $('#selPaymentMethod').val('N/A');
-            } else {
-                $('#divPaymentMethod').removeClass('d-none');
-            }
-        });
 
         function loadCustomerDependents(code) {
             // Load Quotations

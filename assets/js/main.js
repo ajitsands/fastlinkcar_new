@@ -468,9 +468,53 @@ function loadSearchData() {
     })
     .then(json => {
       data = json;
+      // Add Menu Items from DOM to data.navigation
+      if (!data.navigation) data.navigation = {};
+      
+      const menuItems = [];
+      document.querySelectorAll('.menu-inner .menu-item').forEach(item => {
+        const link = item.querySelector('.menu-link:not(.menu-toggle)');
+        if (link && link.getAttribute('href') !== 'javascript:void(0)') {
+          const name = link.querySelector('[data-i18n]')?.textContent || link.textContent.trim();
+          const iconClass = link.querySelector('.menu-icon')?.classList.value || '';
+          const icon = iconClass.split(' ').find(c => c.startsWith('ri-')) || 'ri-file-line';
+          
+          menuItems.push({
+            name: name,
+            url: link.getAttribute('href'),
+            icon: icon
+          });
+        }
+      });
+      
+      if (menuItems.length > 0) {
+        data.navigation['Menu'] = menuItems;
+      }
+
       initializeAutocomplete();
     })
-    .catch(error => console.error('Error loading JSON:', error));
+    .catch(error => {
+        console.error('Error loading JSON:', error);
+        // Fallback: initialize with just Menu if JSON fails
+        data.navigation = {};
+        const menuItems = [];
+        document.querySelectorAll('.menu-inner .menu-item').forEach(item => {
+            const link = item.querySelector('.menu-link:not(.menu-toggle)');
+            if (link && link.getAttribute('href') !== 'javascript:void(0)') {
+                const name = link.querySelector('[data-i18n]')?.textContent || link.textContent.trim();
+                const iconClass = link.querySelector('.menu-icon')?.classList.value || '';
+                const icon = iconClass.split(' ').find(c => c.startsWith('ri-')) || 'ri-file-line';
+                
+                menuItems.push({
+                    name: name,
+                    url: link.getAttribute('href'),
+                    icon: icon
+                });
+            }
+        });
+        data.navigation['Menu'] = menuItems;
+        initializeAutocomplete();
+    });
 }
 
 // Initialize autocomplete

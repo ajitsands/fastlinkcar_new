@@ -97,6 +97,12 @@ class CustomerLedgerController
                 $sql = "INSERT INTO tbl_ledger_heads (head_name, head_type, company_id) VALUES (?, ?, ?)";
                 echo $this->varPDOModelObj->AddToTable($sql, [$head_name, $head_type, $company_id]);
                 break;
+            
+            case 'GetPendingCheques':
+                $customer_code = $_GET['customer_code'] ?? '';
+                $sql = "SELECT cheque_date, credit as amount, ref_no FROM tbl_customer_ledger WHERE customer_code = ? AND payment_method = 'Cheque' AND cheque_status = 'Pending' ORDER BY cheque_date ASC";
+                echo $this->varPDOModelObj->ListFromTable($sql, [$customer_code]);
+                break;
 
             default:
                 echo json_encode(['status' => false, 'message' => 'Invalid Action']);
@@ -114,9 +120,11 @@ class CustomerLedgerController
         $amount = $_POST['amount'] ?? 0;
         $ref_no = $_POST['ref_no'] ?? '';
         $description = $_POST['description'] ?? '';
-        $quotation_no = $_POST['quotation_no'] ?? null;
-        $booking_no = $_POST['booking_no'] ?? null;
-        $bank_id = $_POST['bank_id'] ?? null;
+        $quotation_no = !empty($_POST['quotation_no']) ? $_POST['quotation_no'] : null;
+        $booking_no = !empty($_POST['booking_no']) ? $_POST['booking_no'] : null;
+        $bank_id = !empty($_POST['bank_id']) ? $_POST['bank_id'] : null;
+        $cheque_date = !empty($_POST['cheque_date']) ? $_POST['cheque_date'] : null;
+        $company_bank_id = !empty($_POST['company_bank_id']) ? $_POST['company_bank_id'] : null;
 
         // Dynamic logic for debit/credit based on head_type
         $debit = 0;
@@ -149,17 +157,17 @@ class CustomerLedgerController
                 return;
             }
             $sql = "UPDATE tbl_customer_ledger SET 
-                    customer_code = ?, quotation_no = ?, booking_no = ?, trans_date = ?, 
-                    trans_type = ?, payment_method = ?, bank_id = ?, debit = ?, credit = ?, 
+                    customer_code = ?, quotation_no = ?, booking_no = ?, trans_date = ?, cheque_date = ?, 
+                    trans_type = ?, payment_method = ?, bank_id = ?, company_bank_id = ?, debit = ?, credit = ?, 
                     ref_no = ?, description = ? WHERE ids = ?";
-            $params = [$customer_code, $quotation_no, $booking_no, $trans_date, $trans_type, $payment_method, $bank_id, $debit, $credit, $ref_no, $description, $ids];
+            $params = [$customer_code, $quotation_no, $booking_no, $trans_date, $cheque_date, $trans_type, $payment_method, $bank_id, $company_bank_id, $debit, $credit, $ref_no, $description, $ids];
             echo $this->varPDOModelObj->UpdateTable($sql, $params);
         } else {
             // New entry
             $sql = "INSERT INTO tbl_customer_ledger 
-                    (customer_code, quotation_no, booking_no, trans_date, trans_type, payment_method, bank_id, debit, credit, ref_no, cheque_status, description, user_id, company_id) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)";
-            $params = [$customer_code, $quotation_no, $booking_no, $trans_date, $trans_type, $payment_method, $bank_id, $debit, $credit, $ref_no, $description, $user_id, $company_id];
+                    (customer_code, quotation_no, booking_no, trans_date, cheque_date, trans_type, payment_method, bank_id, company_bank_id, debit, credit, ref_no, cheque_status, description, user_id, company_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)";
+            $params = [$customer_code, $quotation_no, $booking_no, $trans_date, $cheque_date, $trans_type, $payment_method, $bank_id, $company_bank_id, $debit, $credit, $ref_no, $description, $user_id, $company_id];
             echo $this->varPDOModelObj->AddToTable($sql, $params);
         }
     }
@@ -167,15 +175,15 @@ class CustomerLedgerController
     private function handleGetChequeCalendarEvents()
     {
         $customer_code = $_GET['customer_code'] ?? null;
-        $sql = "SELECT trans_date, cheque_status, COUNT(*) as cheque_count 
+        $sql = "SELECT cheque_date, cheque_status, COUNT(*) as cheque_count 
                 FROM tbl_customer_ledger 
-                WHERE payment_method = 'Cheque' ";
+                WHERE payment_method = 'Cheque' AND cheque_date IS NOT NULL ";
         $params = [];
         if ($customer_code) {
             $sql .= " AND customer_code = ? ";
             $params[] = $customer_code;
         }
-        $sql .= " GROUP BY trans_date, cheque_status";
+        $sql .= " GROUP BY cheque_date, cheque_status";
         $res = json_decode($this->varPDOModelObj->ListFromTable($sql, $params), true);
         
         $events = [];
@@ -184,10 +192,11 @@ class CustomerLedgerController
                 $color = ($row['cheque_status'] === 'Collected') ? '#28c76f' : (($row['cheque_status'] === 'Bounced') ? '#ea5455' : '#ff9f43');
                 $events[] = [
                     'title' => $row['cheque_count'] . ' ' . $row['cheque_status'],
-                    'start' => $row['trans_date'],
+                    'start' => $row['cheque_date'],
                     'color' => $color,
+                    'textColor' => '#ffffff',
                     'allDay' => true,
-                    'extendedProps' => ['date' => $row['trans_date']]
+                    'extendedProps' => ['date' => $row['cheque_date']]
                 ];
             }
         }
@@ -202,7 +211,7 @@ class CustomerLedgerController
         $sql = "SELECT l.*, c.customer_name 
                 FROM tbl_customer_ledger l
                 JOIN customer_details c ON l.customer_code = c.customer_id
-                WHERE l.payment_method = 'Cheque' AND l.trans_date = ? ";
+                WHERE l.payment_method = 'Cheque' AND l.cheque_date = ? ";
         $params = [$date];
         if ($customer_code) {
             $sql .= " AND l.customer_code = ? ";
@@ -260,9 +269,10 @@ class CustomerLedgerController
     private function handleGetLedger()
     {
         $customer_code = $_GET['customer_code'] ?? '';
-        $sql = "SELECT l.*, b.bank_name, b.account_no 
+        $sql = "SELECT l.*, b.bank_name, b.account_no, cb.bank_name as company_bank_name, cb.account_no as company_account_no
                 FROM tbl_customer_ledger l 
                 LEFT JOIN tbl_banks b ON l.bank_id = b.ids 
+                LEFT JOIN tbl_banks cb ON l.company_bank_id = cb.ids 
                 WHERE l.customer_code = ? 
                 ORDER BY l.trans_date ASC, l.ids ASC";
         $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$customer_code]), true);

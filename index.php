@@ -239,6 +239,10 @@ class RoutingClass
             'CustomerLedger/' => 'CustomerLedger',
             
             'CustomerLedgerController' => 'CustomerLedgerController',
+            'FundFlow' => 'FundFlow',
+            'FundFlow/' => 'FundFlow',
+            'FundFlowController' => 'FundFlowController',
+            'FundFlowController/' => 'FundFlowController',
             'CustomerLedgerController/' => 'CustomerLedgerController',
        
 
@@ -549,6 +553,14 @@ class RoutingClass
     private function CustomerLedgerController(...$params)
     {
         $this->includeWithParams("controller/ledger/CustomerLedgerController.php", $_GET);
+    }
+    private function FundFlow(...$params)
+    {
+        $this->includeWithParams("view/fund_flow.php", $_GET);
+    }
+    private function FundFlowController(...$params)
+    {
+        $this->includeWithParams("controller/reports/FundFlowController.php", $_GET);
     }
     private function includeWithParams($file, $params)
     {

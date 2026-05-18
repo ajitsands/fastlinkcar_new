@@ -109,19 +109,31 @@ include ROOT_PATH . '/view/envinclude.php';
                                                 </select>
                                             </div>
                                             <div class="mb-3 d-none" id="divBank">
-                                                <label class="form-label">Deposited Bank</label>
+                                                <label class="form-label">Customer Bank (on Cheque)</label>
                                                 <div class="input-group">
                                                     <select class="form-select" id="selBank" name="bank_id"></select>
                                                     <button class="btn btn-outline-primary" type="button" id="btnAddBank"><i class="ri ri-add-line ri-xl"></i></button>
                                                 </div>
+                                            </div>
+                                            <div class="mb-3 d-none" id="divCompanyBank">
+                                                <label class="form-label">Company Bank (Deposited To)</label>
+                                                <select class="form-select" id="selCompanyBank" name="company_bank_id"></select>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Amount</label>
                                                 <input type="number" step="0.001" name="amount" id="txtAmount" class="form-control" required placeholder="0.000">
                                             </div>
                                             <div class="mb-3">
-                                                <label class="form-label">Ref / Cheque No.</label>
-                                                <input type="text" name="ref_no" id="txtReference" class="form-control" placeholder="Optional">
+                                                <div class="row g-2">
+                                                    <div class="col-12" id="divReference">
+                                                        <label class="form-label">Ref / Cheque No.</label>
+                                                        <input type="text" name="ref_no" id="txtReference" class="form-control" placeholder="Optional">
+                                                    </div>
+                                                    <div class="col-6 d-none" id="divChequeDate">
+                                                        <label class="form-label">Cheque Date</label>
+                                                        <input type="date" name="cheque_date" id="txtChequeDate" class="form-control">
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="mb-4">
                                                 <label class="form-label">Description</label>
@@ -175,7 +187,7 @@ include ROOT_PATH . '/view/envinclude.php';
 
     <!-- Calendar Modal -->
     <div class="modal fade" id="modalChequeCalendar" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Cheque Collection Calendar</h5>
@@ -186,6 +198,10 @@ include ROOT_PATH . '/view/envinclude.php';
                         <div class="col-md-6">
                             <label class="form-label">Filter by Customer</label>
                             <select id="selCalendarCustomer" class="form-select select2-modal"></select>
+                        </div>
+                        <div class="col-md-6 d-none" id="divPendingSummary">
+                            <label class="form-label">Pending Cheques Summary</label>
+                            <div id="pendingBadges" class="d-flex flex-wrap gap-1"></div>
                         </div>
                     </div>
                     <div id="chequeCalendar"></div>
@@ -307,14 +323,44 @@ include ROOT_PATH . '/view/envinclude.php';
         // Handle Payment Method change for Bank visibility
         $('#selPaymentMethod').on('change', function() {
             const method = $(this).val();
-            if(method === 'Cheque' || method === 'BankTransfer') {
+            if(method === 'Cheque') {
                 $('#divBank').removeClass('d-none');
+                $('#divCompanyBank').removeClass('d-none');
+                $('#divChequeDate').removeClass('d-none');
+                $('#divReference').removeClass('col-12').addClass('col-6');
+                $('#txtChequeDate').attr('required', true);
                 loadBanks();
+                loadCompanyBanks();
+            } else if(method === 'BankTransfer') {
+                $('#divBank').addClass('d-none');
+                $('#divCompanyBank').removeClass('d-none');
+                $('#divChequeDate').addClass('d-none');
+                $('#divReference').removeClass('col-6').addClass('col-12');
+                $('#txtChequeDate').attr('required', false);
+                loadCompanyBanks();
             } else {
                 $('#divBank').addClass('d-none');
+                $('#divCompanyBank').addClass('d-none');
+                $('#divChequeDate').addClass('d-none');
+                $('#divReference').removeClass('col-6').addClass('col-12');
+                $('#txtChequeDate').attr('required', false);
                 $('#selBank').val(null).trigger('change');
+                $('#selCompanyBank').val(null).trigger('change');
             }
         });
+
+        function loadCompanyBanks(selectedId = null) {
+            $.get('/CustomerLedgerController', { action: 'GetBanks' }, function(data) {
+                $('#selCompanyBank').empty().append('<option value="">Select Company Bank</option>');
+                if(data.status && data.data) {
+                    data.data.forEach(bank => {
+                        const option = new Option(`${bank.text} (${bank.account_no})`, bank.id, false, bank.id == selectedId);
+                        $('#selCompanyBank').append(option);
+                    });
+                    $('#selCompanyBank').trigger('change');
+                }
+            }, 'json');
+        }
 
         function loadBanks(selectedId = null) {
             $.get('/CustomerLedgerController', { action: 'GetBanks' }, function(data) {
@@ -454,11 +500,32 @@ include ROOT_PATH . '/view/envinclude.php';
                     { 
                         data: null, 
                         render: r => {
-                            let out = `<div class="small">${r.ref_no || '-'}</div>`;
+                            let out = '';
+                            
+                            // Top Line: Ref / Check No and Cheque Date
+                            out += `<div class="fw-bold">
+                                ${r.ref_no || '-'}
+                                ${r.cheque_date ? `<span class="text-info fw-normal ms-2" style="font-size:11px">(${moment(r.cheque_date).format('DD-MM-YYYY')})</span>` : ''}
+                            </div>`;
+
+                            // Bank Details
                             if(r.bank_name) {
-                                out += `<div style="font-size:10px" class="text-primary"><i class="ri-bank-line me-1"></i>${r.bank_name} ${r.account_no ? '('+r.account_no+')' : ''}</div>`;
+                                out += `<div style="font-size:10px" class="text-primary"><i class="ri-bank-line me-1"></i>From: ${r.bank_name} ${r.account_no ? '('+r.account_no+')' : ''}</div>`;
                             }
-                            out += `<div style="font-size:10px" class="text-muted">${r.quotation_no || r.booking_no || ''}</div>`;
+                            if(r.company_bank_name) {
+                                out += `<div style="font-size:10px" class="text-success"><i class="ri-bank-fill me-1"></i>To: ${r.company_bank_name} ${r.company_account_no ? '('+r.company_account_no+')' : ''}</div>`;
+                            }
+                            
+                            // Collection Details
+                            if(r.cheque_status === 'Collected' && r.collected_at) {
+                                out += `<div style="font-size:10px" class="text-success fw-medium"><i class="ri-checkbox-circle-line me-1"></i>Collected: ${moment(r.collected_at).format('DD-MM-YYYY')}</div>`;
+                            }
+
+                            // References (Quotation/Booking)
+                            if(r.quotation_no || r.booking_no) {
+                                out += `<div style="font-size:10px" class="text-muted"><i class="ri-links-line me-1"></i>${r.quotation_no || r.booking_no || ''}</div>`;
+                            }
+                            
                             return out;
                         }
                     },
@@ -548,6 +615,10 @@ include ROOT_PATH . '/view/envinclude.php';
                     if(row.bank_id) {
                         setTimeout(() => loadBanks(row.bank_id), 100);
                     }
+                    if(row.company_bank_id) {
+                        setTimeout(() => loadCompanyBanks(row.company_bank_id), 100);
+                    }
+                    $('#txtChequeDate').val(row.cheque_date);
                     $('#selQuotation').val(row.quotation_no);
                     $('#selBooking').val(row.booking_no);
                     
@@ -561,8 +632,8 @@ include ROOT_PATH . '/view/envinclude.php';
         $('#btnCancelEdit').on('click', function() {
             $('#frmTransaction')[0].reset();
             $('#txtTransId').val('');
-            $('#divBank').addClass('d-none');
-            $(this).addClass('d-none');
+            $('#selPaymentMethod').trigger('change');
+            $('#btnCancelEdit').addClass('d-none');
             $('#btnSave').text('Save Transaction');
         });
 
@@ -637,6 +708,8 @@ include ROOT_PATH . '/view/envinclude.php';
             calendar = new Calendar(calendarEl, {
                 plugins: [ dayGridPlugin ],
                 initialView: 'dayGridMonth',
+                contentHeight: 450,
+                aspectRatio: 1.8,
                 events: function(info, successCallback, failureCallback) {
                     $.get('/CustomerLedgerController', { 
                         action: 'GetChequeCalendarEvents',
@@ -661,7 +734,35 @@ include ROOT_PATH . '/view/envinclude.php';
                 data: params => ({ q: params.term, action: 'SearchCustomer' }),
                 processResults: data => ({ results: data.map(i => ({ id: i.customer_code, text: i.customer_name })) })
             }
-        }).on('change', () => calendar.refetchEvents());
+        }).on('change', function() {
+            const code = $(this).val();
+            if(code) {
+                loadPendingSummary(code);
+            } else {
+                $('#divPendingSummary').addClass('d-none');
+            }
+            if(calendar) calendar.refetchEvents();
+        });
+
+        function loadPendingSummary(code) {
+            $.get('/CustomerLedgerController', { action: 'GetPendingCheques', customer_code: code }, function(res) {
+                if(res.status && res.data.length > 0) {
+                    $('#divPendingSummary').removeClass('d-none');
+                    $('#pendingBadges').empty();
+                    res.data.forEach(c => {
+                        const dateStr = moment(c.cheque_date).format('DD MMM');
+                        const amountStr = parseFloat(c.amount).toFixed(3);
+                        const badge = `<span class="badge bg-label-warning border border-warning" title="Ref: ${c.ref_no}">
+                            <small class="d-block text-dark" style="font-size:9px">${dateStr}</small>
+                            ${amountStr}
+                        </span>`;
+                        $('#pendingBadges').append(badge);
+                    });
+                } else {
+                    $('#divPendingSummary').addClass('d-none');
+                }
+            }, 'json');
+        }
 
         function showChequeDetails(date) {
             $('#lblSelectedDate').text(moment(date).format('DD MMM YYYY'));

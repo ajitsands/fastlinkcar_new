@@ -388,6 +388,8 @@ $pdf->SetFont('dejavusans', '', 9);
 $terms = $data['terms_condition'] ?? '1. The hirer agrees to return the vehicle in the same condition as received.<br>2. Fuel costs and traffic fines are the responsibility of the hirer.<br>3. In case of an accident, an official police report must be provided.';
 $pdf->writeHTML($terms, true, false, true, false, '');
 
-ob_end_clean();
+while (ob_get_level() > 0) {
+    ob_end_clean();
+}
 $safe_filename = str_replace('/', '-', $data['agreement_no']) . '.pdf';
 $pdf->Output($safe_filename, 'I');

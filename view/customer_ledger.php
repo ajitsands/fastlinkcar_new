@@ -29,7 +29,7 @@ include ROOT_PATH . '/view/envinclude.php';
             <div class="layout-page">
                 <div class="content-wrapper">
                     <?php include ROOT_PATH . '/view/templates/menu.php'; ?>
-                    <div class="container-fluid flex-grow-1 container-p-y">
+                    <div class="container-fluid flex-grow-1 container-p-y" style="padding-top: 100px !important;">
                         <div class="row mb-4 g-3">
                             <!-- Summary Cards -->
                             <div class="col-md-4">

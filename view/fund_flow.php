@@ -25,7 +25,7 @@ define('ROOT_PATH', dirname(__DIR__));
             <div class="layout-page">
                 <div class="content-wrapper">
                     <?php include ROOT_PATH . '/view/templates/menu.php'; ?>
-                    <div class="container-fluid flex-grow-1 container-p-y">
+                    <div class="container-fluid flex-grow-1 container-p-y" style="padding-top: 100px !important;">
                         
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4 class="fw-bold py-3 mb-0"><span class="text-muted fw-light">Reports /</span> Fund Flow</h4>

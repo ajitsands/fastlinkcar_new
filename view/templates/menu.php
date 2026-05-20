@@ -133,6 +133,12 @@
                <div data-i18n="Contract Generation">Contract Generation</div>
              </a>
            </li>
+           <li class="menu-item">
+             <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#sendContractModal" class="menu-link">
+               <i class="menu-icon icon-base ri ri-send-plane-fill"></i>
+               <div data-i18n="Send Contract">Send Contract</div>
+             </a>
+           </li>
          </ul>
        </li>
 
@@ -159,3 +165,70 @@
      </ul>
    </div>
  </aside>
+
+<!-- Send Contract Modal -->
+<div class="modal fade" id="sendContractModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Send Contract</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="send_contract_no" class="form-label">Contract Number</label>
+          <input type="text" id="send_contract_no" class="form-control" placeholder="Enter Contract Number (e.g. AA/2026/AGR/0003)">
+        </div>
+        <div class="d-flex flex-column gap-2 mt-4">
+          <button type="button" class="btn btn-primary w-100" onclick="handleSendContract('mail')">
+            <i class="ri-mail-send-line me-1"></i> Send by Mail
+          </button>
+          <button type="button" class="btn btn-success w-100" onclick="handleSendContract('whatsapp')">
+            <i class="ri-whatsapp-line me-1"></i> Send via WhatsApp
+          </button>
+          <button type="button" class="btn btn-secondary w-100" onclick="handleSendContract('download')">
+            <i class="ri-download-2-line me-1"></i> View and Download
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function handleSendContract(action) {
+    const contractNo = document.getElementById('send_contract_no').value.trim();
+    if (!contractNo) {
+        alert('Please enter a Contract Number.');
+        return;
+    }
+
+    if (action === 'mail') {
+        if(confirm('Are you sure you want to email this contract?')) {
+            fetch('/controller/send_contract_mail.php?contract_no=' + encodeURIComponent(contractNo))
+            .then(res => res.text())
+            .then(data => {
+                alert(data);
+            }).catch(err => {
+                alert('Error sending mail.');
+            });
+        }
+    } else if (action === 'whatsapp') {
+        fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(contractNo))
+        .then(res => res.text())
+        .then(token => {
+            if(!token) { alert('Encryption failed.'); return; }
+            const url = window.location.origin + '/view_contract.php?token=' + encodeURIComponent(token);
+            const text = encodeURIComponent('Here is your car rental contract: ' + url);
+            window.open('https://wa.me/?text=' + text, '_blank');
+        });
+    } else if (action === 'download') {
+        fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(contractNo))
+        .then(res => res.text())
+        .then(token => {
+            if(!token) { alert('Encryption failed.'); return; }
+            window.open('/view_contract.php?token=' + encodeURIComponent(token), '_blank');
+        });
+    }
+}
+</script>

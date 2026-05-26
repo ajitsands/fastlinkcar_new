@@ -452,6 +452,27 @@ include ROOT_PATH . '/view/envinclude.php';
             refreshLedger(data.customer_code);
         });
 
+        // Deep-linking: Auto-load customer if passed in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCustCode = urlParams.get('customer_code');
+        const urlCustName = urlParams.get('customer_name');
+        
+        if (urlCustCode && urlCustName) {
+            setTimeout(() => {
+                // Auto populate select2
+                var option = new Option(urlCustName, urlCustCode, true, true);
+                $('#selCustomer').append(option).trigger('change');
+                
+                // Trigger the select event manually to load ledger data
+                $('#selCustomer').trigger({
+                    type: 'select2:select',
+                    params: {
+                        data: { raw: { customer_code: urlCustCode, customer_name: urlCustName, customer_mobile: '' } }
+                    }
+                });
+            }, 300); // Small delay to ensure select2 is fully initialized
+        }
+
 
         function loadCustomerDependents(code) {
             // Load Quotations
@@ -541,7 +562,7 @@ include ROOT_PATH . '/view/envinclude.php';
                         render: (id, type, row) => {
                             const isAdmin = userRole.toLowerCase().includes('admin');
                             const isToday = moment(row.created_at).format('YYYY-MM-DD') === todayStr;
-                            const canModify = isAdmin || (row.user_id == currentUserId && isToday);
+                            const canModify = true; // Enabled for all users as requested
                             
                             if(!canModify) return '';
 

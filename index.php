@@ -243,6 +243,12 @@ class RoutingClass
             'FundFlow/' => 'FundFlow',
             'FundFlowController' => 'FundFlowController',
             'FundFlowController/' => 'FundFlowController',
+            'VehicleInsights' => 'VehicleInsights',
+            'VehicleInsights/' => 'VehicleInsights',
+            'ExpectedReturns' => 'ExpectedReturns',
+            'ExpectedReturns/' => 'ExpectedReturns',
+            'CustomerBalances' => 'CustomerBalances',
+            'CustomerBalances/' => 'CustomerBalances',
             'CustomerLedgerController/' => 'CustomerLedgerController',
        
 
@@ -561,6 +567,17 @@ class RoutingClass
     private function FundFlowController(...$params)
     {
         $this->includeWithParams("controller/reports/FundFlowController.php", $_GET);
+    }
+    public function VehicleInsights() {
+        require 'controller/reports/VehicleInsightController.php';
+    }
+
+    public function ExpectedReturns() {
+        require 'controller/reports/ExpectedReturnController.php';
+    }
+
+    public function CustomerBalances() {
+        require 'controller/reports/CustomerBalanceController.php';
     }
     private function includeWithParams($file, $params)
     {

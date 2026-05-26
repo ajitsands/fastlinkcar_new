@@ -259,8 +259,7 @@ $table_html = '
     <thead>
         <tr>
             <th width="4%">No</th>
-            <th width="8%">Image</th>
-            <th width="15%">Type of Car</th>
+            <th width="17%">Type of Car</th>
             <th width="12%">Service Type</th>
             <th width="18%">Period</th>
             <th width="8%">Duration(Months/Days)</th>
@@ -276,6 +275,7 @@ $table_html = '
 
 $count = 1;
 $grand_total = 0;
+$quotation_images = [];
 foreach ($items as $item) {
     $qty = (float) ($item['qty'] ?? 0);
     $price = (float) ($item['price'] ?? 0);
@@ -285,28 +285,17 @@ foreach ($items as $item) {
     $amount_incl = (float) ($item['total'] ?? ($amount_excl + $vat_amt));
     $grand_total += $amount_incl;
 
-    $image_path = '';
-    $img_html = '-';
     if (!empty($item['item_model_pic'])) {
-        // Correct path concatenation for the Image node
-       // $img_file = 'httpdocs/images/vehicle_model_images/'.trim($item['item_model_pic']);
        $img_file = 'https://aacar.sandslab.com/httpdocs/images/vehicle_model_images/'.$item['item_model_pic'];
-       //$img_html =$img_file;
-         //$img_file = 'https://aacar.sandslab.com/httpdocs/images/vehicle_model_images/micra.jpg';
-         $img_html = '<img src="' . $img_file . '" height="50" />';
-        // if (file_exists($img_file)) {
-        //     $img_html = '<img src="' . $img_file . '" height="50" />';
-        // } else {
-        //     // Fallback for demonstration if file not found
-        //     $img_html = '<span style="font-size:7pt; color:#999;">no image</span>';
-        // }
+       if (!in_array($img_file, $quotation_images)) {
+           $quotation_images[] = $img_file;
+       }
     }
 
     $table_html .= '
         <tr>
             <td width="4%" class="text-center">' . $count++ . '</td>
-            <td width="8%" class="text-center">' . $img_html . '</td>
-            <td width="15%" class="text-left">' . ($item['item_name'] ?? '-') . '</td>
+            <td width="17%" class="text-left">' . ($item['item_name'] ?? '-') . '</td>
             <td width="12%" class="text-left">' . ($item['service_name'] ?? ($item['service_type'] ?? '-')) . '</td>
             <td width="18%" class="text-center">' . date('d-m-y', strtotime($item['period_from'])) . ' to ' . date('d-m-y', strtotime($item['period_to'])) . '</td>
             <td width="8%" class="text-center">' . ($item['duration'] ?? ($item['months_days'] ?? 1)) . '</td>
@@ -321,7 +310,7 @@ foreach ($items as $item) {
 
 $table_html .= '
         <tr style="background-color: #ed1c1c; color: #ffffff; font-weight: bold;">
-            <td colspan="11" class="text-right" style="padding: 10px;">NET TOTAL (BHD)</td>
+            <td colspan="10" class="text-right" style="padding: 10px;">NET TOTAL (BHD)</td>
             <td class="text-right" style="padding: 10px;">' . number_format($grand_total, 3) . '</td>
         </tr>
     </tbody>
@@ -375,6 +364,47 @@ if ($seal_last_pg === 'last_custom') {
     if (file_exists($seal_file)) {
         $pdf->Image($seal_file, $seal_last_x, $y_pos, $img_w, 0, 'PNG', '', 'T', false, 300, '', false, false, 0, false, false, false);
     }
+}
+
+// Render Images on a new page if needed
+if (!empty($quotation_images)) {
+    // Only add a new page if we are too far down the current page.
+    // This prevents leaving a nearly blank page (e.g. if only "Best Regards" is on it).
+    if ($pdf->GetY() > 70) {
+        $pdf->AddPage();
+    } else {
+        $pdf->Ln(10);
+    }
+    
+    $pdf->SetFont('dejavusans', 'B', 12);
+    $pdf->Cell(0, 10, 'Vehicle Images / صور المركبة', 0, 1, 'C');
+    $pdf->SetFont('dejavusans', '', 9);
+
+    $html_images = '<table cellpadding="5" border="0" width="100%">';
+    $col = 0;
+    
+    foreach ($quotation_images as $idx => $img_url) {
+        if ($col == 0) {
+            $html_images .= '<tr>';
+        }
+        
+        $html_images .= '<td width="50%" align="center">';
+        $html_images .= '<img src="' . htmlspecialchars($img_url) . '" width="250" height="180">';
+        $html_images .= '</td>';
+        
+        $col++;
+        if ($col == 2) {
+            $html_images .= '</tr>';
+            $col = 0;
+        }
+    }
+    
+    if ($col == 1) {
+        $html_images .= '<td width="50%"></td></tr>';
+    }
+    $html_images .= '</table>';
+    
+    $pdf->writeHTML($html_images, true, false, true, false, '');
 }
 
 ob_end_clean();

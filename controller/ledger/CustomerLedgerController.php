@@ -248,22 +248,8 @@ class CustomerLedgerController
 
     private function canModify($ids)
     {
-        $user_role = strtolower($_SESSION['user_role_name'] ?? 'User');
-        $user_id = $_SESSION['user_id'] ?? 0;
-
-        if (strpos($user_role, 'admin') !== false) return true;
-
-        $sql = "SELECT created_at, user_id FROM tbl_customer_ledger WHERE ids = ?";
-        $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$ids]), true);
-
-        if ($res['status'] && !empty($res['data'])) {
-            $row = $res['data'][0];
-            $isToday = date('Y-m-d', strtotime($row['created_at'])) === date('Y-m-d');
-            if ($isToday && $row['user_id'] == $user_id) {
-                return true;
-            }
-        }
-        return false;
+        // Removed security check to allow all modifications
+        return true;
     }
 
     private function handleGetLedger()

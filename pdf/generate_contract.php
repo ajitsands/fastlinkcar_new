@@ -391,5 +391,70 @@ $pdf->writeHTML($terms, true, false, true, false, '');
 while (ob_get_level() > 0) {
     ob_end_clean();
 }
+
+// 3rd Page: Vehicle Images
+$images_json = $data['vehicle_rentout_images'] ?? '[]';
+$images_arr = json_decode($images_json, true);
+
+if (!empty($images_arr) && is_array($images_arr)) {
+    // Normalize and sort images if they are stored with numeric keys
+    $normalized_images = [];
+    foreach ($images_arr as $key => $val) {
+        if (is_string($val)) {
+            $normalized_images[$key] = $val;
+        } elseif (is_array($val) && isset($val['image'])) {
+            $normalized_images[$key] = $val['image'];
+        } elseif (is_array($val) && isset($val['file'])) {
+            $normalized_images[$key] = $val['file'];
+        }
+    }
+    ksort($normalized_images);
+
+    if (count($normalized_images) > 0) {
+        $pdf->AddPage();
+        $pdf->SetFont('dejavusans', 'B', 12);
+        $pdf->Cell(0, 10, 'Vehicle Images / صور المركبة', 0, 1, 'C');
+        $pdf->SetFont('dejavusans', '', 9);
+
+        $html_images = '<table cellpadding="5" border="0" width="100%">';
+        $col = 0;
+        
+        foreach ($normalized_images as $key => $filename) {
+            if (empty($filename)) continue;
+            
+            // Clean up filename just in case
+            $filename = basename($filename);
+            $img_path = ROOT_PATH . '/../uploads/rentvehicleImages/' . $filename;
+            
+            if (file_exists($img_path)) {
+                $img_data = base64_encode(file_get_contents($img_path));
+                
+                if ($col == 0) {
+                    $html_images .= '<tr>';
+                }
+                
+                $html_images .= '<td width="50%" align="center">';
+                $html_images .= '<b>Image ' . htmlspecialchars($key) . '</b><br><br>';
+                // Using 250 for width to ensure they fit side-by-side in portrait mode nicely
+                $html_images .= '<img src="@' . $img_data . '" width="250" height="180">';
+                $html_images .= '</td>';
+                
+                $col++;
+                if ($col == 2) {
+                    $html_images .= '</tr>';
+                    $col = 0;
+                }
+            }
+        }
+        
+        // Fill remaining cell if odd number
+        if ($col == 1) {
+            $html_images .= '<td width="50%"></td></tr>';
+        }
+        $html_images .= '</table>';
+        
+        $pdf->writeHTML($html_images, true, false, true, false, '');
+    }
+}
 $safe_filename = str_replace('/', '-', $data['agreement_no']) . '.pdf';
 $pdf->Output($safe_filename, 'I');

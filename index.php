@@ -88,6 +88,8 @@ class RoutingClass
             'Logout/' => 'Logout',
             'Home' => 'Home',
             'Home/' => 'Home',
+            'Dashboard' => 'Home',
+            'Dashboard/' => 'Home',
             'GetEventLog' => 'GetEventLog',
             'GetEventLog/' => 'GetEventLog',
             'GetEventLogDetails' => 'GetEventLogDetails',

@@ -1,6 +1,4 @@
 <?php
-// ajax_encrypt_contract.php
-// Returns an AES-256 encrypted, URL-safe token for a given contract number
 
 header('Content-Type: text/plain');
 
@@ -9,10 +7,9 @@ if (empty($contract_no)) {
     die('');
 }
 
-// Ensure secret key exists (fallback if environment variable is not set)
+
 $key = 'AA_CAR_RENTAL_SECRET_KEY_2026';
 
-// Generate a random Initialization Vector (IV) for maximum security
 $iv_length = openssl_cipher_iv_length('aes-256-cbc');
 $iv = openssl_random_pseudo_bytes($iv_length);
 

@@ -2,7 +2,7 @@
     <div class="modal-dialog">
     <form id="addRentalCarDetails" enctype="multipart/form-data" class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="backDropRentalCarModalTitle">Vehicle Documents</h5>
+        <h5 class="modal-title" id="backDropRentalCarModalTitle">Driver Documents</h5>
         <button
           type="button"
           class="btn-close"

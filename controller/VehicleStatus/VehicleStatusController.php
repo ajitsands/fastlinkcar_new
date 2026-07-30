@@ -27,6 +27,7 @@ class VehicleStatusController
         
         $this->company_id = $_SESSION['company_id'] ?? 1;
         $this->user_id = $_SESSION['user_id'] ?? 1;
+        $this->profile_name = $_SESSION['profile_name'] ?? 'Administrator';
         $this->actionevents = $_POST['action'] ?? null;
         date_default_timezone_set('Asia/Bahrain');
         $this->createdDate = date('Y-m-d H:i:s');
@@ -171,7 +172,7 @@ class VehicleStatusController
        $array[6] = "SELECT 
     v.*,
 
-     COUNT(v.ids) AS AS has_unconfirmed_overlap,
+     COUNT(v.ids) AS  has_unconfirmed_overlap,
       IFNULL(MAX(CASE 
         WHEN jt.item = 'Price per hour rental without driver' 
         THEN jt.amount END), 0) AS price_hour_without_driver,
@@ -690,16 +691,16 @@ $this->params[9] = [
         switch(strtolower($status)) {
             case 'available':
                 return 'bg-success text-white';     // Green
-            case 'rent out':
-                return 'bg-danger text-white';      // Red
-            case 'on parking':
+            case 'rentout':
+                return 'bg-warning text-white';      // Red
+            case 'parking':
                 return 'bg-info text-white';        // Blue
-            case 'on maintenance':
-                return 'bg-warning text-dark';      // Yellow
+            case 'maintenance':
+                return 'bg-danger text-white';      // Yellow
             case 'blocked':
                 return 'bg-secondary text-white';  // Grey
             default:
-                return 'bg-light text-dark';        // Default
+                return 'bg-light text-white';        // Default
         }
     }
 
@@ -757,19 +758,18 @@ $this->params[9] = [
                 $resultvehicle = json_decode($this->ReturnData, true);
                 foreach ($resultvehicle['data'] as $item) {
     
-                        $defaultImage = "default.jpg";
-                    
-                            $lastImage = $defaultImage;
-                            
-                            if (!empty($item['image_json'])) {
-                            
-                                $images = json_decode($item['image_json'], true);
-                                $images = json_decode($images, true);
-                            
-                                if (is_array($images) && count($images) > 0) {
-                                    $lastImage = end($images);
-                                }
-                            }
+                        
+            $images = [];
+
+            if (!empty($item['image_json'])) {
+                $decoded = json_decode($item['image_json'], true);
+            
+                if (is_array($decoded)) {
+                    $images = $decoded;
+                }
+            }
+            
+            $lastImage = count($images) > 0 ? end($images) : "default.jpg";
                    $nextPassing = !empty($item['next_passing_date']) ? date('d/m/Y', strtotime($item['next_passing_date'])) : 'NA';
                   $nextInsurance = !empty($item['next_insurance_date']) ? date('d/m/Y', strtotime($item['next_insurance_date'])) : 'NA';
                  $nextMaintenance = !empty($item['next_maintenance_date']) ? date('d/m/Y', strtotime($item['next_maintenance_date'])) : 'NA';
@@ -875,7 +875,7 @@ $this->params[9] = [
                             if (!empty($item['image_json'])) {
                             
                                 $images = json_decode($item['image_json'], true);
-                                $images = json_decode($images, true);
+                                //$images = json_decode($images, true);
                             
                                 if (is_array($images) && count($images) > 0) {
                                     $lastImage = end($images);
@@ -910,7 +910,7 @@ $this->params[9] = [
                 }
                 
                
-                         $resultvehicle = json_decode($this->ReturnData, true);
+            $resultvehicle = json_decode($this->ReturnData, true);
 
 
             if (!isset($resultvehicle['data']) || !is_array($resultvehicle['data'])) {
@@ -925,17 +925,17 @@ $this->params[9] = [
             $html = '';
         foreach ($resultvehicle['data'] as $item) {
         
-            $defaultImage = "default.jpg";
-            $lastImage = $defaultImage;
-        
+            $images = [];
+
             if (!empty($item['image_json'])) {
-                $images = json_decode($item['image_json'], true);
-                $images = json_decode($images, true);
-        
-                if (is_array($images) && count($images) > 0) {
-                    $lastImage = end($images);
+                $decoded = json_decode($item['image_json'], true);
+            
+                if (is_array($decoded)) {
+                    $images = $decoded;
                 }
             }
+            
+            $lastImage = count($images) > 0 ? end($images) : "default.jpg";
         
             $data_other_details = json_decode($item['other_details_json'], true);
             $vehicleFuelType = $data_other_details['vehicleFuelType'];
@@ -1096,20 +1096,20 @@ $this->params[9] = [
                 ]);
                 exit;
             }
-            $html = '';
-        foreach ($resultvehicle['data'] as $item) {
+              $html = '';
+           foreach ($resultvehicle['data'] as $item) {
         
-            $defaultImage = "default.jpg";
-            $lastImage = $defaultImage;
-        
+            $images = [];
+
             if (!empty($item['image_json'])) {
-                $images = json_decode($item['image_json'], true);
-                $images = json_decode($images, true);
-        
-                if (is_array($images) && count($images) > 0) {
-                    $lastImage = end($images);
+                $decoded = json_decode($item['image_json'], true);
+            
+                if (is_array($decoded)) {
+                    $images = $decoded;
                 }
             }
+            
+            $lastImage = count($images) > 0 ? end($images) : "default.jpg";
         
             $data_other_details = json_decode($item['other_details_json'], true);
             $vehicleFuelType = $data_other_details['vehicleFuelType'];
@@ -1118,7 +1118,8 @@ $this->params[9] = [
             $nextPassing = !empty($item['next_passing_date']) ? date('d/m/Y', strtotime($item['next_passing_date'])) : 'NA';
             $nextInsurance = !empty($item['next_insurance_date']) ? date('d/m/Y', strtotime($item['next_insurance_date'])) : 'NA';
             $nextMaintenance = !empty($item['next_maintenance_date']) ? date('d/m/Y', strtotime($item['next_maintenance_date'])) : 'NA';
-        
+            
+             $price_hour_with_driver = !empty($item['next_maintenance_date']) ? date('d/m/Y', strtotime($item['next_maintenance_date'])) : 'NA';
             $bookingJson = $item['booking_json'] ?? '[]';
         
             ob_start();
@@ -1126,14 +1127,7 @@ $this->params[9] = [
         
             <div class="col-12 col-sm-6 col-md-6 col-lg-12 col-xl-6">
                 <div class="vehicle-card d-flex flex-column p-2 border rounded shadow-sm position-relative">
-    <?php
-     if ($item['has_unconfirmed_overlap'] > 0) { ?>
-    <span class="position-absolute top-0 start-0 m-2 badge bg-warning cursor-pointer booking-banner"
-          data-bookings='<?= htmlspecialchars($bookingJson, ENT_QUOTES) ?>'
-          title="Click to view booking">
-        Book
-    </span>
-    <?php } ?>
+  
 
         <div class="d-flex align-items-center">
 
@@ -1397,8 +1391,8 @@ $this->params[9] = [
                                 ':book_to_date' => $booking['toDate'],
                                 ':book_details_json' => $book_details,
                                 ':book_status' => 'Booked',
-                                ':company_id' => 1,
-                                ':user_id' => 1,
+                                ':company_id' => $this->company_id,
+                                ':user_id' => $this->user_id,
                                 ':created_date' => date("Y-m-d H:i:s"),
                                 ':modified_date' => date("Y-m-d H:i:s")
                             ]);
@@ -1462,7 +1456,7 @@ $this->params[9] = [
                             
                             break;
                             case 'get_all_bookings':
-                                 $sql = "SELECT * FROM tbl_vehicle_bookings where vehicle_id = :vehicle_id and book_status in ('Booked','Confirmed','Cancelled')  ORDER BY ids DESC";
+                                 $sql = "SELECT * FROM tbl_vehicle_bookings where vehicle_id = :vehicle_id  and book_status in ('Booked','Confirmed','Cancelled') ORDER BY ids DESC";
                                  $res = json_decode(
                                                 $this->varPDOModelObj->ListFromTable($sql, [
                                                     ':vehicle_id' => $this->vehicle_id
@@ -1475,13 +1469,84 @@ $this->params[9] = [
                                     "data" => $res['data'] ?? []
                                 ]);
                             break;
+                             case 'get_all_contracts':
+                                 
+                                 $sql = "SELECT 
+                        c.ids,
+                        c.agreement_no,
+                        JSON_UNQUOTE(JSON_EXTRACT(c.customer_details, '$.customer_name')) AS customer_name,
+                        JSON_UNQUOTE(JSON_EXTRACT(c.customer_details, '$.customer_mobile')) AS customer_mobile,
+                        JSON_UNQUOTE(JSON_EXTRACT(c.vechile_details, '$.model_name')) AS model_name,
+                        c.service_type,
+                        c.agreement_status,
+                        c.service_start_date_time,
+                        CASE 
+                            WHEN c.agreement_status = 'Extended' 
+                                 AND ext.extend_end_date IS NOT NULL 
+                            THEN ext.extend_end_date
+                            ELSE c.service_end_date_time
+                        END AS return_date,
+                       CASE 
+                            WHEN c.agreement_status IN ('Rentout', 'Extended') THEN
+                                DATEDIFF(
+                                    CASE 
+                                        WHEN c.agreement_status = 'Extended' 
+                                             AND ext.extend_end_date IS NOT NULL 
+                                        THEN ext.extend_end_date
+                                        ELSE c.service_end_date_time
+                                    END,
+                                    :filter_date
+                                )
+                            ELSE NULL
+                        END AS days_left,
+                        DATE_FORMAT(service_start_date_time, '%d-%m-%Y %H:%i') AS start_date,
+                       DATE_FORMAT(
+                                CASE 
+                                    WHEN c.agreement_status = 'Extended' 
+                                         AND ext.extend_end_date IS NOT NULL 
+                                    THEN ext.extend_end_date
+                                    ELSE c.service_end_date_time
+                                END,
+                                '%d-%m-%Y'
+                            ) AS return_date_format
+                    
+                    FROM tbl_vehicle_rentout_contracts c
+                    
+                    LEFT JOIN (
+                        SELECT agreement_ids, MAX(extend_end_date) AS extend_end_date
+                        FROM tbl_vehicle_contract_extensions
+                        GROUP BY agreement_ids
+                    ) ext 
+                        ON ext.agreement_ids = c.ids
+                    
+                    WHERE c.vehicle_id = :vehicle_id order by c.ids desc";
+                     $sqlparams = [
+                        ':filter_date' => date('Y-m-d'),
+                        ':vehicle_id' => $this->vehicle_id
+                    ];
+                                 $res = json_decode(
+                                                $this->varPDOModelObj->ListFromTable($sql, [
+                                                    ':filter_date' => $this->filter_date,
+                                                    ':vehicle_id' => $this->vehicle_id
+                                                ]),
+                                                true
+                                            );
+                            
+                                echo json_encode([
+                                    "status" => true,
+                                    "data" => $res['data'] ?? []
+                                ]);
+                            break;
 
                             case 'delete_booking':
-                                $id = $_POST['id'];
+                                
 
                             $sql = "DELETE FROM tbl_vehicle_bookings WHERE ids = :id";
                         
                             $this->varPDOModelObj->executeQuery($sql, [':id' => $this->bookingid]);
+                            $sql2 = "DELETE FROM  tbl_vehicle_rentout_contracts WHERE booking_ids = :id";
+                        
+                            $this->varPDOModelObj->executeQuery($sql2, [':id' => $this->bookingid]);
                         
                             echo json_encode(["status" => true]);
                             break;
@@ -1497,7 +1562,174 @@ $this->params[9] = [
                                     ':modified_date' => $this->createdDate,
                                     ':id' => $this->bookingid
                                 ]);
+                                if($this->bookingstatus==='Rentout')
+                                {
+                                    $log_details = [
+                                    "user_id" => $this->user_id,
+                                    "datetime" => date('Y-m-d H:i:s')
+                                    ];
+                        
+                                     $json_log = json_encode($log_details);
+                                      $sqlOldStatus = "
+                                        SELECT vehicle_status
+                                        FROM tbl_vehicles
+                                        WHERE ids = :vehicle_id
+                                    ";
+                                
+                                    $stmtOldStatus = $this->varPDOModelObj->selectexecuteQuery($sqlOldStatus, [
+                                        ':vehicle_id' => $this->vehicleId
+                                    ]);
+                                
+                                    $vehicleInfo = $stmtOldStatus->fetch(PDO::FETCH_ASSOC);
+                                
+                                    $oldStatus = $vehicleInfo['vehicle_status'] ?? 'Available';
+                                    
+                                    
+                                    
+                                    
+                                    $sql_update = "UPDATE tbl_vehicle_rentout_contracts 
+                                        SET agreement_status = :status, rentout_log_json = :log_details
+                                        WHERE booking_ids = :id";
                             
+                                    $this->varPDOModelObj->executeQuery($sql_update, [
+                                        ':status' => $this->bookingstatus,
+                                        ':log_details' => $json_log,
+                                        ':id' => $this->bookingid
+                                    ]);
+                                     $sql_veh_update = "UPDATE tbl_vehicles 
+                                        SET vehicle_status = :status, rentout_log_json = :log_details
+                                        WHERE ids  = :id";
+                            
+                                    $this->varPDOModelObj->executeQuery($sql_veh_update, [
+                                        ':status' => $this->bookingstatus,
+                                        ':log_details' => $json_log,
+                                        ':id' => $this->vehicleId
+                                    ]);
+                                    $sql_fetch = "
+                                            SELECT
+                                                ids,vehicle_id,
+                                                booking_ids,
+                                                agreement_no,
+                                                agreement_group_ref_no,
+                                                customer_code,
+                                                quotation_number,service_type,
+                                                contract_details_json,km_out, JSON_UNQUOTE(JSON_EXTRACT(vehicle_accessories_details, '$.fuel_level')) AS fuel_level
+                                            FROM tbl_vehicle_rentout_contracts
+                                            WHERE booking_ids = :id and vehicle_id= :vehicle_id
+                                        ";
+                                       $stmt =  $this->varPDOModelObj->selectexecuteQuery($sql_fetch, [
+                                        ':id' => $this->bookingid,
+                                        ':vehicle_id' => $this->vehicleId
+                                    ]);
+                                      
+                                        $contract = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                                if ($contract) {
+
+                                    $details = json_decode($contract['contract_details_json'], true);
+                                    
+                                    $duration   = (float)($details['duration'] ?? 0);
+                                    $unitPrice  = (float)($details['unit_price'] ?? 0);
+                                    $vatPercent = (float)($details['vat'] ?? 0);
+                                
+                                    $rentalFee = $duration * $unitPrice;
+                                    $vatAmount = ($rentalFee * $vatPercent) / 100;
+                                
+                                    // Insert Rental Fee row
+                                    $sqlInsert = "
+                                        INSERT INTO  tbl_customer_ledger
+                                        (
+                                            customer_code,
+                                            quotation_no,
+                                            booking_no,
+                                            trans_date,
+                                            trans_type,
+                                            debit,
+                                            description,
+                                            user_id,
+                                            company_id,
+                                            created_at,
+                                            booking_ids,
+                                            contract_ids,
+                                            agreement_no
+                                        )
+                                        VALUES
+                                        (
+                                            :customer_code,
+                                            :quotation_number,
+                                            :booking_no,
+                                            :trans_date,
+                                            :ledger_name,
+                                            :amount,
+                                            :description,
+                                            :user_ids,
+                                            :company_ids,
+                                            :trans_date_time,
+                                            :booking_ids,
+                                            :contract_ids,
+                                            :agreement_no
+                                        )
+                                    ";
+                                
+                                    // Rental Fee
+                                    $params_rental =[
+                                        ':customer_code'          => $contract['customer_code'],
+                                        ':quotation_number'       => $contract['quotation_number'],
+                                        ':booking_no' => $contract['agreement_group_ref_no'],
+                                        ':trans_date'            => date('Y-m-d'),
+                                        ':ledger_name'            => $contract['service_type'],
+                                        ':amount'            =>  $rentalFee,
+                                        ':description'            => 'Auto Post Rental Fee',
+                                        ':user_ids'            =>  $this->user_id,
+                                        ':company_ids'            =>  $this->company_id,
+                                        ':trans_date_time'            => date('Y-m-d H:i:s'),
+                                        ':booking_ids'            => $contract['booking_ids'],
+                                        ':agreement_no'           => $contract['agreement_no'],
+                                        ':contract_ids'           => $contract['ids']
+                                        
+                                    ];
+                                $this->varPDOModelObj->executeQuery($sqlInsert, $params_rental);
+                                    // VAT Row
+                                    if ($vatAmount > 0) {
+                                
+                                        $params_vat =[
+                                        ':customer_code'          => $contract['customer_code'],
+                                        ':quotation_number'       => $contract['quotation_number'],
+                                        ':booking_no' => $contract['agreement_group_ref_no'],
+                                        ':trans_date'            => date('Y-m-d'),
+                                        ':ledger_name'            => 'VAT',
+                                        ':amount'            =>  $vatAmount,
+                                        ':description'            => 'Auto Post VAT of Rental Fee',
+                                        ':user_ids'            =>  $this->user_id,
+                                        ':company_ids'            =>  $this->company_id,
+                                        ':trans_date_time'            => date('Y-m-d H:i:s'),
+                                        ':booking_ids'            => $contract['booking_ids'],
+                                        ':agreement_no'           => $contract['agreement_no'],
+                                        ':contract_ids'           => $contract['ids']
+                                        
+                                    ];
+                                     $this->varPDOModelObj->executeQuery($sqlInsert, $params_vat);
+                                    }
+                                      $this->varPDOModelObj->logVehicleMovement([
+                                'vehicle_id'     => $this->vehicleId,
+                                'action_type'    => 'Rentout',
+                                'old_status'     => $oldStatus,
+                                'new_status'     => 'Rentout',
+                                'reference_type' => 'Agreement',
+                                'reference_id'   => $contract['ids'],
+                                'reference_no'   => $contract['agreement_no'],
+                                'location_from'  => 'Main Parking',
+                                'location_to'    => 'Customer',
+                                'staff_id'       => null,
+                                'customer_id'    => $contract['customer_code'],
+                                'garage_id'      => null,
+                                'odometer'       => $contract['km_out'],
+                                'fuel_level'     => $contract['fuel_level'],
+                                'remarks'        => 'Vehicle rented out under Agreement No. ' . $contract['agreement_no']
+                            ]);
+                                }
+                                 
+                                }
                                 echo json_encode(["status" => true]);
                             break;
                             default:

@@ -7,7 +7,7 @@ $pdo = $db->pdo;
 $term = $_GET['term'] ?? '';
 
 
-$stmt = $pdo->prepare("SELECT id, quotation_no, customer_name, attention  FROM quotations WHERE quotation_no LIKE :term1  OR customer_name LIKE :term2
+$stmt = $pdo->prepare("SELECT id, quotation_no, customer_name, attention  FROM quotations WHERE quotation_status='Approved' and quotation_no LIKE :term1  OR customer_name LIKE :term2
     LIMIT 10");
 
 $stmt->execute([

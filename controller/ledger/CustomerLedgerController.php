@@ -41,7 +41,14 @@ class CustomerLedgerController
                 $data = json_decode($res, true);
                 echo json_encode($data['data'] ?? []);
                 break;
-
+            case 'GetContracts':
+                $customer_code = $_GET['customer_code'] ?? '';
+                $sql = "SELECT ids AS id, agreement_no AS text FROM tbl_vehicle_rentout_contracts WHERE customer_code = ? ORDER BY ids DESC";
+                $res = $this->varPDOModelObj->ListFromTable($sql, [$customer_code]);
+                $data = json_decode($res, true);
+                echo json_encode($data['data'] ?? []);
+                break;
+          
             case 'SaveTransaction':
                 $this->handleSave();
                 break;
@@ -49,15 +56,37 @@ class CustomerLedgerController
             case 'GetLedgerData':
                 $this->handleGetLedger();
                 break;
-            
+            case 'GetContractLedgerData':
+                $this->handleContractGetLedger();
+                break;
+            case 'GetContractLedgerBalance':
+                $this->handleContractGetLedgerBalance();
+                break;
+            case 'GetCustomerContractLedgerData':
+                $contractid = $_GET['contract_id'] ?? 'All';
+                if($contractid=='0' || $contractid=='All')
+                {
+                     $this->handleGetLedger();
+                }
+                else
+                {
+                    $this->handleContractGetLedger();
+                }
+                
+                break;
+             
             case 'GetChequeCalendarEvents':
                 $this->handleGetChequeCalendarEvents();
                 break;
-
+             case 'GetChequeCalendarEventsContract':
+                $this->handleGetChequeCalendarEventsContract();
+                break;
             case 'GetChequesByDate':
                 $this->handleGetChequesByDate();
                 break;
-
+            case 'GetChequesByDateContract':
+                $this->handleGetChequesByDateContract();
+                break;
             case 'UpdateChequeStatus':
                 $this->handleUpdateChequeStatus();
                 break;
@@ -89,6 +118,47 @@ class CustomerLedgerController
                 $sql = "SELECT ids AS id, head_name AS text, head_type FROM tbl_ledger_heads ORDER BY head_name ASC";
                 echo $this->varPDOModelObj->ListFromTable($sql, []);
                 break;
+             case 'GetLedgerHeadsContract':
+                $sql = "SELECT 
+                            ids AS id, 
+                            head_name AS text, 
+                            head_type,'No' as ledger_type
+                        FROM tbl_ledger_heads
+                        
+                        UNION
+                        
+                        SELECT 
+                            ids AS id, 
+                            price_item AS text, 
+                            'Debit' AS head_type,'Yes' as ledger_type 
+                        FROM tbl_vehicle_pricing_master
+                        WHERE ledger_status = 'Yes'
+                        
+                        ORDER BY text ASC";
+                echo $this->varPDOModelObj->ListFromTable($sql, []);
+                break;
+                case 'getmodel_price':
+                    $model_ids = $_POST['model_ids'] ?? '';
+                    $head_ids = $_POST['head_ids'] ?? '';
+                    $sql = "SELECT  COALESCE(
+                            (
+                                SELECT NULLIF(jt.amount, '')
+                                FROM JSON_TABLE(
+                                    t.price_json,
+                                    '$[*]' COLUMNS (
+                                        ids VARCHAR(10) PATH '$.ids',
+                                        amount VARCHAR(50) PATH '$.amount'
+                                    )
+                                ) jt
+                                WHERE jt.ids = ?
+                                LIMIT 1
+                            ),
+                            0
+                        ) AS amount
+                    FROM  tbl_vehicle_model t
+                    WHERE t.ids = ?";
+                    echo $this->varPDOModelObj->ListFromTable($sql, [$head_ids, $model_ids]);
+                break;
 
             case 'SaveLedgerHead':
                 $head_name = $_POST['head_name'] ?? '';
@@ -114,8 +184,14 @@ class CustomerLedgerController
     {
         $ids = $_POST['ids'] ?? null;
         $customer_code = $_POST['customer_code'] ?? '';
+        $agreement_no = $_POST['agreement_no'] ?? '';
+        $agreement_id = $_POST['agreement_id'] ?? '';
+        $booking_id = $_POST['booking_id'] ?? '';
         $trans_date = $_POST['trans_date'] ?? date('Y-m-d');
-        $trans_type = $_POST['trans_type'] ?? 'Payment';
+       // $trans_type = $_POST['trans_type'] ?? 'Payment';
+        $trans_type = $_POST['trans_name'] ?? 'Payment';
+        
+        $head_type = $_POST['head_type'] ?? 'Debit';
         $payment_method = $_POST['payment_method'] ?? 'N/A';
         $amount = $_POST['amount'] ?? 0;
         $ref_no = $_POST['ref_no'] ?? '';
@@ -125,26 +201,33 @@ class CustomerLedgerController
         $bank_id = !empty($_POST['bank_id']) ? $_POST['bank_id'] : null;
         $cheque_date = !empty($_POST['cheque_date']) ? $_POST['cheque_date'] : null;
         $company_bank_id = !empty($_POST['company_bank_id']) ? $_POST['company_bank_id'] : null;
+        $trans_name = $_POST['trans_name'] ?? 'Payment';
 
         // Dynamic logic for debit/credit based on head_type
         $debit = 0;
         $credit = 0;
         
-        $sqlHead = "SELECT head_type FROM tbl_ledger_heads WHERE head_name = ?";
-        $resHead = json_decode($this->varPDOModelObj->ListFromTable($sqlHead, [$trans_type]), true);
-        
-        if ($resHead['status'] && !empty($resHead['data'])) {
-            $type = $resHead['data'][0]['head_type'];
+        $type = $head_type;
             if ($type === 'Debit') {
                 $debit = $amount;
             } else {
                 $credit = $amount;
             }
-        } else {
-            // Fallback for legacy data or if head not found
-            $debit = ($trans_type == 'Invoice' || $trans_type == 'Opening Balance') ? $amount : 0;
-            $credit = ($debit == 0) ? $amount : 0;
-        }
+        // $sqlHead = "SELECT head_type FROM tbl_ledger_heads WHERE head_name = ?";
+        // $resHead = json_decode($this->varPDOModelObj->ListFromTable($sqlHead, [$trans_type]), true);
+        
+        // if ($resHead['status'] && !empty($resHead['data'])) {
+        //     $type = $resHead['data'][0]['head_type'];
+        //     if ($type === 'Debit') {
+        //         $debit = $amount;
+        //     } else {
+        //         $credit = $amount;
+        //     }
+        // } else {
+        //     // Fallback for legacy data or if head not found
+        //     $debit = ($trans_type == 'Invoice' || $trans_type == 'Opening Balance') ? $amount : 0;
+        //     $credit = ($debit == 0) ? $amount : 0;
+        // }
 
         $user_id = $_SESSION['user_id'] ?? 1;
         $company_id = $_SESSION['company_id'] ?? 1;
@@ -165,9 +248,9 @@ class CustomerLedgerController
         } else {
             // New entry
             $sql = "INSERT INTO tbl_customer_ledger 
-                    (customer_code, quotation_no, booking_no, trans_date, cheque_date, trans_type, payment_method, bank_id, company_bank_id, debit, credit, ref_no, cheque_status, description, user_id, company_id) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)";
-            $params = [$customer_code, $quotation_no, $booking_no, $trans_date, $cheque_date, $trans_type, $payment_method, $bank_id, $company_bank_id, $debit, $credit, $ref_no, $description, $user_id, $company_id];
+                    (customer_code, quotation_no, booking_no, trans_date, cheque_date, trans_type, payment_method, bank_id, company_bank_id, debit, credit, ref_no, cheque_status, description, user_id, company_id,booking_ids,contract_ids,agreement_no) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?, ?, ?, ?)";
+            $params = [$customer_code, $quotation_no, $booking_no, $trans_date, $cheque_date, $trans_type, $payment_method, $bank_id, $company_bank_id, $debit, $credit, $ref_no, $description, $user_id, $company_id, $booking_id, $agreement_id, $agreement_no];
             echo $this->varPDOModelObj->AddToTable($sql, $params);
         }
     }
@@ -182,6 +265,36 @@ class CustomerLedgerController
         if ($customer_code) {
             $sql .= " AND customer_code = ? ";
             $params[] = $customer_code;
+        }
+        $sql .= " GROUP BY cheque_date, cheque_status";
+        $res = json_decode($this->varPDOModelObj->ListFromTable($sql, $params), true);
+        
+        $events = [];
+        if ($res['status']) {
+            foreach ($res['data'] as $row) {
+                $color = ($row['cheque_status'] === 'Collected') ? '#28c76f' : (($row['cheque_status'] === 'Bounced') ? '#ea5455' : '#ff9f43');
+                $events[] = [
+                    'title' => $row['cheque_count'] . ' ' . $row['cheque_status'],
+                    'start' => $row['cheque_date'],
+                    'color' => $color,
+                    'textColor' => '#ffffff',
+                    'allDay' => true,
+                    'extendedProps' => ['date' => $row['cheque_date']]
+                ];
+            }
+        }
+        echo json_encode($events);
+    }
+     private function handleGetChequeCalendarEventsContract()
+    {
+        $contract_id = $_GET['contract_id'] ?? null;
+        $sql = "SELECT cheque_date, cheque_status, COUNT(*) as cheque_count 
+                FROM tbl_customer_ledger 
+                WHERE payment_method = 'Cheque' AND cheque_date IS NOT NULL ";
+        $params = [];
+        if ($contract_id) {
+            $sql .= " AND contract_ids = ? ";
+            $params[] = $contract_id;
         }
         $sql .= " GROUP BY cheque_date, cheque_status";
         $res = json_decode($this->varPDOModelObj->ListFromTable($sql, $params), true);
@@ -219,6 +332,23 @@ class CustomerLedgerController
         }
         echo $this->varPDOModelObj->ListFromTable($sql, $params);
     }
+    
+    private function handleGetChequesByDateContract()
+    {
+        $date = $_GET['date'] ?? '';
+        $contract_id = $_GET['contract_id'] ?? null;
+        
+        $sql = "SELECT l.*, c.customer_name 
+                FROM tbl_customer_ledger l
+                JOIN customer_details c ON l.customer_code = c.customer_id
+                WHERE l.payment_method = 'Cheque' AND l.cheque_date = ? ";
+        $params = [$date];
+        if ($contract_id) {
+            $sql .= " AND l.contract_ids = ? ";
+            $params[] = $contract_id;
+        }
+        echo $this->varPDOModelObj->ListFromTable($sql, $params);
+    }
 
     private function handleUpdateChequeStatus()
     {
@@ -248,22 +378,8 @@ class CustomerLedgerController
 
     private function canModify($ids)
     {
-        $user_role = strtolower($_SESSION['user_role_name'] ?? 'User');
-        $user_id = $_SESSION['user_id'] ?? 0;
-
-        if (strpos($user_role, 'admin') !== false) return true;
-
-        $sql = "SELECT created_at, user_id FROM tbl_customer_ledger WHERE ids = ?";
-        $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$ids]), true);
-
-        if ($res['status'] && !empty($res['data'])) {
-            $row = $res['data'][0];
-            $isToday = date('Y-m-d', strtotime($row['created_at'])) === date('Y-m-d');
-            if ($isToday && $row['user_id'] == $user_id) {
-                return true;
-            }
-        }
-        return false;
+        // Removed security check to allow all modifications
+        return true;
     }
 
     private function handleGetLedger()
@@ -288,6 +404,101 @@ class CustomerLedgerController
             echo json_encode($res);
         }
     }
+    
+    private function handleContractGetLedger()
+    {
+        $contract_id = $_GET['contract_id'] ?? '';
+        $sql = "SELECT l.*, b.bank_name, b.account_no, cb.bank_name as company_bank_name, cb.account_no as company_account_no
+                FROM tbl_customer_ledger l 
+                LEFT JOIN tbl_banks b ON l.bank_id = b.ids 
+                LEFT JOIN tbl_banks cb ON l.company_bank_id = cb.ids 
+                WHERE l.contract_ids = ? 
+                ORDER BY l.trans_date ASC, l.ids ASC";
+        $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$contract_id]), true);
+        
+        if ($res['status']) {
+            $balance = 0;
+            foreach ($res['data'] as &$row) {
+                $balance += ($row['debit'] - $row['credit']);
+                $row['running_balance'] = $balance;
+            }
+            echo json_encode($res);
+        } else {
+            echo json_encode($res);
+        }
+    }
+   private function handleContractGetLedgerBalance()
+{
+    $contract_id = $_POST['contract_id'] ?? '';
+
+    $sql = "SELECT l.*
+            FROM tbl_customer_ledger l
+            WHERE l.contract_ids = ?
+            ORDER BY l.trans_date ASC, l.ids ASC";
+
+    $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$contract_id]), true);
+
+    if ($res['status']) {
+
+           $totalDebit = 0;
+            $totalCredit = 0;
+            $balance = 0;
+
+        foreach ($res['data'] as &$row) {
+           
+            $totalDebit += (float)$row['debit'];
+            $totalCredit += (float)$row['credit'];
+
+            $balance += ((float)$row['debit'] - (float)$row['credit']);
+            $row['running_balance'] = $balance;
+        }
+         $sqlContract = "SELECT
+                        agreement_no,customer_code,quotation_number,
+                        customer_name,vehicle_no,
+                        customer_details,vechile_details,
+                        service_type
+                    FROM  tbl_vehicle_rentout_contracts
+                    WHERE ids = ?";
+
+    $contractRes = json_decode(
+        $this->varPDOModelObj->ListFromTable($sqlContract, [$contract_id]),
+        true
+    );
+   $contract = $contractRes['data'][0] ?? [];
+
+    $customer = json_decode(
+        $contract['customer_details'] ?? '{}',
+        true
+    );
+    $customer = json_decode(
+        $contract['customer_details'] ?? '{}',
+        true
+    );
+  $vehicle = json_decode(
+        $contract['vechile_details'] ?? '{}',
+        true
+    );
+  
+     $res['balance'] = $balance;
+    $res['total_debit'] = $totalDebit;
+    $res['total_credit'] = $totalCredit;
+
+    $res['agreement_no'] = $contract['agreement_no'] ?? '';
+
+    $res['customer_name'] = $customer['customer_name'] ?? '';
+    $res['customer_code'] = $customer['customer_code'] ?? '';
+    $res['customer_mobile'] = $customer['customer_mobile'] ?? '';
+    $res['customer_email'] = $customer['customer_email'] ?? '';
+    $res['vehicle_no'] =  $contract['vehicle_no'] ?? '';
+    $res['service_type'] =  $contract['service_type'] ?? '';
+    $res['model_name'] = $vehicle['model_name'] ?? '';
+    $res['contract_id'] = $contract_id ?? '';
+
+    echo json_encode($res);
+    } else {
+        echo json_encode($res);
+    }
+}
 }
 
 $obj = new CustomerLedgerController();

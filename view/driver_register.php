@@ -1,4 +1,17 @@
 <?php
+session_start();
+
+function checkLogin()
+{
+    if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+        header("Location: /Logout");
+        exit();
+    }
+}
+
+checkLogin();
+?>
+<?php
 include ROOT_PATH . '/view/envinclude.php';
 ?>
 <!doctype html>

@@ -14,7 +14,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>AA Car Rental</title>
+      <?php include('templates/title.php'); ?>
 
     <meta name="description" content="" />
 
@@ -98,9 +98,9 @@
 			
               <form id="formAuthentication" class="mb-5" action="/Home?val=<?php echo $this->encryption->encrypt('1,1-1');?>" method="GET">
 			  
-				<div class="form-floating form-floating-outline mb-6">
+				<div class="form-floating form-floating-outline mb-6" style="display:none">
 					<select class="form-select" id="selectCompanyDropDown" name="selectCompanyDropDown">
-					  <option value="" selected disabled>Choose Company</option>
+					  <option value="1" selected >AA Car Rental</option>
 					  <option value="1">AA Car Rental</option>
 					  <option value="2">Class Rental Car</option>
 					</select>
@@ -251,7 +251,7 @@
                         
                         setTimeout(function() {
                             // Redirect to home. User logic often uses a val param for session context.
-                            window.location.href = "/Home";
+                            window.location.href = "/Dashboard";
                         }, 1000);
                     } else {
                         if (typeof setupDropdown === 'function') {

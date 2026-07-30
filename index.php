@@ -1,4 +1,16 @@
-<?php session_start();
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    $savePath = session_save_path();
+    if (empty($savePath) || !is_writable($savePath)) {
+        session_save_path(sys_get_temp_dir());
+    }
+    session_start();
+}
+if (!function_exists('str_starts_with')) {
+    function str_starts_with($haystack, $needle) {
+        return (string)$needle !== '' && strncmp($haystack, $needle, strlen($needle)) === 0;
+    }
+}
 define('ROOT_PATH', __DIR__);
 //$rootPath = realpath(__DIR__ );
 require_once ROOT_PATH . '/envfiles/vendor/autoload.php';
@@ -43,8 +55,16 @@ class RoutingClass
         // Initialize encryption class
         $this->encryption = new EncryptionHelper($this->key);
         
-        // Retrieve the requested URL
-        $this->url = isset($_GET['url']) ? $_GET['url'] : '/';
+        // Retrieve the requested URL (support both Apache Rewrite and PHP built-in server)
+        if (isset($_GET['url'])) {
+            $this->url = $_GET['url'];
+        } else {
+            $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+            $this->url = trim($requestUri, '/');
+            if ($this->url === '') {
+                $this->url = '/';
+            }
+        }
         // Define the routes
         $this->routes = array(
             '' => 'Login',
@@ -83,6 +103,12 @@ class RoutingClass
 
             'SearchCustomerDetails' => 'SearchCustomerDetails',
             'SearchCustomerDetails/' => 'SearchCustomerDetails',
+            
+            'SearchStaffDetails' => 'SearchStaffDetails',
+            'SearchStaffDetails/' => 'SearchStaffDetails',
+            
+            'SearchVehicleDetails' => 'SearchVehicleDetails',
+            'SearchVehicleDetails/' => 'SearchVehicleDetails',
 
             'GetCustomerDetails' => 'GetCustomerDetails',
             'GetCustomerDetails/' => 'GetCustomerDetails',
@@ -93,8 +119,8 @@ class RoutingClass
             'AddVehicles' => 'AddVehicles',
             'AddVehicles/' => 'AddVehicles',
 
-            'ListOfVehicles' => 'ListOfVehicles',
-            'ListOfVehicles/' => 'ListOfVehicles',
+            'ListofVehicles' => 'ListofVehicles',
+            'ListofVehicles/' => 'ListofVehicles',
 
             'UploadVehicleImages' => 'UploadVehicleImages',
             'UploadVehicleImages/' => 'UploadVehicleImages',
@@ -151,7 +177,7 @@ class RoutingClass
             'CheckUsername/' => 'CheckUsername',
 
             'UploadUserImages' => 'UploadUserImages',
-            'UploadUserImages/' => 'CheckUploadUserImagesUsername',
+            'UploadUserImages/' => 'UploadUserImages',
 
             'ListOfUsers' => 'ListOfUsers',
             'ListOfUsers/' => 'ListOfUsers',
@@ -235,8 +261,35 @@ class RoutingClass
             'LoadDriverSelect' => 'LoadDriverSelect',
             'LoadDriverSelect/' => 'LoadDriverSelect',
             
+            'GenerateOtp' => 'GenerateOtp',
+            'GenerateOtp/' => 'GenerateOtp',
+            
+            'VerifyOtp' => 'VerifyOtp',
+            'VerifyOtp/' => 'VerifyOtp',
+            
+            'CompressUploadImage' => 'CompressUploadImage',
+            'CompressUploadImage/' => 'CompressUploadImage',
+            
+            'ReturnCompressUploadImage' => 'ReturnCompressUploadImage',
+            'ReturnCompressUploadImage/' => 'ReturnCompressUploadImage',
+            
+            'DeleteUploadImage' => 'DeleteUploadImage',
+            'DeleteUploadImage/' => 'DeleteUploadImage',
+            
+            'ReturnDeleteUploadImage' => 'ReturnDeleteUploadImage',
+            'ReturnDeleteUploadImage/' => 'ReturnDeleteUploadImage',
+            
+            'ContractList' => 'ContractList',
+            'ContractList/' => 'ContractList',
+            
+            'ContractListController' => 'ContractListController',
+            'ContractListController/' => 'ContractListController',
+            
             'CustomerLedger' => 'CustomerLedger',
             'CustomerLedger/' => 'CustomerLedger',
+            
+            'PrintAgreement' => 'PrintAgreement',
+            'PrintAgreement/' => 'PrintAgreement',
             
             'CustomerLedgerController' => 'CustomerLedgerController',
             'FundFlow' => 'FundFlow',
@@ -244,7 +297,109 @@ class RoutingClass
             'FundFlowController' => 'FundFlowController',
             'FundFlowController/' => 'FundFlowController',
             'CustomerLedgerController/' => 'CustomerLedgerController',
-       
+            'VehicleInsights' => 'VehicleInsights',
+            'VehicleInsights/' => 'VehicleInsights',
+            'ExpectedReturns' => 'ExpectedReturns',
+            'ExpectedReturns/' => 'ExpectedReturns',
+            'CustomerLedgerController/' => 'CustomerLedgerController',
+            'CustomerBalances' => 'CustomerBalances',
+            'CustomerBalances/' => 'CustomerBalances',
+            'CustomerLedgerController/' => 'CustomerLedgerController',
+            
+            'Invoice' => 'Invoice',
+            'Invoice/' => 'Invoice',
+            
+            'InvoiceController' => 'InvoiceController',
+            'InvoiceController/' => 'InvoiceController',
+            
+            'getAgreementOptions' => 'getAgreementOptions',
+            'getAgreementOptions/' => 'getAgreementOptions',
+            
+            'getLedgerDetails' => 'getLedgerDetails',
+            'getLedgerDetails/' => 'getLedgerDetails',
+            
+            'getLedgerDetailsExpense' => 'getLedgerDetailsExpense',
+            'getLedgerDetailsExpense/' => 'getLedgerDetailsExpense',
+            
+            
+             'InvoicePrint' => 'InvoicePrint',
+            'InvoicePrint/' => 'InvoicePrint',
+            
+            'CashMemo' => 'CashMemo',
+            'CashMemo/' => 'CashMemo',
+            
+             'CashMemoPrint' => 'CashMemoPrint',
+            'CashMemoPrint/' => 'CashMemoPrint',
+            
+             'CashMemoController' => 'CashMemoController',
+            'CashMemoController/' => 'CashMemoController',
+            
+             'ExpenseVoucher' => 'ExpenseVoucher',
+            'ExpenseVoucher/' => 'ExpenseVoucher',
+            
+             'ExpenseVoucherPrint' => 'ExpenseVoucherPrint',
+            'ExpenseVoucherPrint/' => 'ExpenseVoucherPrint',
+            
+             'ExpenseVoucherController' => 'ExpenseVoucherController',
+            'ExpenseVoucherController/' => 'ExpenseVoucherController',
+            
+             'Dashboard' => 'Dashboard',
+            'Dashboard/' => 'Dashboard',
+            
+             'CloseVerifyOtp' => 'CloseVerifyOtp',
+            'CloseVerifyOtp/' => 'CloseVerifyOtp',
+            
+           'VehicleInsight' => 'VehicleInsight',
+            'VehicleInsight/' => 'VehicleInsight', 
+            'VehicleInsightController' => 'VehicleInsightController',
+            'VehicleInsightController/' => 'VehicleInsightController', 
+            
+            'DashboardStatic' => 'DashboardStatic',
+            'DashboardStatic/' => 'DashboardStatic',
+            
+            'ReturnReport' => 'ReturnReport',
+            'ReturnReport/' => 'ReturnReport',
+            
+            'Customers' => 'Customers',
+            'Customers/' => 'Customers',
+            'CustomerMasterController' => 'CustomerMasterController',
+            'CustomerMasterController/' => 'CustomerMasterController',
+            'UnbilledContracts' => 'UnbilledContracts',
+            'UnbilledContracts/' => 'UnbilledContracts',
+            'QuotationPrint' => 'QuotationPrint',
+            'QuotationPrint/' => 'QuotationPrint',
+            'QuotationPrintImages' => 'QuotationPrintImages',
+            'QuotationPrintImages/' => 'QuotationPrintImages',
+            'DailyRentalReport' => 'DailyRentalReport',
+            'DailyRentalReport/' => 'DailyRentalReport',
+            'DailyCashReport' => 'DailyCashReport',
+            'DailyCashReport/' => 'DailyCashReport',
+            'DailyReportController' => 'DailyReportController',
+            'DailyReportController/' => 'DailyReportController',
+            'DailyRentalReportExport' => 'DailyRentalReportExport',
+            'DailyRentalReportExport/' => 'DailyRentalReportExport',
+            'DailyCashReportExport' => 'DailyCashReportExport',
+            'DailyCashReportExport/' => 'DailyCashReportExport',
+            
+             'RegisterStaff' => 'RegisterStaff',
+            'RegisterStaff/' => 'RegisterStaff',
+             'StaffController' => 'StaffController',
+            'StaffController/' => 'StaffController',
+            'LoadStaffSelect' => 'LoadStaffSelect',
+            'LoadStaffSelect/' => 'LoadStaffSelect',
+             'NonRevenueController' => 'NonRevenueController',
+            'NonRevenueController/' => 'NonRevenueController',
+            'NonRevenueTickets' => 'NonRevenueTickets',
+            'NonRevenueTickets/' => 'NonRevenueTickets',
+             'NonRevenueTicketReport' => 'NonRevenueTicketReport',
+            'NonRevenueTicketReport/' => 'NonRevenueTicketReport',
+             'NonRevenueTicketExport' => 'NonRevenueTicketExport',
+            'NonRevenueTicketExport/' => 'NonRevenueTicketExport',
+             'Profile' => 'Profile',
+            'Profile/' => 'Profile',
+              'LoadProfile' => 'LoadProfile',
+            'LoadProfile/' => 'LoadProfile',
+            
 
         );
 
@@ -281,7 +436,7 @@ class RoutingClass
     }
     private function Home(...$params)
     {
-        $this->includeWithParams("view/index.php", $_GET);
+        $this->includeWithParams("view/dashboard.php", $_GET);
         // $this->includeWithParams("controller/login/LoginController.php", $_GET);
         Logger::ActivityLog('PageAccesed', "controller/login/LoginController.php", ['user' => $this->login_user]);
     }
@@ -329,6 +484,15 @@ class RoutingClass
     {
         $this->includeWithParams("controller/customer/SearchCustomer.php", $_GET);
     }
+    private function SearchStaffDetails(...$params)
+    {
+        $this->includeWithParams("controller/staff/SearchStaff.php", $_GET);
+    }
+    private function SearchVehicleDetails(...$params)
+    {
+        $this->includeWithParams("controller/vehicles/SearchVehicle.php", $_GET);
+    }
+    
     private function GetCustomerDetails(...$params)
     {
         $this->includeWithParams("controller/customer/GetCustomerDetails.php", $_GET);
@@ -349,6 +513,10 @@ class RoutingClass
     private function AddUser(...$params)
     {
         $this->includeWithParams("view/users.php", $_GET);
+    }
+     private function Profile(...$params)
+    {
+        $this->includeWithParams("view/user_profile.php", $_GET);
     }
     private function InsertUser(...$params)
     {
@@ -390,7 +558,7 @@ class RoutingClass
     {
         $this->includeWithParams("controller/vehicles/VehiclesController.php", $_GET);
     }
-    private function ListOfVehicles(...$params)
+    private function ListofVehicles(...$params)
     {
         $this->includeWithParams("view/vehicles_list.php", $_GET);
     }
@@ -546,9 +714,41 @@ class RoutingClass
     {
         $this->includeWithParams("controller/VehicleContractGeneration/loadDriverSelect.php", $_GET);
     }
+      private function GenerateOtp(...$params)
+    {
+        $this->includeWithParams("controller/VehicleContractGeneration/generateOtp.php", $_GET);
+    }
+      private function VerifyOtp(...$params)
+    {
+        $this->includeWithParams("controller/VehicleContractGeneration/verifyOtp.php", $_GET);
+    }
+      private function CompressUploadImage(...$params)
+    {
+        $this->includeWithParams("controller/VehicleContractGeneration/vehicleImageCompress.php", $_GET);
+    }
+     private function DeleteUploadImage(...$params)
+    {
+        $this->includeWithParams("controller/VehicleContractGeneration/vehicleImageDelete.php", $_GET);
+    }
+      private function ReturnCompressUploadImage(...$params)
+    {
+        $this->includeWithParams("controller/VehicleContractList/vehicleImageCompress.php", $_GET);
+    }
+     private function ReturnDeleteUploadImage(...$params)
+    {
+        $this->includeWithParams("controller/VehicleContractList/vehicleImageDelete.php", $_GET);
+    }
+    private function ContractList(...$params)
+    {
+        $this->includeWithParams("view/VehicleContractList.php", $_GET);
+    }
+      private function ContractListController(...$params)
+    {
+        $this->includeWithParams("controller/VehicleContractList/vehicleContractListController.php", $_GET);
+    }  
     private function CustomerLedger(...$params)
     {
-        $this->includeWithParams("view/customer_ledger.php", $_GET);
+        $this->includeWithParams("view/customer_ledger_new.php", $_GET);
     }
     private function CustomerLedgerController(...$params)
     {
@@ -562,6 +762,169 @@ class RoutingClass
     {
         $this->includeWithParams("controller/reports/FundFlowController.php", $_GET);
     }
+    private function PrintAgreement(...$params)
+    {
+        $this->includeWithParams("pdf/generate_contract.php", $_GET);
+    }
+    private function Invoice(...$params)
+    {
+        $this->includeWithParams("view/invoice.php", $_GET);
+    }
+    private function InvoiceController(...$params)
+    {
+        $this->includeWithParams("controller/invoice/invoiceController.php", $_GET);
+    }
+    
+    public function VehicleInsights() {
+        require 'controller/reports/VehicleInsightController.php';
+    }
+
+    public function ExpectedReturns() {
+        require 'controller/reports/ExpectedReturnController.php';
+    }
+    public function CustomerBalances() {
+        require 'controller/reports/CustomerBalanceController.php';
+    }
+    private function getAgreementOptions(...$params)
+    {
+        $this->includeWithParams("controller/invoice/get_agreement_options.php", $_GET);
+    }
+   
+   private function getLedgerDetails(...$params)
+    {
+        $this->includeWithParams("controller/invoice/get_ledger_details.php", $_GET);
+    }
+     private function getLedgerDetailsExpense(...$params)
+    {
+        $this->includeWithParams("controller/invoice/get_ledger_details_expense.php", $_GET);
+    }
+     private function InvoicePrint(...$params)
+    {
+        $this->includeWithParams("pdf/invoice.php", $_GET);
+    }
+    private function CashMemo(...$params)
+    {
+        $this->includeWithParams("view/cash_memo.php", $_GET);
+    }
+    private function CashMemoController(...$params)
+    {
+        $this->includeWithParams("controller/cashmemo/cashmemoController.php", $_GET);
+    }
+     private function CashMemoPrint(...$params)
+    {
+        $this->includeWithParams("pdf/cash_memo.php", $_GET);
+    }
+    private function ExpenseVoucher(...$params)
+    {
+        $this->includeWithParams("view/expense_voucher.php", $_GET);
+    }
+    private function ExpenseVoucherController(...$params)
+    {
+        $this->includeWithParams("controller/expense_voucher/expense_voucherController.php", $_GET);
+    }
+     private function ExpenseVoucherPrint(...$params)
+    {
+        $this->includeWithParams("pdf/expense_voucher.php", $_GET);
+    }
+    private function DashboardStatic(...$params)
+    {
+        $this->includeWithParams("view/dashboard.php", $_GET);
+    }
+      private function CloseVerifyOtp(...$params)
+    {
+        $this->includeWithParams("controller/VehicleContractList/close_verifyOtp.php", $_GET);
+    }
+    
+      private function VehicleInsight(...$params)
+    {
+        $this->includeWithParams("view/vehicle_insight.php", $_GET);
+    }
+      
+     private function VehicleInsightController(...$params)
+    {
+        $this->includeWithParams("controller/VehicleStatus/VehicleInsightController.php", $_GET);
+    }
+     private function Dashboard(...$params)
+    {
+        $this->includeWithParams("view/dashboardnew.php", $_GET);
+    }
+       private function ReturnReport(...$params)
+    {
+        $this->includeWithParams("view/vehicle_return_report.php", $_GET);
+    }
+       private function Customers(...$params)
+    {
+        $this->includeWithParams("view/customers.php", $_GET);
+    }
+     private function CustomerMasterController(...$params)
+    {
+        $this->includeWithParams("controller/customer/CustomerMasterController.php", $_GET);
+    }
+      private function UnbilledContracts(...$params)
+    {
+        $this->includeWithParams("view/unbilled_contracts.php", $_GET);
+    }
+    private function QuotationPrint(...$params)
+    {
+        $this->includeWithParams("pdf/generate_quotation1.php", $_GET);
+    }
+      private function QuotationPrintImages(...$params)
+    {
+        $this->includeWithParams("pdf/generate_quotation_images.php", $_GET);
+    }
+    private function DailyRentalReport(...$params)
+    {
+        $this->includeWithParams("view/daily_rental_report.php", $_GET);
+    }
+      private function DailyCashReport(...$params)
+    {
+        $this->includeWithParams("view/daily_cash_report.php", $_GET);
+    }
+      private function DailyReportController(...$params)
+    {
+        $this->includeWithParams("controller/reports/DailyReportController.php", $_GET);
+    }
+     private function DailyRentalReportExport(...$params)
+    {
+        $this->includeWithParams("pdf/daily_rental_report.php", $_GET);
+    }
+     private function DailyCashReportExport(...$params)
+    {
+        $this->includeWithParams("pdf/daily_cash_report.php", $_GET);
+    }
+    private function RegisterStaff(...$params)
+    {
+        $this->includeWithParams("view/staff_register.php", $_GET);
+    }
+      private function StaffController(...$params)
+    {
+        $this->includeWithParams("controller/staff/StaffController.php", $_GET);
+    }
+     private function LoadStaffSelect(...$params)
+    {
+        $this->includeWithParams("controller/staff/loadDriverSelect.php", $_GET);
+    }
+     private function NonRevenueController(...$params)
+    {
+        $this->includeWithParams("controller/VehicleStatus/NonRevenueController.php", $_GET);
+    }
+     private function NonRevenueTickets(...$params)
+    {
+        $this->includeWithParams("view/NonRevenueTicket.php", $_GET);
+    }
+    private function NonRevenueTicketReport(...$params)
+    {
+        $this->includeWithParams("view/nonrevenueticket_report.php", $_GET);
+    }
+      private function NonRevenueTicketExport(...$params)
+    {
+        $this->includeWithParams("pdf/non_revenue_ticket_export.php", $_GET);
+    }
+      private function LoadProfile(...$params)
+    {
+        $this->includeWithParams("controller/users/ProfileController.php", $_GET);
+    }
+    
     private function includeWithParams($file, $params)
     {
         if (is_array($params)) {

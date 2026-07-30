@@ -14,7 +14,7 @@ $drivers = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <option value="0" disabled selected>Select Driver</option>
 
     <?php foreach ($drivers as $driver) { ?>
-        <option data-documents= "<?php echo $driver['driver_documents']; ?>" data-id ="<?php echo $driver['driver_contact_no']; ?>" data-license_no="<?php echo $driver['license_no']; ?>"  data-license_place="<?php echo $driver['license_issue_place']; ?>" data-license_id="<?php echo $driver['license_issue_date']; ?>" data-license_ed="<?php echo $driver['license_expiry_date']; ?>" value="<?php echo $driver['ids']; ?>"><?php echo $driver['driver_name']; ?></option>
+        <option  data-id ="<?php echo $driver['driver_contact_no']; ?>" data-license_no="<?php echo $driver['license_no']; ?>"  data-license_place="<?php echo $driver['license_issue_place']; ?>" data-license_id="<?php echo $driver['license_issue_date']; ?>" data-license_ed="<?php echo $driver['license_expiry_date']; ?>" value="<?php echo $driver['ids']; ?>"><?php echo $driver['driver_name']; ?></option>
     <?php } ?>
 
 </select>

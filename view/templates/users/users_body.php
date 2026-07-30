@@ -24,77 +24,107 @@
                         <div class="card-body">
                             <input type="hidden" id="editUserId">
 
-                            <div class="row">
+                           <div class="row">
 
-                                <!-- LEFT COLUMN: Inputs (wider) -->
-                                <div class="col-11">
+    <!-- LEFT SECTION -->
+    <div class="col-10">
 
-                                    <div class="row">
+        <div class="row">
 
-                                        <!-- Name + Username -->
-                                        <div class="col-3">
-                                            <div class="form-floating form-floating-outline mb-3">
-                                                <input type="text" class="form-control" id="userProfileName" placeholder="Name">
-                                                <label for="userProfileName">Name</label>
-                                            </div>
-                                            <div class="form-floating form-floating-outline mb-3 mt-2">
-                                                <input type="text" class="form-control" id="userName" placeholder="Username">
-                                                <label for="userName">Username</label>
-                                            </div>
-                                        </div>
+           <!-- Name -->
+            <div class="col-md-3">
+                <div class="form-floating form-floating-outline mb-3">
+                    <input type="text" class="form-control" id="userProfileName" placeholder="Name">
+                    <label for="userProfileName">Name</label>
+                </div>
+            </div>
+             <!-- Role -->
+            <div class="col-md-3">
+                <div class="form-floating form-floating-outline mb-3">
+                    <select id="select2Basic" class="select2 form-select" data-placeholder="Select Role">
+                        <option value="" disabled selected>Select Role</option>
+                    </select>
+                    <label for="select2Basic">Role</label>
+                </div>
+            </div>
+            <!-- Username -->
+            <div class="col-md-3">
+                <div class="form-floating form-floating-outline mb-3">
+                    <input type="text" class="form-control" id="userName" placeholder="Username">
+                    <label for="userName">Username</label>
+                </div>
+            </div>
+            
+            <!-- Password -->
+            <div class="col-md-3">
+                <div class="form-floating form-floating-outline mb-3">
+                    <input type="password" class="form-control" id="userPassword" placeholder="Password">
+                    <label for="userPassword">Password</label>
+                </div>
+            </div>
 
-                                        <!-- Role + Password -->
-                                        <div class="col-3">
-                                            <div class="form-floating form-floating-outline mb-3">
-                                                <select id="select2Basic" class="select2 form-select" data-placeholder="Select Role">
-                                                    <option value="" disabled selected>Select Role</option>
-                                                </select>
-                                                <label for="select2Basic">Role</label>
-                                            </div>
-                                            <div class="form-floating form-floating-outline mb-3 mt-2">
-                                                <input type="password" class="form-control" id="userPassword" placeholder="Password">
-                                                <label for="userPassword">Password</label>
-                                            </div>
-                                        </div>
+            <!-- Email -->
+            <div class="col-md-3">
+                <div class="form-floating form-floating-outline mb-3">
+                    <input type="email" class="form-control" id="userEmail" placeholder="Email">
+                    <label for="userEmail">Email</label>
+                </div>
+            </div>
+            <!-- Phone -->
+            <div class="col-md-3">
+                <div class="form-floating form-floating-outline mb-3">
+                    <input type="tel" class="form-control" id="userPhoneNumber" placeholder="Phone">
+                    <label for="userPhoneNumber">Phone</label>
+                </div>
+            </div>
 
-                                        <!-- Email + Company -->
-                                        <div class="col-3">
-                                            <div class="form-floating form-floating-outline mb-3">
-                                                <input type="email" class="form-control" id="userEmail" placeholder="Email">
-                                                <label for="userEmail">Email</label>
-                                            </div>
-                                            <div class="form-floating form-floating-outline mb-3 mt-2">
-                                                <select id="select2Multiple" class="select2 form-select" data-placeholder="Select Company" multiple>
-                                                    <option value="" disabled selected>Select Company</option>
-                                                </select>
-                                                <label>Company Access</label>
-                                            </div>
-                                        </div>
 
-                                        <!-- Phone + File -->
-                                        <div class="col-3">
-                                            <div class="form-floating form-floating-outline mb-3">
-                                                <input type="tel" class="form-control" id="userPhoneNumber" placeholder="Phone">
-                                                <label for="userPhoneNumber">Phone</label>
-                                            </div>
-                                            <div class="form-floating form-floating-outline mb-3 mt-2">
-                                                <input type="file" class="form-control form-control-sm" id="userImages">
-                                                <input type="hidden" id="uploadedImageName">
-                                                <label>Profile Image</label>
-                                            </div>
-                                        </div>
+            <!-- Company Access -->
+            <div class="col-md-4" style="display:none">
+                <div class="form-floating form-floating-outline mb-3">
+                    <select id="select2Multiple" class="select2 form-select" 
+                            data-placeholder="Select Company" multiple>
+                    </select>
+                    <label for="select2Multiple">Company Access</label>
+                </div>
+            </div>
 
-                                    </div>
-                                </div>
 
-                                <!-- RIGHT COLUMN: Smaller Preview -->
-                                <div class="col d-flex align-items-start justify-content-center">
-                                    <div id="imagePreview" style="width:70px; height:70px; border:1px solid #ccc; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-top:20px; overflow:hidden;">
-                                        <img id="previewImg" src="assets/img/users/default.jpg" alt="Preview" style="width:100%; height:100%; object-fit:cover;">
-                                    </div>
-                                </div>
+           
 
-                            </div>
+
+            <!-- Profile Image Upload -->
+            <div class="col-md-6">
+                <div class="form-floating form-floating-outline mb-3">
+                    <input type="file" class="form-control form-control-sm" id="userImages">
+                    <input type="hidden" id="uploadedImageName">
+                    <label>Profile Image</label>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- IMAGE PREVIEW -->
+    <div class="col-2 d-flex align-items-start justify-content-center">
+
+        <div id="imagePreview" 
+             style="width:90px; height:90px; border:1px solid #ccc; border-radius:50%; 
+                    display:flex; align-items:center; justify-content:center; 
+                    margin-top:20px; overflow:hidden;">
+
+            <img id="previewImg" 
+                 src="assets/img/users/default.jpg" 
+                 alt="Preview" 
+                 style="width:100%; height:100%; object-fit:cover;">
+
+        </div>
+
+    </div>
+
+</div>
 
                             <!-- Buttons -->
                             <div class="text-end mt-3">

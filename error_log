@@ -1,0 +1,34 @@
+[27-Jul-2026 16:00:56 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:10:34 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:11:04 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:17:06 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:18:10 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:31:39 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:31:47 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:33:16 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:33:31 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:36:02 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:36:08 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:36:21 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:38:54 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:39:44 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:41:35 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:41:40 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[27-Jul-2026 16:41:45 Asia/Bahrain] PHP Warning:  Undefined property: VehicleStatusController::$filter_date in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleStatusController.php on line 1528
+[28-Jul-2026 10:31:51 Asia/Bahrain] PHP Deprecated:  str_replace(): Passing null to parameter #3 ($subject) of type array|string is deprecated in /home/sandsl23/public_html/aacar.sandslab.com/model/common/en_de_class.php on line 51
+[28-Jul-2026 10:58:35 Asia/Bahrain] PHP Warning:  Undefined array key "filter_from_date" in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleInsightController.php on line 27
+[28-Jul-2026 10:58:35 Asia/Bahrain] PHP Deprecated:  strtotime(): Passing null to parameter #1 ($datetime) of type string is deprecated in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleInsightController.php on line 27
+[28-Jul-2026 10:58:35 Asia/Bahrain] PHP Warning:  Undefined array key "filter_to_date" in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleInsightController.php on line 28
+[28-Jul-2026 10:58:35 Asia/Bahrain] PHP Deprecated:  strtotime(): Passing null to parameter #1 ($datetime) of type string is deprecated in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleStatus/VehicleInsightController.php on line 28
+[28-Jul-2026 12:04:17 Asia/Bahrain] PHP Deprecated:  str_replace(): Passing null to parameter #3 ($subject) of type array|string is deprecated in /home/sandsl23/public_html/aacar.sandslab.com/model/common/en_de_class.php on line 51
+[28-Jul-2026 13:38:19 Asia/Bahrain] PHP Fatal error:  Uncaught Error: Call to undefined method CommonPDOModel::FetchSingle() in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleContractList/vehicleContractListController.php:1281
+Stack trace:
+#0 /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleContractList/vehicleContractListController.php(1449): VehiclesContractListController->DataRequest('returnContractG...')
+#1 /home/sandsl23/public_html/aacar.sandslab.com/index.php(913): include('/home/sandsl23/...')
+#2 /home/sandsl23/public_html/aacar.sandslab.com/index.php(727): RoutingClass->includeWithParams('controller/Vehi...', Array)
+#3 /home/sandsl23/public_html/aacar.sandslab.com/index.php(396): RoutingClass->ContractListController(Array)
+#4 /home/sandsl23/public_html/aacar.sandslab.com/index.php(929): RoutingClass->__construct()
+#5 {main}
+  thrown in /home/sandsl23/public_html/aacar.sandslab.com/controller/VehicleContractList/vehicleContractListController.php on line 1281
+[28-Jul-2026 15:10:16 Asia/Bahrain] PHP Deprecated:  str_replace(): Passing null to parameter #3 ($subject) of type array|string is deprecated in /home/sandsl23/public_html/aacar.sandslab.com/model/common/en_de_class.php on line 51
+[28-Jul-2026 18:29:48 Asia/Bahrain] PHP Deprecated:  str_replace(): Passing null to parameter #3 ($subject) of type array|string is deprecated in /home/sandsl23/public_html/aacar.sandslab.com/model/common/en_de_class.php on line 51

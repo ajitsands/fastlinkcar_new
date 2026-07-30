@@ -1,13 +1,19 @@
 <?php
+session_start();
 
-// if (!isset($_SESSION['LOGIN_STATUS'])) {
-//     header("Location: /Login");
-//     exit();
-// }
+function checkLogin()
+{
+    if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+        header("Location: /Logout");
+        exit();
+    }
+}
+
+checkLogin();
 ?>
 
 <?php
-include ROOT_PATH . '/view/envinclude.php';
+include('envinclude.php');
 $decimals = $_ENV['DECIMALS'];
 ?>
 <!doctype html>
@@ -18,11 +24,11 @@ $decimals = $_ENV['DECIMALS'];
     dir="ltr"
     data-skin="default"
     data-bs-theme="light"
-    data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/"
+    data-assets-path="../assets/"
     data-template="horizontal-menu-template-no-customizer">
 
 <head>
-    <?php include ROOT_PATH . '/view/templates/head.php'; ?>
+    <?php include('templates/head.php'); ?>
 
 
    
@@ -31,38 +37,38 @@ $decimals = $_ENV['DECIMALS'];
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
 
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/tagify/tagify.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/bootstrap-select/bootstrap-select.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/typeahead-js/typeahead.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/spinkit/spinkit.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/select2/select2.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/tagify/tagify.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/bootstrap-select/bootstrap-select.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/typeahead-js/typeahead.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/spinkit/spinkit.css" />
     
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/typography.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/katex.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/editor.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/quill/typography.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/quill/katex.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/quill/editor.css" />
     
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>alertmessage/css/sands_alert_style.css">
+    <link rel="stylesheet" href="../assets/sands/sands_popup.css" />
+    <link rel="stylesheet" href="alertmessage/css/sands_alert_style.css">
     
         <!-- Ladda CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda-themeless.min.css" />
     
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/typography.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/highlight/highlight.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/katex.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/editor.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/quill/typography.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/highlight/highlight.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/quill/katex.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/quill/editor.css" />
     
      <!-- Helpers -->
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/js/helpers.js"></script>
+    <script src="../assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
 
     <!--? Config: Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file. -->
 
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/config.js"></script>
+    <script src="../assets/js/config.js"></script>
 
     
     
@@ -250,6 +256,49 @@ div.dt-container div.dt-search input {
     overflow-y: auto;
     overflow-x: hidden;
 }
+
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 26px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #dc3545; /* Disapproved */
+    transition: .3s;
+    border-radius: 26px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #28a745; /* Approved */
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
     </style>
 
 </head>
@@ -259,7 +308,7 @@ div.dt-container div.dt-search input {
     <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
         <div class="layout-container">
             <!-- Navbar -->
-            <?php include ROOT_PATH . '/view/templates/nav.php'; ?>
+            <?php include('templates/nav.php'); ?>
             <!-- / Navbar -->
 
             <!-- Layout container -->
@@ -267,7 +316,7 @@ div.dt-container div.dt-search input {
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
                     <!-- Menu -->
-                    <?php include ROOT_PATH . '/view/templates/menu.php'; ?>
+                    <?php include('templates/menu.php'); ?>
                     <!-- / Menu -->
 
                     <!-- Content -->
@@ -275,14 +324,14 @@ div.dt-container div.dt-search input {
                         <!-- Layout Demo -->
                         <?php //echo "DB NAME : ".$_ENV['DB_NAME'];
                         ?>
-                        <?php include ROOT_PATH . '/view/templates/quotation/quotation_body.php'; ?>
+                        <?php include('templates/quotation/quotation_body.php'); ?>
                         
                         <!--/ Layout Demo -->
                     </div>
                     <!--/ Content -->
 
                     <!-- Footer -->
-                    <?php include ROOT_PATH . '/view/templates/footer.php'; ?>
+                    <?php include('templates/footer.php'); ?>
                     <!-- / Footer -->
 
                     <div class="content-backdrop fade"></div>
@@ -302,57 +351,127 @@ div.dt-container div.dt-search input {
 
 
 <!-- Modal -->
- <?php include ROOT_PATH . '/view/templates/quotation/quotation_help_modal.php'; ?>
+ <?php include('templates/quotation/quotation_help_modal.php'); ?>
 
  <!--Off Canvas for Diplsy The Quotation List -->
-  <?php include ROOT_PATH . '/view/templates/quotation/quotation_list_modal.php'; ?>
+  <?php include('templates/quotation/quotation_list_modal.php'); ?>
 
 <!--// Modal For Alart -->
 <!-- Modal -->
 
-<?php include ROOT_PATH . '/view/templates/quotation/quotation_introduction_modal.php'; ?>
-<?php include ROOT_PATH . '/view/templates/quotation/add_new_customer_modal.php'; ?>
- <?php include ROOT_PATH . '/view/templates/quotation/quotation_save_choice_modal.php'; ?>
+<?php include('templates/quotation/quotation_introduction_modal.php'); ?>
+<?php include('templates/quotation/add_new_customer_modal.php'); ?>
+ <?php include('templates/quotation/quotation_save_choice_modal.php'); ?>
 
 
 <!--Print Settings Modal-->
-<?php include ROOT_PATH . '/view/templates/quotation/quotation_print_settings_modal.php'; ?>
+<?php include('templates/quotation/quotation_print_settings_modal.php'); ?>
 
 
 <!--Terms and Condition Modal-->
-<?php include ROOT_PATH . '/view/templates/quotation/quotation_terms_condition_modal.php'; ?>
+<?php include('templates/quotation/quotation_terms_condition_modal.php'); ?>
 
 <!--search Items -->
-<?php include ROOT_PATH . '/view/templates/quotation/quotation_item_search_modal.php'; ?>
+<?php include('templates/quotation/quotation_item_search_modal.php'); ?>
 
 
-    <?php include ROOT_PATH . '/view/templates/scripts.php'); ?>
+    <?php include('templates/scripts.php'); ?>
 <!-- jQuery UI JS -->
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+    <script src="../assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
 
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/forms-selects.js"></script>
+    <script src="../assets/vendor/libs/select2/select2.js"></script>
+    <script src="../assets/js/forms-selects.js"></script>
     
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/settings.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>alertmessage/js/sandsalert.js"></script>
+    <script src="../assets/sands/settings.js"></script>
+    <script src="../assets/sands/sands_popup.js"></script>
+    <script src="../alertmessage/js/sandsalert.js"></script>
         <!-- Ladda & Spin.js JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda.min.js"></script>
     
     
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/katex.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/highlight/highlight.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/quill.js"></script>
+    <script src="../assets/vendor/libs/quill/katex.js"></script>
+    <script src="../assets/vendor/libs/highlight/highlight.js"></script>
+    <script src="../assets/vendor/libs/quill/quill.js"></script>
    
        <!-- Page JS -->
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/ui-popover.js"></script>
+    <script src="../../assets/js/ui-popover.js"></script>
 
-    <!--<script src="<?= $_ENV['BASE_URL'] ?>assets/js/forms-editors.js"></script>-->
+    <!--<script src="../assets/js/forms-editors.js"></script>-->
 <script>
      $(document).ready(function() {
+         
+          var todayFilter = new Date();
+
+    // First day of current month
+    var firstDay = new Date(todayFilter.getFullYear(), todayFilter.getMonth(), 1);
+
+    // Format date as YYYY-MM-DD
+    function formatDate(date) {
+        return date.getFullYear() + '-' +
+            String(date.getMonth() + 1).padStart(2, '0') + '-' +
+            String(date.getDate()).padStart(2, '0');
+    }
+
+    $('#from_date_filter').val(formatDate(firstDay));
+    $('#to_date_filter').val(formatDate(todayFilter));
+   //customer filter
+$('#filterOffcanvas').on('shown.bs.offcanvas', function () {
+    $('#selectCustomerFromSelect2_filter').select2({
+        dropdownParent: $('#quotationCanvas')
+    });
+});
+$('#selectCustomerFromSelect2_filter').select2({
+     dropdownParent: $('#quotationCanvas'),
+    placeholder: 'Search customer by name, mobile or CPR/CR',
+    allowClear: true,
+    minimumInputLength: 2,
+    ajax: {
+        url: '/SearchCustomerDetails',
+        dataType: 'json',
+        delay: 300,
+        data: function (params) {
+            return {
+                q: params.term,
+                action: 'SearchCustomer'
+            };
+        },
+        processResults: function (data) {
+            return {
+                results: data.map(item => ({
+                    id: item.customer_code,
+                    text: item.customer_name,
+                    customer_name: item.customer_name,
+                    customer_mobile: item.customer_mobile,
+                    customer_address: item.customer_addr,
+                    customer_email: item.customer_email,
+                    customer_code: item.customer_code,
+                    customer_attn: item.customer_attn,
+                    customer_cr_cpr: item.customer_cr_cpr
+                }))
+            };
+        }
+    },
+    templateResult: formatCustomer,
+    templateSelection: formatCustomerSelection
+});
+
+$('#selectCustomerFromSelect2_filter').on('select2:select', function (e) {
+
+    const data = e.params.data;
+
+    $('#customer_code_filter').val(data.customer_code);
+
+});
+
+$('#selectCustomerFromSelect2_filter').on('select2:clear', function () {
+
+    $('#customer_code_filter').val('');
+
+});      
+         
           $('#quotation_id').val('');
           $('#original_draft').val('');
           $('#quotation_number').val('');
@@ -606,7 +725,11 @@ $(document).on('blur','.to_datetime',function(){
  
 
 $(document).on('blur','.from_datetime, .to_datetime, .rate_type, .price, .vat .qty', line_item_calculation);
-$(document).on('keyup change', '.rate_type, .price, .vat .qty', line_item_calculation);
+$(document).on('keyup change', '.rate_type', line_item_calculation);
+$(document).on('keyup change', '.price', line_item_calculation);
+$(document).on('keyup change', '.vat', line_item_calculation);
+$(document).on('keyup change', '.qty', line_item_calculation);
+
 $(document).on('input change', '.watch-field', function () {
   recalculate($(this));
      
@@ -1032,7 +1155,7 @@ $('#intcopyContentBtn').click(function () {
 });
 
 $('#selectCustomerFromSelect2').select2({
-    placeholder: 'Search customer by name or mobile',
+    placeholder: 'Search customer by name, mobile or cpr/cr',
     allowClear: true,
     minimumInputLength: 2,
     tags: true, 
@@ -1068,7 +1191,8 @@ $('#selectCustomerFromSelect2').select2({
                     customer_address: item.customer_addr,
                     customer_email: item.customer_email,
                     customer_code: item.customer_code,
-                    customer_attn: item.customer_attn
+                    customer_attn: item.customer_attn,
+                    customer_cr_cpr: item.customer_cr_cpr
                 }))
             };
         }
@@ -1083,7 +1207,7 @@ function formatCustomer(customer) {
 
     return $(`
         <div>
-            <strong>${customer.customer_name} | ${customer.customer_mobile}</strong>
+            <strong>${customer.customer_name} | ${customer.customer_mobile} | ${customer.customer_cr_cpr}</strong>
         </div>
     `);
 }
@@ -1101,6 +1225,7 @@ $('#selectCustomerFromSelect2').on('select2:select', function (e) {
     $('#customer_name').val(data.customer_name);
     $('#customer_phone').val(data.customer_mobile);
     $('#customer_email').val(data.customer_email);
+    $('#customer_cpr_cr').val(data.customer_cr_cpr);
     $('#customer_address').val(data.customer_address);
     $('#quotation_attention').val(data.customer_attn);
     
@@ -1113,6 +1238,7 @@ $('#selectCustomerFromSelect2').on('select2:clear', function () {
     $('#customer_phone').val('');
     $('#customer_email').val('');
     $('#customer_address').val('');
+     $('#customer_cpr_cr').val('');
     $('#quotation_attention').val('');
 }); 
 
@@ -1161,7 +1287,7 @@ $('#selectCustomerFromSelect2').on('select2:clear', function () {
         ]
     }); 
 $('#saveTermsAndConditions').click(function () {
-    var laddaBtn = Ladda.create(document.querySelector('#saveintroduction'));
+    var laddaBtn = Ladda.create(document.querySelector('#saveTermsAndConditions'));
     laddaBtn.start();
     let htmlContentTC = fullEditor.root.innerHTML;
 
@@ -1357,8 +1483,8 @@ $(document).keydown(function(e) {
      // ALT + Q → Quotation List
     if (e.altKey && e.key.toLowerCase() === 'q') {
         e.preventDefault();
-        $('#from_date_filter').val('');
-        $('#to_date_filter').val('');
+        // $('#from_date_filter').val('');
+        // $('#to_date_filter').val('');
         openQuotationCanvas('No');
         qPressed = false;
         return;
@@ -1366,8 +1492,8 @@ $(document).keydown(function(e) {
      // ALT + l → Draft List
     if (e.altKey && e.key.toLowerCase() === 'l') {
         e.preventDefault();
-        $('#from_date_filter').val('');
-        $('#to_date_filter').val('');
+        // $('#from_date_filter').val('');
+        // $('#to_date_filter').val('');
         openQuotationCanvas('Yes');
         qPressed = false;
         return;
@@ -1413,8 +1539,8 @@ $(document).keydown(function(e) {
     // Q + 1 → Final quotations
     if (qPressed && e.key === '1') {
         e.preventDefault();
-         $('#from_date_filter').val('');
-         $('#to_date_filter').val('');
+        //  $('#from_date_filter').val('');
+        //  $('#to_date_filter').val('');
         openQuotationCanvas('No');
         qPressed = false;
         return;
@@ -1423,8 +1549,8 @@ $(document).keydown(function(e) {
     // Q + 2 → Draft quotations
     if (qPressed && e.key === '2') {
         e.preventDefault();
-        $('#from_date_filter').val('');
-        $('#to_date_filter').val('');
+        // $('#from_date_filter').val('');
+        // $('#to_date_filter').val('');
         openQuotationCanvas('Yes');
         qPressed = false;
         return;
@@ -1446,13 +1572,13 @@ $('#btn_filter').click(function () {
    var draft= $('#txt_qtn_draft').val();
    var startDate= $('#from_date_filter').val();
    var endDate= $('#to_date_filter').val();
-   
-    loadQuotationList(draft,startDate,endDate);
+   var customer_code= $('#customer_code_filter').val();
+    loadQuotationList(draft,startDate,endDate,customer_code);
 
 });
 
 
-function openQuotationCanvas(draft, startDate = '', endDate = '') {
+function openQuotationCanvas(draft, startDate = '', endDate = '', customer_code='') {
     let title = (draft === "Yes") ? "Draft Quotations" : "Quotations";
     $('#canvasTitle').text(title);
     $('#txt_qtn_draft').val(draft);
@@ -1475,15 +1601,16 @@ function openQuotationCanvas(draft, startDate = '', endDate = '') {
     canvas.show();
 
     // Load initial data
-    loadQuotationList(draft,startDate,endDate);
+    loadQuotationList(draft,$('#from_date_filter').val(),$('#to_date_filter').val(),$('#customer_code_filter').val());
 }
 
-function loadQuotationList(draft, startDate = '', endDate = '') {
+function loadQuotationList(draft, startDate = '', endDate = '', customer_code='') {
     $.post('/QuotationController', 
     { 
         draft: draft,
         startDate: startDate,
         endDate: endDate,
+        customer_code:customer_code,
         action: 'GetQuotations'
     }, 
     function(response) {
@@ -1530,6 +1657,7 @@ function(response) {
     $('input[name=customer_code]').val(q.customer_code);
     $('input[name=customer_phone]').val(q.customer_phone);
     $('input[name=customer_email]').val(q.customer_email);
+     $('input[name=customer_cpr_cr]').val(q.customer_cpr_cr);
     $('textarea[name=customer_address]').val(q.customer_address);
     $('input[name=total_discount]').val(q.total_discount);
     $('input[name=quotation_prefix]').val(q.user_prefix);
@@ -1755,6 +1883,7 @@ function saveQuotation(action_type){
         customer_code: $('input[name=customer_code]').val(),
         customer_phone: $('input[name=customer_phone]').val(),
         customer_email: $('input[name=customer_email]').val(),
+        customer_cpr_cr: $('input[name=customer_cpr_cr]').val(),
         customer_address: $('textarea[name=customer_address]').val(),
         quotation_date: $('#quotation_date').val(),
         quotation_prefix: $('#quotation_prefix').val(),
@@ -1766,8 +1895,6 @@ function saveQuotation(action_type){
         total_discount : 0,
         total_discount_amount : 0,
         after_discount_amount : 0,
-        storage_company_id : 1,
-        storage_company_name : 'AA Car Rental',
         storage_username : 'Admin',
         storage_userid : 1,
         allItemSubtotal : $('#allItemSubtotal').text(),
@@ -2025,15 +2152,15 @@ $('#printLogo').on('change', function () {
 
 
     $('#openQuotations, #MenuListOfQuotations').click(function () {
-           $('#from_date_filter').val('');
-           $('#to_date_filter').val('');
+           //$('#from_date_filter').val('');
+          // $('#to_date_filter').val('');
            openQuotationCanvas('No');
             
     });
     
     $('#openDraftQuotations, #MenuListOfDraftQuotations').click(function () {
-           $('#from_date_filter').val('');
-           $('#to_date_filter').val('');
+          // $('#from_date_filter').val('');
+          // $('#to_date_filter').val('');
            openQuotationCanvas('Yes');
     });
 
@@ -2132,6 +2259,78 @@ $('#printLogo').on('change', function () {
                 }, 100);
             
             });
+
+$(document).on('change', '.quotation-status', function () {
+
+    let quotationId = $(this).data('id');
+    let status = $(this).is(':checked') ? 1 : 0;
+
+    $.ajax({
+        url: '/QuotationController',
+        type: 'POST',
+        data: {
+            action: 'UpdateQuotationApproval',
+            quotation_id: quotationId,
+            is_approved: status
+        },
+        success: function(response) {
+           var draft= $('#txt_qtn_draft').val();
+           var startDate= $('#from_date_filter').val();
+           var endDate= $('#to_date_filter').val();
+           
+            loadQuotationList(draft,startDate,endDate);
+        }
+    });
+
+});
+
+$(document).on('click', '#btnPrint', function (e) {
+
+   let id = $('#quotation_id').val();
+    let ref = $('#quotation_number').val();
+
+    if (!id) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Quotation Required',
+            text: 'Please select the quotation from the quotation list before printing.'
+        });
+        return;
+    }
+     
+  fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(id))
+        .then(res => res.text())
+        .then(token => {
+            if(!token) { Swal.fire('Error', 'Encryption failed.', 'error'); return; }
+            window.open('/QuotationPrint?token=' + encodeURIComponent(token), '_blank');
+        });
+    
+
+});
+
+$(document).on('click', '#btnPrintWithImages', function (e) {
+
+   let id = $('#quotation_id').val();
+    let ref = $('#quotation_number').val();
+
+    if (!id) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Quotation Required',
+            text: 'Please select the quotation from the quotation list before printing.'
+        });
+        return;
+    }
+     
+  fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(id))
+        .then(res => res.text())
+        .then(token => {
+            if(!token) { Swal.fire('Error', 'Encryption failed.', 'error'); return; }
+            window.open('/QuotationPrintImages?token=' + encodeURIComponent(token), '_blank');
+        });
+    
+
+});
 
 
 

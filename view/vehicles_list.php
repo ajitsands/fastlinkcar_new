@@ -1,4 +1,16 @@
 <?php
+session_start();
+
+function checkLogin()
+{
+    if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+        header("Location: /Logout");
+        exit();
+    }
+}
+checkLogin();
+?>
+<?php
 include ROOT_PATH . '/view/envinclude.php';
 ?>
 <!doctype html>
@@ -31,7 +43,13 @@ include ROOT_PATH . '/view/envinclude.php';
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.css" />
+ <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
 
+    <link rel="stylesheet" href="../assets/sands/sands_popup.css" />
+    <link rel="stylesheet" href="alertmessage/css/sands_alert_style.css">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
     <!-- Page CSS -->
 
     <!-- Helpers -->
@@ -48,6 +66,20 @@ include ROOT_PATH . '/view/envinclude.php';
 }
 @keyframes spin {
     100% { transform: rotate(360deg); }
+}
+.custom-modal-header {
+    background: linear-gradient(135deg, #f12526, #c81e1f);
+    color: white !important; 
+    border-bottom: none;
+}
+
+.custom-modal-header .modal-title {
+    color: #fff;
+}
+
+.custom-modal-header .btn-close {
+    filter: invert(1); /* makes the close (X) icon white */
+    opacity: 1;
 }
     </style>
   </head>
@@ -71,62 +103,11 @@ include ROOT_PATH . '/view/envinclude.php';
             <!-- Content -->
             <div class="container-fluid flex-grow-1 container-p-y">
              
-              <!-- Product List Table -->
-              <div class="card">
-                <div class="card-header border-bottom">
-                  <h5 class="card-title mb-4">Filter</h5>
-                 <div class="row align-items-end g-2">
-
-    <!-- Date -->
-    <div class="col-md-2">
-        <div class="form-floating form-floating-outline">
-            <input class="form-control form-control-sm"
-                   id="filter_date"
-                   name="filter_date"
-                   type="date"
-                   placeholder="dd-mm-yyyy">
-            <label for="filter_date">Filter By</label>
-        </div>
-    </div>
-
-    <!-- Dropdown -->
-    <div class="col-md-4">
-        <div class="form-floating form-floating-outline">
-        <div id="dropdownContaineravail" class=" w-100">
-         <label for="vehicleModelLbl">Select Vehicle Model</label>
-        </div>
-        </div>
-    </div>
-
-    <!-- Search Button -->
-    <div class="col-md-1">
-        <button class="btn btn-primary w-100 rounded-pill" id="btnSearch">
-    <i class="ri ri-search-line me-1"></i> Search
-</button>
-    </div>
-
-</div>
-                </div>
-                <div class="card-datatable table-responsive">
-                  <table class="datatables-products table" id="vehicleTable">
-                    <thead>
-                      <tr>
-                          
-                    <th>Sn</th>
-                       <th>Model</th>
-                    <th>Number</th>
-                    <th>Details</th>
-                    <th>Status</th>
-                    <th>Next Passing </th>
-                    <th>Next Insurance </th>
-                    <th>Next Maintenance </th>
-                    <th>Purchase On</th>
-                    <th>Actions</th>
-                      </tr>
-                    </thead>
-                  </table>
-                </div>
-              </div>
+              <?php include('templates/vehicles/vehicle_list_body.php'); ?>
+             
+              <?php include('templates/VehicleStatus/vehicle_filepreview_modal.php'); ?>
+               <?php include('templates/VehicleStatus/vehicleInfoModal.php'); ?>
+               <?php include('templates/VehicleStatus/vehicle_calender_modal.php'); ?>
                    <!-- slider modal -->
   <div
     class="modal-onboarding modal fade animate__animated"
@@ -246,7 +227,7 @@ include ROOT_PATH . '/view/envinclude.php';
     </div>
   </div>
   <!--/ slider modal -->
-              
+             
             </div>
             <!--/ Content -->
 
@@ -280,9 +261,18 @@ include ROOT_PATH . '/view/envinclude.php';
     <!-- endbuild -->
 
     <!-- Vendors JS -->
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.js"></script>
-
+    
+ <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <script src="../assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <script src="../assets/vendor/libs/select2/select2.js"></script>
+    <script src="../assets/js/forms-selects.js"></script>
+    <script src="../assets/sands/settings.js"></script>
+    <script src="../assets/sands/sands_popup.js"></script>
+    <script src="../alertmessage/js/sandsalert.js"></script>
+     <script src="../httpdocs/user_js/vehicle_info.js"></script>
+      <!--<script src="../httpdocs/user_js/vehicle_dates_calender.js"></script>-->
     <!-- Main JS -->
 
     <!--<script src="<?= $_ENV['BASE_URL'] ?>assets/js/main.js"></script>-->
@@ -292,7 +282,7 @@ include ROOT_PATH . '/view/envinclude.php';
     <!-- jQuery first -->
 <script>
 $(document).ready(function() {
-
+$('[data-bs-toggle="tooltip"]').tooltip();
   $('#vehicleModelAvail').select2({
     dropdownParent: $('#dropdownContaineravail'),
     width: '100%',
@@ -348,7 +338,7 @@ $(document).ready(function() {
                 return JSON.stringify({
                     action: 'ListVehicleMaster_Due_days',
                     filter_date: $('#filter_date').val(),
-                    vehicle_model: $('#vehicleModelAvail').val()
+                    vehicle_model: $('#vehicleModelAvail').val() || 'All'
                 });
             },
             dataSrc: 'data',
@@ -371,72 +361,105 @@ $(document).ready(function() {
                 }
             },
 
-            { data: 'model_names' },
-            { data: 'vehicle_number' },
-
-            // ✅ Details Column (Icons)
-            {
-                data: null,
-                title: 'Details',
-                render: function (data, type, row) {
-
-                    let details = {};
-                    try {
-                        details = JSON.parse(row.other_details_json || '{}');
-                    } catch (e) {}
-
-                    return `
-                        <div class="d-flex flex-column gap-1">
-
-                            <div>
-                                <i class="ri-calendar-line text-primary me-1"></i>
-                                <small>${row.vehicle_year ?? '-'}</small>
-                            </div>
-
-                            <div>
-                                <i class="ri-palette-line text-warning me-1"></i>
-                                <small>${row.vehicle_color ?? '-'}</small>
-                            </div>
-
-                            <div>
-                                <i class="ri-gas-station-line text-success me-1"></i>
-                                <small>${details.vehicleFuelType ?? '-'}</small>
-                            </div>
-
-                            <div>
-                                <i class="ri-settings-3-line text-info me-1"></i>
-                                <small>${details.vehicleGearType ?? '-'}</small>
-                            </div>
-
-                        </div>
-                    `;
+            { data: 'model_names' ,
+                 render: function (data, type, row, meta) {
+                    return  `<span class="small fw-bold">${data}</span>`;
+                }
+            },
+            { data: 'vehicle_number' ,
+                 render: function (data, type, row, meta) {
+                     return  `<span class="small fw-bold">${data}</span>`;
                 }
             },
 
+            // ✅ Details Column (Icons)
+           {
+    data: null,
+    title: 'Details',
+    render: function (data, type, row) {
+
+        let details = {};
+
+        if (typeof row.other_details_json === 'string') {
+            try {
+                details = JSON.parse(row.other_details_json || '{}');
+            } catch (e) {
+                details = {};
+            }
+        }
+
+        return `
+            <div style="font-size:12px; line-height:1.4;">
+
+                <!-- ROW 1 -->
+                <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:4px;">
+
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="ri ri-calendar-line text-primary"></i>
+                        <span>${row.vehicle_year ?? '-'}</span>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="ri ri-palette-line text-warning"></i>
+                        <span>${row.vehicle_color ?? '-'}</span>
+                    </div>
+
+                </div>
+
+                <!-- ROW 2 -->
+                <div style="display:flex; justify-content:space-between; gap:10px;">
+
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="ri ri-gas-station-line text-success"></i>
+                        <span>${details?.vehicleFuelType ?? '-'}</span>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="ri ri-settings-3-line text-info"></i>
+                        <span>${details?.vehicleGearType ?? '-'}</span>
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+    }
+},
+
             // ✅ Status Badge
             {
+                
                 data: 'vehicle_status',
                 render: function (data) {
                     switch (data) {
                         case 'Available':
                             return '<span class="badge rounded-pill bg-label-success">Available</span>';
-                        case 'Rent Out':
-                            return '<span class="badge rounded-pill bg-label-primary">On Rent</span>';
-                        case 'On Maintenance':
-                            return '<span class="badge rounded-pill bg-label-warning">On Maintenance</span>';
-                        case 'On Parking':
-                            return '<span class="badge rounded-pill bg-label-warning">On Parking</span>';
+                        break;
+                        case 'Rentout':
+                            return '<span class="badge rounded-pill bg-label-warning">Rentout</span>';
+                         break;
+                        case 'Maintenance':
+                            return '<span class="badge rounded-pill bg-label-danger">Maintenance</span>';
+                         break;
+                        case 'Parking':
+                            return '<span class="badge rounded-pill bg-label-success">Parking</span>';
+                         break;
                         case 'Blocked':
-                            return '<span class="badge rounded-pill bg-label-danger">Blocked</span>';
+                            return '<span class="badge rounded-pill bg-label-secondary">Blocked</span>';
+                         break;
+                         case 'Staff Use':
+                            return '<span class="badge rounded-pill bg-label-warning">Staff Use</span>';
+                         break;
                         default:
                             return `<span class="badge rounded-pill bg-label-secondary">${data}</span>`;
+                         break;
                     }
                 }
             },
 
             // ✅ Passing Date
             {
-                data: 'next_passing_date',
+                data: 'next_passing_date_format',
                 render: function (data, type, row) {
 
                     if (!data) return '';
@@ -469,7 +492,7 @@ $(document).ready(function() {
 
             // ✅ Insurance Date
             {
-                data: 'next_insurance_date',
+                data: 'next_insurance_date_format',
                 render: function (data, type, row) {
 
                     if (!data) return '';
@@ -499,28 +522,37 @@ $(document).ready(function() {
                     `;
                 }
             },
-
-            { data: 'next_maintenance_date' },
-            { data: 'vehicle_purchase_date' },
+           
+            { data: 'next_maintenance_date_format' },
+            { data: 'vehicle_purchase_date_format' },
 
             // ✅ Actions
             {
-                data: null,
+                data: 'ids',
                 orderable: false,
                 searchable: false,
                 className: 'text-center',
                 render: function (data, type, row) {
-                    return `
-                        <div class="dropdown">
-                            <button class="btn p-0" data-bs-toggle="dropdown">
-                                <i class="ri-more-2-line"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="reportBug(${row.ids})">View Details</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="shareTeams(${row.ids})">Change Status</a></li>
-                            </ul>
-                        </div>
-                    `;
+                  return `
+                    <div class="vehicle-card"><button 
+                        class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 action-btn  btn_vehicle_view btn_vehicle_select"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="View Details"
+                        data-id="${data}"
+                        data-pricehwd="${row.price_hour_with_driver ?? 0}"
+                        data-pricehwod="${row.price_hour_without_driver ?? 0}"
+                        data-pricedwd="${row.price_day_with_driver ?? 0}"
+                        data-pricedwod="${row.price_day_without_driver ?? 0}"
+                        data-pricewwd="${row.price_week_with_driver ?? 0}"
+                        data-pricewwod="${row.price_week_without_driver ?? 0}"
+                        data-pricemwd="${row.price_month_with_driver ?? 0}"
+                        data-pricemwod="${row.price_month_without_driver ?? 0}">
+                        
+                        <i class="ri ri-information-2-line icon-18px"></i>
+                
+                    </button></div>
+                `;
                 }
             }
 
@@ -531,7 +563,7 @@ $(document).ready(function() {
     $('#btnSearch').on('click', function () {
 
         let btn = $(this);
-        btn.prop('disabled', true).html('<i class="ri-loader-4-line spin"></i>');
+        btn.prop('disabled', true).html('<i class="ri ri-loader-4-line spin"></i>');
 
         table.ajax.reload(function () {
             btn.prop('disabled', false).html('<i class="ri-search-line"></i> Search');
@@ -540,7 +572,154 @@ $(document).ready(function() {
         
         
 
-    
+ let vehicleCalendar;
+let calendarInitialized = false;
+
+// ===============================
+// OPEN CALENDAR BUTTON
+// ===============================
+$('#openCalendarBtn').on('click', function () {
+
+    // Bootstrap 5 modal
+    let modal = new bootstrap.Modal(document.getElementById('calendarModal'));
+    modal.show();
+
+    // Load calendar after modal opens
+    setTimeout(function () {
+        loadVehicleCalendar();
+    }, 300);
+});
+
+
+// ===============================
+// LOAD CALENDAR FUNCTION
+// ===============================
+function loadVehicleCalendar() {
+
+    let calendarEl = document.getElementById('vehicleCalendar');
+
+    // Prevent re-initialization
+    if (calendarInitialized) {
+        vehicleCalendar.render();
+        return;
+    }
+
+    vehicleCalendar = new FullCalendar.Calendar(calendarEl, {
+
+        initialView: 'dayGridMonth',
+        height: "auto",
+        expandRows: true,
+
+        // ===============================
+        // EVENTS LOAD (AJAX)
+        // ===============================
+        events: function (fetchInfo, successCallback) {
+
+            $.ajax({
+                url: '/LoadVehicleByUserSellection',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    action: 'vehicle_calendar'
+                }),
+
+                success: function (response) {
+
+                    let events = [];
+
+                    response.data.forEach(v => {
+
+                        let baseTitle = v.vehicle_number + ' - ' + v.model_names;
+                        let status = v.vehicle_status || '';
+
+                        // =========================
+                        // 🔴 PASSING
+                        // =========================
+                        if (v.next_passing_date) {
+                            events.push({
+                                title: baseTitle,
+                                start: v.next_passing_date,
+                                color: '#dc3545',
+                                extendedProps: {
+                                    status: status,
+                                    type: 'Passing'
+                                }
+                            });
+                        }
+
+                        // =========================
+                        // 🔵 INSURANCE
+                        // =========================
+                        if (v.next_insurance_date) {
+                            events.push({
+                                title: baseTitle ,
+                                start: v.next_insurance_date,
+                                color: '#0d6efd',
+                                 extendedProps: {
+                                    status: status,
+                                    type: 'Insurance'
+                                }
+                            });
+                        }
+
+                        // =========================
+                        // 🟢 MAINTENANCE
+                        // =========================
+                        if (v.next_maintenance_date) {
+                            events.push({
+                                title: baseTitle ,
+                                start: v.next_maintenance_date,
+                                color: '#198754',
+                                extendedProps: {
+                                    status: status,
+                                    type: 'Maintenance'
+                                }
+                            });
+                        }
+
+                    });
+
+                    successCallback(events);
+                }
+            });
+        },
+
+      eventContent: function (info) {
+
+    let props = info.event.extendedProps || {};
+
+    let status = props.status || '-';
+    let type = props.type || '-';
+
+    return {
+        html: `
+            <div style="font-size:11px; line-height:1.2;">
+           
+                <div style="font-weight:400;">
+                    ${info.event.title}
+                </div>
+
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    font-size:10px;
+                    margin-top:2px;
+                ">
+                    <span>[${type}]</span>
+                    <span>[${status}]</span>
+                </div>
+
+            </div>
+        `
+    };
+}
+
+    });
+
+    vehicleCalendar.render();
+    calendarInitialized = true;
+}
+
 });
 
 </script>

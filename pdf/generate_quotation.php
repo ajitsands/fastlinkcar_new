@@ -193,7 +193,7 @@ $pdf->SetFont('helvetica', 'B', 11);
 $pdf->Cell($colWidth - 15, 6, strtoupper($customer_name), 0, 1);
 $pdf->SetX(35);
 $pdf->SetFont('helvetica', 'B', 9);
-$pdf->SetTextColor(255, 0, 0);
+$pdf->SetTextColor(0, 0, 0);
 $pdf->Cell($colWidth - 15, 5, $customer_address, 0, 1);
 $pdf->SetTextColor(0, 0, 0);
 $pdf->SetX(20);
@@ -206,7 +206,7 @@ $html_info = '
     </tr>
     <tr>
         <td width="50" style="padding-top:10px;"><b>Email :</b></td>
-        <td width="350" style="color:#0000FF; padding-top:10px;">' . $customer_email . '</td>
+        <td width="350" style=" padding-top:10px;">' . $customer_email . '</td>
     </tr>
 </table>';
 $pdf->writeHTMLCell($colWidth, 0, 20, $pdf->GetY(), $html_info, 0, 1, 0, true, 'L', true);
@@ -247,13 +247,13 @@ $pdf->MultiCell($w['no'], $h_h, "No", 1, 'C', 1, 0, '', '', true, 0, false, true
 $pdf->MultiCell($w['car'], $h_h, "Type of Car", 1, 'C', 1, 0, '', '', true, 0, false, true, $h_h, 'M');
 $pdf->MultiCell($w['service'], $h_h, "Service Type", 1, 'C', 1, 0, '', '', true, 0, false, true, $h_h, 'M');
 $pdf->MultiCell($w['period'], $h_h, "PERIOD", 1, 'C', 1, 0, '', '', true, 0, false, true, $h_h, 'M');
-$pdf->MultiCell($w['months'], $h_h, "No Of\nMonths /\nDays", 1, 'C', 1, 0, '', '', true, 0, false, true, $h_h, 'M');
+$pdf->MultiCell($w['months'], $h_h, "Duration", 1, 'C', 1, 0, '', '', true, 0, false, true, $h_h, 'M');
 $pdf->MultiCell($w['qty'], $h_h, "Qty", 1, 'C', 1, 0, '', '', true, 0, false, true, $h_h, 'M');
-$pdf->MultiCell($w['unit'], $h_h, "Unit Price/\nMonthly\n(BHD)", 1, 'C', 1, 0, '', '', true, 0, false, true, $h_h, 'M');
-$pdf->MultiCell($w['excl'], $h_h, "Amount Excl of\nVAT (BHD)", 1, 'C', 1, 0, '', '', true, 0, false, true, $h_h, 'M');
+$pdf->MultiCell($w['unit'], $h_h, "Unit Price(BHD)", 1, 'C', 1, 0, '', '', true, 0, false, true, $h_h, 'M');
+$pdf->MultiCell($w['excl'], $h_h, "Amount Excl of VAT(BHD)", 1, 'C', 1, 0, '', '', true, 0, false, true, $h_h, 'M');
 $pdf->MultiCell($w['vat_p'], $h_h, "VAT %", 1, 'C', 1, 0, '', '', true, 0, false, true, $h_h, 'M');
 $pdf->MultiCell($w['vat_a'], $h_h, "VAT Amount", 1, 'C', 1, 0, '', '', true, 0, false, true, $h_h, 'M');
-$pdf->MultiCell($w['incl'], $h_h, "Amount incl of\nVAT (BHD)", 1, 'C', 1, 1, '', '', true, 0, false, true, $h_h, 'M');
+$pdf->MultiCell($w['incl'], $h_h, "Amount incl of VAT(BHD)", 1, 'C', 1, 1, '', '', true, 0, false, true, $h_h, 'M');
 
 $pdf->SetFont('helvetica', '', $font_size_table);
 $count = 1;
@@ -342,7 +342,7 @@ if ($seal_last_pg === 'last_custom') {
 
     $seal_file = 'logos/seal_and_sig.png';
     if (!file_exists($seal_file)) {
-        $seal_file = '../assets/img/logo/seal_and_sig.png';
+        $seal_file = 'assets/img/logo/seal_and_sig.png';
     }
 
     if (file_exists($seal_file)) {

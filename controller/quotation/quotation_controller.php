@@ -14,7 +14,7 @@ class QuoationController
     public $email, $phoneNumber, $companies, $image, $createdDate, $ReturnData, $userStatus, $t_c_name, $terms_condition;
     public $quotation_id, $original_draft, $action_type, $save_type, $draft_flag,$customer_code, $customer_name, $customer_phone, $customer_email, $customer_address, $quotation_date, $quotation_prefix;
     public $items, $subtotal, $vat_total, $grand_total, $total_discount, $total_discount_amount, $after_discount_amount, $storage_company_id, $storage_company_name, $storage_username, $storage_userid;
-    public $allItemSubtotal, $reference_number, $itemNamesThroughPost, $termsContentValue, $introContentValue, $attentionValue, $doc_type, $draft, $quotation_number, $startDate, $endDate;
+    public $allItemSubtotal, $reference_number,  $termsContentValue, $introContentValue, $attentionValue, $doc_type, $draft, $quotation_number, $startDate, $endDate,$is_approved,$customer_cpr_cr;
     function __construct()
     {
         $this->varPDOModelObj = new CommonPDOModel();
@@ -35,6 +35,7 @@ class QuoationController
         
         $this->quotation_id = $_POST['quotation_id'] ?? null;
         $this->quotation_number = $_POST['quotation_number'] ?? null;
+        $this->is_approved = $_POST['is_approved'] ?? null;
         
         $this->original_draft = $_POST['original_draft'] ?? null;
         $this->action_type = $_POST['action_type'] ?? null;
@@ -50,10 +51,11 @@ class QuoationController
         $this->customer_name = $_POST['customer_name'] ?? null;
         $this->customer_phone = $_POST['customer_phone'] ?? null;
         $this->customer_email = $_POST['customer_email'] ?? null;
+        $this->customer_cpr_cr = $_POST['customer_cpr_cr'] ?? null;
         $this->customer_address = $_POST['customer_address'] ?? null;
         $this->quotation_date = $_POST['quotation_date'] ?? null;
         $this->quotation_prefix = $_POST['quotation_prefix'] ?? null;
-        
+       
         $this->items = $_POST['items'] ?? [];
         $this->subtotal = $_POST['subtotal'] ?? 0;
         $this->vat_total = $_POST['vat_total'] ?? 0;
@@ -62,15 +64,14 @@ class QuoationController
         $this->total_discount = $_POST['total_discount'] ?? null;
         $this->total_discount_amount = $_POST['total_discount_amount'] ?? null;
         $this->after_discount_amount = $_POST['after_discount_amount'] ?? null;
-        $this->storage_company_id = $_POST['storage_company_id'] ?? 1;
-        $this->storage_company_name = $_POST['storage_company_name'] ?? null;
-        $this->storage_username = $_POST['storage_username'] ?? null;
-        $this->storage_userid = $_POST['storage_userid'] ?? 1;
+        $this->storage_company_id = $_SESSION['company_id'] ?? 1;
+        $this->storage_company_name =$_SESSION['company_name'] ?? null;
+        $this->storage_username = $_SESSION['user_name'] ?? null;
+        $this->storage_userid = $_SESSION['user_id'] ?? 1;
         $this->allItemSubtotal = $_POST['allItemSubtotal'] ?? null;
         
         $this->reference_number  = $_POST['reference_number'] ?? null;
-        $this->itemNamesThroughPost = $_POST['items'];
-        
+       
         $this->termsContentValue = $_POST['termsContentValue'] ?? null;
         $this->introContentValue = $_POST['introContentValue'] ?? null;
         $this->attentionValue = $_POST['attentionValue'] ?? null;
@@ -337,6 +338,7 @@ class QuoationController
                                         quotation_date = :quotation_date,
                                         customer_phone = :customer_phone,
                                         customer_email = :customer_email,
+                                        customer_cpr_cr = :customer_cpr_cr,
                                         customer_address = :customer_address,
                                         items = :items,
                                         subtotal = :subtotal,
@@ -364,6 +366,7 @@ class QuoationController
                                 ':quotation_date' => $this->quotation_date,
                                 ':customer_phone' => $this->customer_phone,
                                 ':customer_email' => $this->customer_email,
+                                ':customer_cpr_cr' => $this->customer_cpr_cr,
                                 ':customer_address' => $this->customer_address,
                                 ':items' => json_encode($this->items),
                                 ':subtotal' => $this->subtotal,
@@ -409,7 +412,7 @@ class QuoationController
                                 ],
                                 ["quotation_no", "draft_flag"]
                             );
-                            
+                           
                             $quotation_no = $result['quotation_no'] ?? null;
                             $draft_flag   = $result['p_draft_flag'] ?? $this->draft_flag;
                            
@@ -420,14 +423,14 @@ class QuoationController
                 
                             $sqlInsert = "INSERT INTO quotations
                                     (user_prefix, quotation_no, quotation_date, customer_code,
-                                     customer_name, customer_phone, customer_email, customer_address,
+                                     customer_name, customer_phone, customer_email,customer_cpr_cr, customer_address,
                                      items, subtotal, vat_total, grand_total, draft, reference_number,
                                      total_discount, total_discount_amount, after_discount_amount,
                                      user_id, user_name, company_id, company_name,
                                      allItemSubtotal, attention, terms, introduction)
                                     VALUES
                                     (:user_prefix, :quotation_no, :quotation_date, :customer_code,
-                                     :customer_name, :customer_phone, :customer_email, :customer_address,
+                                     :customer_name, :customer_phone, :customer_email, :customer_cpr_cr, :customer_address,
                                      :items, :subtotal, :vat_total, :grand_total, :draft, :reference_number,
                                      :total_discount, :total_discount_amount, :after_discount_amount,
                                      :user_id, :user_name, :company_id, :company_name,
@@ -440,6 +443,7 @@ class QuoationController
                                 ':customer_name' => $this->customer_name,
                                 ':customer_phone' => $this->customer_phone,
                                 ':customer_email' => $this->customer_email,
+                                ':customer_cpr_cr' => $this->customer_cpr_cr,
                                 ':customer_address' => $this->customer_address,
                                 ':items' => json_encode($this->items),
                                 ':subtotal' => $this->subtotal,
@@ -480,11 +484,27 @@ class QuoationController
                 break;
            case 'GetQuotations':
 
-            $this->ReturnData = $this->varPDOModelObj->ListFromTable(
-                $var[8],
-                $this->params[8]
-            );
-        
+         
+          $sql = "SELECT * FROM quotations WHERE company_id = :company_ids and draft =:draft AND quotation_date BETWEEN :start_date AND :end_date ";
+            
+            $params = [
+               ':company_ids' => $this->company_id,
+             ':draft' => $this->draft,
+             ':start_date'  => $this->startDate,
+             ':end_date'    => $this->endDate
+            ];
+            
+           
+            if (!empty($this->customer_code) && $this->customer_code != 'All') {
+                    $sql .= " AND customer_code = :customer_code";
+                    $params[':customer_code'] = trim($this->customer_code);
+                }
+            
+            $sql .= " ORDER BY id DESC";
+ 
+            $this->ReturnData = $this->varPDOModelObj->ListFromTable($sql, $params);
+            
+            
             $result = json_decode($this->ReturnData, true);
         
             $decimals = 3; // adjust if needed
@@ -501,23 +521,38 @@ class QuoationController
                     $id = (int)$row['id'];
                     $quotation_no = htmlspecialchars($row['quotation_no']);
                     $customer_name = htmlspecialchars($row['customer_name']);
-        
+                    $customer_phone = htmlspecialchars($row['customer_phone']);
+                    $customer_cpr_cr = htmlspecialchars($row['customer_cpr_cr']);
+                    $customer_val=$customer_name.' | '.$customer_phone.' | '.$customer_cpr_cr;
+                    $checked = ($row['quotation_status']== 'Approved') ? 'checked' : '';
                     $data[] = [
                         $quotation_no,
                         $date,
-                        $customer_name,
+                        $customer_val,
                         "<div style='text-align:right'>{$subtotal}</div>",
                         "<div style='text-align:right'>{$vat}</div>",
                         "<div style='text-align:right'>{$grand}</div>",
+                         
+                        ($this->draft == 'No')
+                            ? "<span class='me-2 text-danger'>Disapproved</span>
+                               <label class='switch'>
+                                   <input type='checkbox'
+                                          class='quotation-status'
+                                          data-id='{$id}'
+                                          {$checked}>
+                                   <span class='slider'></span>
+                               </label>
+                               <span class='ms-2 text-success'>Approved</span>"
+                            : '',
                         "<button class='btn btn-sm btn-primary viewQuotation' data-id='{$id}'>
                             <span class='ri ri-list-view icon-18px'></span>
                         </button>",
-                        "<div class='d-flex gap-1 '>
+                        // "<div class='d-flex gap-1 '>
                             
-                            <button class='btn btn-sm btn-warning .qtnprint' data-bs-toggle='tooltip' title='Print Format 2' data-id={$id} data-ref={$quotation_no} >
-                                <span class='ri ri-printer-line icon-18px'></span>
-                            </button>
-                        </div>"
+                        //     <button class='btn btn-sm btn-warning .qtnprint' data-bs-toggle='tooltip' title='Print Format 2' data-id={$id} data-ref={$quotation_no} >
+                        //         <span class='ri ri-printer-line icon-18px'></span>
+                        //     </button>
+                        // </div>"
                        
                     ];
                 }
@@ -541,6 +576,37 @@ class QuoationController
                     "data" => $result['data'] ?? []
                 ]);
             
+            break;
+             case 'UpdateQuotationApproval':
+                 if($this->is_approved=='1')
+                 {
+                        $sqlUpdate = "UPDATE quotations SET
+                                        quotation_status = 'Approved'
+                                    WHERE id = :quotation_id";
+                            $updateParams = [
+                                ':quotation_id' => $this->quotation_id,
+                                
+                             ];
+                             
+                             
+                 }
+                 else
+                 {
+                     $sqlUpdate = "UPDATE quotations SET
+                                        quotation_status = 'Not Approved'
+                                    WHERE id = :quotation_id";
+                            $updateParams = [
+                                ':quotation_id' => $this->quotation_id,
+                                
+                             ];
+                 }
+                 $this->varPDOModelObj->UpdateTable($sqlUpdate,$updateParams);
+                              echo json_encode([
+                                "status"  => 'Success',
+                                "msg_text"  => 'Updated successfully',
+                                "message" => $newQuotation
+                            ]);
+                 
             break;
             default:
                 $noAction = json_encode([

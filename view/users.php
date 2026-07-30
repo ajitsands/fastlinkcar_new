@@ -1,4 +1,17 @@
 <?php
+session_start();
+
+function checkLogin()
+{
+    if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+        header("Location: /Logout");
+        exit();
+    }
+}
+
+checkLogin();
+?>
+<?php
 include ROOT_PATH . '/view/envinclude.php';
 ?>
 <!doctype html>
@@ -229,6 +242,10 @@ include ROOT_PATH . '/view/envinclude.php';
 
             loadRoles();
             loadCompanies();
+              setTimeout(function () {
+                        $('#userName').val('').trigger('change');
+                         $('#userPassword').val('').trigger('change');
+                    }, 500);
 
             //let userTable = $('#userTable').DataTable({});
 
@@ -297,46 +314,53 @@ include ROOT_PATH . '/view/envinclude.php';
             // Load Companies from DB
             function loadCompanies() {
 
-                $.ajax({
-                    url: '/LoadCompanies',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        action: 'LoadCompanies'
-                    }),
+               $.ajax({
+    url: '/LoadCompanies',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({
+        action: 'LoadCompanies'
+    }),
 
-                    success: function(response) {
+    success: function(response) {
 
-                        let companies = response.data;
+        let companies = response.data;
 
-                        $('#select2Multiple').empty();
+        $('#select2Multiple').empty();
 
-                        companies.forEach(function(company) {
+        let selectedValues = [];
 
-                            $('#select2Multiple').append(
-                                `<option value="${company.ids}">
-                        ${company.company_name}
-                    </option>`
-                            );
+        companies.forEach(function(company) {
 
-                        });
+            $('#select2Multiple').append(
+                `<option value="${company.ids}">
+                    ${company.company_name}
+                </option>`
+            );
 
-                        // refresh select2
-                        $('#select2Multiple').trigger('change');
+            selectedValues.push(company.ids); // Collect all IDs
+        });
 
-                    },
+        // Select all options by default
+        $('#select2Multiple').val(selectedValues).trigger('change');
+    },
 
-                    error: function() {
-                        setupDropdown(
-                            'dropdownContent',
-                            'error',
-                            svgError + 'Error loading companies',
-                            'click'
-                        );
-                    }
+    error: function() {
+        setupDropdown(
+            'dropdownContent',
+            'error',
+            svgError + 'Error loading companies',
+            'click'
+        );
+    }
+});
+function selectAllCompanies() {
+    const allCompanyIds = $('#select2Multiple option').map(function () {
+        return this.value;
+    }).get();
 
-                });
-
+    $('#select2Multiple').val(allCompanyIds).trigger('change');
+}
             }
             // ResetForm
             function resetUserForm() {
@@ -344,10 +368,14 @@ include ROOT_PATH . '/view/envinclude.php';
                 // reset form fields
                 $('#UserDetailsForm')[0].reset();
 
-                $('#select2Basic').val('').trigger('change');
+                
 
-                // reset company multi select2
-                $('#select2Multiple').val(null).trigger('change');
+                $('#select2Basic').val('').trigger('change');
+                  const allCompanyIds = $('#select2Multiple option').map(function () {
+                    return this.value;
+                }).get();
+            
+                $('#select2Multiple').val(allCompanyIds).trigger('change');
 
                 $('#userName').val('').prop('disabled', false);
                 $('#userPassword').val('').prop('disabled', false);
@@ -533,12 +561,15 @@ include ROOT_PATH . '/view/envinclude.php';
                 }
 
             });
+           
+                  
+            
             // Username duplication check
             $('#userName').on('blur', function() {
 
                 let username = $(this).val().trim();
 
-                if (username === '') {
+                if (username.trim() !== '') {
                     return;
                 }
 
@@ -713,6 +744,7 @@ include ROOT_PATH . '/view/envinclude.php';
                     {
                         data: 'company_json',
                         title: 'Companies',
+                        visible: false,
                         render: function(data) {
 
                             if (!data) return '';
@@ -827,7 +859,7 @@ include ROOT_PATH . '/view/envinclude.php';
 
                 $('#userProfileName').val(data.profile_name);
                 $('#userName').val(data.user_name).prop('disabled', true);
-                $('#userPassword').val(data.user_password).prop('disabled', true);;
+                $('#userPassword').val(data.user_passkey).prop('disabled', true);
                 $('#userEmail').val(data.user_email);
                 $('#userPhoneNumber').val(data.user_mobile);
 

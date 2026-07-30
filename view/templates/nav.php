@@ -6,10 +6,12 @@
                 <span class="app-brand-logo demo">
                   <span class="text-primary">
 						<!--Logo Should Come Here-->
-						<img src="<?= $_ENV['BASE_URL'] ?>assets/img/logo/small_logos_blank.png" id="companyLogo" class="img-fluid app-logo" alt="Logo">
+						<!--<img src="<?= $_ENV['BASE_URL'] ?>assets/img/logo/small_logos_blank.png" id="companyLogo" class="img-fluid app-logo" alt="Logo">-->
+							<img src="<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo_small.png" id="companyLogo" class="img-fluid app-logo" alt="Logo">
+						
 				  </span>
                 </span>
-                <span class="app-brand-text demo menu-text fw-semibold ms-1" style="color: #ffffff">CarRental Portal</span>
+                <span class="app-brand-text demo menu-text fw-semibold ms-1" style="color: #ffffff">Car Rental Portal</span>
               </a>
 
               <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-xl-none">
@@ -378,55 +380,85 @@
                   </ul>
                 </li>
                 <!--/ Notification -->
-
+<?php
+$profileName = $_SESSION['profile_name'] ??  $_SESSION['user_name'];
+$userName = $_SESSION['user_name'] ?? 'User';
+$userRole = $_SESSION['role_name'] ?? 'Admin';
+$userImage = !empty($_SESSION['user_image']) 
+            ? $_ENV['BASE_URL'].'assets/img/users/'.$_SESSION['user_image']
+            : $_ENV['BASE_URL'].'assets/img/users/default.jpg';
+?>
                 <!-- User -->
-                <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                    <div class="avatar avatar-online">
-                      <img src="<?= $_ENV['BASE_URL'] ?>assets/img/avatars/1.png" alt="avatar" class="rounded-circle" />
-                    </div>
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-end mt-3 py-2">
-                    <li>
-                      <a class="dropdown-item" href="pages-account-settings-account.html">
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <div class="avatar avatar-online">
-                              <img
-                                src="<?= $_ENV['BASE_URL'] ?>assets/img/avatars/1.png"
-                                alt="alt"
-                                class="w-px-40 h-auto rounded-circle" />
-                            </div>
-                          </div>
-                          <div class="flex-grow-1">
-                            <h6 class="mb-0 small">John Doe</h6>
-                            <small class="text-body-secondary">Admin</small>
-                          </div>
+               <li class="nav-item navbar-dropdown dropdown-user dropdown">
+
+    <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+        <div class="avatar avatar-online">
+            <img src="<?= $userImage ?>" 
+                 alt="avatar" 
+                 class="rounded-circle" />
+        </div>
+    </a>
+
+    <ul class="dropdown-menu dropdown-menu-end mt-3 py-2">
+
+        <!-- User Info -->
+        <li>
+            <a class="dropdown-item" href="/Profile">
+                <div class="d-flex align-items-center">
+
+                    <div class="flex-shrink-0 me-2">
+                        <div class="avatar avatar-online">
+                            <img src="<?= $userImage ?>"
+                                 alt="profile"
+                                 class="w-px-40 h-auto rounded-circle" />
                         </div>
-                      </a>
-                    </li>
-                    <li>
-                      <div class="dropdown-divider"></div>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="pages-profile-user.html">
-                        <i class="icon-base ri ri-user-3-line icon-22px me-3"></i
-                        ><span class="align-middle">My Profile</span>
-                      </a>
-                    </li>
-					<li>
-                      <div class="dropdown-divider"></div>
-                    </li>
-                    <li>
-                      <div class="d-grid px-4 pt-2 pb-1">
-                        <a class="btn btn-sm btn-danger d-flex" href="/Logout"  target="_blank">
-                          <small class="align-middle">Logout</small>
-                          <i class="icon-base ri ri-logout-box-r-line ms-2 icon-16px"></i>
-                        </a>
-                      </div>
-                    </li>
-                  </ul>
-                </li>
+                    </div>
+
+                    <div class="flex-grow-1">
+                        <h6 class="mb-0 small">
+                            <?= htmlspecialchars($profileName) ?>
+                        </h6>
+                        <small class="text-body-secondary">
+                            <?= htmlspecialchars($userRole) ?>
+                        </small>
+                    </div>
+
+                </div>
+            </a>
+        </li>
+
+        <li>
+            <div class="dropdown-divider"></div>
+        </li>
+
+
+        <!-- Profile -->
+        <li>
+            <a class="dropdown-item" href="/Profile">
+                <i class="icon-base ri ri-user-3-line icon-22px me-3"></i>
+                <span class="align-middle">My Profile</span>
+            </a>
+        </li>
+
+
+        <li>
+            <div class="dropdown-divider"></div>
+        </li>
+
+
+        <!-- Logout -->
+        <li>
+            <div class="d-grid px-4 pt-2 pb-1">
+                <a class="btn btn-sm btn-danger d-flex" href="/Logout">
+                    <small class="align-middle">Logout</small>
+                    <i class="icon-base ri ri-logout-box-r-line ms-2 icon-16px"></i>
+                </a>
+            </div>
+        </li>
+
+    </ul>
+
+</li>
                 <!--/ User -->
               </ul>
             </div>

@@ -9,7 +9,7 @@
        <li class="menu-item <?php if ($decrypt[0] == '1') {
                               echo 'active';
                             } ?>">
-         <a href="/Home?val=<?php echo $this->encryption->encrypt('1,1-1'); ?>" class="menu-link">
+         <a href="/Dashboard?val=<?php echo $this->encryption->encrypt('1,1-1'); ?>" class="menu-link">
            <i class="menu-icon icon-base ri ri-home-smile-line"></i>
            <div data-i18n="Dashboard">Dashboard</div>
          </a>
@@ -26,6 +26,15 @@
          </a>
 
          <ul class="menu-sub">
+             <li class="menu-item <?php if ($decrypt[0] == '2-4') {
+                                  echo 'active';
+                                } ?>">
+             <a href="/AddUser?val=<?php echo $this->encryption->encrypt('2,2-4'); ?>" class="menu-link">
+
+               <i class="menu-icon icon-base ri ri-user-add-fill"></i>
+               <div data-i18n="Users">Users</div>
+             </a>
+           </li>
              <li class="menu-item <?php if ($decrypt[0] == '2-3') {
                                   echo 'active';
                                 } ?>">
@@ -53,49 +62,40 @@
                <div data-i18n="Driver Registration">Driver Registration</div>
              </a>
            </li>
+           <li class="menu-item <?php if ($decrypt[0] == '2-6') {
+                                  echo 'active';
+                                } ?>">
+             <a href="/RegisterStaff?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
+
+               <i class="menu-icon icon-base ri ri-id-card-line"></i>
+               <div data-i18n="Staff Registration">Staff Registration</div>
+             </a>
+           </li>
            <li class="menu-item <?php if ($decrypt[0] == '2-2') {
                                   echo 'active';
                                 } ?>">
-             <a href="/ListOfVehicles?val=<?php echo $this->encryption->encrypt('2,2-2'); ?>" class="menu-link">
+             <a href="/ListofVehicles?val=<?php echo $this->encryption->encrypt('2,2-2'); ?>" class="menu-link">
 
                <i class="menu-icon icon-base ri ri-list-unordered"></i>
                <div data-i18n="List of Vehicles">List of Vehicles</div>
              </a>
            </li>
-
-         </ul>
-       </li>
-       <!-- Settings -->
-       <li class="menu-item <?php if ($decrypt[0] == '4') {
-                              echo 'active';
-                            } ?>">
-         <a href="javascript:void(0)" class="menu-link menu-toggle">
-           <i class="menu-icon icon-base ri ri-settings-5-line"></i>
-           <div data-i18n="Settings">Settings</div>
-         </a>
-
-         <ul class="menu-sub">
-           <li class="menu-item <?php if ($decrypt[0] == '4-1') {
+           <li class="menu-item <?php if ($decrypt[0] == '2-5') {
                                   echo 'active';
                                 } ?>">
-             <a href="/AddUser?val=<?php echo $this->encryption->encrypt('4,4-1'); ?>" class="menu-link">
+             <a href="/Customers?val=<?php echo $this->encryption->encrypt('2,2-5'); ?>" class="menu-link">
 
-               <i class="menu-icon icon-base ri ri-user-add-fill"></i>
-               <div data-i18n="Users">Users</div>
+               <i class="menu-icon icon-base ri ri-group-line"></i>
+               <div data-i18n="Customers">Customers</div>
              </a>
            </li>
-           <!-- <li class="menu-item <?php //if($decrypt[0]=='2-2'){echo 'active';}
-                                      ?>">
-                          <a href="/ListOfVehicles?val=<?php //echo $this->encryption->encrypt('2,2-2');
-                                                        ?>" class="menu-link">
-                        
-                          <i class="menu-icon icon-base ri ri-list-unordered"></i>
-                          <div data-i18n="List of Vehicles">List of Vehicles</div>
-                         </a>
-                       </li> -->
+       
 
          </ul>
+         
+         
        </li>
+     
 
        <li class="menu-item <?php if ($decrypt[0] == '3') {
                               echo 'active';
@@ -106,22 +106,14 @@
          </a>
 
          <ul class="menu-sub">
-           <li class="menu-item <?php if ($decrypt[0] == '3-1') {
-                                  echo 'active';
-                                } ?>">
-             <a href="/Quotation?val=<?php echo $this->encryption->encrypt('3,3-1'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-quote-text"></i>
-               <div data-i18n="Quotation">Quotation</div>
-             </a>
-           </li>
+         
             <li class="menu-item <?php if ($decrypt[0] == '3-2') {
                                   echo 'active';
                                 } ?>">
              <a href="/VehicleReservation?val=<?php echo $this->encryption->encrypt('3,3-2'); ?>" class="menu-link">
 
                <i class="menu-icon icon-base ri ri-pushpin-fill"></i>
-               <div data-i18n="Reservation from Quotation">Reservation from Quotation</div>
+               <div data-i18n="Vehicle Reservation">Vehicle Reservation</div>
              </a>
            </li>
             <li class="menu-item <?php if ($decrypt[0] == '3-3') {
@@ -130,7 +122,16 @@
              <a href="/VehicleContract?val=<?php echo $this->encryption->encrypt('3,3-3'); ?>" class="menu-link">
 
                <i class="menu-icon icon-base ri ri-draft-line"></i>
-               <div data-i18n="Contract Generation">Contract Generation</div>
+               <div data-i18n="Generate Contract">Generate Contract</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($decrypt[0] == '3-4') {
+                                  echo 'active';
+                                } ?>">
+             <a href="/ContractList?val=<?php echo $this->encryption->encrypt('3,3-4'); ?>" class="menu-link">
+
+               <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
+               <div data-i18n="Contract List">Contract List</div>
              </a>
            </li>
            <li class="menu-item">
@@ -139,15 +140,59 @@
                <div data-i18n="Send Contract">Send Contract</div>
              </a>
            </li>
+           <li class="menu-item <?php if ($decrypt[0] == '3-5') {
+                                  echo 'active';
+                                } ?>">
+             <a href="/NonRevenueTickets?val=<?php echo $this->encryption->encrypt('3,3-5'); ?>" class="menu-link">
+
+               <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
+               <div data-i18n="Staff Use Allocation">Staff Use Allocation</div>
+             </a>
+           </li>
          </ul>
        </li>
-
-       <li class="menu-item <?php if ($decrypt[0] == '5') { echo 'active'; } ?>">
+        <li class="menu-item <?php if ($decrypt[0] == '5') { echo 'active'; } ?>">
          <a href="javascript:void(0)" class="menu-link menu-toggle">
            <i class="menu-icon icon-base ri ri-wallet-line"></i>
            <div data-i18n="Accounting">Accounting</div>
          </a>
          <ul class="menu-sub">
+               <li class="menu-item <?php if ($decrypt[0] == '5-3') {
+                                  echo 'active';
+                                } ?>">
+             <a href="/Quotation?val=<?php echo $this->encryption->encrypt('5,5-3'); ?>" class="menu-link">
+
+               <i class="menu-icon icon-base ri ri-quote-text"></i>
+               <div data-i18n="Quotation">Quotation</div>
+             </a>
+           </li>
+            <li class="menu-item <?php if ($decrypt[0] == '5-4') {
+                                  echo 'active';
+                                } ?>">
+             <a href="/Invoice?val=<?php echo $this->encryption->encrypt('5,5-4'); ?>" class="menu-link">
+
+               <i class="menu-icon icon-base ri ri-bill-line"></i>
+               <div data-i18n="Invoice">Invoice</div>
+             </a>
+           </li>
+             <li class="menu-item <?php if ($decrypt[0] == '5-5') {
+                                  echo 'active';
+                                } ?>">
+             <a href="/CashMemo?val=<?php echo $this->encryption->encrypt('5,5-5'); ?>" class="menu-link">
+
+               <i class="menu-icon icon-base ri ri-receipt-line"></i>
+               <div data-i18n="Cash Memo/Receipt">Cash Memo/Receipt</div>
+             </a>
+           </li>
+            <li class="menu-item <?php if ($decrypt[0] == '5-7') {
+                                  echo 'active';
+                                } ?>">
+             <a href="/ExpenseVoucher?val=<?php echo $this->encryption->encrypt('5,5-7'); ?>" class="menu-link">
+
+               <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
+               <div data-i18n="Expense Voucher">Expense Voucher</div>
+             </a>
+           </li>
            <li class="menu-item <?php if ($decrypt[0] == '5-1') { echo 'active'; } ?>">
              <a href="/CustomerLedger?val=<?php echo $this->encryption->encrypt('5,5-1'); ?>" class="menu-link">
                <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
@@ -160,75 +205,61 @@
                <div data-i18n="Fund Flow Report">Fund Flow Report</div>
              </a>
            </li>
+            <li class="menu-item <?php if ($decrypt[0] == '5-6') { echo 'active'; } ?>">
+             <a href="/UnbilledContracts?val=<?php echo $this->encryption->encrypt('5,5-6'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-file-warning-line"></i>
+               <div data-i18n="Unbilled Contracts">Unbilled Contracts</div>
+             </a>
+           </li>
          </ul>
        </li>
+       
+        <li class="menu-item <?php if ($decrypt[0] == '6') { echo 'active'; } ?>">
+                 <a href="javascript:void(0)" class="menu-link menu-toggle">
+                   <i class="menu-icon icon-base ri ri-bar-chart-box-line"></i>
+                   <div data-i18n="Reports">Reports</div>
+                 </a>
+                 <ul class="menu-sub">
+                   <li class="menu-item <?php if ($decrypt[0] == '6-1') { echo 'active'; } ?>">
+                     <a href="/VehicleInsight?val=<?php echo $this->encryption->encrypt('6,6-1'); ?>" class="menu-link">
+                       <i class="menu-icon icon-base ri ri-car-line"></i>
+                       <div data-i18n="Vehicle Insight">Vehicle Insight</div>
+                     </a>
+                   </li>
+                   <li class="menu-item <?php if ($decrypt[0] == '6-2') { echo 'active'; } ?>">
+                      <a href="/ReturnReport?val=<?php echo $this->encryption->encrypt('6,6-2'); ?>" class="menu-link">
+                        <i class="menu-icon icon-base ri ri-calendar-check-line"></i>
+                        <div data-i18n="Expected Returns">Expected Returns</div>
+                      </a>
+                    </li>
+                     <li class="menu-item <?php if ($decrypt[0] == '6-3') { echo 'active'; } ?>">
+                      <a href="/CustomerBalances?val=<?php echo $this->encryption->encrypt('6,6-3'); ?>" class="menu-link">
+                        <i class="menu-icon icon-base ri ri-wallet-3-line"></i>
+                        <div data-i18n="Customer Balances">Customer Balances</div>
+                      </a>
+                    </li>
+                     <li class="menu-item <?php if ($decrypt[0] == '6-4') { echo 'active'; } ?>">
+                      <a href="/DailyRentalReport?val=<?php echo $this->encryption->encrypt('6,6-4'); ?>" class="menu-link">
+                        <i class="menu-icon icon-base ri ri-file-chart-line"></i>
+                        <div data-i18n="Daily Rental Report">Daily Rental Report</div>
+                      </a>
+                    </li>
+                     <li class="menu-item <?php if ($decrypt[0] == '6-5') { echo 'active'; } ?>">
+                      <a href="/DailyCashReport?val=<?php echo $this->encryption->encrypt('6,6-5'); ?>" class="menu-link">
+                        <i class="menu-icon icon-base ri ri-funds-line"></i>
+                        <div data-i18n="Daily Cash Report">Daily Cash Report</div>
+                      </a>
+                    </li>
+                    <li class="menu-item <?php if ($decrypt[0] == '6-6') { echo 'active'; } ?>">
+                      <a href="/NonRevenueTicketReport?val=<?php echo $this->encryption->encrypt('6,6-6'); ?>" class="menu-link">
+                        <i class="menu-icon icon-base ri ri-coupon-3-line"></i>
+                        <div data-i18n="Staff Use Report">Staff Use Report</div>
+                      </a>
+                    </li>
+                 </ul>
+        </li>
+       
+       
      </ul>
    </div>
  </aside>
-
-<!-- Send Contract Modal -->
-<div class="modal fade" id="sendContractModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Send Contract</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label for="send_contract_no" class="form-label">Contract Number</label>
-          <input type="text" id="send_contract_no" class="form-control" placeholder="Enter Contract Number (e.g. AA/2026/AGR/0003)">
-        </div>
-        <div class="d-flex flex-column gap-2 mt-4">
-          <button type="button" class="btn btn-primary w-100" onclick="handleSendContract('mail')">
-            <i class="ri-mail-send-line me-1"></i> Send by Mail
-          </button>
-          <button type="button" class="btn btn-success w-100" onclick="handleSendContract('whatsapp')">
-            <i class="ri-whatsapp-line me-1"></i> Send via WhatsApp
-          </button>
-          <button type="button" class="btn btn-secondary w-100" onclick="handleSendContract('download')">
-            <i class="ri-download-2-line me-1"></i> View and Download
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-function handleSendContract(action) {
-    const contractNo = document.getElementById('send_contract_no').value.trim();
-    if (!contractNo) {
-        alert('Please enter a Contract Number.');
-        return;
-    }
-
-    if (action === 'mail') {
-        if(confirm('Are you sure you want to email this contract?')) {
-            fetch('/controller/send_contract_mail.php?contract_no=' + encodeURIComponent(contractNo))
-            .then(res => res.text())
-            .then(data => {
-                alert(data);
-            }).catch(err => {
-                alert('Error sending mail.');
-            });
-        }
-    } else if (action === 'whatsapp') {
-        fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(contractNo))
-        .then(res => res.text())
-        .then(token => {
-            if(!token) { alert('Encryption failed.'); return; }
-            const url = window.location.origin + '/view_contract.php?token=' + encodeURIComponent(token);
-            const text = encodeURIComponent('Here is your car rental contract: ' + url);
-            window.open('https://wa.me/?text=' + text, '_blank');
-        });
-    } else if (action === 'download') {
-        fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(contractNo))
-        .then(res => res.text())
-        .then(token => {
-            if(!token) { alert('Encryption failed.'); return; }
-            window.open('/view_contract.php?token=' + encodeURIComponent(token), '_blank');
-        });
-    }
-}
-</script>

@@ -73,12 +73,20 @@
                                                 <div class="col-4">
                                                     <div class="row">
                                                         <div class="col-12">
-                                                             <!--<div class="col-1 col-xl-1">-->
+                                                            <div class="row">
+                                                             <div class="col-6 col-xl-6">
                                                                 <div class="form-floating form-floating-outline mb-6">
                                                                     <input class="form-control form-control-sm" id="customer_phone" name ="customer_phone" type="text" placeholder="Telephone" >
                                                                     <label for="Telephone">Telephone</label>
                                                                   </div>
-                                                            <!--</div>-->
+                                                            </div>
+                                                            <div class="col-6 col-xl-6">
+                                                                <div class="form-floating form-floating-outline mb-6">
+                                                                    <input class="form-control form-control-sm" id="customer_cpr_cr" name ="customer_cpr_cr" type="text" placeholder="CPR/CR" >
+                                                                    <label for="Telephone">CPR/CR</label>
+                                                                  </div>
+                                                            </div>
+                                                            </div>
                                                         </div>
                                             
                                                         <div class="col-12">
@@ -248,12 +256,28 @@
                                     &nbsp;&nbsp;Add Item (alt+N)
                                 </button>
                                 <!--printQT-->
-                                <button type="button"
-                                    class="btn btn-sm btn-info waves-effect waves-light"
-                                    id="openPrintSettings">
-                                    <span class="ri ri-add-box-line icon-18px"></span>
-                                    &nbsp;&nbsp;Print (alt+P)
-                                </button>
+                                
+                                <div class="btn-group" role="group">
+
+                                    <!-- Print -->
+                                    <button type="button"
+                                        class="btn btn-sm btn-primary"
+                                        id="btnPrint"
+                                        title="Print">
+                                        <i class="ri ri-printer-line fs-5"></i>
+                                        Print
+                                    </button>
+                                
+                                    <!-- Print with Images -->
+                                    <button type="button"
+                                        class="btn btn-sm btn-success"
+                                        id="btnPrintWithImages"
+                                        title="Print With Images">
+                                        <i class="ri ri-image-add-line fs-5"></i>
+                                        Print With Images
+                                    </button>
+
+                                </div>
                                 <button type="button"
                                     class="btn btn-sm btn-warning  waves-effect waves-light"
                                     id="openQuotations">

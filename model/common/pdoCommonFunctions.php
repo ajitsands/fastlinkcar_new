@@ -11,6 +11,7 @@ abstract class FunctionDefinitions
     abstract public function Commit();
     abstract public function Rollback();
     abstract public function validateUser($data);
+     abstract public function logVehicleMovement($data);
     abstract public function executeQuery($sql);
     abstract public function selectexecuteQuery($sql);
     
@@ -54,41 +55,75 @@ class CommonPDOModel extends FunctionDefinitions
 
     // Usage If ListFromTable in Controller 
     //echo $db->listFromTable("SELECT * FROM tbl_users WHERE status = ?", ['Active']);
+    // public function AddToTable($sql, $params = [])
+    // {
+    //     try {
+    //         Logger::ActivityLog('AddToTable',$sql,$params);
+    //         $this->varDBPDO->setAttribute(
+    //             PDO::ATTR_ERRMODE,
+    //             PDO::ERRMODE_EXCEPTION
+    //         );
+    //         $stmt = $this->varDBPDO->prepare($sql);
+    //         $stmt->execute($params);
+    //         Logger::ActivityLog('AddToTable',$sql,$params);
+    //         return json_encode([
+    //             'status'  => true,
+    //             'message' => 'Record inserted successfully',
+    //             'data'    => [
+    //                 'last_insert_id' => $this->varDBPDO->lastInsertId(),
+    //                 'rows_affected' => $stmt->rowCount()
+    //             ]
+    //         ]);
+    
+    //     } catch (PDOException $e) {
+    
+    //         Logger::dbError(
+    //             $e->getMessage(),
+    //             $sql,
+    //             $params
+    //         );
+    
+    //         return json_encode([
+    //             'status'  => false,
+    //             'message' => 'Failed to insert record'
+    //         ]);
+    //     }
+    // }
+    //$db->AddToTable("INSERT INTO tbl_users (name, email) VALUES (?, ?)",[$name, $email]);
+    
     public function AddToTable($sql, $params = [])
     {
         try {
-            Logger::ActivityLog('AddToTable',$sql,$params);
+    
+            Logger::ActivityLog('AddToTable', $sql, $params);
+    
             $this->varDBPDO->setAttribute(
                 PDO::ATTR_ERRMODE,
                 PDO::ERRMODE_EXCEPTION
             );
+    
             $stmt = $this->varDBPDO->prepare($sql);
             $stmt->execute($params);
-            Logger::ActivityLog('AddToTable',$sql,$params);
+    
             return json_encode([
                 'status'  => true,
                 'message' => 'Record inserted successfully',
                 'data'    => [
                     'last_insert_id' => $this->varDBPDO->lastInsertId(),
-                    'rows_affected' => $stmt->rowCount()
+                    'rows_affected'  => $stmt->rowCount()
                 ]
             ]);
     
         } catch (PDOException $e) {
     
-            Logger::dbError(
-                $e->getMessage(),
-                $sql,
-                $params
-            );
-    
-            return json_encode([
-                'status'  => false,
-                'message' => 'Failed to insert record'
-            ]);
+        return json_encode([
+            'status' => false,
+            'message' => $e->getMessage(),
+            'sql' => $sql,
+            'params' => $params
+        ]);
         }
     }
-    //$db->AddToTable("INSERT INTO tbl_users (name, email) VALUES (?, ?)",[$name, $email]);
     public function AddToTableAndReturnSpecifiedColumn($sql,$retColumnName,$tableName,$params = [])
     {
         try {
@@ -186,7 +221,31 @@ class CommonPDOModel extends FunctionDefinitions
             ]);
         }
     }
-
+        public function logVehicleMovement($data)
+        {
+            return $this->callProcedure(
+                'sp_log_vehicle_movement',
+                [
+                    $data['vehicle_id'],
+                    $data['action_type'],
+                    $data['old_status'] ?? null,
+                    $data['new_status'] ?? null,
+                    $data['reference_type'] ?? null,
+                    $data['reference_id'] ?? null,
+                    $data['reference_no'] ?? null,
+                    $data['location_from'] ?? null,
+                    $data['location_to'] ?? null,
+                    $data['staff_id'] ?? null,
+                    $data['customer_id'] ?? null,
+                    $data['garage_id'] ?? null,
+                    $data['odometer'] ?? null,
+                    $data['fuel_level'] ?? null,
+                    $data['remarks'] ?? null,
+                    $_SESSION['user_id'] ?? null,
+                    $_SESSION['profile_name'] ?? null
+                ]
+            );
+        }
     public function callProcedure($procedureName, $inputParams = [], $outputParams = [])
     {
         try {
@@ -251,6 +310,7 @@ class CommonPDOModel extends FunctionDefinitions
             $stmt = $this->varDBPDO->prepare($sql);
             return $stmt->execute($params);
         }
+    
     public function selectexecuteQuery($sql, $params = [])
     {
         $stmt = $this->varDBPDO->prepare($sql);

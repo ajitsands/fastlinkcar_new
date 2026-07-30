@@ -9,20 +9,37 @@ if (empty($contract_no)) {
 // 1. Get the PDF generation URL
 $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
 $host = $_SERVER['HTTP_HOST'];
-$pdf_url = $protocol . "://" . $host . "/pdf/generate_contract.php?contract_no=" . urlencode($contract_no);
+$pdf_url = $protocol . "://" . $host . "/PrintAgreement?token=" . urlencode($contract_no);
 
-// Fetch the PDF content using stream_context since cURL is disabled locally
-$options = [
-    "ssl" => [
-        "verify_peer" => false,
-        "verify_peer_name" => false,
-    ],
-    "http" => [
-        "ignore_errors" => true
-    ]
-];
-$context = stream_context_create($options);
-$pdf_content = @file_get_contents($pdf_url, false, $context);
+$pdf_content = false;
+
+// Attempt with cURL first if available
+if (function_exists('curl_version')) {
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $pdf_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+    $pdf_content = curl_exec($ch);
+    curl_close($ch);
+}
+
+// Fallback to stream_context if cURL failed or is unavailable
+if (empty($pdf_content)) {
+    $options = [
+        "ssl" => [
+            "verify_peer" => false,
+            "verify_peer_name" => false,
+        ],
+        "http" => [
+            "ignore_errors" => true,
+            "header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)\r\n"
+        ]
+    ];
+    $context = stream_context_create($options);
+    $pdf_content = @file_get_contents($pdf_url, false, $context);
+}
 
 if (empty($pdf_content)) {
     die("Error generating PDF from URL: " . $pdf_url);
@@ -39,8 +56,8 @@ if ($mysqli->connect_error) {
     die("Database Connection Error");
 }
 
-$stmt = $mysqli->prepare("SELECT customer_details, agreement_no FROM tbl_vehicle_rentout_contracts WHERE agreement_no = ? OR ids = ?");
-$stmt->bind_param("ss", $contract_no, $contract_no);
+$stmt = $mysqli->prepare("SELECT customer_details, agreement_no FROM tbl_vehicle_rentout_contracts WHERE agreement_no = ? ");
+$stmt->bind_param("s", $contract_no);
 $stmt->execute();
 $result = $stmt->get_result();
 $data = $result->fetch_assoc();

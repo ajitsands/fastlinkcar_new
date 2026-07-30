@@ -1,5 +1,18 @@
 <?php
-include ROOT_PATH . '/view/envinclude.php';
+session_start();
+
+function checkLogin()
+{
+    if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+        header("Location: /Logout");
+        exit();
+    }
+}
+
+checkLogin();
+?>
+<?php
+include('envinclude.php');
 ?>
 <!doctype html>
 
@@ -9,36 +22,36 @@ include ROOT_PATH . '/view/envinclude.php';
     dir="ltr"
     data-skin="default"
     data-bs-theme="light"
-    data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/"
+    data-assets-path="../assets/"
     data-template="horizontal-menu-template-no-customizer">
 
 <head>
-    <?php include ROOT_PATH . '/view/templates/head.php'; ?>
+    <?php include('templates/head.php'); ?>
 
 
     <!-- Helpers -->
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/js/helpers.js"></script>
+    <script src="../assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
 
     <!--? Config: Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file. -->
 
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/config.js"></script>
+    <script src="../assets/js/config.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
 
 
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
 
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/tagify/tagify.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/bootstrap-select/bootstrap-select.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/typeahead-js/typeahead.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/spinkit/spinkit.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.css" />
-    <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>alertmessage/css/sands_alert_style.css">
+    <link rel="stylesheet" href="../assets/vendor/libs/select2/select2.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/tagify/tagify.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/bootstrap-select/bootstrap-select.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/typeahead-js/typeahead.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/spinkit/spinkit.css" />
+    <link rel="stylesheet" href="../assets/sands/sands_popup.css" />
+    <link rel="stylesheet" href="alertmessage/css/sands_alert_style.css">
     <style>
    
     html, body {
@@ -227,7 +240,80 @@ input[type="number"] {
    
 }
 
+.quotation-preview-scroll {
+    height: 60vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 50px;
+}
 
+#quotationPreview table {
+    margin-bottom: 30px;
+}
+.quotation-list-scroll {
+    max-height:300px;
+    overflow-y:auto;
+}
+
+/* Main column scrolling */
+.scroll-container {
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Quotation preview */
+.quotation-preview-scroll {
+    height: 40vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Vehicle list */
+.vehicle-scroll {
+    height: calc(100vh - 220px);
+    overflow-y: auto;
+}
+
+
+/* Mobile devices */
+@media (max-width: 991px) {
+
+    .scroll-container {
+        height: auto;
+        overflow: visible;
+    }
+
+    .quotation-preview-scroll {
+        height: auto;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .vehicle-scroll {
+        height: 500px;
+    }
+
+}
+
+
+/* Small mobile */
+@media (max-width: 576px) {
+
+    .container-fluid {
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+    }
+
+    .card-header {
+        font-size: 14px;
+    }
+
+    .form-label {
+        font-size: 12px;
+    }
+
+}
 </style>
 </head>
 
@@ -236,7 +322,7 @@ input[type="number"] {
     <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
         <div class="layout-container">
             <!-- Navbar -->
-            <?php include ROOT_PATH . '/view/templates/nav.php'; ?>
+            <?php include('templates/nav.php'); ?>
             <!-- / Navbar -->
 
             <!-- Layout container -->
@@ -244,25 +330,25 @@ input[type="number"] {
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
                     <!-- Menu -->
-                    <?php include ROOT_PATH . '/view/templates/menu.php'; ?>
+                    <?php include('templates/menu.php'); ?>
                     <!-- / Menu -->
 
                     <!-- Content -->
                     
                         <!-- Layout Demo -->
                         
-                        <?php include ROOT_PATH . '/view/templates/VehicleReservation/VehicleReservationBody.php'; ?>
-                        <?php include ROOT_PATH . '/view/templates/VehicleReservation/add_new_customer_modal.php'; ?>
-                         <?php include ROOT_PATH . '/view/templates/VehicleReservation/vehicleFloatingFooter.php'; ?>
-                         <?php include ROOT_PATH . '/view/templates/VehicleStatus/vehicle_filepreview_modal.php'; ?>
-                         <?php include ROOT_PATH . '/view/templates/VehicleReservation/reservation_preview_modal.php'; ?>
-                         <?php include ROOT_PATH . '/view/templates/VehicleReservation/vehicle_images_slider.php'; ?>
-                         <?php include ROOT_PATH . '/view/templates/VehicleReservation/custom_confirm_modal.php'; ?>
-                         <?php include ROOT_PATH . '/view/templates/VehicleReservation/confirm_action_modal.php'; ?>
-                          <?php include ROOT_PATH . '/view/templates/VehicleReservation/view_notes_modal.php'; ?>
-                          <?php include ROOT_PATH . '/view/templates/VehicleReservation/vehicle_availability_model.php'; ?>
-                          <?php include ROOT_PATH . '/view/templates/VehicleReservation/booking_listupon_avail_check.php'; ?>
-                          <?php include ROOT_PATH . '/view/templates/VehicleReservation/vehicleAvailFloatingBar.php'; ?>
+                        <?php include('templates/VehicleReservation/VehicleReservationBody.php'); ?>
+                        <?php include('templates/VehicleReservation/add_new_customer_modal.php'); ?>
+                         <?php include('templates/VehicleReservation/vehicleFloatingFooter.php'); ?>
+                         <?php include('templates/VehicleStatus/vehicle_filepreview_modal.php'); ?>
+                         <?php include('templates/VehicleReservation/reservation_preview_modal.php'); ?>
+                         <?php include('templates/VehicleReservation/vehicle_images_slider.php'); ?>
+                         <?php include('templates/VehicleReservation/custom_confirm_modal.php'); ?>
+                         <?php include('templates/VehicleReservation/confirm_action_modal.php'); ?>
+                          <?php include('templates/VehicleReservation/view_notes_modal.php'); ?>
+                          <?php include('templates/VehicleReservation/vehicle_availability_model.php'); ?>
+                          <?php include('templates/VehicleReservation/booking_listupon_avail_check.php'); ?>
+                          <?php include('templates/VehicleReservation/vehicleAvailFloatingBar.php'); ?>
                          
                           
                      
@@ -271,7 +357,7 @@ input[type="number"] {
                     <!--/ Content -->
 
                     <!-- Footer -->
-                    <?php include ROOT_PATH . '/view/templates/footer.php'; ?>
+                    <?php include('templates/footer.php'); ?>
                     <!-- / Footer -->
 
                     <div class="content-backdrop fade"></div>
@@ -283,19 +369,19 @@ input[type="number"] {
         </div>
     </div>
     <div id="dropdownContent" style="text-align:center;"></div> 
-    <?php include ROOT_PATH . '/view/templates/VehicleStatus/vehicleInfoModal.php'; ?>
+    <?php include('templates/VehicleStatus/vehicleInfoModal.php'); ?>
    
 
-    <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
+    <?php include('templates/scripts.php'); ?>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+    <script src="../assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
 
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/forms-selects.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/settings.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>alertmessage/js/sandsalert.js"></script>
+    <script src="../assets/vendor/libs/select2/select2.js"></script>
+    <script src="../assets/js/forms-selects.js"></script>
+    <script src="../assets/sands/settings.js"></script>
+    <script src="../assets/sands/sands_popup.js"></script>
+    <script src="../alertmessage/js/sandsalert.js"></script>
      <script src="../httpdocs/user_js/vehicle_info.js"></script>
    
     <script>
@@ -315,6 +401,8 @@ $(document).ready(function() {
         $('#customerEmail').val('');
         $('#customerAddress').val('');
         $('#customerAttention').val('');
+        $('#customercprcr').val('');
+        
     }
 let selectedVehicles = [];
 
@@ -344,7 +432,7 @@ let selectedVehicles = [];
 });
 
 $('#selectCustomerFromSelect2').select2({
-    placeholder: 'Search customer by name or mobile',
+    placeholder: 'Search customer by name, mobile or cpr/cr',
     allowClear: true,
     minimumInputLength: 2,
     tags: true, 
@@ -380,7 +468,8 @@ $('#selectCustomerFromSelect2').select2({
                     customer_address: item.customer_addr,
                     customer_email: item.customer_email,
                     customer_code: item.customer_code,
-                    customer_attn: item.customer_attn
+                    customer_attn: item.customer_attn,
+                    customer_cr_cpr:item.customer_cr_cpr
                 }))
             };
         }
@@ -395,7 +484,7 @@ function formatCustomer(customer) {
 
     return $(`
         <div>
-            <strong>${customer.customer_name} | ${customer.customer_mobile}</strong>
+            <strong>${customer.customer_name} | ${customer.customer_mobile} | ${customer.customer_cr_cpr}</strong>
         </div>
     `);
 }
@@ -415,7 +504,7 @@ $('#selectCustomerFromSelect2').on('select2:select', function (e) {
     $('#customerEmail').val(data.customer_email);
     $('#customerAddress').val(data.customer_address);
     $('#customerAttention').val(data.customer_attn);
-    
+    $('#customercprcr').val(data.customer_cr_cpr);
 });
 
 
@@ -426,6 +515,7 @@ $('#selectCustomerFromSelect2').on('select2:clear', function () {
     $('#customerEmail').val('');
     $('#customerAddress').val('');
     $('#customerAttention').val('');
+    $('#customercprcr').val('');
 }); 
 
 $('#addCustomerBtn').click(function () {
@@ -582,6 +672,7 @@ function fillQuotationData(response) {
     $('#customerEmail').val(datares.customer_email);
     $('#customerAddress').val(datares.customer_address);
     $('#customerAttention').val(datares.attention);
+     $('#customercprcr').val(datares.customer_cr_cpr);
     $('#quotationRef').val(datares.quotation_no);
     $('#customer_code').val(datares.customer_code);
 
@@ -607,7 +698,7 @@ function fillQuotationData(response) {
     let items_data = JSON.parse(itemsres);
 
   html += `
-<table class="table table-bordered" style="table-layout: fixed; width: 100%;">
+<table class="table table-bordered mb-4">
     <thead>
         <tr>
             <th style="padding: 4px 8px; line-height: 1.2;">Quotation Items</th>
@@ -990,6 +1081,7 @@ function getBookingDetails() {
         customerEmail: $('#customerEmail').val(),
         customerAddress: $('#customerAddress').val(),
         customerAttention: $('#customerAttention').val(),
+        customer_cr_cpr: $('#customercprcr').val(),
         quotation_ref: $('#quotationRef').val(),
         book_through: $('#bookingTypeMain').val()
     };
@@ -1206,15 +1298,31 @@ $(document).on('click', '.vehicle-image', function () {
     let images = $(this).data('images');
     openVehicleModal(images);
 });
- function openVehicleModal(images) {
 
-    // Handle string JSON
+function openVehicleModal(images) {
+
+    // safe parse
     if (typeof images === "string") {
-        images = JSON.parse(images);
+        try {
+            images = JSON.parse(images);
+        } catch (e) {
+            images = [];
+        }
     }
 
-    // ✅ Reverse order (last image first)
-    images = images.slice().reverse();
+    // force array
+    if (!Array.isArray(images)) {
+        images = [];
+    }
+
+    // remove invalid values
+    images = images.filter(img => img && img !== "default.jpg");
+
+    if (images.length === 0) {
+        images = ["default.jpg"];
+    }
+
+    images = [...images].reverse();
 
     let inner = document.getElementById("vehicleCarouselInner");
     let indicators = document.getElementById("vehicleCarouselIndicators");
@@ -1243,12 +1351,10 @@ $(document).on('click', '.vehicle-image', function () {
         `;
     });
 
-    new bootstrap.Modal(document.getElementById('modalvehicleimages')).show();
+    bootstrap.Modal.getOrCreateInstance(
+        document.getElementById('modalvehicleimages')
+    ).show();
 }
-
-
-
-
  let DecimalPositions = 3;  
 function line_item_calculation()
 {
@@ -1530,7 +1636,9 @@ $(document).on('click', '#proceedSelectedVehicles', function () {
         let to = new Date(toDate);
         
        
-    let serviceType = $('#select_service_type').val();
+   // let serviceType = $('#select_service_type').val();
+   let serviceType = 'Reserve Vehicles';
+   
     if ($('#customerName').val()=='' ) {
          setupDropdown('dropdownContent', 'error', svgError + "Please provide customer name", 'click');
                 return false;

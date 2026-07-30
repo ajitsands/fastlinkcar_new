@@ -19,7 +19,16 @@ $('#statusTabs .nav-link').on('click', function(e){
         }, 500);
     }
 });
+ 
+function formatDate(dateStr) {
+ 
+    let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+    let parts = dateStr.split('-');
+
+    return parts[2] + ' ' + months[parseInt(parts[1]) - 1] + ' ' + parts[0];
+}
 //Vehicle Info Modal
  function getFilePreview(ext, url) {
     const map = {
@@ -99,6 +108,7 @@ $('#statusTabs .nav-link').on('click', function(e){
 
     let parentCard = $(this).closest('.vehicle-card');
     let selectBtn = parentCard.find('.btn_vehicle_select');
+    
      $('.span_hwod').html(selectBtn.data('pricehwod'));
      $('.span_hwd').html(selectBtn.data('pricehwd'));
      $('.span_dwod').html(selectBtn.data('pricedwod'));
@@ -134,8 +144,8 @@ $('#statusTabs .nav-link').on('click', function(e){
             
             $('#vehicleYear').text(res.vehicle_year || '-');
             $('#vehicleColor').text(res.vehicle_color || '-');
-            
-            $('#purchaseDate').text(res.vehicle_purchase_date || '-');
+          
+            $('#purchaseDate').text(formatDate(res.vehicle_purchase_date) || '-');
             $('#purchaseCost').text(other.vehiclePurchasePrice || '-');
             
             $('#costHour').text(other.vehiclePricePerHour || 0);
@@ -189,19 +199,26 @@ $('#statusTabs .nav-link').on('click', function(e){
                 });
                 
                 $('#vehicleImagesList').html(imageHtml);
-                
-          let docs = [];
+                let docs = [];
 
-            let attachments = JSON.parse(JSON.parse(res.vehicle_attachments || "{}"));
-            
-            attachments.vehicles?.forEach(v => {
-              v.files.forEach(file => {
-                docs.push({
-                  name: v.documentName,
-                  url: file
-                });
-              });
-            });
+                    let attachments = res.vehicle_attachments || {};
+                    
+                    if (typeof attachments === "string") {
+                        try {
+                            attachments = JSON.parse(attachments);
+                        } catch {
+                            attachments = {};
+                        }
+                    }
+                    
+                    attachments?.vehicles?.forEach(v =>
+                        v.files?.forEach(file =>
+                            docs.push({
+                                name: v.documentName || '',
+                                url: file
+                            })
+                        )
+                    );
             
             let docHtml = '';
 
@@ -234,6 +251,7 @@ $('#statusTabs .nav-link').on('click', function(e){
           renderInsuranceTimeline(insuranceHistory); 
           renderMaintenanceTimeline(maintenanceHistory); 
           loadBookingTable(vehicleId);
+          loadContractTable(vehicleId);
 
         },
         error: function() {
@@ -289,12 +307,12 @@ function renderPassingTimeline(passingHistory=null) {
     
                     <div class="col-md-6">
                         <small class="text-muted">Next Passing Date</small>
-                        <div class="fw-medium">${passitem.next_date}</div>
+                        <div class="fw-medium">${formatDate(passitem.next_date)}</div>
                     </div>
     
                     <div class="col-md-6">
                         <small class="text-muted">Done Date</small>
-                        <div class="fw-medium">${passitem.done_date}</div>
+                        <div class="fw-medium">${formatDate(passitem.done_date)}</div>
                     </div>
     
                     <div class="col-md-12">
@@ -367,12 +385,12 @@ function renderInsuranceTimeline(insuranceHistory=null) {
     
                     <div class="col-md-6">
                         <small class="text-muted">Next Insurance Date</small>
-                        <div class="fw-medium">${insuranceitem.next_date}</div>
+                        <div class="fw-medium">${formatDate(insuranceitem.next_date)}</div>
                     </div>
     
                     <div class="col-md-6">
                         <small class="text-muted">Done Date</small>
-                        <div class="fw-medium">${insuranceitem.done_date}</div>
+                        <div class="fw-medium">${formatDate(insuranceitem.done_date)}</div>
                     </div>
     
                     <div class="col-md-12">
@@ -445,12 +463,12 @@ function renderMaintenanceTimeline(maintenanceHistory=null) {
     
                     <div class="col-md-6">
                         <small class="text-muted">Next Maintenance Date</small>
-                        <div class="fw-medium">${maintenanceitem.next_date}</div>
+                        <div class="fw-medium">${formatDate(maintenanceitem.next_date)}</div>
                     </div>
     
                     <div class="col-md-6">
                         <small class="text-muted">Done Date</small>
-                        <div class="fw-medium">${maintenanceitem.done_date}</div>
+                        <div class="fw-medium">${formatDate(maintenanceitem.done_date)}</div>
                     </div>
     
                     <div class="col-md-12">
@@ -643,64 +661,6 @@ $('#addTimelineBtn').click(function () {
 
 
 
-// function renderFilePreview(moduleKey, containerId, historyData, index) {
-
-//     let container = $('#' + containerId);
-//     container.html('');
-
-//     let files = fileStore[moduleKey] || [];
-
-//     if (index !== null && historyData[index] !== undefined) {
-
-//         let item = historyData[index];
-
-//         (item.documents || []).forEach((doc, docIndex) => {
-
-           
-//             if (!doc || !doc.url) return;
-
-//             let ext = doc.url.split('.').pop().toLowerCase();
-//             let isImage = ['jpg','jpeg','png','gif','webp'].includes(ext);
-
-//             let previewSrc = getFilePreview(ext, doc.url);
-
-//             let finalSrc = isImage
-//                 ? (doc.isNew ? previewSrc : 'httpdocs/' + doc.url)
-//                 : previewSrc;
-
-//             container.append(buildPreviewItem({
-//                 previewIcon: finalSrc,
-//                 fileUrl: 'httpdocs/' + doc.url,
-//                 fileName: doc.name || '',
-//                 type: 'existing',
-//                 index: docIndex,
-//                 module: moduleKey
-//             }));
-//         });
-//     }
-
-   
-//     files.forEach((file, fileIndex) => {
-
-//         if (!file || !file.name) return;
-
-//         let blobUrl = URL.createObjectURL(file);
-//         let ext = file.name.includes('.') 
-//             ? file.name.split('.').pop().toLowerCase()
-//             : '';
-
-//         let previewSrc = getFilePreview(ext, blobUrl);
-
-//         container.append(buildPreviewItem({
-//             previewIcon: previewSrc,
-//             fileUrl: blobUrl,
-//             fileName: file.name,
-//             type: 'new',
-//             index: fileIndex,
-//             module: moduleKey
-//         }));
-//     });
-// }
 
 function generateUniqueId() {
     return Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -801,27 +761,7 @@ function renderFilePreview(moduleKey, containerId, historyData, index) {
         }));
     });
 }
-// function buildPreviewItem({ previewIcon, fileUrl, fileName, type, index, module }) {
 
-//     return `
-//     <li class="avatar avatar-lg pull-up me-1 open-preview"
-//         data-img="${fileUrl}"
-//         data-name="${fileName}"
-//         data-type="${type}"
-//         data-index="${index}"
-//         data-module="${module}"
-//         data-bs-toggle="tooltip"
-//         title="${fileName}">
-
-//         <img class="rounded-circle" src="${previewIcon}" />
-
-//         <span class="remove-file"
-//               data-type="${type}"
-//               data-index="${index}"
-//               data-module="${module}">&times;</span>
-
-//     </li>`;
-// }
 function buildPreviewItem({ previewIcon, fileUrl, fileName, type, id, module }) {
 
     return `
@@ -1964,7 +1904,6 @@ $(document).on('click', '.deleteMaintenanceTimeline', function () {
         console.warn("Invalid index for delete");
         return;
     }
-
     deleteMaintenanceIndex = index; // ✅ store globally
 
     SaNDSAlert(
@@ -2160,6 +2099,106 @@ function loadBookingTable(vehicle_id) {
         }
     });
 }
+
+//Contarct Info
+
+function renderContractTable(data) {
+
+    let rows = '';
+
+    data.forEach((item, index) => {
+
+     
+        rows += `
+            <tr>
+                <td>${index + 1}</td>
+                <td> <div class="view_contract " style=" cursor: pointer;text-decoration: underline;color: #0d6efd;opacity: 0.8;" data-contract="${item.agreement_no}">
+                            <div class="fw-bold small">${item.agreement_no}</div>
+                            <div class="text-muted" style="font-size:11px;">
+                                ${item.agreement_status}
+                            </div>
+                           
+                        </div></td>
+                <td><div>
+                            <div class="fw-bold small">${item.customer_name}</div>
+                            <div class="text-muted" style="font-size:11px;">
+                                ${item.customer_mobile}
+                            </div>
+                        </div></td>
+                
+                <td><div>
+                            <div class="fw-bold small">${item.service_type}</div>
+                            <div class="text-muted" style="font-size:11px;">
+                                ${item.start_date} - ${item.return_date_format}
+                            </div>
+                        </div></td>
+                        <td>${item.days_left ?? '-'}</td>
+            </tr>
+        `;
+    });
+        if ($.fn.DataTable.isDataTable('#contractTable')) {
+            $('#contractTable').DataTable().clear().destroy();
+        }
+
+   $('#contractTable tbody').empty().html(rows);
+    $('#contractTable tbody').html(rows);
+    let contractTable = $('#contractTable').DataTable({
+    destroy: true,
+    processing: true,
+    serverSide: false,
+    responsive: true,
+    autoWidth: false,
+    paging: true,
+    pageLength: 30,
+    lengthChange: false,
+    info: true,
+    ordering: false,
+    searching: true,
+
+    // ✅ Remove default search bar
+    dom: '<"row"<"col-12">><"row"<"col-12"tr>>'
+});
+   $('#contractSearch').off('keyup').on('keyup', function () {
+    contractTable.search(this.value).draw();
+});
+}
+
+function loadContractTable(vehicle_id) {
+
+    $.ajax({
+        url: '/VehicleStatusController',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            action: 'get_all_contracts',
+            vehicle_id:$('#hid_vehicle_id_info_modal').val()
+        },
+        success: function (res) {
+
+            if (res.status) {
+                renderContractTable(res.data);
+                
+            }
+        }
+    });
+}
+
+ $(document).on('click', '#contractTable div.view_contract', function (e) {
+
+     let btn = this;
+
+     
+     let agreement_no = $(this).data('contract');
+     
+  fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent($.trim(agreement_no)))
+        .then(res => res.text())
+        .then(token => {
+            if(!token) { Swal.fire('Error', 'Encryption failed.', 'error'); return; }
+            window.open('/PrintAgreement?token=' + encodeURIComponent(token), '_blank');
+        });
+    
+
+});
 let confirmData = {};
 
 function showConfirmModal({ title, message, confirmText = 'Confirm', type = 'danger', action, data }) {

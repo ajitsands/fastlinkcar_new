@@ -23,17 +23,19 @@ class CustomerController
 		$array =  array();
         
         
-            $array[0] = "SELECT customer_id AS id,customer_id AS customer_code, customer_name, customer_mobile, customer_type,customer_address,customer_email,customer_addr,customer_attn
+            $array[0] = "SELECT customer_id AS id,customer_id AS customer_code, customer_name, customer_mobile, customer_type,customer_address,customer_email,customer_addr,customer_attn,customer_cr_cpr
                         FROM customer_details
                         WHERE
                             customer_name LIKE ?
                             OR customer_mobile LIKE ?
+                            OR customer_cr_cpr LIKE ?
                         LIMIT 20";
             $search = '%' . $this->search . '%';
             $this->params[0] = 
                 [
                     $search,
                     $search,
+                    $search
                 ];
 
 

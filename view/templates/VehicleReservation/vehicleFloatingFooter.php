@@ -17,8 +17,8 @@
     
 <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
     <!-- Select dropdown: half width on desktop, full width on small screens -->
-    <div class="flex-grow-1 flex-md-50">
-        <select id="select_service_type" name="select_service_type" class="form-select">
+    <div class="flex-grow-1 flex-md-50" >
+        <select id="select_service_type" name="select_service_type" class="form-select" style="display:none">
             <option value="0">Select Service</option>
             <option value="Reserve Vehicles">Reserve Vehicles</option>
             <option value="Create Contract">Create Contract</option>

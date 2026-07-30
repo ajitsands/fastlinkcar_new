@@ -1,6 +1,6 @@
 <div class="container-fluid px-2 mt-1">
 
-  <div class="row g-3">
+  <div class="row g-3 align-items-start">
 
     <!-- LEFT COLUMN -->
     <div class="col-lg-4 ">
@@ -32,8 +32,7 @@
         <!-- List -->
         <div class="card mb-3">
           <div class="card-header fw-semibold">Quotation List</div>
-          <div class="card-body p-2" id="quotationList"
-               style="max-height:280px; overflow-y:auto;">
+          <div class="card-body p-2 quotation-list-scroll" id="quotationList">
             <div class="text-muted small text-center">
               No quotations found
             </div>
@@ -41,14 +40,17 @@
         </div>
 
         <!-- Preview -->
-        <div class="card">
-          <div class="card-header fw-semibold">Quotation Preview</div>
-          <div class="card-body" id="quotationPreview" style="max-height:250px; overflow-y:auto;">
-            <div class="text-muted small text-center">
-              Select a quotation to preview details
-            </div>
-          </div>
+       <div class="card">
+    <div class="card-header fw-semibold">
+        Quotation Preview
+    </div>
+
+    <div class="card-body quotation-preview-scroll" id="quotationPreview">
+        <div class="text-muted small text-center">
+            Select a quotation to preview details
         </div>
+    </div>
+</div>
 
       </div>
 
@@ -134,8 +136,12 @@
               <input type="text" class="form-control form-control-sm"
                      id="customerAttention" placeholder="Attention" >
             </div>
-
-            <div class="col-12">
+            <div class="col-md-6">
+                 <label class="form-label small">CPR/CR</label>
+              <input type="text" class="form-control form-control-sm"
+                     id="customercprcr" placeholder="CPR/CR" >
+            </div>
+            <div class="col-6">
                  <label class="form-label small">Address</label>
               <textarea class="form-control form-control-sm"
                         id="customerAddress" rows="2"
@@ -209,15 +215,7 @@
               <label class="form-label small">Duration</label>
               <input type="number" class="duration nav form-control form-control-sm"  value="0" >
             </div>
-            <!--<div class="col-md-4">-->
-            <!--  <label class="form-label small">Unit Price</label>-->
-            <!--  <input type="number" class="price nav form-control form-control-sm"  value="0" >-->
-            <!--  <input type="hidden" class="minprice nav form-control " >-->
-              
-            <!--   <span class="text-muted small min-price-text text-danger">-->
-            <!--        Min Price: 0.000-->
-            <!--      </span>-->
-            <!--</div>-->
+           
             <div class="col-md-4">
 
                 <label class="form-label small">Unit Price</label>
@@ -284,9 +282,9 @@
         
           </div>
         </div>
-
-        <div class="card-body p-2"
-             style="max-height: calc(100vh - 200px); overflow-y:auto;">
+<div class="card-body p-2 vehicle-scroll">
+        <!--<div class="card-body p-2"-->
+        <!--     style="max-height: calc(100vh - 200px); overflow-y:auto;">-->
           <div class="row g-2" id="vehicleContainer"></div>
         </div>
 

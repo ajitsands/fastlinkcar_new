@@ -1,0 +1,295 @@
+<?php
+header('Content-Type: application/json');
+
+class CustomerLedgerController
+{
+    private $varPDOModelObj;
+    public $actionevents, $params = [];
+
+    public function __construct()
+    {
+        $this->varPDOModelObj = new CommonPDOModel();
+        $this->actionevents = $_GET['action'] ?? $_POST['action'] ?? null;
+    }
+
+    public function DataRequest($action)
+    {
+        switch ($action) {
+            case 'SearchCustomer':
+                $search = $_GET['q'] ?? '';
+                $sql = "SELECT ids AS id, customer_id AS customer_code, customer_name, customer_mobile 
+                        FROM customer_details 
+                        WHERE customer_name LIKE ? OR customer_mobile LIKE ? 
+                        LIMIT 20";
+                $res = $this->varPDOModelObj->ListFromTable($sql, ["%$search%", "%$search%"]);
+                $data = json_decode($res, true);
+                echo json_encode($data['data'] ?? []);
+                break;
+
+            case 'GetQuotations':
+                $customer_code = $_GET['customer_code'] ?? '';
+                $sql = "SELECT quotation_no AS id, quotation_no AS text FROM quotations WHERE customer_code = ? ORDER BY id DESC";
+                $res = $this->varPDOModelObj->ListFromTable($sql, [$customer_code]);
+                $data = json_decode($res, true);
+                echo json_encode($data['data'] ?? []);
+                break;
+
+            case 'GetBookings':
+                $customer_code = $_GET['customer_code'] ?? '';
+                $sql = "SELECT booking_no AS id, booking_no AS text FROM tbl_vehicle_bookings WHERE customer_code = ? ORDER BY ids DESC";
+                $res = $this->varPDOModelObj->ListFromTable($sql, [$customer_code]);
+                $data = json_decode($res, true);
+                echo json_encode($data['data'] ?? []);
+                break;
+
+            case 'SaveTransaction':
+                $this->handleSave();
+                break;
+
+            case 'GetLedgerData':
+                $this->handleGetLedger();
+                break;
+            
+            case 'GetChequeCalendarEvents':
+                $this->handleGetChequeCalendarEvents();
+                break;
+
+            case 'GetChequesByDate':
+                $this->handleGetChequesByDate();
+                break;
+
+            case 'UpdateChequeStatus':
+                $this->handleUpdateChequeStatus();
+                break;
+            
+            case 'DeleteTransaction':
+                $this->handleDeleteTransaction();
+                break;
+            
+            case 'GetTransaction':
+                $id = $_GET['ids'] ?? 0;
+                $sql = "SELECT * FROM tbl_customer_ledger WHERE ids = ?";
+                echo $this->varPDOModelObj->ListFromTable($sql, [$id]);
+                break;
+
+            case 'GetBanks':
+                $sql = "SELECT ids AS id, bank_name AS text, account_no FROM tbl_banks ORDER BY bank_name ASC";
+                echo $this->varPDOModelObj->ListFromTable($sql, []);
+                break;
+
+            case 'SaveBank':
+                $bank_name = $_POST['bank_name'] ?? '';
+                $account_no = $_POST['account_no'] ?? null;
+                $company_id = $_SESSION['company_id'] ?? 1;
+                $sql = "INSERT INTO tbl_banks (bank_name, account_no, company_id) VALUES (?, ?, ?)";
+                echo $this->varPDOModelObj->AddToTable($sql, [$bank_name, $account_no, $company_id]);
+                break;
+
+            case 'GetLedgerHeads':
+                $sql = "SELECT ids AS id, head_name AS text, head_type FROM tbl_ledger_heads ORDER BY head_name ASC";
+                echo $this->varPDOModelObj->ListFromTable($sql, []);
+                break;
+
+            case 'SaveLedgerHead':
+                $head_name = $_POST['head_name'] ?? '';
+                $head_type = $_POST['head_type'] ?? 'Credit';
+                $company_id = $_SESSION['company_id'] ?? 1;
+                $sql = "INSERT INTO tbl_ledger_heads (head_name, head_type, company_id) VALUES (?, ?, ?)";
+                echo $this->varPDOModelObj->AddToTable($sql, [$head_name, $head_type, $company_id]);
+                break;
+            
+            case 'GetPendingCheques':
+                $customer_code = $_GET['customer_code'] ?? '';
+                $sql = "SELECT cheque_date, credit as amount, ref_no FROM tbl_customer_ledger WHERE customer_code = ? AND payment_method = 'Cheque' AND cheque_status = 'Pending' ORDER BY cheque_date ASC";
+                echo $this->varPDOModelObj->ListFromTable($sql, [$customer_code]);
+                break;
+
+            default:
+                echo json_encode(['status' => false, 'message' => 'Invalid Action']);
+                break;
+        }
+    }
+
+    private function handleSave()
+    {
+        $ids = $_POST['ids'] ?? null;
+        $customer_code = $_POST['customer_code'] ?? '';
+        $trans_date = $_POST['trans_date'] ?? date('Y-m-d');
+        $trans_type = $_POST['trans_type'] ?? 'Payment';
+        $payment_method = $_POST['payment_method'] ?? 'N/A';
+        $amount = $_POST['amount'] ?? 0;
+        $ref_no = $_POST['ref_no'] ?? '';
+        $description = $_POST['description'] ?? '';
+        $quotation_no = !empty($_POST['quotation_no']) ? $_POST['quotation_no'] : null;
+        $booking_no = !empty($_POST['booking_no']) ? $_POST['booking_no'] : null;
+        $bank_id = !empty($_POST['bank_id']) ? $_POST['bank_id'] : null;
+        $cheque_date = !empty($_POST['cheque_date']) ? $_POST['cheque_date'] : null;
+        $company_bank_id = !empty($_POST['company_bank_id']) ? $_POST['company_bank_id'] : null;
+
+        // Dynamic logic for debit/credit based on head_type
+        $debit = 0;
+        $credit = 0;
+        
+        $sqlHead = "SELECT head_type FROM tbl_ledger_heads WHERE head_name = ?";
+        $resHead = json_decode($this->varPDOModelObj->ListFromTable($sqlHead, [$trans_type]), true);
+        
+        if ($resHead['status'] && !empty($resHead['data'])) {
+            $type = $resHead['data'][0]['head_type'];
+            if ($type === 'Debit') {
+                $debit = $amount;
+            } else {
+                $credit = $amount;
+            }
+        } else {
+            // Fallback for legacy data or if head not found
+            $debit = ($trans_type == 'Invoice' || $trans_type == 'Opening Balance') ? $amount : 0;
+            $credit = ($debit == 0) ? $amount : 0;
+        }
+
+        $user_id = $_SESSION['user_id'] ?? 1;
+        $company_id = $_SESSION['company_id'] ?? 1;
+        $user_role = $_SESSION['user_role_name'] ?? 'User';
+
+        if ($ids) {
+            // Edit mode - Check permissions (Admin or Creator on same day)
+            if (!$this->canModify($ids)) {
+                echo json_encode(['status' => false, 'message' => 'You only have permission to edit your own entries on the same day they were created. Otherwise, only Administrators can edit.']);
+                return;
+            }
+            $sql = "UPDATE tbl_customer_ledger SET 
+                    customer_code = ?, quotation_no = ?, booking_no = ?, trans_date = ?, cheque_date = ?, 
+                    trans_type = ?, payment_method = ?, bank_id = ?, company_bank_id = ?, debit = ?, credit = ?, 
+                    ref_no = ?, description = ? WHERE ids = ?";
+            $params = [$customer_code, $quotation_no, $booking_no, $trans_date, $cheque_date, $trans_type, $payment_method, $bank_id, $company_bank_id, $debit, $credit, $ref_no, $description, $ids];
+            echo $this->varPDOModelObj->UpdateTable($sql, $params);
+        } else {
+            // New entry
+            $sql = "INSERT INTO tbl_customer_ledger 
+                    (customer_code, quotation_no, booking_no, trans_date, cheque_date, trans_type, payment_method, bank_id, company_bank_id, debit, credit, ref_no, cheque_status, description, user_id, company_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)";
+            $params = [$customer_code, $quotation_no, $booking_no, $trans_date, $cheque_date, $trans_type, $payment_method, $bank_id, $company_bank_id, $debit, $credit, $ref_no, $description, $user_id, $company_id];
+            echo $this->varPDOModelObj->AddToTable($sql, $params);
+        }
+    }
+
+    private function handleGetChequeCalendarEvents()
+    {
+        $customer_code = $_GET['customer_code'] ?? null;
+        $sql = "SELECT cheque_date, cheque_status, COUNT(*) as cheque_count 
+                FROM tbl_customer_ledger 
+                WHERE payment_method = 'Cheque' AND cheque_date IS NOT NULL ";
+        $params = [];
+        if ($customer_code) {
+            $sql .= " AND customer_code = ? ";
+            $params[] = $customer_code;
+        }
+        $sql .= " GROUP BY cheque_date, cheque_status";
+        $res = json_decode($this->varPDOModelObj->ListFromTable($sql, $params), true);
+        
+        $events = [];
+        if ($res['status']) {
+            foreach ($res['data'] as $row) {
+                $color = ($row['cheque_status'] === 'Collected') ? '#28c76f' : (($row['cheque_status'] === 'Bounced') ? '#ea5455' : '#ff9f43');
+                $events[] = [
+                    'title' => $row['cheque_count'] . ' ' . $row['cheque_status'],
+                    'start' => $row['cheque_date'],
+                    'color' => $color,
+                    'textColor' => '#ffffff',
+                    'allDay' => true,
+                    'extendedProps' => ['date' => $row['cheque_date']]
+                ];
+            }
+        }
+        echo json_encode($events);
+    }
+
+    private function handleGetChequesByDate()
+    {
+        $date = $_GET['date'] ?? '';
+        $customer_code = $_GET['customer_code'] ?? null;
+        
+        $sql = "SELECT l.*, c.customer_name 
+                FROM tbl_customer_ledger l
+                JOIN customer_details c ON l.customer_code = c.customer_id
+                WHERE l.payment_method = 'Cheque' AND l.cheque_date = ? ";
+        $params = [$date];
+        if ($customer_code) {
+            $sql .= " AND l.customer_code = ? ";
+            $params[] = $customer_code;
+        }
+        echo $this->varPDOModelObj->ListFromTable($sql, $params);
+    }
+
+    private function handleUpdateChequeStatus()
+    {
+        $ids = $_POST['ids'] ?? 0;
+        $status = $_POST['status'] ?? 'Collected';
+        $collected_at = ($status == 'Collected') ? date('Y-m-d H:i:s') : null;
+        
+        if (!$this->canModify($ids)) {
+            echo json_encode(['status' => false, 'message' => 'You only have permission to update status for your own entries on the same day. Otherwise, only Administrators can.']);
+            return;
+        }
+
+        $sql = "UPDATE tbl_customer_ledger SET cheque_status = ?, collected_at = ? WHERE ids = ?";
+        echo $this->varPDOModelObj->UpdateTable($sql, [$status, $collected_at, $ids]);
+    }
+
+    private function handleDeleteTransaction()
+    {
+        $ids = $_POST['ids'] ?? 0;
+        if (!$this->canModify($ids)) {
+            echo json_encode(['status' => false, 'message' => 'You only have permission to delete your own entries on the same day. Otherwise, only Administrators can.']);
+            return;
+        }
+        $sql = "DELETE FROM tbl_customer_ledger WHERE ids = ?";
+        echo $this->varPDOModelObj->DeleteFromTable($sql, [$ids]);
+    }
+
+    private function canModify($ids)
+    {
+        $user_role = strtolower($_SESSION['user_role_name'] ?? 'User');
+        $user_id = $_SESSION['user_id'] ?? 0;
+
+        if (strpos($user_role, 'admin') !== false) return true;
+
+        $sql = "SELECT created_at, user_id FROM tbl_customer_ledger WHERE ids = ?";
+        $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$ids]), true);
+
+        if ($res['status'] && !empty($res['data'])) {
+            $row = $res['data'][0];
+            $isToday = date('Y-m-d', strtotime($row['created_at'])) === date('Y-m-d');
+            if ($isToday && $row['user_id'] == $user_id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function handleGetLedger()
+    {
+        $customer_code = $_GET['customer_code'] ?? '';
+        $sql = "SELECT l.*, b.bank_name, b.account_no, cb.bank_name as company_bank_name, cb.account_no as company_account_no
+                FROM tbl_customer_ledger l 
+                LEFT JOIN tbl_banks b ON l.bank_id = b.ids 
+                LEFT JOIN tbl_banks cb ON l.company_bank_id = cb.ids 
+                WHERE l.customer_code = ? 
+                ORDER BY l.trans_date ASC, l.ids ASC";
+        $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$customer_code]), true);
+        
+        if ($res['status']) {
+            $balance = 0;
+            foreach ($res['data'] as &$row) {
+                $balance += ($row['debit'] - $row['credit']);
+                $row['running_balance'] = $balance;
+            }
+            echo json_encode($res);
+        } else {
+            echo json_encode($res);
+        }
+    }
+}
+
+$obj = new CustomerLedgerController();
+$obj->DataRequest($obj->actionevents);
+?>

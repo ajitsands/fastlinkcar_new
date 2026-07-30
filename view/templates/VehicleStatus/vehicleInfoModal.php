@@ -56,7 +56,12 @@
               </li>
               <li class="nav-item">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-booking">
-                  Booking
+                  Reservations
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-contracts">
+                  Contracts
                 </button>
               </li>
             </ul>
@@ -85,6 +90,9 @@
 
               <div class="tab-pane fade" id="tab-booking">
                  <?php include('vehicle_booking_info.php'); ?>
+              </div>
+              <div class="tab-pane fade" id="tab-contracts">
+                 <?php include('vehicle_contract_info.php'); ?>
               </div>
 
             </div>

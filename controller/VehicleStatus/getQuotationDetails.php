@@ -7,7 +7,7 @@ $pdo = $db->pdo;
 $ids = $_GET['id'] ?? '';
 
 
-$stmt = $pdo->prepare("SELECT id, quotation_no, customer_code,customer_name, DATE_FORMAT(quotation_date, '%M %e %Y') AS qtnformatted_date,customer_phone,customer_email,customer_address,attention,items FROM quotations WHERE id = :ids");
+$stmt = $pdo->prepare("SELECT id, quotation_no, customer_code,customer_name, DATE_FORMAT(quotation_date, '%M %e %Y') AS qtnformatted_date,customer_phone,customer_email,customer_address,attention,items,customer_cpr_cr as customer_cr_cpr FROM quotations WHERE quotation_status='Approved' and id = :ids");
 
 $stmt->execute([
     ':ids' => $ids

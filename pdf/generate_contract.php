@@ -1,7 +1,7 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 
 // Fix for TCPDF missing cURL constants on some local setups without the cURL extension
 if (!extension_loaded('curl')) {
@@ -18,10 +18,10 @@ if (!extension_loaded('curl')) {
     }
 }
 
-define('ROOT_PATH', __DIR__);
-require_once ROOT_PATH . '/../envfiles/vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(ROOT_PATH . '/../envfiles');
-$dotenv->load();
+// define('ROOT_PATH', __DIR__);
+// require_once ROOT_PATH . '/../envfiles/vendor/autoload.php';
+// $dotenv = Dotenv\Dotenv::createImmutable(ROOT_PATH . '/../envfiles');
+// $dotenv->load();
 
 require_once 'vendor/autoload.php';
 
@@ -36,8 +36,46 @@ if (isset($_ENV['APP_TIMEZONE'])) {
 }
 
 // Support for POST or GET parameters
-$params = !empty($_POST) ? $_POST : $_GET;
-$contract_no = $params['contract_no'] ?? '';
+//$params = !empty($_POST) ? $_POST : $_GET;
+
+$key = "AA_CAR_RENTAL_SECRET_KEY_2026";
+
+if (!isset($_GET['token'])) {
+    die("Invalid token");
+}
+
+$token = $_GET['token'];
+
+// Restore Base64 padding
+$remainder = strlen($token) % 4;
+
+if ($remainder) {
+    $token .= str_repeat('=', 4 - $remainder);
+}
+
+// Convert URL-safe Base64 back
+$combined = base64_decode(strtr($token, '-_', '+/'));
+
+// Extract IV length
+$iv_length = openssl_cipher_iv_length('aes-256-cbc');
+
+// Extract IV
+$iv = substr($combined, 0, $iv_length);
+
+// Extract encrypted data
+$encrypted = substr($combined, $iv_length);
+
+// Decrypt
+$contract_no = openssl_decrypt(
+    $encrypted,
+    'aes-256-cbc',
+    $key,
+    OPENSSL_RAW_DATA,
+    $iv
+);
+
+//echo $contract_no;
+//$contract_no = $params['contract_no'] ?? '';
 $view_mode = isset($params['view']) && $params['view'] == 'true';
 
 // Database Connection
@@ -48,8 +86,8 @@ if ($mysqli->connect_error) {
     die("Database Connection Error");
 }
 
-$stmt = $mysqli->prepare("SELECT * FROM tbl_vehicle_rentout_contracts WHERE agreement_no = ? OR agreement_group_ref_no = ?");
-$stmt->bind_param("ss", $contract_no, $contract_no);
+$stmt = $mysqli->prepare("SELECT * FROM tbl_vehicle_rentout_contracts WHERE agreement_no = ? ");
+$stmt->bind_param("s", $contract_no);
 $stmt->execute();
 $result = $stmt->get_result();
 $data = $result->fetch_assoc();
@@ -77,31 +115,58 @@ $accessories = json_decode($data['vehicle_accessories_details'] ?? '{}', true);
 $driver = json_decode($data['driver_details'] ?? '{}', true);
 
 class AA_Contract_PDF extends TCPDF {
-    public function Header() {
-        $logo_jpg = '../assets/img/logo/logo.jpg';
-        $logo_png = '../assets/img/logo/logo.png';
-        
-        if (file_exists($logo_jpg)) {
-            $this->Image($logo_jpg, 15, 10, 45, 0, 'JPG', '', 'T', false, 300, '', false, false, 0, false, false, false);
-        } elseif (file_exists($logo_png)) {
-            if (extension_loaded('gd') || extension_loaded('imagick')) {
-                $this->Image($logo_png, 15, 10, 45, 0, 'PNG', '', 'T', false, 300, '', false, false, 0, false, false, false);
-            }
-        }
-        $this->SetFont('dejavusans', 'B', 16);
-        $this->SetXY(15, 12);
-        $this->Cell(0, 10, 'AA CAR RENTAL', 0, 1, 'C');
-        $this->SetFont('dejavusans', '', 12);
-        $this->SetTextColor(255, 0, 0); // Red text
-        $this->Cell(0, 8, 'CAR HIRE AGREEMENT | اتفاقية استئجار سيارة', 0, 1, 'C');
-        $this->SetTextColor(0, 0, 0);
-        
-        $this->SetFont('helvetica', '', 9);
-        $this->SetXY(140, 10);
-        $this->Cell(0, 5, 'Tel: +973 17300322', 0, 1, 'R');
-        $this->Cell(0, 5, 'Fax: +973 17300311', 0, 1, 'R');
-        $this->Cell(0, 5, 'info@aarentalbh.com', 0, 1, 'R');
+   public function Header()
+{
+    $pageWidth = $this->getPageWidth();
+
+    /* --------------------------
+       COMPANY LOGO
+    -------------------------- */
+    $logo_jpg = 'assets/img/logo/logo.jpg';
+    $logo_png = 'assets/img/logo/logo.png';
+
+    if (file_exists($logo_jpg)) {
+        $this->Image($logo_jpg, 15, 6, 48, 0, 'JPG');
+    } elseif (file_exists($logo_png)) {
+        $this->Image($logo_png, 15, 6, 48, 0, 'PNG');
     }
+
+    /* --------------------------
+       COMPANY NAME
+    -------------------------- */
+    $this->SetTextColor(0, 0, 0);
+
+    $this->SetFont('helvetica', 'B', 18);
+    $this->SetXY(0, 10);
+    $this->Cell($pageWidth, 7, 'AA CAR RENTAL CO. W.L.L.', 0, 1, 'C');
+
+    $this->SetFont('helvetica', '', 9);
+    $this->SetXY(0, 18);
+    $this->Cell($pageWidth, 5, 'Salmabad, Kingdom of Bahrain', 0, 1, 'C');
+
+    /* --------------------------
+       CONTACT DETAILS
+    -------------------------- */
+    $this->SetFont('helvetica', '', 8);
+
+    $rightX = $pageWidth - 65;
+
+    $this->SetXY($rightX, 8);
+    $this->Cell(50, 4, 'Tel : +973 17300322', 0, 1, 'R');
+
+    $this->SetX($rightX);
+    $this->Cell(50, 4, 'Fax : +973 17300311', 0, 1, 'R');
+
+    $this->SetX($rightX);
+    $this->Cell(50, 4, 'info@aarentalbh.com', 0, 1, 'R');
+
+    /* --------------------------
+       HEADER DIVIDER
+    -------------------------- */
+    $this->SetDrawColor(180, 180, 180);
+    $this->SetLineWidth(0.4);
+    $this->Line(15, 32, $pageWidth - 15, 32);
+}
 
     public function Footer() {
         $this->SetY(-15);
@@ -131,45 +196,76 @@ $html = '
     .bg-gray { background-color: #e0e0e0; font-weight: bold; text-align: center; }
 </style>
 
-<table class="no-border" cellpadding="2">
+<table class="no-border" cellpadding="2" width="100%">
     <tr>
-        <td class="no-border" width="30%">
-            <b style="font-size:12pt; color:#d32f2f;">AA CAR RENTAL</b><br>
-            Tel +973 17300322<br>
-            Fax +973 17300311<br>
-            info@aarentalbh.com<br>
-            Kingdom of Bahrain<br><br>
-            <b>Date:</b> ' . htmlspecialchars(!empty($data['agreement_date']) ? date('d-m-Y', strtotime($data['agreement_date'])) : date('d-m-Y')) . '
+        <!-- Left Block -->
+        <td class="no-border" width="30%" valign="top">
+           
+
+            <b>Date:</b><span >
+            ' . htmlspecialchars(
+                !empty($data['agreement_date'])
+                    ? date('d-M-Y', strtotime($data['agreement_date']))
+                    : date('d-M-Y')
+            ) . '</span>
         </td>
-        <td class="no-border" width="40%" align="center">
-            <br>
-            <b style="font-size:14pt; color:#d32f2f;">اتفاقية استئجار سيارة</b><br>
-            <b style="font-size:11pt; color:#d32f2f;">CAR HIRE AGREEMENT</b>
+
+        <!-- Center Block -->
+        <td class="no-border" width="40%" align="center" valign="middle">
+            <b style="font-size:14pt; color:#d32f2f;">
+                اتفاقية استئجار سيارة
+            </b><br/>
+            <b style="font-size:11pt; color:#d32f2f;">
+                CAR HIRE AGREEMENT
+            </b>
         </td>
-        <td class="no-border" width="30%" align="right">
-            <table class="no-border">
-                <tr><td class="no-border" align="right"><b>No:</b> <span style="color:red; font-size:11pt;">' . htmlspecialchars($data['agreement_no']) . '</span></td></tr>
-                <tr><td class="no-border" align="right"><b>Apt. O.:</b> ' . htmlspecialchars($contract_details['qtn_ref_no'] ?? '') . '</td></tr>
+
+        <!-- Right Block -->
+        <td class="no-border" width="30%" valign="top" align="right">
+            <table class="no-border" cellpadding="2" align="right">
+                <tr>
+                    <td class="no-border" align="right">
+                        <b>No:</b>
+                        <span style="color:#d32f2f; font-size:11pt;">
+                            ' . htmlspecialchars($data['agreement_no']) . '
+                        </span>
+                    </td>
+                </tr>
+
+               
             </table>
         </td>
     </tr>
 </table>
-<br>
 
-<table class="bordered-table" cellpadding="3">
+<br/>
+
+<table class="bordered-table" cellpadding="3" width="100%">
     <tr>
-        <td width="15%" class="label">Name الإسم</td>
-        <td width="85%" colspan="5">' . htmlspecialchars($data['customer_name'] ?? '') . '</td>
+        <td width="15%" class="label"><b>Name / الإسم</b></td>
+        <td width="85%" colspan="5">
+            ' . htmlspecialchars($data['customer_name'] ?? '') . '
+        </td>
     </tr>
+
     <tr>
-        <td width="15%" class="label">Work Address</td>
-        <td width="85%" colspan="5">' . htmlspecialchars($customer['customer_address'] ?? '') . '</td>
+        <td width="15%" class="label"><b>Work Address</b></td>
+        <td width="85%" colspan="5">
+            ' . htmlspecialchars($customer['customer_address'] ?? '') . '
+        </td>
     </tr>
+
     <tr>
-        <td width="15%" class="label">Mob No النقال</td>
-        <td width="35%">' . htmlspecialchars($customer['customer_mobile'] ?? '') . '</td>
-        <td width="15%" class="label">Res. Tel.</td>
-        <td width="35%" colspan="3">' . htmlspecialchars($customer['customer_tel'] ?? '') . '</td>
+        <td width="15%" class="label"><b>Mob No / النقال</b></td>
+        <td width="35%">
+            ' . htmlspecialchars($customer['customer_mobile'] ?? '') . '
+        </td>
+
+        <td width="15%" class="label"><b>Email</b></td>
+
+        <td width="35%" colspan="3">
+            ' . htmlspecialchars($customer['customer_email'] ?? '') . '
+        </td>
     </tr>
 </table>
 <br>
@@ -198,7 +294,7 @@ $html = '
                 </tr>
                 <tr>
                     <td colspan="2" align="center">-</td>
-                    <td colspan="3" align="center">' . htmlspecialchars(date('d-m-Y h:i A', strtotime($contract_details['period_from'] ?? ''))) . ' to ' . htmlspecialchars(date('d-m-Y h:i A', strtotime($contract_details['period_to'] ?? ''))) . '</td>
+                    <td colspan="3" align="center">' . htmlspecialchars(date('d-M-Y H:i', strtotime($contract_details['period_from'] ?? ''))) . ' to ' . htmlspecialchars(date('d-M-Y H:i', strtotime($contract_details['period_to'] ?? ''))) . '</td>
                 </tr>
                 <tr>
                     <td colspan="2" class="bg-gray">Return Date<br>تاريخ الإعادة</td>
@@ -279,18 +375,18 @@ $html = '
                     <td class="label">Date/Time In</td>
                     <td>' . htmlspecialchars(date('d-m-Y h:i A', strtotime($contract_details['period_to'] ?? ''))) . '</td>
                 </tr>
-                <tr>
-                    <td class="label">Km. Out</td>
-                    <td>' . htmlspecialchars($data['km_out'] ?? '0') . '</td>
-                </tr>
-                <tr>
-                    <td class="label">Km. In</td>
-                    <td>' . htmlspecialchars($data['km_in'] ?? '0') . '</td>
-                </tr>
-                <tr>
-                    <td class="label">Km. Used</td>
-                    <td>' . htmlspecialchars($data['km_used'] ?? '0') . '</td>
-                </tr>
+               <tr>
+                <td class="label">Km. Out</td>
+                <td>' . (int)($data['km_out'] ?? 0) . '</td>
+            </tr>
+            <tr>
+                <td class="label">Km. In</td>
+                <td>' . (int)($data['km_in'] ?? 0) . '</td>
+            </tr>
+            <tr>
+                <td class="label">Km. Used</td>
+                <td>' . (int)($data['km_used'] ?? 0) . '</td>
+            </tr>
             </table>
         </td>
     </tr>
@@ -334,10 +430,27 @@ $html = '
 </table>
 <br><br><br>
 ';
+$received_sig_img = '<br><br><br>';
+if (!empty($data['receiver_signature'])) {
+   //$hirer_path = ROOT_PATH . '/' . ltrim($data['hirer_signature'], '/');
+    $received_path = ltrim($data['receiver_signature'], '/');
+    if (file_exists($received_path)) {
+        if (extension_loaded('gd') || extension_loaded('imagick')) {
+            $img_data = base64_encode(file_get_contents($received_path));
+            $received_sig_img = '<br><img src="@' . $img_data . '" width="120" height="40"><br>';
+        } else {
+            $received_sig_img = '<br><span style="color:blue; font-size:6pt;">[Needs GD]</span><br>';
+        }
+    }
+}
+$received_name = !empty($data['receiver_name']) ? $data['receiver_name'] : '';
+$received_date = !empty($data['receiver_signature_datetime']) ? date('d-m-Y h:i A', strtotime($data['receiver_signature_datetime'])) : '';
+$received_info = ($received_name || $received_date) ? '<br><span style="font-size:7pt; color:#000;">Name: ' . htmlspecialchars($received_name) . '<br>Date: ' . htmlspecialchars($received_date) . '</span>' : '';
 
 $hirer_sig_img = '<br><br><br>';
 if (!empty($data['hirer_signature'])) {
-    $hirer_path = ROOT_PATH . '/../' . ltrim($data['hirer_signature'], '/');
+   //$hirer_path = ROOT_PATH . '/' . ltrim($data['hirer_signature'], '/');
+    $hirer_path = ltrim($data['hirer_signature'], '/');
     if (file_exists($hirer_path)) {
         if (extension_loaded('gd') || extension_loaded('imagick')) {
             $img_data = base64_encode(file_get_contents($hirer_path));
@@ -353,7 +466,8 @@ $hirer_info = ($hirer_name || $hirer_date) ? '<br><span style="font-size:7pt; co
 
 $delivered_sig_img = '<br><br><br>';
 if (!empty($data['delivered_signature'])) {
-    $delivered_path = ROOT_PATH . '/../' . ltrim($data['delivered_signature'], '/');
+   // $delivered_path = ROOT_PATH . '/../' . ltrim($data['delivered_signature'], '/');
+     $delivered_path = ltrim($data['delivered_signature'], '/');
     if (file_exists($delivered_path)) {
         if (extension_loaded('gd') || extension_loaded('imagick')) {
             $img_data = base64_encode(file_get_contents($delivered_path));
@@ -370,7 +484,7 @@ $delivered_info = ($delivered_name || $delivered_date) ? '<br><span style="font-
 $html .= '
 <table class="no-border" cellpadding="4">
     <tr>
-        <td width="33%" align="center" class="no-border"><br><br><br>_________________________<br><b style="color:#d32f2f;">Received By</b></td>
+        <td width="33%" align="center" class="no-border">' . $received_sig_img . '_________________________<br><b style="color:#d32f2f;">Received By</b>' . $received_info . '</td>
         <td width="33%" align="center" class="no-border">' . $hirer_sig_img . '_________________________<br><b style="color:#d32f2f;">Hirer Signature</b>' . $hirer_info . '<br><span style="font-size:7pt; color:#d32f2f;">I Agree on the terms & conditions over leaf</span></td>
         <td width="33%" align="center" class="no-border">' . $delivered_sig_img . '_________________________<br><b style="color:#d32f2f;">Delivered By</b>' . $delivered_info . '</td>
     </tr>
@@ -388,6 +502,76 @@ $pdf->SetFont('dejavusans', '', 9);
 $terms = $data['terms_condition'] ?? '1. The hirer agrees to return the vehicle in the same condition as received.<br>2. Fuel costs and traffic fines are the responsibility of the hirer.<br>3. In case of an accident, an official police report must be provided.';
 $pdf->writeHTML($terms, true, false, true, false, '');
 
-ob_end_clean();
+while (ob_get_level() > 0) {
+    ob_end_clean();
+}
+
+// 3rd Page: Vehicle Images
+$images_json = $data['vehicle_rentout_images'] ?? '[]';
+$images_arr = json_decode($images_json, true);
+
+if (!empty($images_arr) && is_array($images_arr)) {
+    // Normalize and sort images if they are stored with numeric keys
+    $normalized_images = [];
+    foreach ($images_arr as $key => $val) {
+        if (is_string($val)) {
+            $normalized_images[$key] = $val;
+        } elseif (is_array($val) && isset($val['image'])) {
+            $normalized_images[$key] = $val['image'];
+        } elseif (is_array($val) && isset($val['file'])) {
+            $normalized_images[$key] = $val['file'];
+        }
+    }
+    ksort($normalized_images);
+
+    if (count($normalized_images) > 0) {
+        $pdf->AddPage();
+        $pdf->SetFont('dejavusans', 'B', 12);
+        $pdf->Cell(0, 10, 'Vehicle Images / صور المركبة', 0, 1, 'C');
+        $pdf->SetFont('dejavusans', '', 9);
+
+        $html_images = '<table cellpadding="5" border="0" width="100%">';
+        $col = 0;
+        
+        foreach ($normalized_images as $key => $filename) {
+            if (empty($filename)) continue;
+            
+            // Clean up filename just in case
+            $filename = basename($filename);
+           // $img_path = ROOT_PATH . '/../uploads/rentvehicleImages/' . $filename;
+             $img_path ='uploads/rentvehicleImages/' . $filename;
+            
+            if (file_exists($img_path)) {
+                $img_data = base64_encode(file_get_contents($img_path));
+                
+                if ($col == 0) {
+                    $html_images .= '<tr>';
+                }
+                
+                $html_images .= '<td width="50%" align="center">';
+                $html_images .= '<b>Image ' . htmlspecialchars($key) . '</b><br><br>';
+                // Using 250 for width to ensure they fit side-by-side in portrait mode nicely
+                $html_images .= '<img src="@' . $img_data . '" width="250" height="180">';
+                $html_images .= '</td>';
+                
+                $col++;
+                if ($col == 2) {
+                    $html_images .= '</tr>';
+                    $col = 0;
+                }
+            }
+        }
+        
+        // Fill remaining cell if odd number
+        if ($col == 1) {
+            $html_images .= '<td width="50%"></td></tr>';
+        }
+        $html_images .= '</table>';
+        
+        $pdf->writeHTML($html_images, true, false, true, false, '');
+    }
+}
+
+
 $safe_filename = str_replace('/', '-', $data['agreement_no']) . '.pdf';
 $pdf->Output($safe_filename, 'I');

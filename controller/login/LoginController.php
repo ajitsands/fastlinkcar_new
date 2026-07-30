@@ -149,8 +149,19 @@ class LoginController
 	
 }
 
-$obj = new LoginController();
-$obj->DataRequest($obj->actionevents);
+try {
+    $obj = new LoginController();
+    $obj->DataRequest($obj->actionevents);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode([
+        'status'  => false,
+        'message' => 'Server Error: ' . $e->getMessage(),
+        'file'    => $e->getFile(),
+        'line'    => $e->getLine(),
+        'trace'   => $e->getTraceAsString()
+    ]);
+}
 
 			 //   echo json_encode([
     //                     'status'  => true,

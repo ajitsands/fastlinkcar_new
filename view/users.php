@@ -744,7 +744,7 @@ function selectAllCompanies() {
                     {
                         data: 'company_json',
                         title: 'Companies',
-                        visible: false,
+                        visible: true,
                         render: function(data) {
 
                             if (!data) return '';

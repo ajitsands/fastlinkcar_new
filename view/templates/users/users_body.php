@@ -80,7 +80,7 @@
 
 
             <!-- Company Access -->
-            <div class="col-md-4" style="display:none">
+            <div class="col-md-4">
                 <div class="form-floating form-floating-outline mb-3">
                     <select id="select2Multiple" class="select2 form-select" 
                             data-placeholder="Select Company" multiple>
@@ -166,9 +166,10 @@
                                             <th>Image</th>
                                             <th>Name</th>
                                             <th>Username</th>
-                                            <th>Role</th>
                                             <th>Email</th>
                                             <th>Phone</th>
+                                            <th>Role</th>
+                                            <th>Companies</th>
                                             <th>Status</th>
                                             <th>Action</th>
                                         </tr>

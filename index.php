@@ -1,7 +1,18 @@
 <?php
+function is_session_path_writable($path) {
+    if (empty($path)) return false;
+    if (!is_dir($path)) return false;
+    $testFile = $path . '/test_session_write_' . uniqid() . '.txt';
+    $writeResult = @file_put_contents($testFile, 'test');
+    if ($writeResult !== false) {
+        @unlink($testFile);
+        return true;
+    }
+    return false;
+}
 if (session_status() === PHP_SESSION_NONE) {
     $savePath = session_save_path();
-    if (empty($savePath) || !is_writable($savePath)) {
+    if (!is_session_path_writable($savePath)) {
         session_save_path(sys_get_temp_dir());
     }
     session_start();

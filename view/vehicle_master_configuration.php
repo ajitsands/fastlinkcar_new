@@ -207,30 +207,107 @@ include ROOT_PATH . '/view/envinclude.php';
           object-fit: cover;   /* Ã¢Å“â€¦ fills properly */
           border-radius: 50%;
         }
-       .customdataTable tbody tr {
+        .customdataTable tbody tr,
+        .customdataTable tbody tr td,
+        table.dataTable tbody tr,
+        table.dataTable tbody tr td,
+        #pricingTable tbody tr,
+        #pricingTable tbody tr td {
             cursor: pointer;
             outline: none !important;
+            box-shadow: none !important;
         }
-        
-        /* Remove all focus/active blue styles */
+
         .customdataTable tbody tr:focus,
         .customdataTable tbody tr:active,
-        .customdataTable tbody tr:focus-visible {
+        .customdataTable tbody tr:focus-visible,
+        .customdataTable tbody tr td:focus,
+        .customdataTable tbody tr td:active,
+        table.dataTable tbody tr:focus,
+        table.dataTable tbody tr:active,
+        table.dataTable tbody tr:focus-visible,
+        table.dataTable tbody tr td:focus,
+        table.dataTable tbody tr td:active,
+        #pricingTable tbody tr:focus,
+        #pricingTable tbody tr:active,
+        #pricingTable tbody tr:focus-visible,
+        #pricingTable tbody tr td:focus,
+        #pricingTable tbody tr td:active {
             outline: none !important;
             box-shadow: none !important;
-            background-color: inherit !important;
         }
-        
-        /* Force red selection */
+
+        /* Selected row and all child cells in ALL states (normal, hover, active, striped) */
         .customdataTable tbody tr.selected,
-        .customdataTable tbody tr.selected td {
-            background-color: red !important;
-            color: white !important;
+        .customdataTable tbody tr.selected > td,
+        .customdataTable tbody tr.selected > th,
+        .customdataTable tbody tr.selected:hover,
+        .customdataTable tbody tr.selected:hover > td,
+        .customdataTable tbody tr.selected:hover > th,
+        table.dataTable tbody tr.selected,
+        table.dataTable tbody tr.selected > td,
+        table.dataTable tbody tr.selected > th,
+        table.dataTable tbody tr.selected:hover,
+        table.dataTable tbody tr.selected:hover > td,
+        table.dataTable tbody tr.selected:hover > th,
+        table.dataTable.table-hover tbody tr.selected:hover,
+        table.dataTable.table-hover tbody tr.selected:hover > *,
+        table.dataTable.table-striped tbody tr.selected,
+        table.dataTable.table-striped tbody tr.selected > *,
+        table.dataTable.table-striped tbody tr.selected:hover,
+        table.dataTable.table-striped tbody tr.selected:hover > *,
+        table.dataTable.table-striped > tbody > tr:nth-of-type(odd).selected,
+        table.dataTable.table-striped > tbody > tr:nth-of-type(odd).selected > *,
+        #pricingTable tbody tr.selected,
+        #pricingTable tbody tr.selected > td,
+        #pricingTable tbody tr.selected > th,
+        #pricingTable tbody tr.selected:hover,
+        #pricingTable tbody tr.selected:hover > td,
+        #pricingTable tbody tr.selected:hover > th {
+            background-color: #F87C63 !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+            outline: none !important;
         }
-        
-        /* Prevent hover from interfering */
-        .customdataTable tbody tr:hover {
-            background-color: inherit !important;
+
+        /* Unselected row hover state */
+        .customdataTable tbody tr:not(.selected):hover,
+        .customdataTable tbody tr:not(.selected):hover > td,
+        .customdataTable tbody tr:not(.selected):hover > th,
+        table.dataTable tbody tr:not(.selected):hover,
+        table.dataTable tbody tr:not(.selected):hover > td,
+        table.dataTable tbody tr:not(.selected):hover > th,
+        table.dataTable.table-hover tbody tr:not(.selected):hover > *,
+        #pricingTable tbody tr:not(.selected):hover,
+        #pricingTable tbody tr:not(.selected):hover > td,
+        #pricingTable tbody tr:not(.selected):hover > th {
+            background-color: rgba(248, 124, 99, 0.15) !important;
+            color: inherit !important;
+        }
+
+        /* Responsive tabs and padding adjustments */
+        @media (max-width: 991.98px) {
+            .container-p-y {
+                padding-top: 15px !important;
+            }
+            .nav-align-left {
+                flex-direction: column !important;
+            }
+            .nav-align-left > .nav-pills {
+                margin-right: 0 !important;
+                margin-bottom: 1rem !important;
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                justify-content: flex-start !important;
+            }
+            .nav-align-left > .tab-content {
+                width: 100% !important;
+            }
+        }
+        @media (min-width: 992px) {
+            .container-p-y {
+                padding-top: 55px !important;
+            }
         }
        .custom-modal-header {
     background: linear-gradient(135deg, #f12526, #c81e1f);
@@ -246,8 +323,44 @@ include ROOT_PATH . '/view/envinclude.php';
     filter: invert(1); /* makes the close (X) icon white */
     opacity: 1;
 }
-        
-    </style>
+
+/* BULLETPROOF DATATABLES ROW HIGHLIGHT OVERRIDE FOR BOOTSTRAP 5 */
+#vehicleCategoryTable tbody tr, #vehicleBrandTable tbody tr, #vehicleModelTable tbody tr, #vehicleModelPricingTable tbody tr, #pricingTable tbody tr {
+    cursor: pointer;
+}
+
+#vehicleCategoryTable tbody tr.selected, #vehicleCategoryTable tbody tr.selected > *,
+#vehicleBrandTable tbody tr.selected, #vehicleBrandTable tbody tr.selected > *,
+#vehicleModelTable tbody tr.selected, #vehicleModelTable tbody tr.selected > *,
+#vehicleModelPricingTable tbody tr.selected, #vehicleModelPricingTable tbody tr.selected > *,
+#pricingTable tbody tr.selected, #pricingTable tbody tr.selected > * {
+    --bs-table-bg-state: #F87C63 !important;
+    --bs-table-bg-type: #F87C63 !important;
+    --bs-table-accent-bg: #F87C63 !important;
+    --bs-table-bg: #F87C63 !important;
+    --bs-table-color-state: #ffffff !important;
+    --bs-table-color: #ffffff !important;
+    background-color: #F87C63 !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 0 0 9999px #F87C63 !important;
+    outline: none !important;
+}
+
+#vehicleCategoryTable tbody tr:not(.selected):hover, #vehicleCategoryTable tbody tr:not(.selected):hover > *,
+#vehicleBrandTable tbody tr:not(.selected):hover, #vehicleBrandTable tbody tr:not(.selected):hover > *,
+#vehicleModelTable tbody tr:not(.selected):hover, #vehicleModelTable tbody tr:not(.selected):hover > *,
+#vehicleModelPricingTable tbody tr:not(.selected):hover, #vehicleModelPricingTable tbody tr:not(.selected):hover > *,
+#pricingTable tbody tr:not(.selected):hover, #pricingTable tbody tr:not(.selected):hover > * {
+    --bs-table-bg-state: rgba(248, 124, 99, 0.15) !important;
+    --bs-table-bg-type: rgba(248, 124, 99, 0.15) !important;
+    --bs-table-accent-bg: rgba(248, 124, 99, 0.15) !important;
+    --bs-table-bg: rgba(248, 124, 99, 0.15) !important;
+    background-color: rgba(248, 124, 99, 0.15) !important;
+    color: inherit !important;
+    box-shadow: inset 0 0 0 9999px rgba(248, 124, 99, 0.15) !important;
+}
+
+</style>
 
 </head>
 
@@ -490,13 +603,17 @@ function resetCategoryForm() {
     $('#categoryId').val('');
     $('#categoryName').val('');
     $('#categoryDescription').val('');
-     $('#categoryDescription').val('');
     $('#categoryImages').val('');
     $('#categoryimagePreview').html('');
-    $('#categoryStatus').val('').trigger('change');
-    $('#saveCategoryData').text('Save');
+    $('#categoryStatus').val('Active');
+    $('#saveCategoryData').html('<i class="ri-save-line me-1"></i> Save');
+    $('#categoryStatusBadge').attr('class', 'badge bg-label-success').text('New Entry');
+    $('#toggleCategoryStatusBtn').addClass('d-none');
 
-    croppedBlob = null; // ðŸ”¥ reset cropped image
+    if ($.fn.DataTable.isDataTable('#vehicleCategoryTable')) {
+        $('#vehicleCategoryTable').DataTable().$('tr.selected').removeClass('selected');
+    }
+    croppedBlob = null;
 }
 
 $('#categoryImages').on('change', function () {
@@ -504,17 +621,14 @@ $('#categoryImages').on('change', function () {
     let file = this.files[0];
     if (!file) return;
 
-    // âœ… Reset any previous preview/blob
     croppedBlob = null;
 
-    // âœ… Only images
     if (!file.type.startsWith('image/')) {
         setupDropdown('dropdownContent', 'error', svgError + "Only images allowed", 'click');
         $(this).val('');
         return;
     }
 
-    // âœ… Optional: limit file size (e.g. 2MB)
     let maxSize = 2 * 1024 * 1024;
     if (file.size > maxSize) {
         setupDropdown('dropdownContent', 'error', svgError + "Image must be less than 2MB", 'click');
@@ -522,21 +636,16 @@ $('#categoryImages').on('change', function () {
         return;
     }
 
-    // âœ… Open cropper
     openCropperModal(file, '#categoryimagePreview');
-
 });
 
-
- load_category_list();
- function load_category_list() {
-  // Destroy existing table
+load_category_list();
+function load_category_list() {
   if ($.fn.DataTable.isDataTable('#vehicleCategoryTable')) {
     $('#vehicleCategoryTable').DataTable().destroy();
     $('#vehicleCategoryTable tbody').empty();
   }
 
-  // Initialize DataTable
   let categorytable = $('#vehicleCategoryTable').DataTable({
     processing: true,
     serverSide: false,
@@ -557,7 +666,7 @@ $('#categoryImages').on('change', function () {
             action: 'get_categories'
         },
        dataSrc: function (json) {
-        return json.data.data; // IMPORTANT FIX
+        return json.data.data;
     }
     },
 
@@ -572,11 +681,10 @@ $('#categoryImages').on('change', function () {
         {
             data: 'category_status',
             render: function (data, type, row) {
-        
                 if (data === 'Active') {
-                    return `<span class="badge bg-success">Active</span>`;
+                    return `<span class="badge bg-label-success">Active</span>`;
                 } else {
-                    return `<span class="badge bg-default">Inactive</span>`;
+                    return `<span class="badge bg-label-danger">Inactive</span>`;
                 }
             }
         }
@@ -589,28 +697,46 @@ $('#categoryImages').on('change', function () {
 }
 
 $('#vehicleCategoryTable tbody').on('click', 'tr', function () {
-
     let categorytable = $('#vehicleCategoryTable').DataTable();
-
     categorytable.$('tr.selected').removeClass('selected');
     $(this).addClass('selected');
+    $(this).siblings().css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
+    $(this).siblings().find('*').css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
+    $(this).css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
+    $(this).find('*').css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
 
     this.blur();
     resetCategoryForm();
     let data = categorytable.row(this).data();
-    
-    loadCategoryForEdit(data); 
+    if (data) {
+        loadCategoryForEdit(data);
+    }
 });
 
-
 function loadCategoryForEdit(data) {
-
-   $('#saveCategoryData').text('Update Category');
-    $('#categoryStatus').val(data.category_status).trigger('change');
+    $('#saveCategoryData').html('<i class="ri-save-line me-1"></i> Update Category');
+    $('#categoryStatus').val(data.category_status || 'Active');
     $('#categoryId').val(data.ids);
     $('#categoryName').val(data.category_name);
     $('#categoryDescription').val(data.category_description);
-     let imageUrl = 'httpdocs/images/vehicle_category_images/' + data.category_image;
+
+    let status = data.category_status || 'Active';
+    if (status === 'Active') {
+        $('#categoryStatusBadge').attr('class', 'badge bg-label-success').text('Active');
+        $('#toggleCategoryStatusBtn')
+            .removeClass('d-none btn-success')
+            .addClass('btn-warning')
+            .html('<i class="ri-close-circle-line me-1"></i> Deactivate');
+    } else {
+        $('#categoryStatusBadge').attr('class', 'badge bg-label-danger').text('Inactive');
+        $('#toggleCategoryStatusBtn')
+            .removeClass('d-none btn-warning')
+            .addClass('btn-success')
+            .html('<i class="ri-checkbox-circle-line me-1"></i> Activate');
+    }
+
+    if (data.category_image) {
+        let imageUrl = 'httpdocs/images/vehicle_category_images/' + data.category_image;
         $('#categoryimagePreview').html(`
             <li>
                 <img src="${imageUrl}" 
@@ -619,8 +745,7 @@ function loadCategoryForEdit(data) {
                      style="width:80px;height:80px;object-fit:cover;border-radius:6px;">
             </li>
         `);
-    
-   
+    }
 }
 
 $('#btn_category_cancel').click(function () {
@@ -681,10 +806,15 @@ function resetBrandForm() {
     $('#brandDescription').val('');
     $('#brandImages').val('');
     $('#brandimagePreview').html('');
-    $('#brandStatus').val('').trigger('change');
-    $('#saveBrandData').text('Save');
+    $('#brandStatus').val('Active');
+    $('#saveBrandData').html('<i class="ri-save-line me-1"></i> Save');
+    $('#brandStatusBadge').attr('class', 'badge bg-label-success').text('New Entry');
+    $('#toggleBrandStatusBtn').addClass('d-none');
 
-    croppedBlob = null; // ðŸ”¥ reset cropped image
+    if ($.fn.DataTable.isDataTable('#vehicleBrandTable')) {
+        $('#vehicleBrandTable').DataTable().$('tr.selected').removeClass('selected');
+    }
+    croppedBlob = null;
 }
 
 $('#brandImages').on('change', function () {
@@ -692,17 +822,14 @@ $('#brandImages').on('change', function () {
     let file = this.files[0];
     if (!file) return;
 
-    // âœ… Reset any previous preview/blob
     croppedBlob = null;
 
-    // âœ… Only images
     if (!file.type.startsWith('image/')) {
         setupDropdown('dropdownContent', 'error', svgError + "Only images allowed", 'click');
         $(this).val('');
         return;
     }
 
-    // âœ… Optional: limit file size (e.g. 2MB)
     let maxSize = 2 * 1024 * 1024;
     if (file.size > maxSize) {
         setupDropdown('dropdownContent', 'error', svgError + "Image must be less than 2MB", 'click');
@@ -710,21 +837,16 @@ $('#brandImages').on('change', function () {
         return;
     }
 
-    // âœ… Open cropper
     openCropperModal(file, '#brandimagePreview');
-
 });
 
-
- load_brand_list();
- function load_brand_list() {
-  // Destroy existing table
+load_brand_list();
+function load_brand_list() {
   if ($.fn.DataTable.isDataTable('#vehicleBrandTable')) {
     $('#vehicleBrandTable').DataTable().destroy();
     $('#vehicleBrandTable tbody').empty();
   }
 
-  // Initialize DataTable
   let brandtable = $('#vehicleBrandTable').DataTable({
     processing: true,
     serverSide: false,
@@ -745,7 +867,7 @@ $('#brandImages').on('change', function () {
             action: 'get_brand'
         },
        dataSrc: function (json) {
-        return json.data.data; // IMPORTANT FIX
+        return json.data.data;
     }
     },
 
@@ -760,11 +882,10 @@ $('#brandImages').on('change', function () {
         {
             data: 'brand_status',
             render: function (data, type, row) {
-        
                 if (data === 'Active') {
-                    return `<span class="badge bg-success">Active</span>`;
+                    return `<span class="badge bg-label-success">Active</span>`;
                 } else {
-                    return `<span class="badge bg-default">Inactive</span>`;
+                    return `<span class="badge bg-label-danger">Inactive</span>`;
                 }
             }
         }
@@ -777,28 +898,46 @@ $('#brandImages').on('change', function () {
 }
 
 $('#vehicleBrandTable tbody').on('click', 'tr', function () {
-
     let brandtable = $('#vehicleBrandTable').DataTable();
-
     brandtable.$('tr.selected').removeClass('selected');
     $(this).addClass('selected');
+    $(this).siblings().css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
+    $(this).siblings().find('*').css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
+    $(this).css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
+    $(this).find('*').css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
 
     this.blur();
     resetBrandForm();
     let data = brandtable.row(this).data();
-    
-    loadBrandForEdit(data); 
+    if (data) {
+        loadBrandForEdit(data);
+    }
 });
 
-
 function loadBrandForEdit(data) {
-
-   $('#saveBrandData').text('Update Brand');
-    $('#brandStatus').val(data.brand_status).trigger('change');
+    $('#saveBrandData').html('<i class="ri-save-line me-1"></i> Update Brand');
+    $('#brandStatus').val(data.brand_status || 'Active');
     $('#brandId').val(data.ids);
     $('#brandName').val(data.brand_name);
     $('#brandDescription').val(data.brand_description);
-     let imageUrl = 'httpdocs/images/vehicle_brand_images/' + data.brand_image;
+
+    let status = data.brand_status || 'Active';
+    if (status === 'Active') {
+        $('#brandStatusBadge').attr('class', 'badge bg-label-success').text('Active');
+        $('#toggleBrandStatusBtn')
+            .removeClass('d-none btn-success')
+            .addClass('btn-warning')
+            .html('<i class="ri-close-circle-line me-1"></i> Deactivate');
+    } else {
+        $('#brandStatusBadge').attr('class', 'badge bg-label-danger').text('Inactive');
+        $('#toggleBrandStatusBtn')
+            .removeClass('d-none btn-warning')
+            .addClass('btn-success')
+            .html('<i class="ri-checkbox-circle-line me-1"></i> Activate');
+    }
+
+    if (data.brand_image) {
+        let imageUrl = 'httpdocs/images/vehicle_brand_images/' + data.brand_image;
         $('#brandimagePreview').html(`
             <li>
                 <img src="${imageUrl}" 
@@ -807,8 +946,7 @@ function loadBrandForEdit(data) {
                      style="width:80px;height:80px;object-fit:cover;border-radius:6px;">
             </li>
         `);
-    
-   
+    }
 }
 
 $('#btn_brand_cancel').click(function () {
@@ -957,10 +1095,15 @@ function resetModelForm() {
     $('#modelimagePreview').html('');
     $('#vehicleCategory').val('0').trigger('change');
     $('#vehicleBrand').val('0').trigger('change');
-    $('#modelStatus').val('').trigger('change');
-    $('#saveModelData').text('Save');
+    $('#modelStatus').val('Active');
+    $('#saveModelData').html('<i class="ri-save-line me-1"></i> Save');
+    $('#modelStatusBadge').attr('class', 'badge bg-label-success').text('New Entry');
+    $('#toggleModelStatusBtn').addClass('d-none');
 
-    croppedBlob = null; // ðŸ”¥ reset cropped image
+    if ($.fn.DataTable.isDataTable('#vehicleModelTable')) {
+        $('#vehicleModelTable').DataTable().$('tr.selected').removeClass('selected');
+    }
+    croppedBlob = null;
 }
 
 $('#modelImages').on('change', function () {
@@ -968,17 +1111,14 @@ $('#modelImages').on('change', function () {
     let file = this.files[0];
     if (!file) return;
 
-    // âœ… Reset any previous preview/blob
     croppedBlob = null;
 
-    // âœ… Only images
     if (!file.type.startsWith('image/')) {
         setupDropdown('dropdownContent', 'error', svgError + "Only images allowed", 'click');
         $(this).val('');
         return;
     }
 
-    // âœ… Optional: limit file size (e.g. 2MB)
     let maxSize = 2 * 1024 * 1024;
     if (file.size > maxSize) {
         setupDropdown('dropdownContent', 'error', svgError + "Image must be less than 2MB", 'click');
@@ -986,21 +1126,16 @@ $('#modelImages').on('change', function () {
         return;
     }
 
-    // âœ… Open cropper
     openCropperModal(file, '#modelimagePreview');
-
 });
 
-
- load_model_list();
- function load_model_list() {
-  // Destroy existing table
+load_model_list();
+function load_model_list() {
   if ($.fn.DataTable.isDataTable('#vehicleModelTable')) {
     $('#vehicleModelTable').DataTable().destroy();
     $('#vehicleModelTable tbody').empty();
   }
 
-  // Initialize DataTable
   let modeltable = $('#vehicleModelTable').DataTable({
     processing: true,
     serverSide: false,
@@ -1021,7 +1156,7 @@ $('#modelImages').on('change', function () {
             action: 'get_model'
         },
        dataSrc: function (json) {
-        return json.data.data; // IMPORTANT FIX
+        return json.data.data;
     }
     },
 
@@ -1036,11 +1171,10 @@ $('#modelImages').on('change', function () {
         {
             data: 'model_status',
             render: function (data, type, row) {
-        
                 if (data === 'Active') {
-                    return `<span class="badge bg-success">Active</span>`;
+                    return `<span class="badge bg-label-success">Active</span>`;
                 } else {
-                    return `<span class="badge bg-default">Inactive</span>`;
+                    return `<span class="badge bg-label-danger">Inactive</span>`;
                 }
             }
         }
@@ -1053,30 +1187,48 @@ $('#modelImages').on('change', function () {
 }
 
 $('#vehicleModelTable tbody').on('click', 'tr', function () {
-
     let modeltable = $('#vehicleModelTable').DataTable();
-
-   modeltable.$('tr.selected').removeClass('selected');
+    modeltable.$('tr.selected').removeClass('selected');
     $(this).addClass('selected');
+    $(this).siblings().css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
+    $(this).siblings().find('*').css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
+    $(this).css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
+    $(this).find('*').css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
 
     this.blur();
     resetModelForm();
     let data = modeltable.row(this).data();
-    
-    loadModelForEdit(data); 
+    if (data) {
+        loadModelForEdit(data);
+    }
 });
 
-
 function loadModelForEdit(data) {
-
-   $('#saveModelData').text('Update Model');
-    $('#modelStatus').val(data.model_status).trigger('change');
+    $('#saveModelData').html('<i class="ri-save-line me-1"></i> Update Model');
+    $('#modelStatus').val(data.model_status || 'Active');
     $('#vehicleCategory').val(data.category_id).trigger('change');
     $('#vehicleBrand').val(data.brand_id).trigger('change');
     $('#modelId').val(data.ids);
     $('#modelName').val(data.modal_name);
     $('#modelDescription').val(data.model_description);
-     let imageUrl = 'httpdocs/images/vehicle_model_images/' + data.vehicle_modal_pic;
+
+    let status = data.model_status || 'Active';
+    if (status === 'Active') {
+        $('#modelStatusBadge').attr('class', 'badge bg-label-success').text('Active');
+        $('#toggleModelStatusBtn')
+            .removeClass('d-none btn-success')
+            .addClass('btn-warning')
+            .html('<i class="ri-close-circle-line me-1"></i> Deactivate');
+    } else {
+        $('#modelStatusBadge').attr('class', 'badge bg-label-danger').text('Inactive');
+        $('#toggleModelStatusBtn')
+            .removeClass('d-none btn-warning')
+            .addClass('btn-success')
+            .html('<i class="ri-checkbox-circle-line me-1"></i> Activate');
+    }
+
+    if (data.vehicle_modal_pic) {
+        let imageUrl = 'httpdocs/images/vehicle_model_images/' + data.vehicle_modal_pic;
         $('#modelimagePreview').html(`
             <li>
                 <img src="${imageUrl}" 
@@ -1085,8 +1237,121 @@ function loadModelForEdit(data) {
                      style="width:80px;height:80px;object-fit:cover;border-radius:6px;">
             </li>
         `);
-    
-   
+    }
+}
+
+$('#btn_model_cancel').click(function () {
+    resetModelForm();
+});
+
+// Master Status Change via SaNDSAlert popup
+let pendingMasterType = null;
+let pendingMasterId = null;
+let pendingMasterStatus = null;
+
+$(document).on('click', '#toggleCategoryStatusBtn', function(e) {
+    e.preventDefault();
+    pendingMasterType = 'category';
+    pendingMasterId = $('#categoryId').val();
+    pendingMasterStatus = $('#categoryStatus').val() || 'Active';
+    triggerMasterStatusAlert();
+});
+
+$(document).on('click', '#toggleBrandStatusBtn', function(e) {
+    e.preventDefault();
+    pendingMasterType = 'brand';
+    pendingMasterId = $('#brandId').val();
+    pendingMasterStatus = $('#brandStatus').val() || 'Active';
+    triggerMasterStatusAlert();
+});
+
+$(document).on('click', '#toggleModelStatusBtn', function(e) {
+    e.preventDefault();
+    pendingMasterType = 'model';
+    pendingMasterId = $('#modelId').val();
+    pendingMasterStatus = $('#modelStatus').val() || 'Active';
+    triggerMasterStatusAlert();
+});
+
+function triggerMasterStatusAlert() {
+    if (!pendingMasterId) {
+        setupDropdown('dropdownContent', 'error', svgError + 'No item selected to change status', 'click');
+        return;
+    }
+    SaNDSAlert(
+        'Are you sure you want to change the status?',
+        'ChangeMasterStatus',
+        'warning',
+        '#f39c12',
+        'Yes Change',
+        'Cancel',
+        'Change Status'
+    );
+}
+
+$(document).on('click', '#msg_popup_confirmed', function() {
+    let action = $('#message_matter').attr('data-switch-values');
+    if (action === 'ChangeMasterStatus' && pendingMasterType && pendingMasterId) {
+        let newStatus = (pendingMasterStatus === 'Active') ? 'Inactive' : 'Active';
+        executeMasterStatusUpdate(pendingMasterType, pendingMasterId, newStatus);
+    }
+    closePopup();
+});
+
+$(document).on('click', '#msg_popup_canceled', function() {
+    closePopup();
+});
+
+function closePopup() {
+    $('#popupOverlay').hide();
+    $('#popupContainer').hide();
+}
+
+function executeMasterStatusUpdate(type, id, newStatus) {
+    let formData = new FormData();
+    if (type === 'category') {
+        formData.append('id', id);
+        formData.append('categoryName', $('#categoryName').val());
+        formData.append('categoryDescription', $('#categoryDescription').val());
+        formData.append('status', newStatus);
+        formData.append('action', 'save_category');
+    } else if (type === 'brand') {
+        formData.append('brand_id', id);
+        formData.append('brandName', $('#brandName').val());
+        formData.append('brandDescription', $('#brandDescription').val());
+        formData.append('brand_status', newStatus);
+        formData.append('action', 'save_brand');
+    } else if (type === 'model') {
+        formData.append('model_id', id);
+        formData.append('modelName', $('#modelName').val());
+        formData.append('modelDescription', $('#modelDescription').val());
+        formData.append('category_id', $('#vehicleCategory').val());
+        formData.append('brand_id', $('#vehicleBrand').val());
+        formData.append('model_status', newStatus);
+        formData.append('action', 'save_model');
+    }
+
+    $.ajax({
+        url: '/MasterConfigurationController',
+        type: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function(res) {
+            let data = JSON.parse(res);
+            if (data.success) {
+                setupDropdown('dropdownContent', 'success', svgSuccess + 'Status Changed Successfully', 'click');
+                if (type === 'category') { load_category_list(); resetCategoryForm(); }
+                else if (type === 'brand') { load_brand_list(); resetBrandForm(); }
+                else if (type === 'model') { load_model_list(); resetModelForm(); }
+            } else {
+                setupDropdown('dropdownContent', 'error', svgError + 'Failed to change status', 'click');
+            }
+        },
+        error: function() {
+            setupDropdown('dropdownContent', 'warning', svgError + 'Error updating status', 'click');
+        }
+    });
 }
 
 $('#btn_model_cancel').click(function () {
@@ -1206,6 +1471,10 @@ $('#vehicleModelPricingTable tbody').on('click', 'tr', function () {
 
    modelpricetable.$('tr.selected').removeClass('selected');
     $(this).addClass('selected');
+    $(this).siblings().css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
+    $(this).siblings().find('*').css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
+    $(this).css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
+    $(this).find('*').css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
 
     this.blur();
    
@@ -1213,25 +1482,44 @@ $('#vehicleModelPricingTable tbody').on('click', 'tr', function () {
     $('#pricingmodelId').val(data.ids);
     loadPricing(data.ids); 
 });
+<?php
+$sysCurrency = defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD';
+?>
+const systemCurrency = '<?= $sysCurrency ?>';
+const priceDecimals = (systemCurrency === 'BHD' || systemCurrency === 'KWD' || systemCurrency === 'OMR') ? 3 : 2;
+const defaultPriceVal = (priceDecimals === 3) ? '0.000' : '0.00';
+
+function formatPriceAmount(val) {
+    let num = parseFloat(val);
+    if (isNaN(num) || val === '' || val === null || val === undefined) {
+        return defaultPriceVal;
+    }
+    return num.toFixed(priceDecimals);
+}
+
 function loadPricing(modelId) {
 
     $.post('/LoadPriceModelTable', { modelId: modelId }, function (res) {
 
         let data = JSON.parse(res);
         let html = '';
-        let i = 1;
+        let stepVal = (priceDecimals === 3) ? '0.001' : '0.01';
 
         data.forEach(row => {
-
+            let formattedVal = formatPriceAmount(row.amount);
             html += `
                 <tr>
-                    <td style="width:80%;">
+                    <td style="width:75%; vertical-align: middle;">
                         ${row.item}
                         <input type="hidden" class="item_id" value="${row.id}">
                     </td>
 
-                    <td style="width:20%;">
-                        <input type="number" class="priceamount" style="width:100%; height:40px; border-radius: 6px; border: 1px solid #ccc;" value="${row.amount}">
+                    <td style="width:25%; text-align: right; vertical-align: middle;">
+                        <input type="number" 
+                               step="${stepVal}" 
+                               class="form-control form-control-sm priceamount text-end" 
+                               style="width:100%; height:34px; text-align: right !important; padding-left: 6px !important; padding-right: 6px !important; font-size: 13px;" 
+                               value="${formattedVal}">
                     </td>
                 </tr>
             `;
@@ -1241,6 +1529,11 @@ function loadPricing(modelId) {
     });
 }
 
+$(document).on('blur', '.priceamount', function() {
+    let val = $(this).val();
+    $(this).val(formatPriceAmount(val));
+});
+
 $('#saveBtnPricing').click(function () {
 
     let data = [];
@@ -1249,7 +1542,8 @@ $('#saveBtnPricing').click(function () {
 
         let id = $(this).find('.item_id').val();
         let item = $(this).find('td:eq(0)').text().trim();
-        let amount = $(this).find('.priceamount').val();
+        let rawVal = $(this).find('.priceamount').val();
+        let amount = formatPriceAmount(rawVal);
 
         data.push({
             id: id,

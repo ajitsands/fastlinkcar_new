@@ -9,3 +9,9 @@ vendor/
 *.log
 *.zip
 backup/
+scratch/
+test_*.php
+fix*.php
+desc_*.php
+replace.php
+reload_permissions.php

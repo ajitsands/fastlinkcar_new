@@ -250,7 +250,7 @@ $this->params[6] = [
 
     COALESCE(
         JSON_ARRAYAGG(
-            DISTINCT CASE 
+            CASE 
                 WHEN b.vehicle_id IS NOT NULL THEN JSON_OBJECT(
                     'from', b.book_from_date,
                     'to', b.book_to_date,
@@ -407,7 +407,7 @@ $this->params[7] = [
 
     COALESCE(
         JSON_ARRAYAGG(
-            DISTINCT CASE 
+            CASE 
                 WHEN b.vehicle_id IS NOT NULL THEN JSON_OBJECT(
                     'from', DATE_FORMAT(b.book_from_date, '%d-%m-%y %H:%i'),
                     'to', DATE_FORMAT(b.book_to_date, '%d-%m-%y %H:%i'),
@@ -557,7 +557,7 @@ $this->params[8] = [
 
     COALESCE(
         JSON_ARRAYAGG(
-            DISTINCT CASE 
+            CASE 
                 WHEN b.vehicle_id IS NOT NULL THEN JSON_OBJECT(
                     'from', b.book_from_date,
                     'to', b.book_to_date,

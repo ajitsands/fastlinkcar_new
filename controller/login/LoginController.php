@@ -46,7 +46,7 @@ class LoginController
 			     $companyId = $_POST['companyId'] ?? 1;
 			     
 			     // Authenticate against database (Plain Text as requested)
-			     $sql = "SELECT user_id, user_name, user_role_name,profile_image,profile_name FROM tbl_users WHERE user_name = ? AND user_passkey = ? AND user_status = 'Active'";
+			     $sql = "SELECT user_id, user_name, user_role_id, user_role_name, profile_image, profile_name, company_json FROM tbl_users WHERE user_name = ? AND user_passkey = ? AND user_status = 'Active'";
 			     $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$userName, $passWord]), true);
 			     
 			     if($res['status'] && !empty($res['data']))
@@ -54,12 +54,21 @@ class LoginController
 			            $user = $res['data'][0];
 			            
 			            // Populate Session
-			             $_SESSION['profile_name'] = $user['profile_name'];
+			            $_SESSION['profile_name'] = $user['profile_name'];
 			            $_SESSION['user_id'] = $user['user_id'];
 			            $_SESSION['user_name'] = $user['user_name'];
+			            $_SESSION['user_role_id'] = $user['user_role_id'] ?? 2;
 			            $_SESSION['user_role_name'] = $user['user_role_name'];
-			             $_SESSION['user_image'] = $user['profile_image'];
+			            $_SESSION['company_json'] = $user['company_json'] ?? '[]';
+			            $roleIds = array_map('intval', explode(',', $user['user_role_id'] ?? ''));
+			            $roleNames = array_map('trim', explode(',', $user['user_role_name'] ?? ''));
+			            $_SESSION['is_super_admin'] = (in_array(3, $roleIds) || in_array('Super Admin', $roleNames));
+			            $_SESSION['user_image'] = $user['profile_image'];
 			            $_SESSION['company_id'] = $companyId;
+
+			            // Load effective permissions into session
+			            require_once ROOT_PATH . '/model/common/PermissionHelper.php';
+			            PermissionHelper::loadUserPermissionsIntoSession($user['user_id'], $user['user_role_id'] ?? 2, $user['user_role_name'] ?? '');
 			           
 			            $this->JWT = new JWTClass($_ENV['JWTKEY'], $_ENV['MAINSERVER'], $userName); 
         			    $JWToken = $this->JWT->CreateJWToken($companyId, $userName, $user['user_id'], $passWord, 'Active', (60 * 60 * 24 * 7)); // Token for 7 Days

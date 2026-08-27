@@ -10,8 +10,14 @@
                   <div class="col-12 col-lg-8">
                     <!-- Product Information -->
                     <div class="card mb-6">
-                      <div class="card-header">
-                        <h5 class="card-tile mb-0">Driver Registration Details</h5>
+                      <div class="card-header d-flex align-items-center justify-content-between pb-3">
+                        <div>
+                          <h5 class="card-title mb-0">Driver Registration Details</h5>
+                          <small class="text-muted">Add or manage driver information</small>
+                        </div>
+                        <div id="driverStatusBadgeContainer">
+                            <span class="badge bg-label-success" id="driverStatusBadge">New Entry</span>
+                        </div>
                       </div>
                       <div class="card-body">
                         
@@ -81,16 +87,7 @@
                                 <label for="licenseexpiryDate">License Expiry Date</label>
                             </div>
                           </div>
-                          <div class="col-12 col-md-6 col-lg-4">
-                            <div class="form-floating form-floating-outline mb-5">
-                              <select id="driverStatus" name="driverStatus" class="form-select" >
-                                <option value="" disabled="" selected="">Select Driver Status</option>
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                              </select>
-                              <label for="driverStatus">Driver Status</label>
-                            </div>
-                          </div>
+                          <input type="hidden" id="driverStatus" name="driverStatus" value="Active">
                         
                           
                          <div class="col-12 col-md-6 col-lg-8">
@@ -118,28 +115,29 @@
                                 </ul>
                             
                                 <!-- Right: Button -->
-                                <a href="javascript:;" class="ms-auto">
+                                <a href="javascript:;" class="ms-auto" data-permission="driver_registration_manage">
                                     <span class="badge bg-label-primary rounded-pill openAddRentalCarImageModal">
                                         Add Driver Documents
                                     </span>
                                 </a>
                             
                             </div>
+                            
+                            <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 pt-3 border-top">
+                              <button type="button" class="btn btn-secondary" id="btn_cancel">
+                                  <i class="ri-refresh-line me-1"></i> Reset / Clear
+                              </button>
+                              
+                              <div class="d-flex gap-2">
+                                  <button type="button" class="btn btn-warning d-none" id="toggleDriverStatusBtn" data-permission="driver_registration_manage">
+                                      <i class="ri-close-circle-line me-1"></i> Deactivate
+                                  </button>
+                                  <button class="btn btn-primary" type="button" id="saveDriverData" data-permission="driver_registration_manage">
+                                      <i class="ri-save-line me-1"></i> Save
+                                  </button>
+                              </div>
+                            </div>
                         </div>
-                    </div>
-                   
-                   
-                    <div class="col-12 ">
-                      <div class="d-flex justify-content-between">
-                    
-                        <button type="button" class="btn btn-secondary" id="btn_cancel">Cancel</button>
-                    
-                        <div class="d-flex gap-2">
-                          <button class="btn btn-primary" type="button" id="saveDriverData">Save</button>
-                          
-                        </div>
-                    
-                      </div>
                     </div>
                   </div>
                  

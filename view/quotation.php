@@ -43,6 +43,7 @@ $decimals = $_ENV['DECIMALS'];
 
     <link rel="stylesheet" href="../assets/vendor/libs/select2/select2.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/tagify/tagify.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/flatpickr/flatpickr.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/bootstrap-select/bootstrap-select.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/typeahead-js/typeahead.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/spinkit/spinkit.css" />
@@ -361,6 +362,7 @@ input:checked + .slider:before {
 
 <?php include('templates/quotation/quotation_introduction_modal.php'); ?>
 <?php include('templates/quotation/add_new_customer_modal.php'); ?>
+<?php include('templates/customer/customer_images_modal.php'); ?>
  <?php include('templates/quotation/quotation_save_choice_modal.php'); ?>
 
 
@@ -395,6 +397,7 @@ input:checked + .slider:before {
     <script src="../assets/vendor/libs/quill/katex.js"></script>
     <script src="../assets/vendor/libs/highlight/highlight.js"></script>
     <script src="../assets/vendor/libs/quill/quill.js"></script>
+    <script src="../assets/vendor/libs/flatpickr/flatpickr.js"></script>
    
        <!-- Page JS -->
     <script src="../../assets/js/ui-popover.js"></script>
@@ -558,19 +561,13 @@ $(document).on('blur','.to_datetime',function(){
     let from = row.find('.from_datetime').val();
     let to = $(this).val();
        
-        let fromDate = new Date(from);
-        let toDate   = new Date(to);
-        if(toDate < fromDate){
-        let fromDate = new Date(from);
-        let toDate   = new Date(to);
-
+        let fromDate = parseDDMMYYYYtoJSDate(from);
+        let toDate   = parseDDMMYYYYtoJSDate(to);
         if(toDate < fromDate){
              setupDropdown('dropdownContent','error',svgSuccess+'To date must be after From date','click');
             
             $(this).val('');
         }
-
-    }
 
 });
  // Full Toolbar
@@ -644,6 +641,15 @@ $(document).on('blur','.to_datetime',function(){
                 },
                 theme: 'snow'
               });
+              const fullEditorIntroductionOnBody = new Quill('#full-editor-introduction-onbody', {
+                bounds: '#full-editor-introduction-onbody',
+                placeholder: 'Enter introduction or click 🔍 to choose template',
+                modules: {
+                  syntax: true,
+                  toolbar: fullToolbar
+                },
+                theme: 'snow'
+              });
               const fullEditorIndroduction = new Quill('#full-editor-introduction', {
                 bounds: '#full-editor-introduction',
                 placeholder: 'Introduction',
@@ -681,11 +687,11 @@ $(document).on('blur','.to_datetime',function(){
                     </select>
                 </td>
                 <td>
-                    <input type="datetime-local" class="from_datetime form-control form-control-sm datetime_col " >
+                    <input type="text" class="from_datetime form-control form-control-sm datetime_col" placeholder="DD-MM-YYYY HH:mm" maxlength="16" >
                 </td>
         
                 <td>
-                    <input type="datetime-local" class="to_datetime form-control form-control-sm datetime_col" >
+                    <input type="text" class="to_datetime form-control form-control-sm datetime_col" placeholder="DD-MM-YYYY HH:mm" maxlength="16" >
                 </td>
                 <td><input type="number" class="duration nav form-control form-control-sm" step="any" value="0"></td>
                 <td><input type="number" class="qty nav form-control form-control-sm" step="any" value="1"></td>
@@ -706,7 +712,7 @@ $(document).on('blur','.to_datetime',function(){
                                style="padding-top:12px;">
                     </div>
                 </td>
-                <td><input type="number" class="vat nav form-control form-control-sm" step="0.1" value="<?echo $_ENV['TAX_PERCENTAGE']?>"></td>
+                <td><input type="number" class="vat nav form-control form-control-sm" step="0.1" value="<?php echo $_ENV['TAX_PERCENTAGE']; ?>"></td>
                 <td class="line_total">0.00</td>
                 <td>
                     <span class="icon-base ri ri-delete-bin-6-line icon-22px remove"></span>
@@ -719,16 +725,60 @@ $(document).on('blur','.to_datetime',function(){
                 initCategoryAutocomplete(lastRow.find('.vehicle_category'));
                 initserviceload(lastRow.find('.service'));
                 
+                // Removed flatpickr per user request
+                
                 renumberRows();
             $('#itemTable tbody tr:last .vehicle_category').focus();
         }
  
 
-$(document).on('blur','.from_datetime, .to_datetime, .rate_type, .price, .vat .qty', line_item_calculation);
-$(document).on('keyup change', '.rate_type', line_item_calculation);
-$(document).on('keyup change', '.price', line_item_calculation);
-$(document).on('keyup change', '.vat', line_item_calculation);
-$(document).on('keyup change', '.qty', line_item_calculation);
+$(document).on('keyup change blur', '.from_datetime, .to_datetime, .rate_type, .price, .vat, .qty, .duration', line_item_calculation);
+
+$(document).on('input', '.from_datetime, .to_datetime', function(e) {
+    let input = $(this).val().replace(/\D/g, ''); // Remove all non-digits
+    let formatted = '';
+    
+    if (input.length > 0) formatted += input.substring(0, 2);
+    if (input.length >= 3) formatted += '-' + input.substring(2, 4);
+    if (input.length >= 5) formatted += '-' + input.substring(4, 8);
+    if (input.length >= 9) formatted += ' ' + input.substring(8, 10);
+    if (input.length >= 11) formatted += ':' + input.substring(10, 12);
+    
+    $(this).val(formatted);
+});
+$(document).on('blur', '.from_datetime, .to_datetime', function(e) {
+    let val = $(this).val();
+    if (val.length === 10) {
+        $(this).val(val + ' 00:00');
+        $(this).trigger('change');
+    }
+});
+function parseDDMMYYYYtoJSDate(dateStr) {
+    if (!dateStr || dateStr.length < 10) return new Date("Invalid");
+    let parts = dateStr.split(' ');
+    let dParts = parts[0].split('-');
+    let tParts = (parts[1] || '00:00').split(':');
+    if(dParts.length !== 3) return new Date("Invalid");
+    return new Date(dParts[2], parseInt(dParts[1]) - 1, dParts[0], tParts[0], tParts[1]);
+}
+
+function convertDDMMYYYYtoYYYYMMDD(dateStr) {
+    if (!dateStr || dateStr.length < 10) return dateStr;
+    let parts = dateStr.split(' ');
+    let dParts = parts[0].split('-');
+    let time = parts[1] || '00:00';
+    if(dParts.length !== 3) return dateStr;
+    return dParts[2] + '-' + dParts[1] + '-' + dParts[0] + ' ' + time;
+}
+
+function formatYYYYMMDDtoDDMMYYYY(dateStr) {
+    if (!dateStr) return "";
+    let parts = dateStr.split(' ');
+    let dParts = parts[0].split('-');
+    if(dParts.length !== 3) return dateStr;
+    let time = parts[1] ? parts[1].substring(0,5) : '00:00';
+    return dParts[2] + '-' + dParts[1] + '-' + dParts[0] + ' ' + time;
+}
 
 $(document).on('input change', '.watch-field', function () {
   recalculate($(this));
@@ -847,11 +897,13 @@ function line_item_calculation()
 {
    
     let row = $(this).closest('tr');
-    let from = new Date(row.find('.from_datetime').val());
-    let to = new Date(row.find('.to_datetime').val());
+    let from_val = row.find('.from_datetime').val();
+    let to_val = row.find('.to_datetime').val();
+    let from = parseDDMMYYYYtoJSDate(from_val);
+    let to = parseDDMMYYYYtoJSDate(to_val);
     let rateType = row.find('.rate_type').val();
 
-    if(from && to && to >= from){
+    if(from_val && to_val && to >= from){
 
         let diffMs = to - from;
         let duration_count = 0;
@@ -863,26 +915,29 @@ function line_item_calculation()
             duration_count = Math.ceil(diffMs / (1000*60*60*24)); // days
         }
         else if (rateType == 'week') {
-        duration_count = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 7)); // weeks
+            duration_count = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 7)); // weeks
         }
         else if(rateType == 'month'){
             duration_count = Math.ceil(diffMs / (1000*60*60*24*30)); // months
         }
 
         row.find('.duration').val(duration_count);
-
-        
-        let price = parseFloat(row.find('.price').val()) || 0;
-          
-       
-        let qty = parseFloat(row.find('.qty').val()) || 0;
-        let vat = parseFloat(row.find('.vat').val()) || 0;
-
-        let total = (price * qty * duration_count) * (1 + vat/100);
-        row.find('.line_total').text(total.toFixed(DecimalPositions));
-        calculateTotals();
-
     }
+
+    let price = parseFloat(row.find('.price').val()) || 0;
+    let qty = parseFloat(row.find('.qty').val()) || 0;
+    let vat = parseFloat(row.find('.vat').val()) || 0;
+    let duration_val = parseFloat(row.find('.duration').val()) || 0;
+    
+    // Fallback: If duration is 0, it means it's a flat item or hasn't been set. Let's use 1 if rateType is not time-based or if there are no dates.
+    if (duration_val === 0 && !from_val && !to_val) {
+        duration_val = 1;
+        row.find('.duration').val(1);
+    }
+
+    let total = (price * qty * duration_val) * (1 + vat/100);
+    row.find('.line_total').text(total.toFixed(DecimalPositions));
+    calculateTotals();
 }
 function renumberRows() {
     $('#itemTable tbody tr').each(function(index) {
@@ -893,11 +948,13 @@ function renumberRows() {
 $(document).on('wheel', 'input[type=number]', function(e) {
     $(this).blur();
 });
-
+$(document).on('input', '#total_discount', function() {
+    calculateTotals();
+});
 
 function calculateTotals() {
     let subtotal = 0;
-    let vat_total = 0;
+    let vat_total_before_discount = 0;
 
  $('#itemTable tbody tr').each(function() {
         let qty = parseFloat($(this).find('.qty').val()) || 0;
@@ -910,29 +967,32 @@ function calculateTotals() {
         let total = line + vat_amt;
 
         subtotal += line;
-        vat_total += vat_amt;
+        vat_total_before_discount += vat_amt;
 
         //$(this).find('.line_total').text(total.toFixed(DecimalPositions));
     });
     
-    // let total_discount = (subtotal*$('#total_discount').val()/100);
-    // $('#total_discount_amount').text(total_discount.toFixed(DecimalPositions));
-    // let after_discount = subtotal - (subtotal*$('#total_discount').val()/100);
-    // $('#after_discount_amount').text(after_discount.toFixed(DecimalPositions));
-    // let vatAmount = after_discount * 10/100;
-    let grand = subtotal + vat_total;
-    //let grand = after_discount + vatAmount;
+    let discount_pct = parseFloat($('#total_discount').val()) || 0;
+    let total_discount = (subtotal * discount_pct / 100);
+    $('#total_discount_amount').text(total_discount.toFixed(DecimalPositions));
+    
+    let after_discount = subtotal - total_discount;
+    $('#after_discount_amount').text(after_discount.toFixed(DecimalPositions));
+    
+    // Apply the same discount percentage to the VAT total
+    let vat_total = vat_total_before_discount - (vat_total_before_discount * discount_pct / 100);
+
+    let grand = after_discount + vat_total;
     
     
     let subtotals = parseFloat(subtotal);
     let vat_totals = parseFloat(vat_total);
     
-    let allItemSubTotal = (subtotals + vat_totals).toFixed(DecimalPositions);
+    let allItemSubTotal = (subtotals + vat_total_before_discount).toFixed(DecimalPositions);
     
     $('#allItemSubtotal').text(allItemSubTotal);
     $('#subtotal').text(subtotal.toFixed(DecimalPositions));
     $('#vat_total').text(vat_total.toFixed(DecimalPositions));
-    // $('#vat_total').text(vatAmount.toFixed(DecimalPositions));
     $('#grand_total').text(grand.toFixed(DecimalPositions));
 }
 
@@ -950,8 +1010,9 @@ function calculateTotals() {
         email: $("#customerEmail_onmodal").val(),
         attention: $("#bookingCustomerAttn_onmodal").val(),
         cprcr: $("#customerCprCr_onmodal").val(),
+        cprexpiryDate: $("#cprexpiryDate_onmodal").val(),
         address: $("#bookingCustomerAddress_onmodal").val(),
-        clientsDoc: [] 
+        clientsDoc: bookingMaster 
     };
 
     $.ajax({
@@ -1008,11 +1069,14 @@ function calculateTotals() {
     $.ajax({
         url: "/QuotationController",
         type: "POST",
-        data: { action: 'SaveIntroduction',intrn_content: htmlContentIndroduction, intrn_title: $('#int_name').val() },
+        data: { action: 'SaveIntroduction',intrn_content: htmlContentIndroduction, intrn_title: $('#int_name').val(), id: $('#int_id').val() },
         success: function (response) { 
             setupDropdown('dropdownContent','success',svgSuccess+ ' Introduction Saved Successfully','click');
             laddaBtn.stop();
             $('#introTable').DataTable().ajax.reload(null, false);
+            $('#int_name').val('');
+            $('#int_id').val('');
+            fullEditorIndroduction.root.innerHTML = '';
            
         },
         error: function () {
@@ -1026,8 +1090,9 @@ function calculateTotals() {
 $('#btn_open_intn_modal').click(function(){
     $('#introTable').DataTable().ajax.reload(null, false);
   
-    fullEditorIndroduction.root.innerHTML ='';
+    fullEditorIndroduction.root.innerHTML = fullEditorIntroductionOnBody.root.innerHTML;
      $('#int_name').val('');
+     $('#int_id').val('');
     $('#QtnIntroductionModal').modal('show');
 })
 
@@ -1068,10 +1133,10 @@ $('#btn_open_intn_modal').click(function(){
             {
                 "data": null,
                 "render": function(data, type, row){
-                    return `<i class="ri ri-eye-line text-primary showRowIntroduction" 
+                    return `<i class="ri ri-edit-box-line text-primary showRowIntroduction" 
                              style="cursor:pointer; font-size: 1.5rem;" 
                              data-id="${row.ids}" 
-                             title="View this entry"></i>`;
+                             title="Edit this entry"></i>`;
                 },
                 "orderable": false
             }
@@ -1120,6 +1185,8 @@ $(document).on("click", ".showRowIntroduction", function() {
         success: function (response) {
 
             fullEditorIndroduction.root.innerHTML = response.html;
+            $('#int_name').val(response.title);
+            $('#int_id').val(response.id);
 
             setupDropdown(
                 'dropdownContent',
@@ -1148,8 +1215,9 @@ $(document).on("click", ".showRowIntroduction", function() {
 $('#intcopyContentBtn').click(function () {
                 
     var content = fullEditorIndroduction.root.innerHTML;
-    
-    $('#quoation_introduction').val(content);
+   
+    fullEditorIntroductionOnBody.root.innerHTML = content;
+
     $('#QtnIntroductionModal').modal('hide');
 
 });
@@ -1277,10 +1345,10 @@ $('#selectCustomerFromSelect2').on('select2:clear', function () {
             {
                 "data": null,
                 "render": function(data, type, row){
-                    return `<i class="ri ri-eye-line text-primary showRowTermsCondition" 
+                    return `<i class="ri ri-edit-box-line text-primary showRowTermsCondition" 
                              style="cursor:pointer; font-size: 1.5rem;" 
                              data-id="${row.ids}" 
-                             title="View this entry"></i>`;
+                             title="Edit this entry"></i>`;
                 },
                 "orderable": false
             }
@@ -1314,7 +1382,7 @@ $('#saveTermsAndConditions').click(function () {
 $('#btn_terms_condition').click(function(){
     $('#termsTable').DataTable().ajax.reload(null, false);
   
-    fullEditor.root.innerHTML ='';
+    fullEditor.root.innerHTML = fullEditorOnBody.root.innerHTML;
     $('#t_c_name').val('');
     $('#termsAndConditionModal').modal('show');
 })
@@ -1573,7 +1641,8 @@ $('#btn_filter').click(function () {
    var startDate= $('#from_date_filter').val();
    var endDate= $('#to_date_filter').val();
    var customer_code= $('#customer_code_filter').val();
-    loadQuotationList(draft,startDate,endDate,customer_code);
+   var company_id = $('#company_id_filter').val();
+    loadQuotationList(draft,startDate,endDate,customer_code,company_id);
 
 });
 
@@ -1601,16 +1670,17 @@ function openQuotationCanvas(draft, startDate = '', endDate = '', customer_code=
     canvas.show();
 
     // Load initial data
-    loadQuotationList(draft,$('#from_date_filter').val(),$('#to_date_filter').val(),$('#customer_code_filter').val());
+    loadQuotationList(draft,$('#from_date_filter').val(),$('#to_date_filter').val(),$('#customer_code_filter').val(), $('#company_id_filter').val());
 }
 
-function loadQuotationList(draft, startDate = '', endDate = '', customer_code='') {
+function loadQuotationList(draft, startDate = '', endDate = '', customer_code='', company_id='') {
     $.post('/QuotationController', 
     { 
         draft: draft,
         startDate: startDate,
         endDate: endDate,
         customer_code:customer_code,
+        company_id: company_id,
         action: 'GetQuotations'
     }, 
     function(response) {
@@ -1651,6 +1721,9 @@ function(response) {
     $('#quotationNumber').text(q.quotation_no);
     $('#quotation_date').val(q.quotation_date);
     
+    // Set the company dropdown
+    $('#selCompany').val(q.company_id).trigger('change');
+    
     let option = new Option(q.customer_name, q.customer_name, true, true);
     $('#selectCustomerFromSelect2').append(option).trigger('change');
 
@@ -1662,7 +1735,10 @@ function(response) {
     $('input[name=total_discount]').val(q.total_discount);
     $('input[name=quotation_prefix]').val(q.user_prefix);
     $('input[name=quotation_attention]').val(q.attention);
-    $('textarea[name=quoation_introduction]').val(q.introduction);
+    if(q.introduction != null && q.introduction != '')
+    {
+       fullEditorIntroductionOnBody.root.innerHTML = q.introduction;
+    }
     fullEditorOnBody.clipboard.dangerouslyPasteHTML(q.terms || '');
     $('#itemTable tbody').empty();
 
@@ -1678,8 +1754,8 @@ function(response) {
         initserviceload(row.find('.service'), item.service_id);
         row.find('.service').val(item.service_id).trigger('change');
         row.find('.rate_type').val(item.rate_type_id).trigger('change');
-        row.find('.from_datetime').val(item.period_from).trigger('change');
-        row.find('.to_datetime').val(item.period_to).trigger('change');
+        row.find('.from_datetime').val(formatYYYYMMDDtoDDMMYYYY(item.period_from)).trigger('change');
+        row.find('.to_datetime').val(formatYYYYMMDDtoDDMMYYYY(item.period_to)).trigger('change');
         row.find('.qty').val(item.qty);
         row.find('.price').val(item.price);
         row.find('.duration').val(item.duration);
@@ -1851,8 +1927,8 @@ function saveQuotation(action_type){
             service_name: $(this).find('.service option:selected').text(),
             rate_type_id: $(this).find('.rate_type ').val(),
             rate_type_name: $(this).find('.rate_type option:selected').text(),
-            period_from: $(this).find('.from_datetime').val(),
-            period_to: $(this).find('.to_datetime').val(),
+            period_from: convertDDMMYYYYtoYYYYMMDD($(this).find('.from_datetime').val()),
+            period_to: convertDDMMYYYYtoYYYYMMDD($(this).find('.to_datetime').val()),
             qty: $(this).find('.qty').val(),
             price: $(this).find('.price').val(),
             duration: $(this).find('.duration').val(),
@@ -1871,7 +1947,7 @@ function saveQuotation(action_type){
                     //     let storageuserid = loginData.userid;
                    
       var termsContent = fullEditorOnBody.root.innerHTML;
-      var introContent = $('#quoation_introduction').val(); 
+      var introContent = fullEditorIntroductionOnBody.root.innerHTML; 
 
 
     let data = {
@@ -1879,6 +1955,7 @@ function saveQuotation(action_type){
         original_draft: $('#original_draft').val(),
         action_type: action_type,
         save_type: saveType,
+        company_id: $('#selCompany').val(),
         customer_name: $('#selectCustomerFromSelect2').find(':selected').text(),
         customer_code: $('input[name=customer_code]').val(),
         customer_phone: $('input[name=customer_phone]').val(),
@@ -1892,9 +1969,9 @@ function saveQuotation(action_type){
         vat_total: $('#vat_total').text(),
         grand_total: $('#grand_total').text(),
         reference_number : 0,
-        total_discount : 0,
-        total_discount_amount : 0,
-        after_discount_amount : 0,
+        total_discount : $('#total_discount').val() || 0,
+        total_discount_amount : $('#total_discount_amount').text(),
+        after_discount_amount : $('#after_discount_amount').text(),
         storage_username : 'Admin',
         storage_userid : 1,
         allItemSubtotal : $('#allItemSubtotal').text(),
@@ -2277,8 +2354,10 @@ $(document).on('change', '.quotation-status', function () {
            var draft= $('#txt_qtn_draft').val();
            var startDate= $('#from_date_filter').val();
            var endDate= $('#to_date_filter').val();
+           var customer_code= $('#customer_code_filter').val();
+           var company_id= $('#company_id_filter').val();
            
-            loadQuotationList(draft,startDate,endDate);
+            loadQuotationList(draft,startDate,endDate,customer_code,company_id);
         }
     });
 

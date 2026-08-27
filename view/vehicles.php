@@ -13,6 +13,51 @@ checkLogin();
 ?>
 <?php
 include ROOT_PATH . '/view/envinclude.php';
+
+$userId = $_SESSION['user_id'] ?? 1;
+$userCompanies = [];
+$outsourcingCompanies = [];
+
+try {
+    $pdoModelObj = new CommonPDOModel();
+    $isSuperAdmin = (!empty($_SESSION['is_super_admin'])) || (($_SESSION['user_role_name'] ?? '') === 'Super Admin') || (($_SESSION['user_role_id'] ?? 0) == 3);
+
+    if ($isSuperAdmin) {
+        $allCompSql = "SELECT ids, company_name FROM tbl_company ORDER BY ids ASC";
+        $allCompStmt = $pdoModelObj->selectexecuteQuery($allCompSql);
+        if ($allCompStmt && $allCompStmt instanceof PDOStatement) {
+            $userCompanies = $allCompStmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    } else {
+        // User company access
+        $userSql = "SELECT company_json FROM tbl_users WHERE user_id = '{$userId}' LIMIT 1";
+        $userStmt = $pdoModelObj->selectexecuteQuery($userSql);
+        if ($userStmt && $userStmt instanceof PDOStatement) {
+            $uRows = $userStmt->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($uRows[0]['company_json'])) {
+                $userCompanies = json_decode($uRows[0]['company_json'], true) ?: [];
+            }
+        }
+    }
+
+    if (empty($userCompanies)) {
+        $userCompanies = [
+            ['ids' => strval($_SESSION['company_id'] ?? '1'), 'company_name' => $_SESSION['company_name'] ?? 'AA Car Rental']
+        ];
+    }
+
+    // Active outsourcing companies
+    $outSql = "SELECT ids, company_name FROM tbl_outsourcing_companies WHERE status = 'Active' ORDER BY company_name ASC";
+    $outStmt = $pdoModelObj->selectexecuteQuery($outSql);
+    if ($outStmt && $outStmt instanceof PDOStatement) {
+        $outsourcingCompanies = $outStmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+} catch (Exception $e) {
+    $userCompanies = [
+        ['ids' => '1', 'company_name' => 'AA Car Rental']
+    ];
+    $outsourcingCompanies = [];
+}
 ?>
 <!doctype html>
 
@@ -214,27 +259,21 @@ include ROOT_PATH . '/view/envinclude.php';
             outline: none !important;
         }
         
-        /* Remove all focus/active blue styles */
-        #vehicleTable tbody tr:focus,
-        #vehicleTable tbody tr:active,
-        #vehicleTable tbody tr:focus-visible {
-            outline: none !important;
-            box-shadow: none !important;
-            background-color: inherit !important;
+        /* Unselected row hover state for vehicleTable */
+        #vehicleTable tbody tr:not(.selected):hover,
+        #vehicleTable tbody tr:not(.selected):hover > td,
+        #vehicleTable tbody tr:not(.selected):hover > th,
+        #vehicleTable.dataTable tbody tr:not(.selected):hover > *,
+        #vehicleTable.dataTable.table-hover tbody tr:not(.selected):hover > * {
+            --bs-table-bg-state: rgba(248, 124, 99, 0.15) !important;
+            --bs-table-hover-bg: rgba(248, 124, 99, 0.15) !important;
+            --bs-table-bg-type: rgba(248, 124, 99, 0.15) !important;
+            --bs-table-accent-bg: rgba(248, 124, 99, 0.15) !important;
+            --bs-table-bg: rgba(248, 124, 99, 0.15) !important;
+            background-color: rgba(248, 124, 99, 0.15) !important;
+            color: inherit !important;
+            box-shadow: inset 0 0 0 9999px rgba(248, 124, 99, 0.15) !important;
         }
-        
-        /* Force red selection */
-        #vehicleTable tbody tr.selected,
-        #vehicleTable tbody tr.selected td {
-            background-color: red !important;
-            color: white !important;
-        }
-        
-        /* Prevent hover from interfering */
-        #vehicleTable tbody tr:hover {
-            background-color: inherit !important;
-        }
-       
         
     </style>
 
@@ -857,23 +896,64 @@ $('#closeModal').on('click', function () {
              location.reload();
          });
          
-         function resetVehicleForm() {
+const userCompaniesData = <?= json_encode($userCompanies) ?>;
+const outsourcingCompaniesData = <?= json_encode($outsourcingCompanies) ?>;
 
-            $('#VehicleDetailsForm')[0].reset();
-        
-            uploadedImages = [];
-            $('#imagePreview').html('');
-            $('#rentalCarImages').html('');
-            
-            bookingMaster = { vehicles: [] }; // ✅ safe reset
-        
-            selectedVehicleData = null;
-        
-            $('#saveVehicleData').text('Save');
-        }
+function populateCompanyOptions() {
+    let compSelect = $('#belongsToCompanyID');
+    compSelect.empty();
 
-       
+    if (userCompaniesData.length === 1) {
+        let c = userCompaniesData[0];
+        compSelect.append(`<option value="${c.ids}" selected>${c.company_name}</option>`);
+    } else {
+        compSelect.append('<option value="" disabled selected>Select Registration Company</option>');
+        userCompaniesData.forEach(c => {
+            compSelect.append(`<option value="${c.ids}">${c.company_name}</option>`);
+        });
+    }
 
+    let outSelect = $('#outsourcingCompanyId');
+    outSelect.empty().append('<option value="" disabled selected>Select Outsourcing Company</option>');
+    outsourcingCompaniesData.forEach(o => {
+        outSelect.append(`<option value="${o.ids}">${o.company_name}</option>`);
+    });
+}
+
+populateCompanyOptions();
+
+$('#isOutsourced').on('change', function() {
+    if ($(this).val() === 'Yes') {
+        $('#outsourcingCompanyContainer').slideDown(200);
+    } else {
+        $('#outsourcingCompanyContainer').slideUp(200);
+        $('#outsourcingCompanyId').val('');
+    }
+});
+
+function resetVehicleForm() {
+
+    $('#VehicleDetailsForm')[0].reset();
+
+    uploadedImages = [];
+    $('#imagePreview').html('');
+    $('#rentalCarImages').html('');
+    
+    bookingMaster = { vehicles: [] }; // ✅ safe reset
+
+    selectedVehicleData = null;
+
+    $('#saveVehicleData').html('<i class="ri-save-line me-1"></i> Save Vehicle');
+
+    $('#vehicleStatusBadge').attr('class', 'badge bg-label-success').text('New Entry');
+    $('#toggleStatusBtn').addClass('d-none');
+    $('#chassisNumber').val('');
+
+    populateCompanyOptions();
+    $('#isOutsourced').val('No');
+    $('#outsourcingCompanyContainer').hide();
+    $('#outsourcingCompanyId').val('');
+}
 
     $('#vehicleModel').select2({
         placeholder: "Select Model",
@@ -914,6 +994,21 @@ $('#closeModal').on('click', function () {
     }
        $('#saveVehicleData').on('click', function (e) {
             e.preventDefault();
+
+            let belongsToCompanyID = $('#belongsToCompanyID').val();
+            if (!belongsToCompanyID) {
+                setupDropdown('dropdownContent', 'error', svgError + "Please select a registration company", 'click');
+                return false;
+            }
+
+            let isOutsourced = $('#isOutsourced').val();
+            let outsourcingCompanyId = (isOutsourced === 'Yes') ? $('#outsourcingCompanyId').val() : 0;
+
+            if (isOutsourced === 'Yes' && (!outsourcingCompanyId || outsourcingCompanyId === '0' || outsourcingCompanyId === null)) {
+                setupDropdown('dropdownContent', 'error', svgError + "Please select an outsourcing company", 'click');
+                return false;
+            }
+
             let modelVal = $('#vehicleModel').val();
             let modelName = $.trim($('#vehicleModel option:selected').text());
 
@@ -964,11 +1059,15 @@ $('#closeModal').on('click', function () {
    
             let postData = {
                 ids: isEdit ? selectedVehicleData.ids : null, 
+                belongsToCompanyID: belongsToCompanyID,
+                is_outsourced: isOutsourced,
+                outsourcing_company_id: outsourcingCompanyId,
                 vehicleModel: modelVal,
                 modelName: modelName,
                 category_id:category_id,
                 brand_id:brand_id,
                 vehicleNumber: $('#vehicleNumber').val(),
+                chassisNumber: $('#chassisNumber').val(),
                 vehicleYear: $('#vehicleYear').val(),
                 vehicleColor: $('#vehicleColor').val(),
                 vehiclePurchaseDate : $('#vehiclePurchaseDate').val(),
@@ -989,7 +1088,19 @@ $('#closeModal').on('click', function () {
                 data: JSON.stringify(postData),
         
                 success: function (response) {
-                  setupDropdown(
+                    let resObj = response;
+                    try {
+                        if (typeof response === 'string') {
+                            resObj = JSON.parse(response);
+                        }
+                    } catch(e) {}
+
+                    if (resObj && resObj.status === false) {
+                        setupDropdown('dropdownContent', 'error', resObj.message || "Error saving vehicle", 'click');
+                        return;
+                    }
+
+                    setupDropdown(
                         'dropdownContent',
                         'success',
                         svgSuccess + (isEdit ? "Vehicle updated successfully" : "Vehicle added successfully"),
@@ -1001,7 +1112,7 @@ $('#closeModal').on('click', function () {
                     // 🔥 RESET MODE
                     resetVehicleForm();
                     selectedVehicleData = null;
-                    $('#saveVehicleData').text('Save');
+                    $('#saveVehicleData').html('<i class="ri-save-line me-1"></i> Save Vehicle');
                 },
         
                 error: function (xhr) {
@@ -1011,7 +1122,12 @@ $('#closeModal').on('click', function () {
                 },
         
                 complete: function () {
-                    btn.prop('disabled', false).text('Save');
+                    btn.prop('disabled', false);
+                    if (selectedVehicleData !== null) {
+                        btn.html('<i class="ri-save-line me-1"></i> Update Vehicle');
+                    } else {
+                        btn.html('<i class="ri-save-line me-1"></i> Save Vehicle');
+                    }
                 }
             });
         });
@@ -1045,11 +1161,12 @@ $('#closeModal').on('click', function () {
     contentType: 'application/json',
      data: function () {
         return JSON.stringify({
-            action: 'ListVehicleMaster'
+            action: 'ListVehicleMaster',
+            company_id: $('#companyFilter').val()
         });
     },
     dataSrc: function (json) {
-            return json.data.data; // ✅ FIXED
+            return json.data; 
         }
     },
     columns: [
@@ -1059,14 +1176,43 @@ $('#closeModal').on('click', function () {
                     return meta.row + meta.settings._iDisplayStart + 1;
                 }
             },
-            { data: 'model_names' },
-            { data: 'vehicle_number' },
-            { data: 'vehicle_year' }
+             { 
+                 data: 'model_names',
+                 render: function (data, type, row) {
+                     let html = `<span class="small fw-bold">${data || ''}</span>`;
+                     html += `<small class="d-block text-success mt-1 lh-1"><i class="ri ri-building-4-line align-middle"></i> Reg Co: ${row.ownership_company || 'N/A'}</small>`;
+                     return html;
+                 }
+             },
+             {
+                 data: null,
+                 render: function (data, type, row) {
+                     let html = '<div class="fw-bold">' + row.vehicle_number + '</div><small class="text-muted">' + (row.chassis_number || 'N/A') + '</small>';
+                     if (row.is_outsourced === 'Yes') {
+                         html += `<small class="d-block text-warning mt-1 lh-1"><i class="ri ri-share-forward-line align-middle"></i> Outsource: ${row.outsourcing_company_name || row.outsourcing_company || 'N/A'}</small>`;
+                     }
+                     return html;
+                 }
+             },
+            { data: 'vehicle_year' },
+            { 
+                data: 'vehicle_status',
+                render: function (data, type, row) {
+                    if (typeof window.getVehicleStatusBadgeHtml === 'function') {
+                        return window.getVehicleStatusBadgeHtml(data);
+                    }
+                    return data;
+                }
+            }
         ]
   });
 
-  $('#vehicleSearch').off('keyup').on('keyup', function() {
+  $('#vehicleSearch').on('keyup', function () {
     vehicletable.search(this.value).draw();
+  });
+
+  $('#companyFilter').on('change', function () {
+    vehicletable.ajax.reload();
   });
 }
 
@@ -1076,6 +1222,11 @@ $('#vehicleTable tbody').on('click', 'tr', function () {
 
     table.$('tr.selected').removeClass('selected');
     $(this).addClass('selected');
+    $(this).siblings().css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
+    $(this).siblings().find('*').css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
+    $(this).css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
+    $(this).find('*').css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
+
 
     this.blur();
     resetVehicleForm();
@@ -1088,12 +1239,38 @@ $('#vehicleTable tbody').on('click', 'tr', function () {
 
 function loadVehicleForEdit(data) {
 
+   $('#saveVehicleData').html('<i class="ri-save-line me-1"></i> Update Vehicle');
    
-    
+   let vStatus = data.vehicle_status || 'Available';
+   if (vStatus === 'Available' || vStatus === 'Active') {
+       $('#vehicleStatusBadge').attr('class', 'badge bg-label-success').text('Available');
+       $('#toggleStatusBtn')
+           .removeClass('d-none btn-success')
+           .addClass('btn-warning')
+           .html('<i class="ri-close-circle-line me-1"></i> Deactivate');
+   } else {
+       $('#vehicleStatusBadge').attr('class', 'badge bg-label-danger').text(vStatus);
+       $('#toggleStatusBtn')
+           .removeClass('d-none btn-warning')
+           .addClass('btn-success')
+           .html('<i class="ri-checkbox-circle-line me-1"></i> Activate');
+   }
+    if (data.company_id) {
+        $('#belongsToCompanyID').val(data.company_id);
+    }
+    let isOut = data.is_outsourced || 'No';
+    $('#isOutsourced').val(isOut);
+    if (isOut === 'Yes') {
+        $('#outsourcingCompanyContainer').show();
+        $('#outsourcingCompanyId').val(data.outsourcing_company_id || '');
+    } else {
+        $('#outsourcingCompanyContainer').hide();
+        $('#outsourcingCompanyId').val('');
+    }
 
-   $('#saveVehicleData').text('Update Vehicle');
     $('#vehicleModel').val(data.model_id).trigger('change');
     $('#vehicleNumber').val(data.vehicle_number);
+    $('#chassisNumber').val(data.chassis_number);
     $('#vehicleYear').val(data.vehicle_year);
     $('#vehicleColor').val(data.vehicle_color);
     $('#vehiclePurchaseDate').val(data.vehicle_purchase_date);
@@ -1139,6 +1316,7 @@ try {
 
                 <a class="remove-img"
                    data-file="${fileName}"
+                   data-permission="vehicle_registration_manage"
                    style="position:absolute;top:0;right:0;transform:translate(30%,-30%);
                           background:red;color:#fff;border-radius:50%;padding:2px 6px;">
                     ✕
@@ -1207,7 +1385,99 @@ console.log("Loaded bookingMaster:", bookingMaster);
 }
 
     console.log("Loaded bookingMaster:", bookingMaster);
+    
+    if (typeof applyUiPermissions === 'function') {
+        applyUiPermissions();
+    }
 }
+
+            let pendingVehicleId = null;
+            let pendingVehicleStatus = null;
+
+            // Toggle Status Button (Activate / Deactivate) using SaNDSAlert modal
+            $('#toggleStatusBtn').on('click', function (e) {
+                e.preventDefault();
+                let vehicleId = selectedVehicleData ? selectedVehicleData.ids : null;
+                let vehicleStatus = selectedVehicleData ? selectedVehicleData.vehicle_status : 'Available';
+
+                if (!vehicleId) {
+                    setupDropdown('dropdownContent', 'error', 'No vehicle selected to change status', 'click');
+                    return;
+                }
+
+                pendingVehicleId = vehicleId;
+                pendingVehicleStatus = vehicleStatus;
+
+                SaNDSAlert(
+                    'Are you sure you want to change the status?',
+                    'ChangeVehicleStatus',
+                    'warning',
+                    '#f39c12',
+                    'Yes Change',
+                    'Cancel',
+                    'Change Status'
+                );
+            });
+
+            $(document).on('click', '#msg_popup_confirmed', function () {
+                let action = $('#message_matter').attr('data-switch-values');
+                if (action === 'ChangeVehicleStatus') {
+                    let targetSt = (pendingVehicleStatus === 'Available' || pendingVehicleStatus === 'Active') ? 'Deactivated' : 'Available';
+                    $.ajax({
+                        url: '/AddVehicles',
+                        type: 'POST',
+                        data: JSON.stringify({
+                            action: 'update_status',
+                            ids: pendingVehicleId,
+                            status: targetSt
+                        }),
+                        contentType: 'application/json',
+                        dataType: 'json',
+                        success: function (res) {
+                            if (res.status) {
+                                setupDropdown(
+                                    'dropdownContent',
+                                    'success',
+                                    'Status Changed Successfully',
+                                    'click'
+                                );
+                                // Update UI locally
+                                if (targetSt === 'Available') {
+                                    $('#vehicleStatusBadge').attr('class', 'badge bg-label-success').text('Available');
+                                    $('#toggleStatusBtn')
+                                        .removeClass('d-none btn-success')
+                                        .addClass('btn-warning')
+                                        .html('<i class="ri-close-circle-line me-1"></i> Deactivate');
+                                } else {
+                                    $('#vehicleStatusBadge').attr('class', 'badge bg-label-danger').text('Deactivated');
+                                    $('#toggleStatusBtn')
+                                        .removeClass('d-none btn-warning')
+                                        .addClass('btn-success')
+                                        .html('<i class="ri-checkbox-circle-line me-1"></i> Activate');
+                                }
+                                pendingVehicleStatus = targetSt;
+                                if (selectedVehicleData) selectedVehicleData.vehicle_status = targetSt;
+                                
+                                if($.fn.DataTable.isDataTable('#vehicleTable')){
+                                     $('#vehicleTable').DataTable().ajax.reload(null, false);
+                                }
+                            } else {
+                                setupDropdown('dropdownContent', 'error', res.message || 'Error changing status', 'click');
+                            }
+                        },
+                        error: function () {
+                            setupDropdown('dropdownContent', 'error', 'Error connecting to server', 'click');
+                        }
+                    });
+                }
+                $('#popupOverlay').hide();
+                $('#popupContainer').hide();
+            });
+
+            $(document).on('click', '#msg_popup_canceled', function () {
+                $('#popupOverlay').hide();
+                $('#popupContainer').hide();
+            });
 
 });// Jquery Close
 

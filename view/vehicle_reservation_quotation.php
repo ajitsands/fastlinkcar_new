@@ -1429,13 +1429,13 @@ $('.service').on('change', function () {
     // optional: trigger recalculation
     $('.vat').trigger('input');
 });
-$('.service, .rate_type, .from_datetime, .to_datetime, .price, .vat .duration')
+$('.service, .rate_type, .from_datetime, .to_datetime, .price, .vat, .duration')
 .on('input change', function () {
-    let modelId = $('#ModelRef').val();
+    let modelId = $('#ModelRef').val() || 'All';
     let fromDate = $('.from_datetime').val();
     let toDate   = $('.to_datetime').val();
     
-    if (modelId !== '' && fromDate !== '' && toDate !== '') {
+    if (fromDate !== '' && toDate !== '') {
         loadVehiclesTableAvailability(modelId, fromDate, toDate);
     }
     line_item_calculation();

@@ -84,7 +84,7 @@
         <!-- dynamic content -->
       </div>
       <div class="modal-footer">
-            <button type="button" class="btn btn-danger" id="deletePreviewImageBtn">Delete</button>
+            <button type="button" class="btn btn-danger" id="deletePreviewImageBtn" data-permission="customers_manage">Delete</button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>

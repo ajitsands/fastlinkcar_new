@@ -7,6 +7,7 @@
         class="btn btn-dark fw-semibold px-3"
         id="btnWalkIns"
         data-bs-toggle="tooltip"
+        data-bs-trigger="hover"
         data-bs-placement="top"
         title="Create Direct Booking">
 
@@ -17,7 +18,15 @@
                     </div>
 
                  <div class="row align-items-end g-2">
-                <div class="col-md-4">
+                <div class="col-md-2">
+                    <div class="form-floating form-floating-outline flex-grow-1">
+                        <select id="companySelect" name="companySelect" class="form-select" data-allow-clear="true" style="width:100%">
+                            <!-- Populated via AJAX -->
+                        </select>
+                        <label for="companySelect">Company</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
                     <div class="d-flex align-items-stretch gap-2">
             
                     <div class="form-floating form-floating-outline flex-grow-1">
@@ -32,7 +41,7 @@
             
                     <button type="button"
                             
-                            class="btn btn-primary d-flex align-items-center justify-content-center addCustomerBtn"
+                            class="btn btn-primary d-none align-items-center justify-content-center addCustomerBtn"
                             title="Add New Customer">
                         <i class="ri ri-user-add-line" style="font-size:20px;"></i>
                     </button>
@@ -80,7 +89,7 @@
     
     <!-- Search Button -->
     <div class="col-md-1">
-        <button class="btn btn-primary w-100 rounded-pill" id="btnMainSearch">
+        <button class="btn btn-primary w-100 rounded-pill" id="btnMainSearch" title="Search">
     <i class="ri ri-search-line me-1"></i> Search
 </button>
     </div>
@@ -116,6 +125,7 @@
                                 <tr>
                                     <th></th> 
                                     <th> Ref</th>
+                                    <th>Reservation Date</th>
                                     <th>Customer</th>
                                     <th>Count</th>
                                     <th>Actions</th>

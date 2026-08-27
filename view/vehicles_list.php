@@ -338,7 +338,8 @@ $('[data-bs-toggle="tooltip"]').tooltip();
                 return JSON.stringify({
                     action: 'ListVehicleMaster_Due_days',
                     filter_date: $('#filter_date').val(),
-                    vehicle_model: $('#vehicleModelAvail').val() || 'All'
+                    vehicle_model: $('#vehicleModelAvail').val() || 'All',
+                    company_id: $('#companyFilter').val()
                 });
             },
             dataSrc: 'data',
@@ -363,12 +364,18 @@ $('[data-bs-toggle="tooltip"]').tooltip();
 
             { data: 'model_names' ,
                  render: function (data, type, row, meta) {
-                    return  `<span class="small fw-bold">${data}</span>`;
+                     let html = `<span class="small fw-bold">${data || ''}</span>`;
+                     html += `<small class="d-block text-success mt-1 lh-1"><i class="ri ri-building-4-line align-middle"></i> Reg Co: ${row.ownership_company || 'N/A'}</small>`;
+                     return html;
                 }
             },
             { data: 'vehicle_number' ,
                  render: function (data, type, row, meta) {
-                     return  `<span class="small fw-bold">${data}</span>`;
+                     let html = `<span class="small fw-bold">${data}</span>`;
+                     if (row.is_outsourced === 'Yes') {
+                         html += `<small class="d-block text-warning mt-1 lh-1"><i class="ri ri-share-forward-line align-middle"></i> Outsource: ${row.outsourcing_company_name || row.outsourcing_company || 'N/A'}</small>`;
+                     }
+                     return html;
                 }
             },
 
@@ -560,8 +567,15 @@ $('[data-bs-toggle="tooltip"]').tooltip();
     });
 
     // ✅ Search Button Click
-    $('#btnSearch').on('click', function () {
+    $('#filter_date, #vehicleModelAvail').on('change', function () {
+        table.ajax.reload();
+    });
 
+    $('#companyFilter').on('change', function () {
+        table.ajax.reload();
+    });
+
+    $('#btnSearch').on('click', function () {
         let btn = $(this);
         btn.prop('disabled', true).html('<i class="ri ri-loader-4-line spin"></i>');
 

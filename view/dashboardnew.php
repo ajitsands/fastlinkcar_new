@@ -82,6 +82,34 @@ include ROOT_PATH . '/view/envinclude.php';
     filter: invert(1); /* makes the close (X) icon white */
     opacity: 1;
 }
+
+/* Dashboard Expected Return Card & Table Tight Spacing */
+.card-box {
+    padding: 0.75rem 1rem !important;
+}
+.card-box h6 {
+    margin-bottom: 0.25rem !important;
+}
+#vehicleTable_wrapper {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+#vehicleTable_wrapper .row:first-child,
+#vehicleTable_wrapper .dt-action-bar,
+#vehicleTable_wrapper .me-5,
+#vehicleTable_wrapper .ms-n2 {
+    margin-top: 0 !important;
+    margin-bottom: 0.25rem !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+#vehicleTable_wrapper table.dataTable {
+    margin-top: 0 !important;
+}
+#vehicleTable_wrapper table.dataTable thead th {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+}
 #vehicleDetailsModal {
     z-index: 9999 !important;
 }

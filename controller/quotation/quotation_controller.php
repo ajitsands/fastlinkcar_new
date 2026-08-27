@@ -64,8 +64,8 @@ class QuoationController
         $this->total_discount = $_POST['total_discount'] ?? null;
         $this->total_discount_amount = $_POST['total_discount_amount'] ?? null;
         $this->after_discount_amount = $_POST['after_discount_amount'] ?? null;
-        $this->storage_company_id = $_SESSION['company_id'] ?? 1;
-        $this->storage_company_name =$_SESSION['company_name'] ?? null;
+        $this->storage_company_id = $_POST['company_id'] ?? $_SESSION['company_id'] ?? 1;
+        $this->storage_company_name = $_SESSION['company_name'] ?? null;
         $this->storage_username = $_SESSION['user_name'] ?? null;
         $this->storage_userid = $_SESSION['user_id'] ?? 1;
         $this->allItemSubtotal = $_POST['allItemSubtotal'] ?? null;
@@ -123,7 +123,7 @@ class QuoationController
              ':intr_ids' => $this->id
         ];
         
-        $array[3] = "SELECT intrn_content FROM tbl_quotation_introduction WHERE ids = :intr_ids";
+        $array[3] = "SELECT * FROM tbl_quotation_introduction WHERE ids = :intr_ids";
         
         $this->params[3] = [
              ':intr_ids' => $this->id
@@ -191,15 +191,25 @@ class QuoationController
         switch ($action) {
 
             case 'SaveIntroduction':
-
-                $this->ReturnData = $this->varPDOModelObj
-                    ->AddToTable(
-                        $var[0],
-                        $this->params[0]
+                if (!empty($this->id)) {
+                    $sqlUpdate = "UPDATE tbl_quotation_introduction SET intrn_title = ?, intrn_content = ? WHERE ids = ?";
+                    $this->ReturnData = $this->varPDOModelObj->UpdateTable(
+                        $sqlUpdate,
+                        [$this->intrn_title, $this->intrn_content, $this->id]
                     );
+                    echo json_encode([
+                        "status"  => 'Success',
+                        "msg_text"  => 'Updated successfully'
+                    ]);
+                } else {
+                    $this->ReturnData = $this->varPDOModelObj
+                        ->AddToTable(
+                            $var[0],
+                            $this->params[0]
+                        );
 
-                echo $this->ReturnData;
-
+                    echo $this->ReturnData;
+                }
                 break;
 
            case 'LoadIntroduction':
@@ -244,10 +254,14 @@ class QuoationController
                 $result = json_decode($this->ReturnData, true);
             
                 $htmlContent = $result['data'][0]['intrn_content'] ?? '';
+                $title = $result['data'][0]['intrn_title'] ?? '';
+                $id = $result['data'][0]['ids'] ?? '';
             
                 echo json_encode([
                     'status' => true,
-                    'html'   => $htmlContent
+                    'html'   => $htmlContent,
+                    'title'  => $title,
+                    'id'     => $id
                 ]);
             
             break;
@@ -314,6 +328,15 @@ class QuoationController
             
             break;
             case 'SaveQuotation':
+                    $userPermissions = isset($_SESSION['permissions']) ? (is_array($_SESSION['permissions']) ? $_SESSION['permissions'] : explode(',', $_SESSION['permissions'])) : [];
+                    $loggedInRoleIds = array_map('intval', explode(',', $_SESSION['user_role_id'] ?? ''));
+                    $isSuperAdmin = (!empty($_SESSION['is_super_admin'])) || in_array($_SESSION['user_role_name'] ?? '', ['Super Admin', 'Admin']) || in_array(3, $loggedInRoleIds) || in_array(1, $loggedInRoleIds);
+                    $canManage = $isSuperAdmin || in_array('*', $userPermissions) || in_array('quotation_manage', $userPermissions);
+                    
+                    if (!$canManage) {
+                        echo json_encode(["status" => false, "msg_text" => "Permission denied to manage quotations."]);
+                        break;
+                    }
                     try {
                         
                         $isUpdate = ($this->action_type === 'update' && !empty($this->quotation_id));
@@ -485,22 +508,47 @@ class QuoationController
            case 'GetQuotations':
 
          
-          $sql = "SELECT * FROM quotations WHERE company_id = :company_ids and draft =:draft AND quotation_date BETWEEN :start_date AND :end_date ";
+            $filterCompanyId = $_POST['company_id'] ?? 'All';
+            $companyIds = [];
             
-            $params = [
-               ':company_ids' => $this->company_id,
-             ':draft' => $this->draft,
-             ':start_date'  => $this->startDate,
-             ':end_date'    => $this->endDate
-            ];
+            if ($filterCompanyId !== 'All' && !empty($filterCompanyId)) {
+                $companyIds[] = $filterCompanyId;
+            } else {
+                if (!empty($_SESSION['company_json'])) {
+                    $companyData = json_decode($_SESSION['company_json'], true);
+                    if (is_array($companyData)) {
+                        foreach ($companyData as $comp) {
+                            $companyIds[] = $comp['ids'];
+                        }
+                    }
+                }
+                if (empty($companyIds) && !empty($_SESSION['company_id'])) {
+                    $companyIds[] = $_SESSION['company_id'];
+                }
+            }
             
+            if (empty($companyIds)) {
+                $companyIds = [-1]; // Fallback if no companies
+            }
+            
+            $placeholders = implode(',', array_fill(0, count($companyIds), '?'));
+            
+            $sql = "SELECT quotations.*, tbl_company.company_name 
+                    FROM quotations 
+                    LEFT JOIN tbl_company ON quotations.company_id = tbl_company.ids 
+                    WHERE quotations.company_id IN ($placeholders) AND quotations.draft = ? AND quotations.quotation_date BETWEEN ? AND ? ";
+            
+            $params = $companyIds;
+            $params[] = $this->draft;
+            $params[] = $this->startDate;
+            $params[] = $this->endDate;
            
             if (!empty($this->customer_code) && $this->customer_code != 'All') {
-                    $sql .= " AND customer_code = :customer_code";
-                    $params[':customer_code'] = trim($this->customer_code);
+                    $sql .= " AND quotations.customer_code = ?";
+                    $params[] = trim($this->customer_code);
                 }
             
-            $sql .= " ORDER BY id DESC";
+            $sql .= " ORDER BY quotations.id DESC";
  
             $this->ReturnData = $this->varPDOModelObj->ListFromTable($sql, $params);
             
@@ -520,32 +568,49 @@ class QuoationController
         
                     $id = (int)$row['id'];
                     $quotation_no = htmlspecialchars($row['quotation_no']);
+                    $company_name = htmlspecialchars($row['company_name'] ?? '');
+                    $quotation_no_html = "{$quotation_no}<br><span class='badge bg-primary mt-1'>{$company_name}</span>";
                     $customer_name = htmlspecialchars($row['customer_name']);
                     $customer_phone = htmlspecialchars($row['customer_phone']);
                     $customer_cpr_cr = htmlspecialchars($row['customer_cpr_cr']);
                     $customer_val=$customer_name.' | '.$customer_phone.' | '.$customer_cpr_cr;
                     $checked = ($row['quotation_status']== 'Approved') ? 'checked' : '';
+                    $userPermissions = isset($_SESSION['permissions']) ? (is_array($_SESSION['permissions']) ? $_SESSION['permissions'] : explode(',', $_SESSION['permissions'])) : [];
+                    $loggedInRoleIds = array_map('intval', explode(',', $_SESSION['user_role_id'] ?? ''));
+                    $isSuperAdmin = (!empty($_SESSION['is_super_admin'])) || in_array($_SESSION['user_role_name'] ?? '', ['Super Admin', 'Admin']) || in_array(3, $loggedInRoleIds) || in_array(1, $loggedInRoleIds);
+                    $canApprove = $isSuperAdmin || in_array('*', $userPermissions) || in_array('quotation_approve', $userPermissions);
+                    
+                    if ($this->draft == 'No') {
+                        if ($canApprove) {
+                            $statusHtml = "<span class='me-2 text-danger'>Not Approved</span>
+                                           <label class='switch'>
+                                               <input type='checkbox'
+                                                      class='quotation-status'
+                                                      data-id='{$id}'
+                                                      {$checked}>
+                                               <span class='slider'></span>
+                                           </label>
+                                           <span class='ms-2 text-success'>Approved</span>";
+                        } else {
+                            $statusText = ($row['quotation_status'] == 'Approved') ? 'Approved' : 'Disapproved';
+                            $badgeClass = ($row['quotation_status'] == 'Approved') ? 'bg-success' : 'bg-danger';
+                            $statusHtml = "<span class='badge {$badgeClass}'>{$statusText}</span>";
+                        }
+                    } else {
+                        $statusHtml = '';
+                    }
+
                     $data[] = [
-                        $quotation_no,
+                        $quotation_no_html,
                         $date,
                         $customer_val,
                         "<div style='text-align:right'>{$subtotal}</div>",
                         "<div style='text-align:right'>{$vat}</div>",
                         "<div style='text-align:right'>{$grand}</div>",
                          
-                        ($this->draft == 'No')
-                            ? "<span class='me-2 text-danger'>Disapproved</span>
-                               <label class='switch'>
-                                   <input type='checkbox'
-                                          class='quotation-status'
-                                          data-id='{$id}'
-                                          {$checked}>
-                                   <span class='slider'></span>
-                               </label>
-                               <span class='ms-2 text-success'>Approved</span>"
-                            : '',
+                        $statusHtml,
                         "<button class='btn btn-sm btn-primary viewQuotation' data-id='{$id}'>
-                            <span class='ri ri-list-view icon-18px'></span>
+                            <span class='ri ri-edit-box-line icon-18px'></span>
                         </button>",
                         // "<div class='d-flex gap-1 '>
                             
@@ -578,6 +643,15 @@ class QuoationController
             
             break;
              case 'UpdateQuotationApproval':
+                 $userPermissions = isset($_SESSION['permissions']) ? (is_array($_SESSION['permissions']) ? $_SESSION['permissions'] : explode(',', $_SESSION['permissions'])) : [];
+                 $loggedInRoleIds = array_map('intval', explode(',', $_SESSION['user_role_id'] ?? ''));
+                 $isSuperAdmin = (!empty($_SESSION['is_super_admin'])) || in_array($_SESSION['user_role_name'] ?? '', ['Super Admin', 'Admin']) || in_array(3, $loggedInRoleIds) || in_array(1, $loggedInRoleIds);
+                 $canApprove = $isSuperAdmin || in_array('*', $userPermissions) || in_array('quotation_approve', $userPermissions);
+                 
+                 if (!$canApprove) {
+                     echo json_encode(["status" => false, "msg_text" => "Permission denied to approve quotations."]);
+                     break;
+                 }
                  if($this->is_approved=='1')
                  {
                         $sqlUpdate = "UPDATE quotations SET

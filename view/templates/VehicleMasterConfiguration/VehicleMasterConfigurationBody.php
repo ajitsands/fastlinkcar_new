@@ -11,43 +11,43 @@
                       <div class="card-body">
                            <div class="col-xl-12">
                          
-                          <div class="nav-align-left">
-                            <ul class="nav nav-pills me-4" role="tablist">
+                           <div class="nav-align-top">
+                            <ul class="nav nav-pills mb-4" role="tablist">
                               <li class="nav-item" role="presentation">
-                                <button type="button" class="nav-link waves-effect waves-light active" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-left-category" aria-controls="navs-pills-left-category" aria-selected="false" tabindex="-1">
+                                <button type="button" class="nav-link waves-effect waves-light active" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-category" aria-controls="navs-pills-top-category" aria-selected="true">
                                   Category
                                 </button>
                               </li>
                               <li class="nav-item" role="presentation">
-                                <button type="button" class="nav-link waves-effect waves-light" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-left-brand" aria-controls="navs-pills-left-brand" aria-selected="false" tabindex="-1">
+                                <button type="button" class="nav-link waves-effect waves-light" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-brand" aria-controls="navs-pills-top-brand" aria-selected="false">
                                   Brand
                                 </button>
                               </li>
                               <li class="nav-item" role="presentation">
-                                <button type="button" class="nav-link waves-effect waves-light " role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-left-model" aria-controls="navs-pills-left-model" aria-selected="true">
+                                <button type="button" class="nav-link waves-effect waves-light" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-model" aria-controls="navs-pills-top-model" aria-selected="false">
                                   Model
                                 </button>
                               </li>
                               <li class="nav-item" role="presentation">
-                                <button type="button" class="nav-link waves-effect waves-light " role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-left-pricing" aria-controls="navs-pills-left-pricing" aria-selected="true">
+                                <button type="button" class="nav-link waves-effect waves-light" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-pricing" aria-controls="navs-pills-top-pricing" aria-selected="false">
                                   Pricing
                                 </button>
                               </li>
                             </ul>
                             <div class="tab-content">
-                              <div class="tab-pane fade  active show" id="navs-pills-left-category" role="tabpanel">
+                              <div class="tab-pane fade active show" id="navs-pills-top-category" role="tabpanel">
                                   
                                     <?php include('vehicleMasterCategory.php'); ?>
                                 
                               </div>
-                              <div class="tab-pane fade" id="navs-pills-left-brand" role="tabpanel">
+                              <div class="tab-pane fade" id="navs-pills-top-brand" role="tabpanel">
                                   <?php include('vehicleMasterBrand.php'); ?>
                                 
                               </div>
-                              <div class="tab-pane fade" id="navs-pills-left-model" role="tabpanel">
+                              <div class="tab-pane fade" id="navs-pills-top-model" role="tabpanel">
                                 <?php include('vehicleMasterModel.php'); ?>
                               </div>
-                              <div class="tab-pane fade" id="navs-pills-left-pricing" role="tabpanel">
+                              <div class="tab-pane fade" id="navs-pills-top-pricing" role="tabpanel">
                                 <?php include('vehicleMasterPricing.php'); ?>
                               </div>
                             </div>

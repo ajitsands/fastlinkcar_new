@@ -12,6 +12,7 @@ class VehiclesContractListController
 	  public $user_id,$company_id,$insertedDate,$bookingid,$vehicleid,$customer_code,$model_ids,$km_used;
 	  public $booking_ids,$booking_ref_no,$customer_data,$vehicle_data,$contract_details,$company_driver_details,$vehicle_accessories,$tc_ids,$t_c_name,$terms_condition,$termsContent,$agreement_date,$contract_ids,$data_source_val,$filter_from,$filter_to,$booking_status,$hirer_name,$delivery_name,$hirer_signature,$delivery_signature,$agreementid,$agreement_no,$extend_ids,$vehicle_ids,$km_in,$return_date_in,$ReceiverSign,$receiver_name,$service_name,$close_otp_msg;
 	  public $returnvehicleimages = [];
+	  public $violations = [];
 	  public $page, $limit, $offset, $status, $ReturnData;
 	function __construct()
 	{
@@ -67,14 +68,37 @@ class VehiclesContractListController
         $this->agreement_no = $data['agreement_no'] ?? '';
         $this->extend_ids = $data['extend_ids'] ?? '';
         $this->vehicle_ids = $data['vehicle_ids'] ?? '';
-        $this->vehicle_ids = $data['vehicle_ids'] ?? '';
+        $this->vehicle_number = $data['vehicle_number'] ?? '';
         $this->receiver_name      = $data['receiver_name'] ?? '';
         $this->ReceiverSign    = $data['ReceiverSign'] ?? '';
         $this->returnvehicleimages = $data['returnvehicleimages'] ?? [];
+        $this->violations = $data['violations'] ?? [];
         $this->km_in = $data['km_in'] ?? '';
         $this->km_used = $data['km_used'] ?? '';
         
         $this->return_date_in = $data['return_date_in'] ?? '';
+        $this->head_name = $data['head_name'] ?? '';
+
+        $this->old_vehicle_id = $data['old_vehicle_id'] ?? '';
+        $this->old_vehicle_no = $data['old_vehicle_no'] ?? '';
+        $this->old_km_in = $data['old_km_in'] ?? '';
+        $this->old_km_used = $data['old_km_used'] ?? '';
+        $this->old_fuel_in = $data['old_fuel_in'] ?? '';
+        $this->old_dt_in = $data['old_dt_in'] ?? '';
+        $this->old_return_images = $data['old_return_images'] ?? [];
+        $this->old_accessories = $data['old_accessories'] ?? [];
+        $this->new_vehicle_id = $data['new_vehicle_id'] ?? '';
+        $this->new_vehicle_no = $data['new_vehicle_no'] ?? '';
+        $this->new_category_id = $data['new_category_id'] ?? '';
+        $this->new_model_id = $data['new_model_id'] ?? '';
+        $this->new_km_out = $data['new_km_out'] ?? '';
+        $this->new_fuel_out = $data['new_fuel_out'] ?? '';
+        $this->new_dt_out = $data['new_dt_out'] ?? '';
+        $this->new_accessories = $data['new_accessories'] ?? [];
+        $this->new_rentout_images = $data['new_rentout_images'] ?? [];
+        $this->replace_remarks = $data['replace_remarks'] ?? '';
+        $this->staff_name = $data['staff_name'] ?? '';
+        $this->staff_signature = $data['staff_signature'] ?? '';
        
       
         
@@ -569,6 +593,14 @@ class VehiclesContractListController
                         ]);
 		  	break;
 		   case 'GetContractDetails':
+                    try {
+                        $checkCol = $this->varPDOModelObj->selectexecuteQuery("SHOW COLUMNS FROM tbl_vehicle_rentout_contracts LIKE 'violations_json'");
+                        if ($checkCol && $checkCol->rowCount() == 0) {
+                            $this->varPDOModelObj->executeQuery("ALTER TABLE tbl_vehicle_rentout_contracts ADD COLUMN violations_json LONGTEXT NULL");
+                        }
+                    } catch (\Exception $colEx) {
+                        // Ignore if column check fails or column already exists
+                    }
 
                     // 1. Customer Details
                     $result_cust = $this->varPDOModelObj->selectexecuteQuery(
@@ -577,40 +609,94 @@ class VehiclesContractListController
                          WHERE customer_id = :customer_code",
                         [':customer_code' => $this->customer_code]
                     );
-                    $customer = $result_cust->fetch(PDO::FETCH_ASSOC);
-                
-                    // 2. Vehicle Details
+                    $customer = $result_cust ? $result_cust->fetch(PDO::FETCH_ASSOC) : [];
+
+                    // 2. Fetch Contract Details First
+                    $contract = [];
+                    try {
+                        $result_rentout = $this->varPDOModelObj->selectexecuteQuery(
+                            "SELECT *, contract_details_json as book_details_json FROM tbl_vehicle_rentout_contracts WHERE ids = :agreementid",
+                            [':agreementid' => $this->agreementid]
+                        );
+                        $contract = $result_rentout ? $result_rentout->fetch(PDO::FETCH_ASSOC) : [];
+                    } catch (\Exception $exSelect) {
+                        $result_rentout = $this->varPDOModelObj->selectexecuteQuery(
+                            "SELECT * FROM tbl_vehicle_rentout_contracts WHERE ids = :agreementid",
+                            [':agreementid' => $this->agreementid]
+                        );
+                        $contract = $result_rentout ? $result_rentout->fetch(PDO::FETCH_ASSOC) : [];
+                    }
+
+                    // 3. Resolve Target Vehicle ID and Category ID for current contract vehicle
+                    $targetVehId = !empty($contract['new_vehicle_id']) ? $contract['new_vehicle_id'] : (!empty($contract['vehicle_id']) ? $contract['vehicle_id'] : $this->vehicleid);
+                    $targetVehNo = !empty($contract['new_vehicle_no']) ? $contract['new_vehicle_no'] : (!empty($contract['vehicle_no']) ? $contract['vehicle_no'] : '');
+                    $targetModelId = !empty($contract['new_model_id']) ? $contract['new_model_id'] : (!empty($contract['model_id']) ? $contract['model_id'] : $this->model_ids);
+
+                    $whereConds = ["v.ids = :veh_id"];
+                    $queryParams = [':veh_id' => $targetVehId];
+
+                    if (!empty($targetVehNo)) {
+                        $whereConds[] = "v.vehicle_number = :veh_no";
+                        $queryParams[':veh_no'] = $targetVehNo;
+                    }
+                    if (!empty($this->vehicleid) && $this->vehicleid != $targetVehId) {
+                        $whereConds[] = "v.ids = :alt_id";
+                        $queryParams[':alt_id'] = $this->vehicleid;
+                    }
+
+                    $whereSql = "WHERE " . implode(" OR ", $whereConds);
+
                     $result_vehicle = $this->varPDOModelObj->selectexecuteQuery(
-                        "SELECT ids,category_id, model_id, category_name, brand_name, model_names, vehicle_number, vehicle_year, vehicle_color,
-                                next_insurance_date, next_maintenance_date,next_passing_date,DATE_FORMAT(next_insurance_date, '%d/%m/%Y') AS formatted_next_insurance_date,DATE_FORMAT(next_maintenance_date, '%d/%m/%Y') AS formatted_next_maintenance_date,DATE_FORMAT(next_passing_date, '%d/%m/%Y') AS formatted_next_passing_date  
-                         FROM view_vehicle_details 
-                         WHERE ids = :vehicle_ids",
-                        [':vehicle_ids' => $this->vehicleid]
+                        "SELECT 
+                            v.ids, 
+                            COALESCE(v.category_id, m.category_id) AS category_id, 
+                            v.model_id, 
+                            v.vehicle_number, 
+                            v.vehicle_year, 
+                            v.vehicle_color,
+                            c.category_name, 
+                            b.brand_name, 
+                            m.modal_name AS model_names,
+                            v.next_insurance_date, 
+                            v.next_maintenance_date, 
+                            v.next_passing_date,
+                            DATE_FORMAT(v.next_insurance_date, '%d/%m/%Y') AS formatted_next_insurance_date,
+                            DATE_FORMAT(v.next_maintenance_date, '%d/%m/%Y') AS formatted_next_maintenance_date,
+                            DATE_FORMAT(v.next_passing_date, '%d/%m/%Y') AS formatted_next_passing_date  
+                         FROM tbl_vehicles v
+                         LEFT JOIN tbl_vehicle_model m ON m.ids = v.model_id
+                         LEFT JOIN tbl_vehicle_category c ON c.ids = COALESCE(v.category_id, m.category_id)
+                         LEFT JOIN tbl_vehicle_brand b ON b.ids = v.brand_id
+                         {$whereSql}",
+                        $queryParams
                     );
-                    $vehicle = $result_vehicle->fetch(PDO::FETCH_ASSOC);
-                   
-                  $result_model = $this->varPDOModelObj->selectexecuteQuery(
-                    "SELECT price_json FROM  tbl_vehicle_model WHERE ids = :model_ids",
-                    [':model_ids' => $this->model_ids]
-                );
-                       $model = $result_model->fetch(PDO::FETCH_ASSOC);
-                        $price_list = [];
-                        if (!empty($model['price_json'])) {
-                            $price_list = json_decode($model['price_json'], true);
+                    $vehicle = $result_vehicle ? $result_vehicle->fetch(PDO::FETCH_ASSOC) : [];
+
+                    if (empty($vehicle['category_id'])) {
+                        if (!empty($contract['new_category_id'])) {
+                            $vehicle['category_id'] = $contract['new_category_id'];
+                        } elseif (!empty($contract['category_id'])) {
+                            $vehicle['category_id'] = $contract['category_id'];
+                        } elseif (!empty($targetModelId)) {
+                            $catModelStmt = $this->varPDOModelObj->selectexecuteQuery(
+                                "SELECT category_id FROM tbl_vehicle_model WHERE ids = :mids",
+                                [':mids' => $targetModelId]
+                            );
+                            if ($catModelStmt && $catModelRow = $catModelStmt->fetch(PDO::FETCH_ASSOC)) {
+                                $vehicle['category_id'] = $catModelRow['category_id'];
+                            }
                         }
-                    // 3. Check Rentout First
-                    $result_rentout = $this->varPDOModelObj->selectexecuteQuery(
-                        "SELECT ids,service_type, service_start_date_time, service_end_date_time,agreement_date,
-                                km_in, km_out, km_used, vehicle_rentout_images, quotation_number,agreement_group_ref_no,
-                                vehicle_accessories_details, remarks1, terms_condition,
-                                driver_status, driver_details, hier_signature_status,
-                                received_by, delivered_by,contract_details_json as book_details_json,driver_ids,driver_details,customer_driver_name,customer_driver_contact_number,customer_driver_attachments,booking_ids,agreement_no,vehicle_return_images,agreement_status,hirer_signature,hirer_name,hirer_signature_date,hier_signature_status,delivered_signature_status,delivered_signature,delivered_signatory,delivered_signature_date,receiver_signature,receiver_name,receiver_signature_datetime,return_date
-                         FROM tbl_vehicle_rentout_contracts 
-                         WHERE ids = :agreementid",
-                        [':agreementid' => $this->agreementid]
+                    }
+                   
+                    $result_model = $this->varPDOModelObj->selectexecuteQuery(
+                        "SELECT price_json FROM tbl_vehicle_model WHERE ids = :model_ids",
+                        [':model_ids' => $targetModelId]
                     );
-                
-                    $contract = $result_rentout->fetch(PDO::FETCH_ASSOC);
+                    $model = $result_model ? $result_model->fetch(PDO::FETCH_ASSOC) : [];
+                    $price_list = [];
+                    if (!empty($model['price_json'])) {
+                        $price_list = json_decode($model['price_json'], true);
+                    }
                 
                      $result_extend = $this->varPDOModelObj->selectexecuteQuery(
                         "SELECT ids,extend_end_date FROM  tbl_vehicle_contract_extensions 
@@ -1240,11 +1326,70 @@ class VehiclesContractListController
                         $returnjson_log = json_encode($returnlog_details);
                         $return_date=date('Y-m-d');
                         $returnvehicleimages_upload = json_encode($this->returnvehicleimages);
+                        
+                        $rawViolations = is_array($this->violations) ? $this->violations : json_decode($this->violations ?? '[]', true);
+                        $formattedViolations = [];
+
+                        if (is_array($rawViolations)) {
+                            $fallbackVehNo = $this->vehicle_number ?? '';
+                            if (empty($fallbackVehNo) && !empty($this->vehicle_ids)) {
+                                try {
+                                    $stmtV = $this->varPDOModelObj->selectexecuteQuery("SELECT vehicle_number FROM tbl_vehicles WHERE ids = :vids", [':vids' => $this->vehicle_ids]);
+                                    if ($stmtV) {
+                                        $rowV = $stmtV->fetch(PDO::FETCH_ASSOC);
+                                        $fallbackVehNo = $rowV['vehicle_number'] ?? '';
+                                    }
+                                } catch (\Exception $eV) {}
+                            }
+
+                            foreach ($rawViolations as $v) {
+                                $vTitle = trim($v['title'] ?? '');
+                                $vFee = floatval($v['fee'] ?? 0);
+                                $vRemarks = trim($v['remarks'] ?? '');
+                                $vDate = !empty($v['violation_date']) ? $v['violation_date'] : (!empty($v['date']) ? $v['date'] : date('Y-m-d'));
+                                $vVehId = !empty($v['vehicle_id']) ? $v['vehicle_id'] : ($this->vehicle_ids ?? '');
+                                $vVehNo = !empty($v['vehicle_number']) ? $v['vehicle_number'] : $fallbackVehNo;
+                                $vLedgerId = !empty($v['ledger_id']) ? intval($v['ledger_id']) : 0;
+
+                                if (empty($vLedgerId) && !empty($vTitle)) {
+                                    try {
+                                        $stmtL = $this->varPDOModelObj->selectexecuteQuery("SELECT ids FROM tbl_ledger_heads WHERE head_name = :hname", [':hname' => $vTitle]);
+                                        if ($stmtL) {
+                                            $rowL = $stmtL->fetch(PDO::FETCH_ASSOC);
+                                            $vLedgerId = $rowL['ids'] ?? 0;
+                                        }
+                                    } catch (\Exception $eL) {}
+                                }
+
+                                if ($vTitle !== '' || $vFee > 0 || $vRemarks !== '') {
+                                    $formattedViolations[] = [
+                                        'vehicle_id'     => $vVehId,
+                                        'vehicle_number' => $vVehNo,
+                                        'violation_date' => $vDate,
+                                        'title'          => $vTitle,
+                                        'ledger_id'      => $vLedgerId,
+                                        'fee'            => $vFee,
+                                        'remarks'        => $vRemarks
+                                    ];
+                                }
+                            }
+                        }
+
+                        $violations_json_data = json_encode($formattedViolations);
                           
                        try {
+                                try {
+                                    $checkCol = $this->varPDOModelObj->selectexecuteQuery("SHOW COLUMNS FROM tbl_vehicle_rentout_contracts LIKE 'violations_json'");
+                                    if ($checkCol && $checkCol->rowCount() == 0) {
+                                        $this->varPDOModelObj->executeQuery("ALTER TABLE tbl_vehicle_rentout_contracts ADD COLUMN violations_json LONGTEXT NULL");
+                                    }
+                                } catch (\Exception $colEx) {
+                                    // Ignore if column check fails or column already exists
+                                }
+
                                 $updateContractQuery = "
                                         UPDATE  tbl_vehicle_rentout_contracts
-                                        SET agreement_status = 'Returned',return_log_json=:return_log,km_in=:km_in,km_used=:km_used,return_date=:return_date,received_by=:received_by,receiver_name=:receiver_name,receiver_signature=:receiver_signature,receiver_signature_datetime=:receiver_signature_datetime,receiver_signed_device=:receiver_signed_device,receiver_signed_ip=:receiver_signed_ip,vehicle_return_images=:vehicle_return_images
+                                        SET agreement_status = 'Returned',return_log_json=:return_log,km_in=:km_in,km_used=:km_used,return_date=:return_date,received_by=:received_by,receiver_name=:receiver_name,receiver_signature=:receiver_signature,receiver_signature_datetime=:receiver_signature_datetime,receiver_signed_device=:receiver_signed_device,receiver_signed_ip=:receiver_signed_ip,vehicle_return_images=:vehicle_return_images,violations_json=:violations_json
                                         WHERE ids = :agreement_id
                                     ";
                                      $updateContractParams = [
@@ -1260,6 +1405,7 @@ class VehiclesContractListController
                                           ':receiver_signed_device' => $receiver_signed_device,
                                            ':receiver_signed_ip' => $receiver_signed_ip,
                                           ':vehicle_return_images' => $returnvehicleimages_upload,
+                                          ':violations_json' => $violations_json_data,
                                             ':agreement_id' => $this->agreementid
                                 
                                     ];
@@ -1271,7 +1417,164 @@ class VehiclesContractListController
                                
                              if ($this->ReturnData) {
                                  
-                              
+                                     if (!empty($formattedViolations)) {
+                                             try {
+                                                 $this->varPDOModelObj->executeQuery("ALTER TABLE tbl_customer_ledger MODIFY trans_type VARCHAR(100) NOT NULL");
+                                             } catch (\Exception $exTrans) {}
+
+                                             $stmtContractInfo = $this->varPDOModelObj->selectexecuteQuery(
+                                                 "SELECT 
+                                                     c.quotation_number AS contract_qtn, 
+                                                     c.booking_ids, 
+                                                     c.agreement_no, 
+                                                     c.customer_code AS contract_cust_code,
+                                                     b.booking_no AS booking_no_str,
+                                                     b.quotation_number AS booking_qtn_str,
+                                                     b.customer_code AS booking_cust_code
+                                                  FROM tbl_vehicle_rentout_contracts c
+                                                  LEFT JOIN tbl_vehicle_bookings b ON b.ids = c.booking_ids
+                                                  WHERE c.ids = :agreementid",
+                                                 [':agreementid' => $this->agreementid]
+                                             );
+                                             $contractInfoRow = $stmtContractInfo ? $stmtContractInfo->fetch(PDO::FETCH_ASSOC) : [];
+
+                                             $ledgerCustCode = !empty($this->customer_code) ? $this->customer_code : ($contractInfoRow['contract_cust_code'] ?? ($contractInfoRow['booking_cust_code'] ?? ''));
+                                             $ledgerQtnNo    = !empty($contractInfoRow['contract_qtn']) ? $contractInfoRow['contract_qtn'] : (!empty($contractInfoRow['booking_qtn_str']) ? $contractInfoRow['booking_qtn_str'] : ($contractInfoRow['agreement_no'] ?? ''));
+                                             $ledgerBookNo   = !empty($contractInfoRow['booking_no_str']) ? $contractInfoRow['booking_no_str'] : (!empty($this->booking_ref_no) ? $this->booking_ref_no : ($contractInfoRow['booking_ids'] ?? ''));
+                                             $ledgerAgreeNo  = !empty($this->agreement_no) ? $this->agreement_no : ($contractInfoRow['agreement_no'] ?? '');
+
+                                             foreach ($formattedViolations as $violation) {
+                                                 $vTitle = trim($violation['title'] ?? '');
+                                                 $vFee = floatval($violation['fee'] ?? 0);
+                                                 $vRemarks = trim($violation['remarks'] ?? '');
+                                                 $vDateStr = !empty($violation['violation_date']) ? date('Y-m-d', strtotime($violation['violation_date'])) : (!empty($this->return_date_in) ? date('Y-m-d', strtotime($this->return_date_in)) : date('Y-m-d'));
+                                                 $transTypeStr = !empty($vTitle) ? $vTitle : 'Vehicle Violation';
+
+                                                 if ($vTitle !== '' || $vFee > 0 || $vRemarks !== '') {
+                                                     $vDesc = 'Vehicle Violation: ' . $vTitle;
+                                                     if (!empty($vRemarks)) {
+                                                         $vDesc .= ' (Remarks: ' . $vRemarks . ')';
+                                                     }
+                                                     $vDesc .= ' (Agreement No: ' . $ledgerAgreeNo . ')';
+
+                                                     $ledgerSql = "
+                                                         INSERT INTO tbl_customer_ledger
+                                                         (
+                                                             customer_code,
+                                                             quotation_no,
+                                                             booking_no,
+                                                             trans_date,
+                                                             trans_type,
+                                                             payment_method,
+                                                             debit,
+                                                             credit,
+                                                             ref_no,
+                                                             description,
+                                                             user_id,
+                                                             company_id,
+                                                             created_at,
+                                                             booking_ids,
+                                                             contract_ids,
+                                                             agreement_no
+                                                         )
+                                                         VALUES
+                                                         (
+                                                             :customer_code,
+                                                             :quotation_no,
+                                                             :booking_no,
+                                                             :trans_date,
+                                                             :trans_type,
+                                                             'N/A',
+                                                             :debit,
+                                                             :credit,
+                                                             :ref_no,
+                                                             :description,
+                                                             :user_id,
+                                                             :company_id,
+                                                             :created_at,
+                                                             :booking_ids,
+                                                             :contract_ids,
+                                                             :agreement_no
+                                                         )
+                                                     ";
+
+                                                     $ledgerParams = [
+                                                         ':customer_code' => $ledgerCustCode,
+                                                         ':quotation_no'  => $ledgerQtnNo,
+                                                         ':booking_no'    => $ledgerBookNo,
+                                                         ':trans_date'    => $vDateStr,
+                                                         ':trans_type'    => $transTypeStr,
+                                                         ':debit'         => $vFee,
+                                                         ':credit'        => 0,
+                                                         ':ref_no'        => $ledgerAgreeNo,
+                                                         ':description'   => $vDesc,
+                                                         ':user_id'       => $this->user_id ?? 1,
+                                                         ':company_id'    => $this->company_id ?? 1,
+                                                         ':created_at'    => date('Y-m-d H:i:s'),
+                                                         ':booking_ids'   => $ledgerBookNo,
+                                                         ':contract_ids'  => $this->agreementid ?? 0,
+                                                         ':agreement_no'  => $ledgerAgreeNo
+                                                     ];
+
+                                                     try {
+                                                         $this->varPDOModelObj->executeQuery($ledgerSql, $ledgerParams);
+                                                     } catch (\Exception $ledgerEx) {
+                                                         $fallbackLedgerSql = "
+                                                             INSERT INTO tbl_customer_ledger
+                                                             (
+                                                                 customer_code,
+                                                                 quotation_no,
+                                                                 booking_no,
+                                                                 trans_date,
+                                                                 trans_type,
+                                                                 payment_method,
+                                                                 debit,
+                                                                 credit,
+                                                                 ref_no,
+                                                                 description,
+                                                                 user_id,
+                                                                 company_id,
+                                                                 created_at
+                                                             )
+                                                             VALUES
+                                                             (
+                                                                 :customer_code,
+                                                                 :quotation_no,
+                                                                 :booking_no,
+                                                                 :trans_date,
+                                                                 :trans_type,
+                                                                 'N/A',
+                                                                 :debit,
+                                                                 :credit,
+                                                                 :ref_no,
+                                                                 :description,
+                                                                 :user_id,
+                                                                 :company_id,
+                                                                 :created_at
+                                                             )
+                                                         ";
+
+                                                         $fallbackParams = [
+                                                             ':customer_code' => $ledgerCustCode,
+                                                             ':quotation_no'  => $ledgerQtnNo,
+                                                             ':booking_no'    => $ledgerBookNo,
+                                                             ':trans_date'    => $vDateStr,
+                                                             ':trans_type'    => $transTypeStr,
+                                                             ':debit'         => $vFee,
+                                                             ':credit'        => 0,
+                                                             ':ref_no'        => $ledgerAgreeNo,
+                                                             ':description'   => $vDesc,
+                                                             ':user_id'       => $this->user_id ?? 1,
+                                                             ':company_id'    => $this->company_id ?? 1,
+                                                             ':created_at'    => date('Y-m-d H:i:s')
+                                                         ];
+
+                                                         $this->varPDOModelObj->executeQuery($fallbackLedgerSql, $fallbackParams);
+                                                     }
+                                                 }
+                                             }
+                                     }
+                               
                                     $sqlOldStatus = "
                                         SELECT vehicle_status
                                         FROM tbl_vehicles
@@ -1429,6 +1732,444 @@ class VehiclesContractListController
     ]);
 
 break;
+
+case 'getViolationHeads':
+    try {
+        $checkCol = $this->varPDOModelObj->selectexecuteQuery("SHOW COLUMNS FROM tbl_ledger_heads LIKE 'violation_fine_type'");
+        if ($checkCol && $checkCol->rowCount() == 0) {
+            $this->varPDOModelObj->executeQuery("ALTER TABLE tbl_ledger_heads ADD COLUMN violation_fine_type VARCHAR(10) NOT NULL DEFAULT 'No'");
+        }
+    } catch (\Exception $exCol) {}
+
+    $stmtHeads = $this->varPDOModelObj->selectexecuteQuery(
+        "SELECT ids, head_name FROM tbl_ledger_heads WHERE violation_fine_type = 'Yes' ORDER BY head_name ASC"
+    );
+    $headsList = $stmtHeads ? $stmtHeads->fetchAll(PDO::FETCH_ASSOC) : [];
+    echo json_encode([
+        'status' => true,
+        'data'   => $headsList
+    ]);
+    break;
+
+case 'addViolationHead':
+    $headName = trim($this->head_name ?? '');
+    if (empty($headName)) {
+        echo json_encode(['status' => false, 'message' => 'Violation head name is required']);
+        break;
+    }
+
+    try {
+        $checkCol = $this->varPDOModelObj->selectexecuteQuery("SHOW COLUMNS FROM tbl_ledger_heads LIKE 'violation_fine_type'");
+        if ($checkCol && $checkCol->rowCount() == 0) {
+            $this->varPDOModelObj->executeQuery("ALTER TABLE tbl_ledger_heads ADD COLUMN violation_fine_type VARCHAR(10) NOT NULL DEFAULT 'No'");
+        }
+    } catch (\Exception $exCol) {}
+
+    $stmtCheck = $this->varPDOModelObj->selectexecuteQuery(
+        "SELECT ids FROM tbl_ledger_heads WHERE head_name = :hname",
+        [':hname' => $headName]
+    );
+    $existHead = $stmtCheck ? $stmtCheck->fetch(PDO::FETCH_ASSOC) : null;
+
+    if ($existHead) {
+        $this->varPDOModelObj->executeQuery(
+            "UPDATE tbl_ledger_heads SET violation_fine_type = 'Yes' WHERE ids = :id",
+            [':id' => $existHead['ids']]
+        );
+        echo json_encode([
+            'status' => true,
+            'message' => 'Violation head enabled successfully',
+            'head_name' => $headName
+        ]);
+    } else {
+        $this->varPDOModelObj->executeQuery(
+            "INSERT INTO tbl_ledger_heads (head_name, head_type, violation_fine_type, is_locked, company_id) VALUES (:hname, 'Debit', 'Yes', 0, :company_id)",
+            [
+                ':hname' => $headName,
+                ':company_id' => $this->company_id ?? 1
+            ]
+        );
+        echo json_encode([
+            'status' => true,
+            'message' => 'Violation head added successfully',
+            'head_name' => $headName
+        ]);
+    }
+    break;
+
+case 'getAvailableVehicles':
+    $rawCat = trim($data['category_id'] ?? '');
+    $whereClause = "WHERE v.vehicle_status = 'Available'";
+    $params = [];
+
+    if (!empty($rawCat)) {
+        if (is_numeric($rawCat)) {
+            $catId = intval($rawCat);
+            $whereClause .= " AND (v.category_id = {$catId} OR m.category_id = {$catId} OR c.ids = {$catId})";
+        } else {
+            $whereClause .= " AND (c.category_name LIKE :cname OR (SELECT category_name FROM tbl_vehicle_category WHERE ids = m.category_id) LIKE :cname)";
+            $params[':cname'] = '%' . $rawCat . '%';
+        }
+    }
+
+    $sqlVeh = "
+        SELECT 
+            v.ids,
+            v.vehicle_number,
+            COALESCE(v.category_id, m.category_id) AS vehicle_category_id,
+            v.model_id AS vehicle_model_id,
+            v.vehicle_color,
+            v.vehicle_year AS manufacture_year,
+            v.vehicle_status,
+            v.other_details_json,
+            v.image_json,
+            COALESCE(c.category_name, (SELECT category_name FROM tbl_vehicle_category WHERE ids = m.category_id)) AS category_name,
+            m.modal_name AS model_name
+        FROM tbl_vehicles v
+        LEFT JOIN tbl_vehicle_category c ON c.ids = v.category_id
+        LEFT JOIN tbl_vehicle_model m ON m.ids = v.model_id
+        {$whereClause}
+        ORDER BY v.vehicle_number ASC
+    ";
+    $stmtVeh = !empty($params) 
+        ? $this->varPDOModelObj->selectexecuteQuery($sqlVeh, $params)
+        : $this->varPDOModelObj->selectexecuteQuery($sqlVeh);
+    $availableList = [];
+    if ($stmtVeh) {
+        $rows = $stmtVeh->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $r) {
+            $other = !empty($r['other_details_json']) ? (json_decode($r['other_details_json'], true) ?: []) : [];
+            $r['odo_meter'] = $other['current_km'] ?? ($other['odo_meter'] ?? ($other['km'] ?? 0));
+            $r['fuel_level'] = $other['fuel_level'] ?? ($other['fuel'] ?? '');
+            $r['fuel_type'] = $other['fuel_type'] ?? ($other['fuel'] ?? 'Petrol');
+            $r['gear_type'] = $other['gear_type'] ?? ($other['transmission'] ?? 'Automatic');
+            $r['next_passing_date'] = $other['next_passing_date'] ?? ($other['passing_date'] ?? 'NA');
+            $r['next_insurance_date'] = $other['next_insurance_date'] ?? ($other['insurance_date'] ?? 'NA');
+            $r['next_maintenance_date'] = $other['next_maintenance_date'] ?? ($other['maintenance_date'] ?? 'NA');
+
+            $lastImage = '';
+            if (!empty($r['image_json'])) {
+                $imgs = json_decode($r['image_json'], true);
+                if (is_array($imgs) && count($imgs) > 0) {
+                    $lastImage = end($imgs);
+                }
+            }
+            if (empty($lastImage) && !empty($other['vehicle_images'])) {
+                $imgs = is_array($other['vehicle_images']) ? $other['vehicle_images'] : json_decode($other['vehicle_images'], true);
+                if (is_array($imgs) && count($imgs) > 0) {
+                    $lastImage = end($imgs);
+                }
+            }
+            $r['last_image'] = $lastImage;
+            $r['vehicle_images'] = $other['vehicle_images'] ?? ($other['images'] ?? []);
+            $availableList[] = $r;
+        }
+    }
+    echo json_encode([
+        'status' => true,
+        'data'   => $availableList
+    ]);
+    break;
+
+case 'replaceContractGeneration':
+    try {
+        $agreementId = intval($this->agreementid);
+        if (empty($agreementId)) {
+            echo json_encode(['status' => false, 'message' => 'Agreement ID is required']);
+            break;
+        }
+
+        $stmtContract = $this->varPDOModelObj->selectexecuteQuery(
+            "SELECT * FROM tbl_vehicle_rentout_contracts WHERE ids = :id",
+            [':id' => $agreementId]
+        );
+        $contractRow = $stmtContract ? $stmtContract->fetch(PDO::FETCH_ASSOC) : null;
+        if (!$contractRow) {
+            echo json_encode(['status' => false, 'message' => 'Contract not found']);
+            break;
+        }
+
+        if (strtolower($contractRow['agreement_status']) !== 'rentout') {
+            echo json_encode(['status' => false, 'message' => 'Vehicle replacement is only allowed for active Rentout contracts.']);
+            break;
+        }
+
+        $newVehId = intval($this->new_vehicle_id);
+        if (empty($newVehId)) {
+            echo json_encode(['status' => false, 'message' => 'Please select a replacement vehicle']);
+            break;
+        }
+
+        $stmtNewVeh = $this->varPDOModelObj->selectexecuteQuery(
+            "SELECT v.*, c.category_name, m.modal_name AS model_name 
+             FROM tbl_vehicles v
+             LEFT JOIN tbl_vehicle_category c ON c.ids = v.category_id
+             LEFT JOIN tbl_vehicle_model m ON m.ids = v.model_id
+             WHERE v.ids = :id",
+            [':id' => $newVehId]
+        );
+        $newVehRow = $stmtNewVeh ? $stmtNewVeh->fetch(PDO::FETCH_ASSOC) : null;
+        if (!$newVehRow) {
+            echo json_encode(['status' => false, 'message' => 'Replacement vehicle not found']);
+            break;
+        }
+
+        $oldVehId = intval($contractRow['vehicle_id']);
+        $oldVehNo = $contractRow['vehicle_no'] ?? '';
+        $oldCatId = $contractRow['vehicle_category_id'] ?? '';
+        $oldModelId = $contractRow['vehicle_model_id'] ?? '';
+        $agreementNo = $contractRow['agreement_no'] ?? ($this->agreement_no ?? '');
+        $custCode = $contractRow['customer_code'] ?? ($this->customer_code ?? '');
+
+        // 1. Process Old Vehicle Return -> Parking
+        $oldKmIn = !empty($this->old_km_in) ? floatval($this->old_km_in) : floatval($contractRow['km_in'] ?? 0);
+        $oldKmOut = floatval($contractRow['km_out'] ?? 0);
+        $oldKmUsed = !empty($this->old_km_used) ? floatval($this->old_km_used) : max(0, $oldKmIn - $oldKmOut);
+        $oldFuelIn = !empty($this->old_fuel_in) ? $this->old_fuel_in : '';
+        $oldDtIn = !empty($this->old_dt_in) ? $this->old_dt_in : date('Y-m-d H:i:s');
+        $oldDtOut = $contractRow['date_out'] ?? date('Y-m-d H:i:s');
+
+        $stmtOldOther = $this->varPDOModelObj->selectexecuteQuery("SELECT other_details_json FROM tbl_vehicles WHERE ids = :id", [':id' => $oldVehId]);
+        $oldOtherRow = $stmtOldOther ? $stmtOldOther->fetch(PDO::FETCH_ASSOC) : null;
+        $oldOtherJson = !empty($oldOtherRow['other_details_json']) ? (json_decode($oldOtherRow['other_details_json'], true) ?: []) : [];
+        $oldOtherJson['current_km'] = $oldKmIn;
+        $oldOtherJson['fuel_level'] = $oldFuelIn;
+
+        $this->varPDOModelObj->executeQuery(
+            "UPDATE tbl_vehicles SET vehicle_status = 'Parking', other_details_json = :oth WHERE ids = :id",
+            [':oth' => json_encode($oldOtherJson), ':id' => $oldVehId]
+        );
+
+        $this->varPDOModelObj->logVehicleMovement([
+            'vehicle_id'     => $oldVehId,
+            'action_type'    => 'Replace Return',
+            'old_status'     => 'Rentout',
+            'new_status'     => 'Parking',
+            'reference_type' => 'Agreement',
+            'reference_id'   => $agreementId,
+            'reference_no'   => $agreementNo,
+            'location_from'  => 'Customer',
+            'location_to'    => 'Main Parking',
+            'staff_id'       => null,
+            'customer_id'    => $custCode,
+            'garage_id'      => null,
+            'odometer'       => $oldKmIn,
+            'fuel_level'     => $oldFuelIn,
+            'remarks'        => 'Replaced on contract: ' . ($this->replace_remarks ?? 'Vehicle replacement')
+        ]);
+
+        // Process Old Vehicle Traffic Violations
+        $rawViolations = is_array($this->violations) ? $this->violations : [];
+        $formattedViolations = [];
+        foreach ($rawViolations as $v) {
+            $vTitle = trim($v['title'] ?? '');
+            $vFee = floatval($v['fee'] ?? 0);
+            $vRemarks = trim($v['remarks'] ?? '');
+            $vDate = !empty($v['violation_date']) ? $v['violation_date'] : date('Y-m-d');
+            $vLedgerId = !empty($v['ledger_id']) ? intval($v['ledger_id']) : 0;
+
+            if (empty($vLedgerId) && !empty($vTitle)) {
+                try {
+                    $stmtL = $this->varPDOModelObj->selectexecuteQuery("SELECT ids FROM tbl_ledger_heads WHERE head_name = :hname", [':hname' => $vTitle]);
+                    if ($stmtL) {
+                        $rowL = $stmtL->fetch(PDO::FETCH_ASSOC);
+                        $vLedgerId = $rowL['ids'] ?? 0;
+                    }
+                } catch (\Exception $eL) {}
+            }
+
+            if ($vTitle !== '' || $vFee > 0 || $vRemarks !== '') {
+                $formattedViolations[] = [
+                    'vehicle_id'     => $oldVehId,
+                    'vehicle_number' => $oldVehNo,
+                    'violation_date' => $vDate,
+                    'title'          => $vTitle,
+                    'ledger_id'      => $vLedgerId,
+                    'fee'            => $vFee,
+                    'remarks'        => $vRemarks
+                ];
+
+                $transTypeStr = !empty($vTitle) ? $vTitle : 'Vehicle Violation';
+                $vDesc = 'Vehicle Violation (Replaced Vehicle ' . $oldVehNo . '): ' . $vTitle;
+                if (!empty($vRemarks)) $vDesc .= ' (Remarks: ' . $vRemarks . ')';
+                $vDesc .= ' (Agreement No: ' . $agreementNo . ')';
+
+                try {
+                    $this->varPDOModelObj->executeQuery("
+                        INSERT INTO tbl_customer_ledger
+                        (customer_code, quotation_no, booking_no, trans_date, trans_type, payment_method, debit, credit, ref_no, description, user_id, company_id, created_at, booking_ids, contract_ids, agreement_no)
+                        VALUES
+                        (:customer_code, :quotation_no, :booking_no, :trans_date, :trans_type, 'N/A', :debit, 0, :ref_no, :description, :user_id, :company_id, :created_at, :booking_ids, :contract_ids, :agreement_no)
+                    ", [
+                        ':customer_code' => $custCode,
+                        ':quotation_no'  => $contractRow['quotation_number'] ?? '',
+                        ':booking_no'    => $contractRow['booking_ids'] ?? '',
+                        ':trans_date'    => $vDate,
+                        ':trans_type'    => $transTypeStr,
+                        ':debit'         => $vFee,
+                        ':ref_no'        => $agreementNo,
+                        ':description'   => $vDesc,
+                        ':user_id'       => $this->user_id ?? 1,
+                        ':company_id'    => $this->company_id ?? 1,
+                        ':created_at'    => date('Y-m-d H:i:s'),
+                        ':booking_ids'   => $contractRow['booking_ids'] ?? '',
+                        ':contract_ids'  => $agreementId,
+                        ':agreement_no'  => $agreementNo
+                    ]);
+                } catch (\Exception $exLedger) {}
+            }
+        }
+
+        // 2. Process New Vehicle -> Rentout
+        $newVehNo = $newVehRow['vehicle_number'] ?? '';
+        $newCatId = $newVehRow['category_id'] ?? '';
+        $newModelId = $newVehRow['model_id'] ?? '';
+        $newOtherJson = !empty($newVehRow['other_details_json']) ? (json_decode($newVehRow['other_details_json'], true) ?: []) : [];
+        $newKmOut = !empty($this->new_km_out) ? floatval($this->new_km_out) : floatval($newOtherJson['current_km'] ?? 0);
+        $newFuelOut = !empty($this->new_fuel_out) ? $this->new_fuel_out : ($newOtherJson['fuel_level'] ?? '');
+        $newDtOut = !empty($this->new_dt_out) ? $this->new_dt_out : date('Y-m-d H:i:s');
+
+        $this->varPDOModelObj->executeQuery(
+            "UPDATE tbl_vehicles SET vehicle_status = 'Rentout' WHERE ids = :id",
+            [':id' => $newVehId]
+        );
+
+        $this->varPDOModelObj->logVehicleMovement([
+            'vehicle_id'     => $newVehId,
+            'action_type'    => 'Replace Rentout',
+            'old_status'     => 'Parking',
+            'new_status'     => 'Rentout',
+            'reference_type' => 'Agreement',
+            'reference_id'   => $agreementId,
+            'reference_no'   => $agreementNo,
+            'location_from'  => 'Main Parking',
+            'location_to'    => 'Customer',
+            'staff_id'       => null,
+            'customer_id'    => $custCode,
+            'garage_id'      => null,
+            'odometer'       => $newKmOut,
+            'fuel_level'     => $newFuelOut,
+            'remarks'        => 'Assigned on contract replacement: ' . ($this->replace_remarks ?? '')
+        ]);
+
+        // 3. Build Historical Node & Update `replaced_vehicle_json`
+        try {
+            $checkCol = $this->varPDOModelObj->selectexecuteQuery("SHOW COLUMNS FROM tbl_vehicle_rentout_contracts LIKE 'replaced_vehicle_json'");
+            if ($checkCol && $checkCol->rowCount() == 0) {
+                $this->varPDOModelObj->executeQuery("ALTER TABLE tbl_vehicle_rentout_contracts ADD COLUMN replaced_vehicle_json LONGTEXT NULL");
+            }
+        } catch (\Exception $colEx) {}
+
+        $existingReplacedList = [];
+        if (!empty($contractRow['replaced_vehicle_json'])) {
+            $existingReplacedList = json_decode($contractRow['replaced_vehicle_json'], true) ?: [];
+        }
+
+        $oldCatName = $contractRow['category_name'] ?? '';
+        $oldModelName = $contractRow['model_name'] ?? '';
+        $oldFuelOut = '';
+        if (!empty($contractRow['contract_details_json'])) {
+            $cdj = json_decode($contractRow['contract_details_json'], true) ?: [];
+            $oldFuelOut = $cdj['fuel_out'] ?? ($cdj['fuel_level'] ?? '');
+        }
+
+        $replacementRecordNode = [
+            'replacement_id'   => 'REPL-' . time() . '-' . rand(100, 999),
+            'replaced_on'      => date('Y-m-d H:i:s'),
+            'replaced_by_user' => $this->user_id ?? 1,
+            'staff_name'       => $this->staff_name ?? '',
+            'staff_signature'  => $this->staff_signature ?? '',
+            'old_vehicle'      => [
+                'vehicle_id'        => $oldVehId,
+                'vehicle_number'    => $oldVehNo,
+                'category_id'       => $oldCatId,
+                'model_id'          => $oldModelId,
+                'category_name'     => $oldCatName,
+                'model_name'        => $oldModelName,
+                'km_out'            => $oldKmOut,
+                'km_in'             => $oldKmIn,
+                'km_used'           => $oldKmUsed,
+                'dt_out'            => $oldDtOut,
+                'dt_in'             => $oldDtIn,
+                'fuel_level_out'    => $oldFuelOut,
+                'fuel_level_in'     => $oldFuelIn,
+                'accessories'       => $this->old_accessories,
+                'old_return_images' => $this->old_return_images,
+                'violations'        => $formattedViolations
+            ],
+            'new_vehicle'      => [
+                'vehicle_id'        => $newVehId,
+                'vehicle_number'    => $newVehNo,
+                'category_id'       => $newCatId,
+                'model_id'          => $newModelId,
+                'category_name'     => $newVehRow['category_name'] ?? '',
+                'model_name'        => $newVehRow['model_name'] ?? '',
+                'km_out'            => $newKmOut,
+                'fuel_level_out'    => $newFuelOut,
+                'dt_out'            => $newDtOut,
+                'accessories'       => $this->new_accessories,
+                'new_rentout_images'=> $this->new_rentout_images
+            ],
+            'remarks'          => $this->replace_remarks ?? ''
+        ];
+
+        $existingReplacedList[] = $replacementRecordNode;
+        $replacedJsonStr = json_encode($existingReplacedList);
+
+        $newVehDetailsStr = json_encode([
+            'vehicle_id'     => (string)$newVehId,
+            'category_id'    => (string)$newCatId,
+            'model_id'       => (string)$newModelId,
+            'veh_no'         => (string)$newVehNo,
+            'category_name'  => (string)($newVehRow['category_name'] ?? ''),
+            'model_name'     => (string)($newVehRow['model_name'] ?? ''),
+            'vehicle_color'  => (string)($newVehRow['vehicle_color'] ?? ''),
+            'vehicle_year'   => (string)($newVehRow['manufacture_year'] ?? ($newVehRow['vehicle_year'] ?? ''))
+        ]);
+
+        $existingContractDetails = !empty($contractRow['contract_details_json']) ? (json_decode($contractRow['contract_details_json'], true) ?: []) : [];
+        $existingContractDetails['fuel_out'] = $newFuelOut;
+        $existingContractDetails['fuel_level'] = $newFuelOut;
+        $contractDetailsJsonStr = json_encode($existingContractDetails);
+
+        $this->varPDOModelObj->executeQuery("
+            UPDATE tbl_vehicle_rentout_contracts
+            SET 
+                vehicle_category_id    = :new_cat_id,
+                vehicle_model_id       = :new_model_id,
+                vehicle_id             = :new_veh_id,
+                vehicle_no             = :new_veh_no,
+                vechile_details        = :new_veh_details,
+                km_out                 = :new_km_out,
+                contract_details_json  = :contract_details_json,
+                vehicle_rentout_images = :new_rentout_images,
+                replaced_vehicle_json  = :replaced_json
+            WHERE ids = :agreement_id
+        ", [
+            ':new_cat_id'            => $newCatId,
+            ':new_model_id'          => $newModelId,
+            ':new_veh_id'            => $newVehId,
+            ':new_veh_no'            => $newVehNo,
+            ':new_veh_details'       => $newVehDetailsStr,
+            ':new_km_out'            => $newKmOut,
+            ':contract_details_json' => $contractDetailsJsonStr,
+            ':new_rentout_images'    => $newRentoutImagesStr,
+            ':replaced_json'         => $replacedJsonStr,
+            ':agreement_id'          => $agreementId
+        ]);
+
+        echo json_encode([
+            'status'  => true,
+            'message' => 'Vehicle replaced successfully! Old vehicle moved to parking and contract updated.'
+        ]);
+
+    } catch (\Exception $e) {
+        echo json_encode([
+            'status'  => false,
+            'message' => 'Error replacing vehicle: ' . $e->getMessage()
+        ]);
+    }
+    break;
                 
 			default:
         	      $noAction= json_encode([

@@ -7,9 +7,23 @@
 $db = new ClassDatabaseConnection();
 $pdo = $db->pdo;
 
-// Get categories
-$stmt = $pdo->query("
-    SELECT model_ids,concat(`brand_name`,' ',`model_name`) as model_names,category_id,brand_id FROM `view_vehicle_model`");
+$company_id = $_GET['company_id'] ?? null;
+
+if ($company_id) {
+    $stmt = $pdo->prepare("
+        SELECT DISTINCT vm.model_ids, CONCAT(vm.`brand_name`,' ',vm.`model_name`) as model_names, vm.category_id, vm.brand_id 
+        FROM `view_vehicle_model` vm
+        JOIN `tbl_vehicles` v ON v.model_id = vm.model_ids
+        WHERE v.company_id = :company_id
+    ");
+    $stmt->execute(['company_id' => $company_id]);
+} else {
+    $stmt = $pdo->query("
+        SELECT model_ids, CONCAT(`brand_name`,' ',`model_name`) as model_names, category_id, brand_id 
+        FROM `view_vehicle_model`
+    ");
+}
+
 $models = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 ?>

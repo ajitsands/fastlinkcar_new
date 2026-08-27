@@ -516,8 +516,41 @@ class Logger
             FILE_APPEND
         );
     }
-    
-    
+}
 
-
+if (!function_exists('get_system_settings')) {
+    function get_system_settings($company_id = 1) {
+        static $systemSettings = null;
+        if ($systemSettings !== null) {
+            return $systemSettings;
+        }
+        try {
+            $pdoObj = new CommonPDOModel();
+            $stmt = $pdoObj->selectexecuteQuery("SELECT * FROM tbl_system_settings WHERE company_id = '{$company_id}' LIMIT 1");
+            if ($stmt && $stmt instanceof PDOStatement) {
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if (!empty($rows)) {
+                    $systemSettings = $rows[0];
+                }
+            }
+            if (empty($systemSettings)) {
+                $systemSettings = [
+                    'vat_percentage' => '10.00',
+                    'timezone' => 'Asia/Bahrain',
+                    'date_format' => 'Y-m-d',
+                    'currency_code' => 'BHD',
+                    'currency_symbol' => 'BD'
+                ];
+            }
+        } catch (Exception $e) {
+            $systemSettings = [
+                'vat_percentage' => '10.00',
+                'timezone' => 'Asia/Bahrain',
+                'date_format' => 'Y-m-d',
+                'currency_code' => 'BHD',
+                'currency_symbol' => 'BD'
+            ];
+        }
+        return $systemSettings;
+    }
 }

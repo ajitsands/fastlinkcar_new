@@ -587,7 +587,7 @@ $(document).on('blur','.to_datetime',function(){
                                style="padding-top:12px;">
                     </div>
                 </td>
-                <td><input type="number" class="vat nav form-control form-control-sm" step="0.1" value="<?echo $_ENV['TAX_PERCENTAGE']?>"></td>
+                <td><input type="number" class="vat nav form-control form-control-sm" step="0.1" value="<?php echo $_ENV['TAX_PERCENTAGE']; ?>"></td>
                 <td class="line_total">0.00</td>
                 <td>
                     <span class="icon-base ri ri-delete-bin-6-line icon-22px remove"></span>

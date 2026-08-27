@@ -3,7 +3,7 @@
   <div class="row g-3 align-items-start">
 
     <!-- LEFT COLUMN -->
-    <div class="col-lg-4 ">
+    <div class="col-12 col-lg-4 mb-3">
     <div class="scroll-container scrollonfooter">
        <div class="card mb-3">
              <div class="card-header fw-semibold">Booking Type</div>
@@ -104,7 +104,7 @@
     </div>
 
     <!-- MIDDLE COLUMN -->
-    <div class="col-lg-3">
+    <div class="col-12 col-lg-3 mb-3">
      <div class="scroll-container scrollonfooter" id="second_section" >
       <!-- CUSTOMER DETAILS -->
       <div class="card mb-1">
@@ -113,30 +113,30 @@
         <input type="hidden" id="customer_code" name="customer_code">
           <div class="row g-2">
           
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                  <label class="form-label small">Customer Name</label>
               <input type="text" class="form-control form-control-sm"
                      id="customerName" placeholder="Customer Name" readonly>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                  <label class="form-label small">Telephone</label>
               <input type="text" class="form-control form-control-sm"
                      id="customerPhone" placeholder="Telephone" >
             </div>
 
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                  <label class="form-label small">Email</label>
               <input type="email" class="form-control form-control-sm"
                      id="customerEmail" placeholder="Email" >
             </div>
 
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                  <label class="form-label small">Attention</label>
               <input type="text" class="form-control form-control-sm"
                      id="customerAttention" placeholder="Attention" >
             </div>
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                  <label class="form-label small">CPR/CR</label>
               <input type="text" class="form-control form-control-sm"
                      id="customercprcr" placeholder="CPR/CR" >
@@ -180,19 +180,19 @@
 
           <div class="row g-2">
 
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
               <label class="form-label small">From Date</label>
               <input type="datetime-local"
                      class="from_datetime form-control form-control-sm watch-field">
             </div>
 
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
               <label class="form-label small">To Date</label>
               <input type="datetime-local"
                      class="to_datetime form-control form-control-sm watch-field">
             </div>
 
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
               <label class="form-label small">Type</label>
               <select class="rate_type form-control form-control-sm watch-field">
                 <option value="0">Select</option>
@@ -203,7 +203,7 @@
               </select>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
               <label class="form-label small">Service</label>
               <select class="service form-control form-control-sm watch-field">
                 <option value="0">Select Service</option>
@@ -211,12 +211,12 @@
                 <option value="2" data-id="0">Rental With Driver</option>
               </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-12 col-md-4">
               <label class="form-label small">Duration</label>
               <input type="number" class="duration nav form-control form-control-sm"  value="0" >
             </div>
            
-            <div class="col-md-4">
+            <div class="col-12 col-md-4">
 
                 <label class="form-label small">Unit Price</label>
                 
@@ -238,7 +238,7 @@
                 <input type="hidden" class="minprice nav form-control">
                 
                 </div>
-             <div class="col-md-4">
+             <div class="col-12 col-md-4">
               <label class="form-label small">VAT %</label>
               <input type="number" class="vat nav form-control form-control-sm"   value="10" >
             </div>
@@ -257,7 +257,7 @@
     </div>
 
     <!-- RIGHT COLUMN -->
-    <div class="col-lg-5">
+    <div class="col-12 col-lg-5 mb-3">
      <div class="scroll-container scrollonfooter">
       <div class="card h-100 shadow-sm">
 

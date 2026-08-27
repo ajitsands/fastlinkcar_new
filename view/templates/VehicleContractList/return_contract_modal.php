@@ -290,6 +290,64 @@
                     </div>
                 </div>
            </div>
+           <!-- Vehicle Violations Section -->
+           <div class="col-12 col-md-12">
+               <div class="accordion mt-4 accordion-collapse collapse show" id="accordionViolations">
+                   <div class="accordion-item mb-1">
+                       <h2 class="accordion-header fw-bold">
+                           <button class="accordion-button text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#violationsSec">
+                               Vehicle Violations
+                           </button>
+                       </h2>
+
+                       <div id="violationsSec" class="accordion-collapse collapse show">
+                           <div class="accordion-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                                    <div>
+                                        <a href="https://services.bahrain.bh" target="_blank" rel="noopener noreferrer" class="text-primary fw-bold text-decoration-underline d-inline-flex align-items-center gap-1">
+                                            Check Traffic Violations on services.bahrain.bh <i class="ri ri-external-link-line fs-5 ms-1"></i>
+                                        </a>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" id="btn_add_violation_head_master">
+                                            <i class="ri-add-line me-1"></i> Add Master
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-primary" id="btn_add_violation_row">
+                                            <i class="ri-add-line me-1"></i> Add Violation
+                                        </button>
+                                    </div>
+                                </div>
+                                <datalist id="violation_heads_list"></datalist>
+
+                               <div class="table-responsive">
+                                    <table class="table table-bordered align-middle table-sm" id="table_violations">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="5%">#</th>
+                                                <th width="20%">Violation Date</th>
+                                                <th width="30%">Violation Title</th>
+                                                <th width="15%">Fees</th>
+                                                <th width="20%">Remarks</th>
+                                                <th width="10%">Action</th>
+                                            </tr>
+                                        </thead>
+                                       <tbody id="violations_tbody">
+                                           <!-- Dynamic rows will be added here -->
+                                       </tbody>
+                                   </table>
+                               </div>
+
+                               <div class="form-check mt-3">
+                                   <input class="form-check-input" type="checkbox" id="chk_violations_checked">
+                                   <label class="form-check-label fw-bold text-danger" for="chk_violations_checked">
+                                       I confirm that vehicle violations have been checked on services.bahrain.bh
+                                   </label>
+                               </div>
+                           </div>
+                       </div>
+                   </div>
+               </div>
+           </div>
           <div class="col-12 col-md-12" style="display:none">
 
     <!-- Accordion -->
@@ -672,4 +730,26 @@
 
     </div>
   </div>
+</div>
+
+<!-- Modal: Add New Violation Head Master -->
+<div class="modal fade" id="modalAddViolationHead" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Violation Head</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-floating form-floating-outline mb-3">
+                    <input type="text" class="form-control" id="new_violation_head_name" placeholder="Enter Violation Head Name">
+                    <label for="new_violation_head_name">Violation Head Name</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-primary" id="btn_save_violation_head">Save Head</button>
+            </div>
+        </div>
+    </div>
 </div>

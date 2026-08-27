@@ -1,7 +1,32 @@
- <div class="card">
+<?php
+$allowedCompanies = [];
+if (!empty($_SESSION['company_json'])) {
+    $companyData = json_decode($_SESSION['company_json'], true);
+    if (is_array($companyData)) {
+        $allowedCompanies = $companyData;
+    }
+}
+$isSingleCompany = count($allowedCompanies) <= 1;
+?>
+<div class="card">
                 <div class="card-header border-bottom">
                   <h5 class="card-title mb-4">Filter</h5>
                  <div class="row align-items-end g-2">
+
+    <!-- Company -->
+    <div class="col-md-3">
+        <div class="form-floating form-floating-outline">
+            <select id="companyFilter" class="form-select form-select-sm" <?= $isSingleCompany ? 'disabled' : '' ?>>
+                <?php if (!$isSingleCompany): ?>
+                    <option value="">All Companies</option>
+                <?php endif; ?>
+                <?php foreach ($allowedCompanies as $comp): ?>
+                    <option value="<?= htmlspecialchars($comp['ids']) ?>"><?= htmlspecialchars($comp['company_name']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <label for="companyFilter">Company</label>
+        </div>
+    </div>
 
     <!-- Date -->
     <div class="col-md-2">

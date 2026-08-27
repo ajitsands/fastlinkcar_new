@@ -54,6 +54,7 @@ class VehiclesController
         $this->vehicleYear = $data['vehicleYear'] ?? null;
         $this->vehicleColor = $data['vehicleColor'] ?? null;
         $this->vehicleRegNumber = $data['vehicleNumber'] ?? null;
+        $this->chassisNumber = $data['chassisNumber'] ?? null;
         $this->vehicleModal = $data['vehicleModel'] ?? null;
         $this->vehiclePurchaseDate = $data['vehiclePurchaseDate'] ?? null;
         $this->brand_id = $data['brand_id'] ?? null;
@@ -66,8 +67,10 @@ class VehiclesController
         $this->vehicleInsuranceExpDate = $data['vehicleInsuranceExpDate'] ?? null;
         $this->vehicleStatus = $data['vehicleStatus'] ?? null;
         $this->category = $data['category'] ?? null;
-        $this->belongsToCompanyID = $data['belongsToCompanyID'] ?? null;
+        $this->belongsToCompanyID = !empty($data['belongsToCompanyID']) ? intval($data['belongsToCompanyID']) : ($_SESSION['company_id'] ?? 1);
         $this->belongsToCompanyName = $data['belongsToCompanyName'] ?? null;
+        $this->isOutsourced = !empty($data['is_outsourced']) ? $data['is_outsourced'] : 'No';
+        $this->outsourcingCompanyId = ($this->isOutsourced === 'Yes' && !empty($data['outsourcing_company_id'])) ? intval($data['outsourcing_company_id']) : 0;
         
         $this->status = $data['status'] ?? 'Available';
         
@@ -95,7 +98,7 @@ class VehiclesController
         );
        
         
-        $this->company_id = $_SESSION['company_id'] ?? 1;
+        $this->company_id = $this->belongsToCompanyID;
         $this->user_id = $_SESSION['user_id'] ?? 1;
         $this->insertedDate = date('Y-m-d');
         $this->page = isset($data['page']) ? (int)$data['page'] : 1;
@@ -114,16 +117,17 @@ class VehiclesController
 		$array =  array();
         
         $array[0] = "INSERT INTO tbl_vehicles
-                        (category_id,model_id,model_names,brand_id,company_id,vehicle_number,vehicle_year,vehicle_color,image_json,other_details_json,vehicle_attachments,vehicle_status,created_on,created_by,vehicle_purchase_date) VALUES
-                        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        (category_id,model_id,model_names,brand_id,company_id,vehicle_number,chassis_number,vehicle_year,vehicle_color,image_json,other_details_json,vehicle_attachments,vehicle_status,created_on,created_by,vehicle_purchase_date,is_outsourced,outsourcing_company_id) VALUES
+                        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $this->params[0] = [
                 $this->category_id,
                 $this->vehicleModal,
                 $this->modelName,
                 $this->brand_id,
-                $this->company_id,
+                $this->belongsToCompanyID,
                 $this->vehicleRegNumber,
+                $this->chassisNumber,
                 $this->vehicleYear,
                 $this->vehicleColor,
                 $this->vehicleimages,
@@ -132,10 +136,12 @@ class VehiclesController
                 'Available',
                 $this->insertedDate,
                 $this->user_id,
-                $this->vehiclePurchaseDate
+                $this->vehiclePurchaseDate,
+                $this->isOutsourced,
+                $this->outsourcingCompanyId
         ];
         
-        $array[4] = "SELECT * FROM tbl_vehicles ORDER BY ids DESC";
+        $array[4] = "SELECT v.*, o.company_name AS outsourcing_company_name FROM tbl_vehicles v LEFT JOIN tbl_outsourcing_companies o ON o.ids = v.outsourcing_company_id ORDER BY v.ids DESC";
         $array[5] = "UPDATE tbl_vehicles SET
                         category_id = ?,
                         model_id = ?,
@@ -143,26 +149,32 @@ class VehiclesController
                         brand_id = ?,
                         company_id = ?,
                         vehicle_number = ?,
+                        chassis_number = ?,
                         vehicle_year = ?,
                         vehicle_color = ?,
                         image_json = ?,
                         other_details_json = ?,
                         vehicle_attachments = ?,
-                        vehicle_purchase_date = ?
+                        vehicle_purchase_date = ?,
+                        is_outsourced = ?,
+                        outsourcing_company_id = ?
                     WHERE ids = ?";
         $this->params[5] = [
             $this->category_id,
             $this->vehicleModal,
             $this->modelName,
             $this->brand_id,
-            $this->company_id,
+            $this->belongsToCompanyID,
             $this->vehicleRegNumber,
+            $this->chassisNumber,
             $this->vehicleYear,
             $this->vehicleColor,
             $this->vehicleimages,
             $this->vehicleDetails,
             $this->vehiclesDocObj,
             $this->vehiclePurchaseDate,
+            $this->isOutsourced,
+            $this->outsourcingCompanyId,
             $this->vehicle_ids
         ];           
                     
@@ -179,6 +191,16 @@ class VehiclesController
 		{
 			
 case 'AddVehicleInformationnew':
+
+    if (!empty($this->chassisNumber)) {
+        $checkSql = "SELECT ids FROM tbl_vehicles WHERE chassis_number = ?";
+        $checkStmt = $this->varPDOModelObj->varDBPDO->prepare($checkSql);
+        $checkStmt->execute([$this->chassisNumber]);
+        if ($checkStmt->rowCount() > 0) {
+            echo json_encode(['status' => false, 'message' => 'Chassis Number already exists.']);
+            break;
+        }
+    }
 
     $this->ReturnData = $this->varPDOModelObj
         ->AddToTableAndReturnSpecifiedColumn(
@@ -266,23 +288,88 @@ break;
 			break;
 			case 'UpdateVehicleInformation':
 			    
+			    if (!empty($this->chassisNumber)) {
+                    $checkSql = "SELECT ids FROM tbl_vehicles WHERE chassis_number = ? AND ids != ?";
+                    $checkStmt = $this->varPDOModelObj->varDBPDO->prepare($checkSql);
+                    $checkStmt->execute([$this->chassisNumber, $this->vehicle_ids]);
+                    if ($checkStmt->rowCount() > 0) {
+                        echo json_encode(['status' => false, 'message' => 'Chassis Number already exists.']);
+                        break;
+                    }
+                }
+			    
 			     $result = $this->varPDOModelObj->UpdateTable($var[5], $this->params[5]);
 			     // Logger::ActivityLog('UpdateVehicleInformation',"Send to Client - 103 ",[$var[5],$this->params[5],$result]);
 			    
                 echo $result;
 			break;
+			case 'update_status':
+			    if (empty($this->vehicle_ids) || empty($this->status)) {
+                    echo json_encode(['status' => false, 'message' => 'Missing vehicle ID or status.']);
+                    break;
+                }
+                
+                $sql = "UPDATE tbl_vehicles SET vehicle_status = :status WHERE ids = :id";
+                $stmt = $this->varPDOModelObj->varDBPDO->prepare($sql);
+                $result = $stmt->execute([
+                    ':status' => $this->status,
+                    ':id' => $this->vehicle_ids
+                ]);
+                
+                echo json_encode([
+                    'status' => $result,
+                    'message' => $result ? 'Status updated successfully' : 'Failed to update status'
+                ]);
+			break;
 			
 		
             case 'ListVehicleMaster':
-			    
-			    $this->ReturnData = $this->varPDOModelObj->ListFromTable($var[4]);
-			   
+                $allowedCompanies = [];
+                if (!empty($_SESSION['company_json'])) {
+                    $companyData = json_decode($_SESSION['company_json'], true);
+                    if (is_array($companyData)) {
+                        $allowedCompanies = array_column($companyData, 'ids');
+                    }
+                }
+                if (empty($allowedCompanies)) {
+                    $allowedCompanies = [$_SESSION['company_id'] ?? 1];
+                }
+
+                $inputData = json_decode($this->json, true);
+                $selectedCompanyId = $inputData['company_id'] ?? '';
+                $filterCompanyId = '';
+                if ($selectedCompanyId !== '' && in_array($selectedCompanyId, $allowedCompanies)) {
+                    $filterCompanyId = $selectedCompanyId;
+                }
+
+                $sql = "SELECT v.*, 
+                               c.company_name as ownership_company,
+                               o.company_name AS outsourcing_company_name 
+                        FROM tbl_vehicles v 
+                        LEFT JOIN tbl_company c ON v.company_id = c.ids
+                        LEFT JOIN tbl_outsourcing_companies o ON o.ids = v.outsourcing_company_id 
+                        WHERE 1=1 ";
+                
+                $params = [];
+                if ($filterCompanyId !== '') {
+                    $sql .= " AND v.company_id = ? ";
+                    $params[] = $filterCompanyId;
+                } else {
+                    $inQuery = implode(',', array_fill(0, count($allowedCompanies), '?'));
+                    $sql .= " AND v.company_id IN ($inQuery) ";
+                    $params = array_merge($params, $allowedCompanies);
+                }
+                $sql .= " ORDER BY v.ids DESC";
+
+                // Use PDO prepare/execute to safely bind parameters
+                $stmt = $this->varPDOModelObj->varDBPDO->prepare($sql);
+                $stmt->execute($params);
+                $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
                 echo json_encode([
                     "status" => "success",
-                    "data" => json_decode($this->ReturnData, true)
+                    "data" => $results
                 ]);
-		
-			    
             break;	
              case 'vehicle_calendar':
                   $sql = "
@@ -324,6 +411,24 @@ break;
             break;
             
             case 'ListVehicleMaster_Due_days':
+                $allowedCompanies = [];
+                if (!empty($_SESSION['company_json'])) {
+                    $companyData = json_decode($_SESSION['company_json'], true);
+                    if (is_array($companyData)) {
+                        $allowedCompanies = array_column($companyData, 'ids');
+                    }
+                }
+                if (empty($allowedCompanies)) {
+                    $allowedCompanies = [$_SESSION['company_id'] ?? 1];
+                }
+
+                $inputData = json_decode($this->json, true);
+                $selectedCompanyId = $inputData['company_id'] ?? '';
+                $filterCompanyId = '';
+                if ($selectedCompanyId !== '' && in_array($selectedCompanyId, $allowedCompanies)) {
+                    $filterCompanyId = $selectedCompanyId;
+                }
+
                 $sql = "
                 SELECT 
                     v.ids,
@@ -340,6 +445,9 @@ break;
                     v.passing_histroy,
                     v.insurance_histroy,
                     v.maintenance_histroy,
+                    v.is_outsourced,
+                    c.company_name AS ownership_company,
+                    o.company_name AS outsourcing_company_name,
                     DATE_FORMAT(v.vehicle_purchase_date, '%d-%m-%Y') as vehicle_purchase_date_format,
                     DATE_FORMAT(v.next_passing_date, '%d-%m-%Y') as next_passing_date_format,
                     DATE_FORMAT(v.next_insurance_date, '%d-%m-%Y') as next_insurance_date_format,
@@ -381,8 +489,9 @@ break;
                 
                 FROM tbl_vehicles v
                 
-                LEFT JOIN tbl_vehicle_model vm
-                    ON vm.ids = v.model_id
+                LEFT JOIN tbl_vehicle_model vm ON vm.ids = v.model_id
+                LEFT JOIN tbl_company c ON c.ids = v.company_id
+                LEFT JOIN tbl_outsourcing_companies o ON o.ids = v.outsourcing_company_id
                 
                 LEFT JOIN JSON_TABLE(
                     vm.price_json,
@@ -391,7 +500,6 @@ break;
                         amount DECIMAL(10,3) PATH '$.amount'
                     )
                 ) jt ON TRUE
-                
                 
                 WHERE v.vehicle_status != 'Sold Out'
                 ";
@@ -407,6 +515,23 @@ break;
                     $sql .= " AND v.model_id = :vehicle_model";
                     $sqlparams[':vehicle_model'] = $this->vehicle_model;
                 }
+
+                if ($filterCompanyId !== '') {
+                    $sql .= " AND v.company_id = :company_id";
+                    $sqlparams[':company_id'] = $filterCompanyId;
+                } else {
+                    $inQueryParts = [];
+                    foreach ($allowedCompanies as $index => $comp_id) {
+                        $paramName = ":comp_" . $index;
+                        $inQueryParts[] = $paramName;
+                        $sqlparams[$paramName] = $comp_id;
+                    }
+                    if (!empty($inQueryParts)) {
+                        $inQueryStr = implode(',', $inQueryParts);
+                        $sql .= " AND v.company_id IN ($inQueryStr) ";
+                    }
+                }
+
 			   $sql .= " GROUP BY v.ids ";
 			    $this->ReturnData = $this->varPDOModelObj->ListFromTable($sql, $sqlparams);
 
@@ -624,110 +749,85 @@ break;
 		
             break;
             case 'vehicle_return_due_dashboard':
-               $sql = "  SELECT 
-                        c.ids,
-                        c.agreement_no,
-                        JSON_UNQUOTE(JSON_EXTRACT(c.customer_details, '$.customer_name')) AS customer_name,
-                        JSON_UNQUOTE(JSON_EXTRACT(c.customer_details, '$.customer_mobile')) AS customer_mobile,
-                        JSON_UNQUOTE(JSON_EXTRACT(c.vechile_details, '$.model_name')) AS model_name,
-                        c.vehicle_no,
-                        c.agreement_status,
-                        c.service_start_date_time,
-                        CASE 
-                            WHEN c.agreement_status = 'Extended' 
-                                 AND ext.extend_end_date IS NOT NULL 
-                            THEN ext.extend_end_date
-                            ELSE c.service_end_date_time
-                        END AS return_date,
-                        DATEDIFF(
-                            CASE 
-                                WHEN c.agreement_status = 'Extended' 
-                                     AND ext.extend_end_date IS NOT NULL 
-                                THEN ext.extend_end_date
-                                ELSE c.service_end_date_time
-                            END,
-                            :filter_date
-                        ) AS days_left,
-                        DATE_FORMAT(service_start_date_time, '%d-%m-%Y %H:%i') AS start_date,
-                       DATE_FORMAT(
-                                CASE 
-                                    WHEN c.agreement_status = 'Extended' 
-                                         AND ext.extend_end_date IS NOT NULL 
-                                    THEN ext.extend_end_date
-                                    ELSE c.service_end_date_time
-                                END,
-                                '%d-%m-%Y'
-                            ) AS return_date_format
-                    
-                    FROM tbl_vehicle_rentout_contracts c
-                    
-                    LEFT JOIN (
-                        SELECT agreement_ids, MAX(extend_end_date) AS extend_end_date
-                        FROM tbl_vehicle_contract_extensions
-                        GROUP BY agreement_ids
-                    ) ext 
-                        ON ext.agreement_ids = c.ids
-                    
-                    WHERE c.agreement_status IN ('Rentout', 'Extended')";
-                     $sqlparams = [
-                        ':filter_date' => $this->filter_date
-                    ];
-                
-                
-                
-			    $this->ReturnData = $this->varPDOModelObj->ListFromTable($sql, $sqlparams);
-
-               $decoded = json_decode($this->ReturnData, true);
-
-                echo json_encode([
-                    "status" => "success",
-                    "data" => $decoded['data'] ?? []
-                ]);
-            break;
             case 'return_vehicle_calendar':
-                 $sql = "  SELECT 
-                        c.ids,
-                        c.agreement_no,
-                        JSON_UNQUOTE(JSON_EXTRACT(c.customer_details, '$.customer_name')) AS customer_name,
-                        JSON_UNQUOTE(JSON_EXTRACT(c.customer_details, '$.customer_mobile')) AS customer_mobile,
-                        JSON_UNQUOTE(JSON_EXTRACT(c.vechile_details, '$.model_name')) AS model_name,
-                        c.vehicle_no,
-                        c.agreement_status,
-                        c.service_start_date_time,
-                        CASE 
-                            WHEN c.agreement_status = 'Extended' 
-                                 AND ext.extend_end_date IS NOT NULL 
-                            THEN ext.extend_end_date
-                            ELSE c.service_end_date_time
-                        END AS return_date,
-                       
-                        DATE_FORMAT(service_start_date_time, '%d-%m-%Y %H:%i') AS start_date,
-                       DATE_FORMAT(
-                                CASE 
-                                    WHEN c.agreement_status = 'Extended' 
-                                         AND ext.extend_end_date IS NOT NULL 
-                                    THEN ext.extend_end_date
-                                    ELSE c.service_end_date_time
-                                END,
-                                '%d-%m-%Y'
-                            ) AS return_date_format
-                    
-                    FROM tbl_vehicle_rentout_contracts c
-                    
-                    LEFT JOIN (
-                        SELECT agreement_ids, MAX(extend_end_date) AS extend_end_date
-                        FROM tbl_vehicle_contract_extensions
-                        GROUP BY agreement_ids
-                    ) ext 
-                        ON ext.agreement_ids = c.ids
-                    
-                    WHERE c.agreement_status IN ('Rentout', 'Extended')";
-                   
-                
-                
-			   $this->ReturnData = $this->varPDOModelObj->ListFromTable($sql);
+                $sysSettings = get_system_settings($_SESSION['company_id'] ?? 1);
+                $dateFormatSetting = $sysSettings['date_format'] ?? 'Y-m-d';
 
-               $decoded = json_decode($this->ReturnData, true);
+                switch ($dateFormatSetting) {
+                    case 'd/m/Y':
+                        $sqlDateFormat = '%d/%m/%Y';
+                        $sqlDateTimeFormat = '%d/%m/%Y %H:%i';
+                        break;
+                    case 'd-M-Y':
+                        $sqlDateFormat = '%d-%b-%Y';
+                        $sqlDateTimeFormat = '%d-%b-%Y %H:%i';
+                        break;
+                    case 'm/d/Y':
+                        $sqlDateFormat = '%m/%d/%Y';
+                        $sqlDateTimeFormat = '%m/%d/%Y %H:%i';
+                        break;
+                    case 'Y-m-d':
+                    default:
+                        $sqlDateFormat = '%Y-%m-%d';
+                        $sqlDateTimeFormat = '%Y-%m-%d %H:%i';
+                        break;
+                }
+
+                $filterDate = !empty($this->filter_date) ? $this->filter_date : date('Y-m-d');
+
+                $sql = "  SELECT 
+                         c.ids,
+                         c.agreement_no,
+                         JSON_UNQUOTE(JSON_EXTRACT(c.customer_details, '$.customer_name')) AS customer_name,
+                         JSON_UNQUOTE(JSON_EXTRACT(c.customer_details, '$.customer_mobile')) AS customer_mobile,
+                         JSON_UNQUOTE(JSON_EXTRACT(c.vechile_details, '$.model_name')) AS model_name,
+                         c.vehicle_no,
+                         c.agreement_status,
+                         c.service_start_date_time,
+                         CASE 
+                             WHEN c.agreement_status = 'Extended' 
+                                  AND ext.extend_end_date IS NOT NULL 
+                             THEN ext.extend_end_date
+                             ELSE c.service_end_date_time
+                         END AS return_date,
+                         DATEDIFF(
+                             CASE 
+                                 WHEN c.agreement_status = 'Extended' 
+                                      AND ext.extend_end_date IS NOT NULL 
+                                 THEN ext.extend_end_date
+                                 ELSE c.service_end_date_time
+                             END,
+                             :filter_date
+                         ) AS days_left,
+                         DATE_FORMAT(service_start_date_time, '{$sqlDateTimeFormat}') AS start_date,
+                         DATE_FORMAT(
+                                 CASE 
+                                     WHEN c.agreement_status = 'Extended' 
+                                          AND ext.extend_end_date IS NOT NULL 
+                                     THEN ext.extend_end_date
+                                     ELSE c.service_end_date_time
+                                 END,
+                                 '{$sqlDateFormat}'
+                             ) AS return_date_format
+                     
+                     FROM tbl_vehicle_rentout_contracts c
+                     
+                     LEFT JOIN (
+                         SELECT agreement_ids, MAX(extend_end_date) AS extend_end_date
+                         FROM tbl_vehicle_contract_extensions
+                         GROUP BY agreement_ids
+                     ) ext 
+                         ON ext.agreement_ids = c.ids
+                     
+                     WHERE c.agreement_status IN ('Rentout', 'Extended')";
+
+                $sqlparams = [
+                    ':filter_date' => $filterDate
+                ];
+
+                $this->ReturnData = $this->varPDOModelObj->ListFromTable($sql, $sqlparams);
+
+                $decoded = json_decode($this->ReturnData, true);
 
                 echo json_encode([
                     "status" => "success",
@@ -1067,6 +1167,114 @@ break;
                     "status" => "success",
                     "data" => $decoded['data'] ?? []
                 ]);
+            case 'get_vehicle_profile':
+                $inputData = json_decode($this->json, true);
+                $vehicleId = $inputData['vehicle_id'] ?? ($_GET['vehicle_id'] ?? null);
+
+                if (!$vehicleId) {
+                    echo json_encode(['status' => false, 'message' => 'Vehicle ID is required']);
+                    break;
+                }
+
+                $sql = "SELECT v.*, 
+                               c.company_name as ownership_company,
+                               o.company_name AS outsourcing_company_name,
+                               vb.brand_name,
+                               vc.category_name,
+                               vm.price_json as model_price_json,
+                               DATE_FORMAT(v.vehicle_purchase_date, '%d-%b-%Y') as formatted_purchase_date,
+                               DATE_FORMAT(v.next_insurance_date, '%d-%b-%Y') as formatted_insurance_date,
+                               DATE_FORMAT(v.next_passing_date, '%d-%b-%Y') as formatted_passing_date,
+                               DATE_FORMAT(v.next_maintenance_date, '%d-%b-%Y') as formatted_maintenance_date
+                        FROM tbl_vehicles v 
+                        LEFT JOIN tbl_company c ON v.company_id = c.ids
+                        LEFT JOIN tbl_outsourcing_companies o ON o.ids = v.outsourcing_company_id 
+                        LEFT JOIN tbl_vehicle_brand vb ON v.brand_id = vb.ids
+                        LEFT JOIN tbl_vehicle_category vc ON v.category_id = vc.ids
+                        LEFT JOIN tbl_vehicle_model vm ON v.model_id = vm.ids
+                        WHERE v.ids = ?";
+                
+                $stmt = $this->varPDOModelObj->varDBPDO->prepare($sql);
+                $stmt->execute([$vehicleId]);
+                $vehicle = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($vehicle) {
+                    $vehicle['current_user_name'] = null;
+                    $vehicle['current_user_contact'] = null;
+                    
+                    if (in_array($vehicle['vehicle_status'], ['Rentout', 'Staff Use'])) {
+                        $vehicle['contract_ref'] = null;
+                        $vehicle['expected_return_date'] = null;
+                        
+                        if ($vehicle['vehicle_status'] === 'Rentout') {
+                            // Fetch from Rentout Contracts directly
+                            $rSql = "SELECT ids, agreement_no, customer_code, customer_name, service_end_date_time FROM tbl_vehicle_rentout_contracts WHERE vehicle_id = ? AND agreement_status = 'Rentout' ORDER BY ids DESC LIMIT 1";
+                            $rStmt = $this->varPDOModelObj->varDBPDO->prepare($rSql);
+                            $rStmt->execute([$vehicleId]);
+                            $r = $rStmt->fetch(PDO::FETCH_ASSOC);
+                            
+                            if ($r) {
+                                $vehicle['contract_ref'] = $r['agreement_no'];
+                                $vehicle['current_user_name'] = $r['customer_name'];
+                                $vehicle['expected_return_date'] = $r['service_end_date_time'];
+                                
+                                // Fetch contact
+                                $cSql = "SELECT customer_mobile FROM customer_details WHERE customer_id = ?";
+                                $cStmt = $this->varPDOModelObj->varDBPDO->prepare($cSql);
+                                $cStmt->execute([$r['customer_code']]);
+                                $c = $cStmt->fetch(PDO::FETCH_ASSOC);
+                                if ($c) {
+                                    $vehicle['current_user_contact'] = $c['customer_mobile'];
+                                }
+                                
+                                // Check for extensions
+                                $extSql = "SELECT extend_end_date FROM tbl_vehicle_contract_extensions WHERE agreement_ids = ? ORDER BY ids DESC LIMIT 1";
+                                $extStmt = $this->varPDOModelObj->varDBPDO->prepare($extSql);
+                                $extStmt->execute([$r['ids']]);
+                                $ext = $extStmt->fetch(PDO::FETCH_ASSOC);
+                                if ($ext && !empty($ext['extend_end_date'])) {
+                                    $vehicle['expected_return_date'] = $ext['extend_end_date'];
+                                }
+                            }
+                        } else if ($vehicle['vehicle_status'] === 'Staff Use') {
+                            // Staff Use - use non revenue ticket
+                            $nrSql = "SELECT booking_no, staff_ids, staff_name, book_to_date FROM tbl_vehicle_non_revenue_ticket WHERE vehicle_id = ? AND book_status != 'Closed' ORDER BY ids DESC LIMIT 1";
+                            $nrStmt = $this->varPDOModelObj->varDBPDO->prepare($nrSql);
+                            $nrStmt->execute([$vehicleId]);
+                            $nr = $nrStmt->fetch(PDO::FETCH_ASSOC);
+                            
+                            if ($nr) {
+                                $vehicle['contract_ref'] = $nr['booking_no'];
+                                $vehicle['current_user_name'] = $nr['staff_name'];
+                                $vehicle['expected_return_date'] = $nr['book_to_date'];
+                                
+                                if (!empty($nr['staff_ids'])) {
+                                    $sSql = "SELECT staff_contact_no FROM tbl_staff WHERE ids = ?";
+                                    $sStmt = $this->varPDOModelObj->varDBPDO->prepare($sSql);
+                                    $sStmt->execute([$nr['staff_ids']]);
+                                    $s = $sStmt->fetch(PDO::FETCH_ASSOC);
+                                    if ($s) {
+                                        $vehicle['current_user_contact'] = $s['staff_contact_no'];
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Parse JSON fields
+                    $vehicle['other_details'] = json_decode($vehicle['other_details_json'] ?? '{}', true);
+                    $vehicle['images'] = json_decode($vehicle['image_json'] ?? '[]', true);
+                    
+                    echo json_encode([
+                        "status" => true,
+                        "data" => $vehicle
+                    ]);
+                } else {
+                    echo json_encode([
+                        "status" => false,
+                        "message" => "Vehicle not found"
+                    ]);
+                }
             break;
 			default:
         	      $noAction= json_encode([

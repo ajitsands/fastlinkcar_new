@@ -9,7 +9,7 @@
     <div class="modal-content text-center">
 
       <!-- HEADER -->
-      <div class="modal-header border-0">
+      <div class="modal-header custom-modal-header">
           <h5 class="modal-title">Vehicle Pics</h5>
         <button
           type="button"

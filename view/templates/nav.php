@@ -2,16 +2,11 @@
         <nav class="layout-navbar navbar navbar-expand-xl align-items-center" id="layout-navbar">
           <div class="container-fluid">
             <div class="navbar-brand app-brand demo d-none d-xl-flex py-0 me-6">
-              <a href="index.html" class="app-brand-link gap-2">
-                <span class="app-brand-logo demo">
-                  <span class="text-primary">
-						<!--Logo Should Come Here-->
-						<!--<img src="<?= $_ENV['BASE_URL'] ?>assets/img/logo/small_logos_blank.png" id="companyLogo" class="img-fluid app-logo" alt="Logo">-->
-							<img src="<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo_small.png" id="companyLogo" class="img-fluid app-logo" alt="Logo">
-						
-				  </span>
+              <a href="/Dashboard" class="app-brand-link d-flex align-items-center gap-2">
+                <span class="app-brand-logo demo d-flex align-items-center">
+                  <img src="<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo_small.png" id="companyLogo" class="img-fluid app-logo" alt="Logo" style="height: 32px; width: auto; object-fit: contain;">
                 </span>
-                <span class="app-brand-text demo menu-text fw-semibold ms-1" style="color: #ffffff">Car Rental Portal</span>
+                <span class="app-brand-text demo menu-text fw-semibold text-white mb-0" style="font-size: 1.15rem; color: #ffffff !important;">Car Rental Portal</span>
               </a>
 
               <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-xl-none">
@@ -379,9 +374,47 @@
                     </li>
                   </ul>
                 </li>
-                <!--/ Notification -->
+                <!-- Style Switcher / Light & Dark Mode Toggle -->
+                <li class="nav-item dropdown-style-switcher dropdown me-2 me-xl-1">
+                  <a class="nav-link dropdown-toggle hide-arrow btn btn-icon btn-text-secondary rounded-pill" 
+                     href="javascript:void(0);" 
+                     id="themeToggleBtn"
+                     data-bs-toggle="dropdown" 
+                     title="Toggle Theme">
+                    <i class="icon-base ri ri-sun-line icon-22px" id="themeToggleIcon"></i>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end dropdown-styles">
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0);" data-theme="light">
+                        <span class="align-middle"><i class="ri-sun-line me-2"></i>Light</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0);" data-theme="dark">
+                        <span class="align-middle"><i class="ri-moon-clear-line me-2"></i>Dark</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0);" data-theme="system">
+                        <span class="align-middle"><i class="ri-computer-line me-2"></i>System</span>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <!-- / Style Switcher -->
+
+                <!-- System Settings Button -->
+                <li class="nav-item me-2 me-xl-1">
+                  <a class="nav-link btn btn-icon btn-text-secondary rounded-pill" 
+                     href="/SystemSettings" 
+                     title="System Settings">
+                    <i class="icon-base ri ri-settings-3-line icon-22px"></i>
+                  </a>
+                </li>
+                <!-- / System Settings Button -->
+
 <?php
-$profileName = $_SESSION['profile_name'] ??  $_SESSION['user_name'];
+$profileName = $_SESSION['profile_name'] ??  $_SESSION['user_name'] ?? 'User';
 $userName = $_SESSION['user_name'] ?? 'User';
 $userRole = $_SESSION['role_name'] ?? 'Admin';
 $userImage = !empty($_SESSION['user_image']) 

@@ -10,8 +10,9 @@
                   <div class="col-12 col-lg-8">
                     <!-- Product Information -->
                     <div class="card mb-6">
-                      <div class="card-header">
+                      <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-tile mb-0">Customer Registration Details</h5>
+                        <span class="badge bg-label-success" id="customerStatusBadge">New Entry</span>
                       </div>
                       <div class="card-body">
                         
@@ -102,28 +103,30 @@
                                 </ul>
                             
                                 <!-- Right: Button -->
-                                <a href="javascript:;" class="ms-auto">
+                                <a href="javascript:;" class="ms-auto" data-permission="customers_manage">
                                     <span class="badge bg-label-primary rounded-pill openAddRentalCarImageModal">
                                         Add Customer Documents
                                     </span>
                                 </a>
                             
                             </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 action-buttons-wrapper mt-4">
+                                <button type="button" class="btn btn-secondary" id="btn_cancel">
+                                    <i class="ri-refresh-line me-1"></i> Reset / Cancel
+                                </button>
+
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-warning d-none" id="toggleCustomerStatusBtn" data-permission="customers_manage">
+                                        <i class="ri-toggle-line me-1"></i> Deactivate
+                                    </button>
+                                    <button type="button" class="btn btn-primary" id="saveCustomerData" data-permission="customers_manage">
+                                        <i class="ri-save-line me-1"></i> Save
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                   
-                   
-                    <div class="col-12 ">
-                      <div class="d-flex justify-content-between">
-                    
-                        <button type="button" class="btn btn-secondary" id="btn_cancel">Cancel</button>
-                    
-                        <div class="d-flex gap-2">
-                          <button class="btn btn-primary" type="button" id="saveCustomerData">Save</button>
-                          
-                        </div>
-                    
-                      </div>
                     </div>
                   </div>
                  
@@ -131,7 +134,7 @@
                       <div class="card shadow-sm">
                         
                          <div class="card-header p-2">
-                              <input type="text" id="customerSearch" class="form-control" placeholder="Type to search drivers...">
+                              <input type="text" id="customerSearch" class="form-control" placeholder="Type to search customers...">
                             </div>
                     
                         <div class="card-body p-2">
@@ -143,6 +146,7 @@
                                   <th>Name</th>
                                   <th>Contact No.</th>
                                   <th>CR/Cpr</th>
+                                  <th>Status</th>
                                 </tr>
                               </thead>
                               <tbody>

@@ -5,7 +5,7 @@
                         
                         <div class=" p-0 " >
                           <div class="table-responsive">
-                            <table id="contractTable" class="table table-bordered table-sm align-middle">
+                            <table id="vehicleInfoModalContractTable" class="table table-bordered table-sm align-middle">
                                     <thead class="">
                                         <tr>
                                             <th>#</th>

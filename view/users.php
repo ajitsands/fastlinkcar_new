@@ -142,12 +142,27 @@ include ROOT_PATH . '/view/envinclude.php';
             /* fit inside modal height */
             display: block;
         }
+        /* Unselected row hover state for userTable */
+        #userTable tbody tr:not(.selected):hover,
+        #userTable tbody tr:not(.selected):hover > td,
+        #userTable tbody tr:not(.selected):hover > th,
+        #userTable.dataTable tbody tr:not(.selected):hover > *,
+        #userTable.dataTable.table-hover tbody tr:not(.selected):hover > * {
+            --bs-table-bg-state: rgba(248, 124, 99, 0.15) !important;
+            --bs-table-hover-bg: rgba(248, 124, 99, 0.15) !important;
+            --bs-table-bg-type: rgba(248, 124, 99, 0.15) !important;
+            --bs-table-accent-bg: rgba(248, 124, 99, 0.15) !important;
+            --bs-table-bg: rgba(248, 124, 99, 0.15) !important;
+            background-color: rgba(248, 124, 99, 0.15) !important;
+            color: inherit !important;
+            box-shadow: inset 0 0 0 9999px rgba(248, 124, 99, 0.15) !important;
+        }
     </style>
 
 </head>
 
 <body>
-    <div id="dropdownContent" style="text-align:center;"></div>
+    <div id="dropdownContent" style="text-align:center; position: relative; z-index: 99999;"></div>
     <!-- Layout wrapper -->
     <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
         <div class="layout-container">
@@ -186,11 +201,11 @@ include ROOT_PATH . '/view/envinclude.php';
         </div>
     </div>
 
-    <div id="dropdownContent" style="text-align:center;"></div>
+    <div id="dropdownContent" style="text-align:center; position: relative; z-index: 99999;"></div>
     <!--Cropping image Before Upload Modal-->
     <!-- Crop Modal -->
     <div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Crop User Image</h5>
@@ -206,10 +221,117 @@ include ROOT_PATH . '/view/envinclude.php';
         </div>
     </div>
 
+    <!-- Reset Password Modal -->
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white p-3">
+                    <h5 class="modal-title text-white mb-0">
+                        <i class="ri-key-2-line me-2"></i>Reset User Password
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="resetModalUserId">
+                    <div class="alert alert-primary py-2 px-3 mb-3 d-flex align-items-center">
+                        <i class="ri-user-follow-line me-2 fs-5"></i>
+                        <span>Resetting password for: <strong id="resetModalUserName">User</strong></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="resetModalNewPassword" class="form-label fw-semibold">New Password <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="resetModalNewPassword" placeholder="Enter new password">
+                            <button class="btn btn-outline-secondary" type="button" id="btnGenerateRandomModalPass" title="Generate Random Password">
+                                <i class="ri-refresh-line me-1"></i> Generate
+                            </button>
+                        </div>
+                        <small class="text-muted mt-1 d-block">Specify a custom password or click <strong>Generate</strong> for a random 6-digit password.</small>
+                    </div>
+                </div>
+                <div class="modal-footer p-3">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmResetPasswordBtn">
+                        <i class="ri-check-line me-1"></i> Update Password
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 
 
+
+
+    <!-- Manage Roles & Role Permissions Modal -->
+    <div class="modal fade" id="rolePermissionsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header text-white p-3" style="background: linear-gradient(135deg, #f12526, #c81e1f); border-bottom: none;">
+                    <h5 class="modal-title text-white mb-0">
+                        <i class="ri-shield-user-line me-2"></i>Manage Roles & Role Permissions Matrix
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3 mb-4 align-items-center">
+                        <!-- Create New Role -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">Create New Role</label>
+                            <div class="input-group">
+                                <input type="text" id="newRoleNameInput" class="form-control" placeholder="e.g. Accountant, Rental Agent">
+                                <button type="button" class="btn btn-success" id="btnSaveNewRole">
+                                    <i class="ri-add-line me-1"></i> Add Role
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Select Role to Edit Permissions -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">Configure Role Permissions</label>
+                            <select id="roleMatrixSelect" class="form-select">
+                                <option value="">Select a Role...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Role Permission Matrix Table -->
+                    <div class="card border shadow-none">
+                        <div class="card-header bg-light py-2 px-3 d-flex align-items-center justify-content-between">
+                            <span class="fw-semibold text-dark" id="roleMatrixTitle">Permissions for Selected Role</span>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-success" id="btnModalGrantAll">Grant All</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="btnModalRevokeAll">Revoke All</button>
+                            </div>
+                        </div>
+                        <div class="card-body p-3">
+                            <table class="table table-sm table-hover align-middle mb-0" id="roleMatrixTable">
+                                <thead class="table-light sticky-top" style="z-index: 1;">
+                                    <tr>
+                                        <th style="width: 40px;" class="text-center">#</th>
+                                        <th>Permission / Control Name</th>
+                                        <th style="width: 120px;" class="text-center">Group</th>
+                                        <th style="width: 100px;" class="text-center">Status</th>
+                                        <th style="width: 80px;" class="text-center">Grant</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="roleMatrixTbody">
+                                    <tr><td colspan="5" class="text-center text-muted py-3">Select a role above to configure its default permissions.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer p-3">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="btnSaveRolePermissions">
+                        <i class="ri-save-line me-1"></i> Save Role Permissions
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
 
@@ -238,10 +360,13 @@ include ROOT_PATH . '/view/envinclude.php';
 
     <!-- Page JS -->
     <script>
+        const loggedInIsSuperAdmin = <?= (!empty($_SESSION['is_super_admin']) || ($_SESSION['user_role_name'] ?? '') === 'Super Admin' || ($_SESSION['user_role_id'] ?? 0) == 3) ? 'true' : 'false' ?>;
+
         $(document).ready(function() {
 
             loadRoles();
             loadCompanies();
+            loadPermissions();
               setTimeout(function () {
                         $('#userName').val('').trigger('change');
                          $('#userPassword').val('').trigger('change');
@@ -287,14 +412,29 @@ include ROOT_PATH . '/view/envinclude.php';
                         let roles = response.data;
 
                         $('#select2Basic').empty();
-                        $('#select2Basic').append('<option value="">Select Role</option>');
 
                         roles.forEach(function(role) {
+                            if (!loggedInIsSuperAdmin && (role.role_name === 'Super Admin' || role.role_id == 3)) {
+                                return;
+                            }
 
                             $('#select2Basic').append(
                                 `<option value="${role.role_id}">${role.role_name}</option>`
                             );
 
+                        });
+
+                        $('#select2Basic').off('change.superadmin').on('change.superadmin', function() {
+                            let selectedRoles = $(this).val() || [];
+                            if (selectedRoles.includes('3')) {
+                                let allCompanyVals = [];
+                                $('#select2Multiple option').each(function() {
+                                    if ($(this).val()) allCompanyVals.push($(this).val());
+                                });
+                                $('#select2Multiple').val(allCompanyVals).trigger('change').prop('disabled', true);
+                            } else {
+                                $('#select2Multiple').prop('disabled', false);
+                            }
                         });
 
                     },
@@ -368,14 +508,13 @@ function selectAllCompanies() {
                 // reset form fields
                 $('#UserDetailsForm')[0].reset();
 
-                
-
-                $('#select2Basic').val('').trigger('change');
-                  const allCompanyIds = $('#select2Multiple option').map(function () {
+                $('#editUserId').val('');
+                $('#select2Basic').val([]).trigger('change');
+                const allCompanyIds = $('#select2Multiple option').map(function () {
                     return this.value;
                 }).get();
             
-                $('#select2Multiple').val(allCompanyIds).trigger('change');
+                $('#select2Multiple').val(allCompanyIds).trigger('change').prop('disabled', false);
 
                 $('#userName').val('').prop('disabled', false);
                 $('#userPassword').val('').prop('disabled', false);
@@ -383,6 +522,18 @@ function selectAllCompanies() {
                 // clear images
                 uploadedImages = [];
                 $('#imagePreview').html('<img id="previewImg" src="assets/img/users/default.jpg" alt="Preview" style="width:100%; height:100%; object-fit:cover;">');
+
+                $('#saveUserData').show();
+                $('#updateUserData').hide();
+                $('#userStatusBadge').attr('class', 'badge bg-label-success').text('New Entry');
+                $('#toggleUserStatusBtn').addClass('d-none');
+                $('#resetUserPasswordBtn').addClass('d-none');
+
+                if ($.fn.DataTable.isDataTable('#userTable')) {
+                    $('#userTable').DataTable().$('tr.selected').removeClass('selected');
+                }
+
+                loadPermissions();
             }
 
             function insertUser(profileName, roleId, roleName, username, password, email, phoneNumber, companies, userImage) {
@@ -396,6 +547,7 @@ function selectAllCompanies() {
                     phoneNumber: phoneNumber,
                     companies: companies,
                     image: userImage,
+                    permissions: getSelectedPermissions(),
                     action: 'InsertUserInformation'
                 };
 
@@ -472,8 +624,15 @@ function selectAllCompanies() {
                 e.preventDefault();
 
                 let profileName = $('#userProfileName').val().trim();
-                let roleId = $('#select2Basic').val();
-                let roleName = $('#select2Basic option:selected').text();
+                let roleIds = $('#select2Basic').val() || [];
+                let roleNames = [];
+                $('#select2Basic option:selected').each(function() {
+                    roleNames.push($(this).text().trim());
+                });
+
+                let roleId = roleIds.join(',');
+                let roleName = roleNames.join(', ');
+
                 let phoneNumber = $('#userPhoneNumber').val().trim();
                 let username = $('#userName').val().trim();
                 let password = $('#userPassword').val().trim();
@@ -499,8 +658,8 @@ function selectAllCompanies() {
                 }
 
                 // Role validation
-                if (roleId === '' || roleId === null) {
-                    setupDropdown('dropdownContent', 'error', svgError + 'Please select a user role', 'click');
+                if (roleIds.length === 0) {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Please select at least one user role', 'click');
                     $('#select2Basic').focus();
                     return;
                 }
@@ -569,9 +728,11 @@ function selectAllCompanies() {
 
                 let username = $(this).val().trim();
 
-                if (username.trim() !== '') {
+                if (username === '') {
                     return;
                 }
+
+                let currentUserId = $('#editUserId').val() || null;
 
                 $.ajax({
                     url: '/CheckUsername',
@@ -579,6 +740,7 @@ function selectAllCompanies() {
                     contentType: 'application/json',
                     data: JSON.stringify({
                         username: username,
+                        user_id: currentUserId,
                         action: 'CheckUsername'
                     }),
 
@@ -661,184 +823,101 @@ function selectAllCompanies() {
             // user table list
 
             let table = $('#userTable').DataTable({
-                //pageLength: 100,
                 searching: true,
                 lengthChange: false,
-                dom: "<'row mb-2'<'col-sm-6'l><'col-sm-6 d-flex justify-content-end'>>" + // top row: entries left, empty right
-                    "<'row'<'col-sm-12'tr>>" + // table
-                    "<'row mt-2'<'col-sm-6'i><'col-sm-6 d-flex justify-content-end'p>>",
-
-                columnDefs: [{
-                    targets: [0, 1, 9],
-                    className: "text-center"
-                }],
-
+                responsive: true,
+                autoWidth: false,
+                paging: true,
+                pageLength: 15,
+                ordering: false,
+                dom: '<"row"<"col-12 font-weight-bold">><"row"<"col-12"tr>><"row"<"col-6"i><"col-6"p>>',
                 ajax: {
                     url: '/ListOfUsers',
                     type: 'POST',
-                    data: function(d) {
+                    contentType: 'application/json',
+                    processData: false,
+                    data: function() {
                         return JSON.stringify({
                             action: 'LoadUserList'
                         });
                     },
-                    contentType: "application/json",
-                    dataSrc: 'data',
+                    dataSrc: function(json) {
+                        return (json && json.data && Array.isArray(json.data)) ? json.data : [];
+                    },
                     error: function(xhr) {
-                        console.log(xhr.responseText);
+                        console.log('Error loading users:', xhr.responseText);
                     }
                 },
-
                 columns: [
-
                     {
                         data: null,
-                        title: 'S.No',
                         render: function(data, type, row, meta) {
-                            return meta.row + 1;
+                            return meta.row + meta.settings._iDisplayStart + 1;
                         },
                         orderable: false,
                         searchable: false
                     },
-
                     {
                         data: 'profile_image',
-                        title: 'Image',
                         render: function(data) {
-
                             if (!data || data === '') {
                                 data = 'default.jpg';
                             }
-
-                            return `<img src="assets/img/users/${data}" 
-                            width="40" 
-                            height="40" 
-                            style="border-radius:50%;object-fit:cover;">`;
+                            return `<img src="assets/img/users/${data}" width="36" height="36" style="border-radius:50%;object-fit:cover;">`;
                         }
-
                     },
                     {
                         data: 'profile_name',
-                        title: 'Name',
-                        width: '200px'
-                    },
-                    {
-                        data: 'user_name',
-                        title: 'Username'
-                    },
-                    {
-                        data: 'user_passkey',
-                        visible: false
-                    },
-                    {
-                        data: 'user_email',
-                        title: 'Email'
-                    },
-                    {
-                        data: 'user_mobile',
-                        title: 'Phone'
+                        render: function(data, type, row) {
+                            let compNames = '';
+                            if (row.company_json) {
+                                try {
+                                    let cList = JSON.parse(row.company_json);
+                                    if (Array.isArray(cList) && cList.length > 0) {
+                                        compNames = cList.map(c => c.company_name).join(', ');
+                                    }
+                                } catch(e) {}
+                            }
+                            let compBadge = compNames ? `<br><small class="text-primary" style="font-size:11px; font-weight:500;"><i class="ri-building-line me-1"></i>${compNames}</small>` : '';
+                            return `<span class="fw-semibold">${data}</span> <small class="text-muted">(@${row.user_name || ''})</small>${compBadge}`;
+                        }
                     },
                     {
                         data: 'user_role_name',
-                        title: 'Role'
-                    },
-                    {
-                        data: 'company_json',
-                        title: 'Companies',
-                        visible: true,
                         render: function(data) {
-
-                            if (!data) return '';
-
-                            let companies = [];
-
-                            try {
-                                let jsonData = JSON.parse(data);
-
-                                jsonData.forEach(function(item) {
-                                    companies.push(item.company_name);
-                                });
-
-                            } catch (e) {
-                                console.log(e);
+                            if (data === 'Super Admin') {
+                                return '<span class="badge bg-label-danger"><i class="ri-shield-user-line me-1"></i>Super Admin</span>';
                             }
-
-                            return companies.join(', ');
+                            return data || '-';
                         }
                     },
                     {
                         data: 'user_status',
-                        title: 'Status',
-
-                        render: function(data, type, row) {
-
-                            switch (data) {
-
-                                case 'Active':
-                                    return '<span class="badge rounded-pill bg-label-success">Active</span>';
-
-                                case 'Deactive':
-                                    return '<span class="badge rounded-pill bg-label-danger">Deactive</span>';
-
-                                default:
-                                    return '<span class="badge rounded-pill bg-label-secondary">' + data + '</span>';
+                        render: function(data) {
+                            if (data === 'Active') {
+                                return '<span class="badge bg-label-success">Active</span>';
+                            } else {
+                                return '<span class="badge bg-label-danger">Deactive</span>';
                             }
-
-                        }
-                    },
-
-                    {
-                        data: null,
-                        title: 'Actions',
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center',
-                        render: function(data, type, row) {
-                            return `
-                        <div class="dropdown">
-                            <button type="button" class="btn dropdown-toggle hide-arrow p-0" data-bs-toggle="dropdown">
-                                <i class="icon-base ri ri-more-2-line icon-22px text-body-secondary"></i>
-                            </button>
-
-                            <ul class="dropdown-menu dropdown-menu-end">
-
-                                <li>
-                                    <a class="dropdown-item edit-user"
-                                    href="javascript:void(0);"
-                                    data-row='${JSON.stringify(row)}'>
-                                    Edit
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a class="dropdown-item change-status"
-                                    href="javascript:void(0);"
-                                    data-id="${row.user_id}"
-                                    data-status="${row.user_status}">
-                                    Change Status
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a class="dropdown-item reset-password"
-                                    href="javascript:void(0);"
-                                    data-id="${row.user_id}">
-                                    Reset Password
-                                    </a>
-                                </li>
-
-                            </ul>
-                        </div>`;
                         }
                     }
-
                 ]
-
             });
 
             $('#searchUser').on('keyup', function() {
-
                 table.search(this.value).draw();
+            });
 
+            // Table Row Click Event matching Outsourcing Company layout
+            $('#userTable tbody').off('click', 'tr').on('click', 'tr', function () {
+                let tableInstance = $('#userTable').DataTable();
+                tableInstance.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+
+                let rowData = tableInstance.row(this).data();
+                if (rowData) {
+                    fillUserForm(rowData);
+                }
             });
 
             // Edit user form details
@@ -855,6 +934,9 @@ function selectAllCompanies() {
 
             function fillUserForm(data) {
 
+                $('#saveUserData').hide();
+                $('#updateUserData').show();
+
                 $('#editUserId').val(data.user_id);
 
                 $('#userProfileName').val(data.profile_name);
@@ -864,27 +946,82 @@ function selectAllCompanies() {
                 $('#userPhoneNumber').val(data.user_mobile);
 
                 // Role select
-                $('#select2Basic').val(data.user_role_id).trigger('change');
+                let roleIds = data.user_role_id ? data.user_role_id.split(',') : [];
+                $('#select2Basic').val(roleIds).trigger('change');
 
                 // Companies JSON
-                let companies = JSON.parse(data.company_json);
-
-                let companyIds = companies.map(c => c.ids);
-                $('#select2Multiple').val(companyIds).trigger('change');
+                if (data.company_json) {
+                    try {
+                        let companies = JSON.parse(data.company_json);
+                        let companyIds = companies.map(c => c.ids);
+                        $('#select2Multiple').val(companyIds).trigger('change');
+                    } catch(e) {}
+                }
 
                 if (data.profile_image) {
-
                     $('#imagePreview').html(`
                     <img src="assets/img/users/${data.profile_image}"
-                    width="50"
-                    height="50"
+                    width="100"
+                    height="100"
                     style="border-radius:50%; object-fit:cover; border:2px solid #ddd;">
                 `);
-                    //$('#fileNameDisplay').text(data.profile_image);
                     $('#uploadedImageName').val(data.profile_image);
                 }
 
+                // Status Badge & Toggle Button Setup
+                let isTargetSuperAdmin = (data.user_role_name === 'Super Admin' || data.user_role_id == 3);
 
+                if (data.user_status === 'Active') {
+                    $('#userStatusBadge').attr('class', 'badge bg-label-success').text('Active');
+                    $('#toggleUserStatusBtn')
+                        .removeClass('d-none btn-success')
+                        .addClass('btn-warning')
+                        .html('<i class="ri-close-circle-line me-1"></i> Deactivate')
+                        .attr('data-id', data.user_id)
+                        .attr('data-status', 'Active')
+                        .data('id', data.user_id)
+                        .data('status', 'Active');
+                } else {
+                    $('#userStatusBadge').attr('class', 'badge bg-label-danger').text('Deactive');
+                    $('#toggleUserStatusBtn')
+                        .removeClass('d-none btn-warning')
+                        .addClass('btn-success')
+                        .html('<i class="ri-checkbox-circle-line me-1"></i> Activate')
+                        .attr('data-id', data.user_id)
+                        .attr('data-status', 'Deactive')
+                        .data('id', data.user_id)
+                        .data('status', 'Deactive');
+                }
+
+                // If target user is Super Admin and logged-in user is NOT Super Admin, hide status toggle
+                if (isTargetSuperAdmin && !loggedInIsSuperAdmin) {
+                    $('#toggleUserStatusBtn').addClass('d-none');
+                }
+
+                // Show Reset Password button: Super Admin can reset all users; Admin can reset regular users (not Admins/Super Admins)
+                let canResetPassword = false;
+                let isTargetAdminOrSuper = (data.user_role_name === 'Administrator' || data.user_role_name === 'Super Admin' || data.user_role_id == 1 || data.user_role_id == 3);
+
+                if (loggedInIsSuperAdmin) {
+                    canResetPassword = true;
+                } else if (data.user_id && !isTargetAdminOrSuper) {
+                    canResetPassword = true;
+                }
+
+                if (canResetPassword && data.user_id) {
+                    $('#resetUserPasswordBtn')
+                        .removeClass('d-none')
+                        .attr('data-id', data.user_id)
+                        .attr('data-name', data.profile_name);
+                } else {
+                    $('#resetUserPasswordBtn').addClass('d-none');
+                }
+
+                if (data.user_id) {
+                    loadPermissions(data.user_id);
+                } else {
+                    loadPermissions();
+                }
             }
 
 
@@ -901,6 +1038,7 @@ function selectAllCompanies() {
                     role_name: data.roleName,
                     companies: data.companies,
                     image: data.userImage,
+                    permissions: getSelectedPermissions(),
                     action: 'UpdateUserInformation'
                 };
 
@@ -939,8 +1077,16 @@ function selectAllCompanies() {
                 let password = $('#userPassword').val().trim();
                 let email = $('#userEmail').val().trim();
                 let phoneNumber = $('#userPhoneNumber').val().trim();
-                let roleId = $('#select2Basic').val();
-                let roleName = $('#select2Basic option:selected').text();
+
+                let roleIds = $('#select2Basic').val() || [];
+                let roleNames = [];
+                $('#select2Basic option:selected').each(function() {
+                    roleNames.push($(this).text().trim());
+                });
+
+                let roleId = roleIds.join(',');
+                let roleName = roleNames.join(', ');
+
                 let companies = [];
 
                 $('#select2Multiple option:selected').each(function() {
@@ -959,8 +1105,8 @@ function selectAllCompanies() {
                 }
 
                 // Role validation
-                if (roleId === '' || roleId === null) {
-                    setupDropdown('dropdownContent', 'error', svgError + 'Please select a user role', 'click');
+                if (roleIds.length === 0) {
+                    setupDropdown('dropdownContent', 'error', svgError + 'Please select at least one user role', 'click');
                     $('#select2Basic').focus();
                     return;
                 }
@@ -1002,8 +1148,8 @@ function selectAllCompanies() {
                     password: $('#userPassword').val(),
                     email: $('#userEmail').val(),
                     phoneNumber: $('#userPhoneNumber').val(),
-                    roleId: $('#select2Basic').val(),
-                    roleName: $('#select2Basic option:selected').text(),
+                    roleId: roleId,
+                    roleName: roleName,
                     companies: companies,
                     userImage: $('#uploadedImageName').val()
                 };
@@ -1016,10 +1162,16 @@ function selectAllCompanies() {
             let userId = null;
             let currentStatus = null;
 
-            $(document).on('click', '.change-status', function() {
+            $(document).on('click', '.change-status, #toggleUserStatusBtn', function(e) {
+                e.preventDefault();
 
-                userId = $(this).data('id');
-                currentStatus = $(this).data('status');
+                userId = $(this).attr('data-id') || $(this).data('id') || $('#editUserId').val();
+                currentStatus = $(this).attr('data-status') || $(this).data('status') || 'Active';
+
+                if (!userId) {
+                    setupDropdown('dropdownContent', 'error', svgError + 'No user selected to change status', 'click');
+                    return;
+                }
 
                 SaNDSAlert(
                     'Are you sure you want to change the status?',
@@ -1075,15 +1227,16 @@ function selectAllCompanies() {
                     }),
                     success: function(response) {
                         if (response.success) {
-                            setupDropdown(
-                                'dropdownContent',
-                                'success',
-                                svgSuccess + 'Status Changed Successfully',
-                                'click'
-                            );
+                             setupDropdown(
+                                 'dropdownContent',
+                                 'success',
+                                 svgSuccess + 'Status Changed Successfully',
+                                 'click'
+                             );
 
-                            // Update the row in DataTable dynamically
-                            $('#userTable').DataTable().ajax.reload(null, false);
+                             resetUserForm();
+                             // Update the row in DataTable dynamically
+                             $('#userTable').DataTable().ajax.reload(null, false);
                         } else {
                             setupDropdown(
                                 'dropdownContent',
@@ -1104,35 +1257,76 @@ function selectAllCompanies() {
                 });
             }
 
-            $(document).on('click', '.reset-password', function() {
+            // Reset Password Modal Trigger
+            $(document).on('click', '.reset-password, #resetUserPasswordBtn', function(e) {
+                e.preventDefault();
+                let userId = $(this).attr('data-id') || $(this).data('id') || $('#editUserId').val();
+                let userName = $(this).attr('data-name') || $('#userProfileName').val() || 'User';
+                
+                if (!userId) {
+                    setupDropdown('dropdownContent', 'error', svgError + 'No user selected for password reset', 'click');
+                    return;
+                }
 
-                let userId = $(this).data('id');
-                //alert('hi' + userId);
-                resetUserPassword(userId);
+                $('#resetModalUserId').val(userId);
+                $('#resetModalUserName').text(userName);
+                // Default random password
+                let randomPass = Math.floor(100000 + Math.random() * 900000).toString();
+                $('#resetModalNewPassword').val(randomPass);
+
+                const resetModalEl = document.getElementById('resetPasswordModal');
+                const modal = new bootstrap.Modal(resetModalEl);
+                modal.show();
             });
 
-            function resetUserPassword(userId) {
-                let randomPassword = Math.floor(10000 + Math.random() * 90000).toString();
+            // Generate Random Password button inside modal
+            $(document).on('click', '#btnGenerateRandomModalPass', function() {
+                let randomPass = Math.floor(100000 + Math.random() * 900000).toString();
+                $('#resetModalNewPassword').val(randomPass);
+            });
+
+            // Confirm Password Reset inside modal
+            $(document).on('click', '#confirmResetPasswordBtn', function() {
+                let userId = $('#resetModalUserId').val();
+                let userName = $('#resetModalUserName').text();
+                let newPassword = $('#resetModalNewPassword').val().trim();
+
+                if (!newPassword) {
+                    setupDropdown('dropdownContent', 'warning', svgError + 'Please enter or generate a new password', 'click');
+                    $('#resetModalNewPassword').focus();
+                    return;
+                }
+
+                let btn = $(this);
+                btn.prop('disabled', true).html('<i class="ri-loader-4-line spin me-1"></i> Updating...');
+
                 $.ajax({
                     url: '/ResetUserPassword',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({
                         user_id: userId,
-                        password: randomPassword,
+                        password: newPassword,
                         action: 'ResetPassword'
                     }),
 
                     success: function(response) {
-                        //console.log(response);
-                        if (response.success) {
+                        let res = (typeof response === 'string') ? JSON.parse(response) : response;
+                        if (res.success) {
+                            const resetModalEl = document.getElementById('resetPasswordModal');
+                            const modal = bootstrap.Modal.getInstance(resetModalEl);
+                            if (modal) modal.hide();
+
                             setupDropdown(
                                 'dropdownContent',
                                 'success',
-                                svgSuccess + 'Password reset to '+randomPassword+' successfully',
+                                svgSuccess + 'Password for <strong>' + userName + '</strong> reset to: <strong>' + newPassword + '</strong>',
                                 'click'
                             );
-                            $('#userTable').DataTable().ajax.reload(null, false);
+                            $('#userPassword').val(newPassword);
+                            if ($.fn.DataTable.isDataTable('#userTable')) {
+                                $('#userTable').DataTable().ajax.reload(null, false);
+                            }
                         } else {
                             setupDropdown(
                                 'dropdownContent',
@@ -1141,21 +1335,336 @@ function selectAllCompanies() {
                                 'click'
                             );
                         }
-
                     },
 
                     error: function() {
                         setupDropdown(
                             'dropdownContent',
                             'error',
-                            svgError + 'Server error',
+                            svgError + 'Server error during password reset',
                             'click'
                         );
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).html('<i class="ri-check-line me-1"></i> Update Password');
                     }
+                });
+            });
 
+            function loadPermissions(userId = null, roleId = null) {
+                let requestUrl = userId ? '/LoadUserPermissions' : (roleId ? '/LoadRolePermissions' : '/LoadMasterPermissions');
+                let requestData = { action: userId ? 'LoadUserPermissions' : (roleId ? 'LoadRolePermissions' : 'LoadMasterPermissions') };
+                if (userId) requestData.user_id = userId;
+                if (roleId) requestData.role_id = roleId;
+
+                $.ajax({
+                    url: requestUrl,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    processData: false,
+                    data: JSON.stringify(requestData),
+                    success: function(response) {
+                        let responseData = (typeof response === 'string') ? JSON.parse(response) : response;
+                        let perms = responseData.data || [];
+                        let tbody = $('#permissionsTbody');
+                        tbody.empty();
+
+                        if (perms.length === 0) {
+                            tbody.html('<tr><td colspan="4" class="text-center text-muted py-3">No permissions found.</td></tr>');
+                            return;
+                        }
+
+                        perms.forEach(function(perm, index) {
+                            let isGranted = (perm.status === 'Granted');
+                            let badgeClass = isGranted ? 'bg-label-success' : 'bg-label-danger';
+                            let badgeText = isGranted ? 'Granted' : 'Revoked';
+
+                            let rowHtml = `
+                                <tr data-perm-name="${(perm.permission_name || '').toLowerCase()}" data-perm-group="${(perm.module_group || '').toLowerCase()}">
+                                    <td class="text-center fw-semibold text-muted">${index + 1}</td>
+                                    <td><span class="fw-semibold text-dark">${perm.permission_name}</span></td>
+                                    <td class="text-center"><span class="badge bg-label-info">${perm.module_group || 'General'}</span></td>
+                                    <td class="text-center"><span class="badge ${badgeClass}" id="perm_badge_${perm.permission_id}">${badgeText}</span></td>
+                                </tr>
+                            `;
+                            tbody.append(rowHtml);
+                        });
+                    },
+                    error: function() {
+                        $('#permissionsTbody').html('<tr><td colspan="4" class="text-center text-danger py-3">Error loading permissions.</td></tr>');
+                    }
+                });
+            }
+
+            // Auto-load role permissions into permissions card when role changes
+            $(document).on('change', '#select2Basic', function() {
+                let selectedRoleIds = $(this).val() || [];
+                let editingUserId = $('#editUserId').val();
+                if (!editingUserId && selectedRoleIds.length > 0) {
+                    loadPermissions(null, selectedRoleIds.join(','));
+                } else if (!editingUserId) {
+                    $('#permissionsTbody').empty().html('<tr><td colspan="4" class="text-center text-muted py-3">Select one or more roles to see permissions.</td></tr>');
+                }
+            });
+
+            function getSelectedPermissions() {
+                return [];
+            }
+
+            // Live permission search filter
+            $('#searchPermissions').on('keyup', function() {
+                let query = $(this).val().toLowerCase().trim();
+                $('#permissionsTbody tr').each(function() {
+                    let name = $(this).data('perm-name') || '';
+                    let group = $(this).data('perm-group') || '';
+                    if (name.includes(query) || group.includes(query)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+
+            // Open Manage Roles & Permissions Modal
+            $('#btnOpenRoleModal').on('click', function(e) {
+                e.preventDefault();
+                populateRoleMatrixDropdown();
+                const modal = new bootstrap.Modal(document.getElementById('rolePermissionsModal'));
+                modal.show();
+            });
+
+            function populateRoleMatrixDropdown() {
+                $.ajax({
+                    url: '/LoadRoles',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    processData: false,
+                    data: JSON.stringify({ action: 'LoadRoles' }),
+                    success: function(res) {
+                        let responseData = (typeof res === 'string') ? JSON.parse(res) : res;
+                        let roles = responseData.data || [];
+                        let select = $('#roleMatrixSelect');
+                        select.empty();
+                        select.append('<option value="">Select a Role...</option>');
+                        roles.forEach(function(r) {
+                            select.append(`<option value="${r.role_id}">${r.role_name}</option>`);
+                        });
+                    }
+                });
+            }
+
+            // Create New Role
+            $('#btnSaveNewRole').on('click', function(e) {
+                e.preventDefault();
+                let roleName = $('#newRoleNameInput').val().trim();
+                if (!roleName) {
+                    setupDropdown('dropdownContent', 'error', 'Please enter a role name', 'click');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/CreateRole',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    processData: false,
+                    data: JSON.stringify({ action: 'CreateRole', role_name: roleName }),
+                    success: function(res) {
+                        let responseData = (typeof res === 'string') ? JSON.parse(res) : res;
+                        if (responseData.status) {
+                            setupDropdown('dropdownContent', 'success', 'Role created successfully!', 'click');
+                            $('#newRoleNameInput').val('');
+                            loadRoles();
+                            populateRoleMatrixDropdown();
+                            setTimeout(function() {
+                                $('#roleMatrixSelect').val(responseData.role_id).trigger('change');
+                            }, 300);
+                        } else {
+                            setupDropdown('dropdownContent', 'error', responseData.message || 'Error creating role', 'click');
+                        }
+                    }
+                });
+            });
+
+            // Select Role in Modal -> Load Role Permissions
+            
+            function initRoleMatrixDataTable() {
+                if ($.fn.DataTable.isDataTable('#roleMatrixTable')) {
+                    $('#roleMatrixTable').DataTable().destroy();
+                }
+                $('#roleMatrixTable').DataTable({
+                    paging: false,
+                    info: true,
+                    searching: true,
+                    scrollY: '450px',
+                    scrollCollapse: true,
+                    order: [] // prevent auto sorting of the first column
+                });
+            }
+
+            $('#roleMatrixSelect').on('change', function() {
+                let roleId = $(this).val();
+                let roleName = $('#roleMatrixSelect option:selected').text();
+                let tbody = $('#roleMatrixTbody');
+
+                if (!roleId) {
+                    $('#roleMatrixTitle').text('Permissions for Selected Role');
+                    tbody.html('<tr><td colspan="5" class="text-center text-muted py-3">Select a role above to configure its default permissions.</td></tr>');
+                    return;
+                }
+
+                $('#roleMatrixTitle').html(`Default Permissions for <strong>${roleName}</strong> Role`);
+
+                $.ajax({
+                    url: '/LoadRolePermissions',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    processData: false,
+                    data: JSON.stringify({ action: 'LoadRolePermissions', role_id: roleId }),
+                    success: function(res) {
+                        let responseData = (typeof res === 'string') ? JSON.parse(res) : res;
+                        let perms = responseData.data || [];
+                        tbody.empty();
+                        if (perms.length === 0) {
+                            tbody.html('<tr><td colspan="5" class="text-center text-muted py-3">No permissions found.</td></tr>');
+                            return;
+                        }
+
+                        perms.forEach(function(perm, index) {
+                            let isGranted = (perm.status === 'Granted');
+                            let badgeClass = isGranted ? 'bg-label-success' : 'bg-label-danger';
+                            let badgeText = isGranted ? 'Granted' : 'Revoked';
+
+                            let rowHtml = `
+                                <tr>
+                                    <td class="text-center fw-semibold text-muted">${index + 1}</td>
+                                    <td><span class="fw-semibold text-dark">${perm.permission_name}</span></td>
+                                    <td class="text-center"><span class="badge bg-label-info">${perm.module_group || 'General'}</span></td>
+                                    <td class="text-center"><span class="badge ${badgeClass}" id="role_perm_badge_${perm.permission_id}">${badgeText}</span></td>
+                                    <td class="text-center">
+                                        <label class="switch switch-success switch-sm d-inline-block mb-0">
+                                            <input type="checkbox" class="switch-input role-permission-switch" id="role_perm_switch_${perm.permission_id}" data-perm-id="${perm.permission_id}" ${isGranted ? 'checked' : ''} />
+                                            <span class="switch-toggle-slider">
+                                                <span class="switch-on"></span>
+                                                <span class="switch-off"></span>
+                                            </span>
+                                        </label>
+                                    </td>
+                                </tr>
+                            `;
+                            tbody.append(rowHtml);
+                        });
+                        initRoleMatrixDataTable();
+                    },
+                    error: function(xhr, status, error) {
+                        if (xhr && xhr.responseText) {
+                            try {
+                                let raw = xhr.responseText;
+                                let start = raw.indexOf('{');
+                                let end = raw.lastIndexOf('}');
+                                if (start !== -1 && end !== -1) {
+                                    let parsed = JSON.parse(raw.substring(start, end + 1));
+                                    if (parsed && parsed.data) {
+                                        let perms = parsed.data;
+                                        tbody.empty();
+                                        perms.forEach(function(perm, index) {
+                                            let isGranted = (perm.status === 'Granted');
+                                            let badgeClass = isGranted ? 'bg-label-success' : 'bg-label-danger';
+                                            let badgeText = isGranted ? 'Granted' : 'Revoked';
+
+                                            let rowHtml = `
+                                                <tr>
+                                                    <td class="text-center fw-semibold text-muted">${index + 1}</td>
+                                                    <td><span class="fw-semibold text-dark">${perm.permission_name}</span></td>
+                                                    <td class="text-center"><span class="badge bg-label-info">${perm.module_group || 'General'}</span></td>
+                                                    <td class="text-center"><span class="badge ${badgeClass}" id="role_perm_badge_${perm.permission_id}">${badgeText}</span></td>
+                                                    <td class="text-center">
+                                                        <label class="switch switch-success switch-sm d-inline-block mb-0">
+                                                            <input type="checkbox" class="switch-input role-permission-switch" id="role_perm_switch_${perm.permission_id}" data-perm-id="${perm.permission_id}" ${isGranted ? 'checked' : ''} />
+                                                            <span class="switch-toggle-slider">
+                                                                <span class="switch-on"></span>
+                                                                <span class="switch-off"></span>
+                                                            </span>
+                                                        </label>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                            tbody.append(rowHtml);
+                                        });
+                                        return;
+                                    }
+                                }
+                            } catch (e) {
+                                console.error("Fallback error parse failed:", e);
+                            }
+                        }
+                        tbody.html('<tr><td colspan="5" class="text-center text-danger py-3">Error loading role permissions.</td></tr>');
+                    }
+                });
+            });
+
+            // Live status badge update on role switch toggle
+            $(document).on('change', '.role-permission-switch', function() {
+                let permId = $(this).data('perm-id');
+                let isChecked = $(this).is(':checked');
+                let badge = $('#role_perm_badge_' + permId);
+                if (isChecked) {
+                    badge.removeClass('bg-label-danger').addClass('bg-label-success').text('Granted');
+                } else {
+                    badge.removeClass('bg-label-success').addClass('bg-label-danger').text('Revoked');
+                }
+            });
+
+            // Grant All inside Modal
+            $('#btnModalGrantAll').on('click', function() {
+                $('.role-permission-switch').prop('checked', true).trigger('change');
+            });
+
+            // Revoke All inside Modal
+            $('#btnModalRevokeAll').on('click', function() {
+                $('.role-permission-switch').prop('checked', false).trigger('change');
+            });
+
+            // Save Role Permissions
+            $('#btnSaveRolePermissions').on('click', function(e) {
+                e.preventDefault();
+                let roleId = $('#roleMatrixSelect').val();
+                if (!roleId) {
+                    setupDropdown('dropdownContent', 'error', 'Please select a role first', 'click');
+                    return;
+                }
+
+                let permissions = [];
+                $('.role-permission-switch').each(function() {
+                    let permId = $(this).data('perm-id');
+                    let status = $(this).is(':checked') ? 'Granted' : 'Revoked';
+                    if (permId) {
+                        permissions.push({ permission_id: permId, status: status });
+                    }
                 });
 
-            }
+                $.ajax({
+                    url: '/SaveRolePermissions',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    processData: false,
+                    data: JSON.stringify({ action: 'SaveRolePermissions', role_id: roleId, permissions: permissions }),
+                    success: function(res) {
+                        let responseData = (typeof res === 'string') ? JSON.parse(res) : res;
+                        if (responseData.status) {
+                            setupDropdown('dropdownContent', 'success', 'Role permissions saved successfully!', 'click');
+                            if ($('#select2Basic').val() == roleId && !$('#editUserId').val()) {
+                                loadPermissions();
+                            }
+                        } else {
+                            setupDropdown('dropdownContent', 'error', responseData.message || 'Error saving role permissions', 'click');
+                        }
+                    }
+                });
+            });
 
         });
     </script>

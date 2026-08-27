@@ -1,5 +1,10 @@
- <?php $decrypt = $this->encryption->decrypt($_GET['val'] ?? null);
-  $decrypt = explode(",", $decrypt);
+<?php
+require_once ROOT_PATH . '/model/common/PermissionHelper.php';
+if (!empty($_SESSION['user_id'])) {
+    PermissionHelper::loadUserPermissionsIntoSession($_SESSION['user_id'], $_SESSION['user_role_id'] ?? 0, $_SESSION['user_role_name'] ?? '');
+}
+$decrypt = $this->encryption->decrypt($_GET['val'] ?? null);
+$decrypt = explode(",", $decrypt);
 
   ?>
  <aside id="layout-menu" class="layout-menu-horizontal menu-horizontal menu flex-grow-0">
@@ -35,6 +40,7 @@
                <div data-i18n="Vehicle Configuration">Vehicle Configuration</div>
              </a>
            </li>
+
            <li class="menu-item <?php if ($decrypt[0] == '2-1') {
                                   echo 'active';
                                 } ?>">
@@ -60,6 +66,15 @@
 
                <i class="menu-icon icon-base ri ri-list-unordered"></i>
                <div data-i18n="List of Vehicles">List of Vehicles</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($decrypt[0] == '2-8') {
+                                  echo 'active';
+                                } ?>">
+             <a href="/OutsourcingCompany?val=<?php echo $this->encryption->encrypt('2,2-8'); ?>" class="menu-link">
+
+               <i class="menu-icon icon-base ri ri-building-4-line"></i>
+               <div data-i18n="Outsourcing Company">Outsourcing Company</div>
              </a>
            </li>
 
@@ -124,6 +139,15 @@
                <div data-i18n="Reservation from Quotation">Reservation from Quotation</div>
              </a>
            </li>
+           <li class="menu-item <?php if ($decrypt[0] == '3-10') {
+                                 echo 'active';
+                               } ?>">
+            <a href="/Reservation?val=<?php echo $this->encryption->encrypt('3,3-10'); ?>" class="menu-link">
+
+              <i class="menu-icon icon-base ri ri-survey-line"></i>
+              <div data-i18n="Reservation">Reservation</div>
+            </a>
+          </li>
             <li class="menu-item <?php if ($decrypt[0] == '3-3') {
                                   echo 'active';
                                 } ?>">
@@ -133,12 +157,20 @@
                <div data-i18n="Contract Generation">Contract Generation</div>
              </a>
            </li>
-           <li class="menu-item">
-             <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#sendContractModal" class="menu-link">
-               <i class="menu-icon icon-base ri ri-send-plane-fill"></i>
-               <div data-i18n="Send Contract">Send Contract</div>
-             </a>
-           </li>
+            <li class="menu-item">
+              <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#sendContractModal" class="menu-link">
+                <i class="menu-icon icon-base ri ri-send-plane-fill"></i>
+                <div data-i18n="Send Contract">Send Contract</div>
+              </a>
+            </li>
+            <li class="menu-item <?php if ($decrypt[0] == '2-6') {
+                                   echo 'active';
+                                 } ?>">
+              <a href="/MaintenanceRequest?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
+                <i class="menu-icon icon-base ri ri-tools-line"></i>
+                <div data-i18n="Maintenance Request">Maintenance Request</div>
+              </a>
+            </li>
          </ul>
        </li>
 

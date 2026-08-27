@@ -10,13 +10,48 @@
                   <div class="col-12 col-lg-8">
                     <!-- Product Information -->
                     <div class="card mb-6">
-                      <div class="card-header">
-                        <h5 class="card-tile mb-0">Vehicle Registration Details</h5>
+                      <div class="card-header d-flex align-items-center justify-content-between">
+                          <h5 class="card-title mb-0">
+                              <i class="ri-car-line me-2 text-primary"></i>Vehicle Registration Details
+                          </h5>
+                          <div id="statusBadgeContainer">
+                              <span class="badge bg-label-success" id="vehicleStatusBadge">New Entry</span>
+                          </div>
                       </div>
                       <div class="card-body">
                         
 
                        <div class="row g-3 mb-4">
+
+                          <!-- Registration Company Access -->
+                          <div class="col-12 col-md-6 col-lg-4">
+                            <div class="form-floating form-floating-outline mb-3">
+                              <select id="belongsToCompanyID" name="belongsToCompanyID" class="form-select">
+                              </select>
+                              <label for="belongsToCompanyID">Registration Company</label>
+                            </div>
+                          </div>
+
+                          <!-- Is Outsourced Vehicle -->
+                          <div class="col-12 col-md-6 col-lg-4">
+                            <div class="form-floating form-floating-outline mb-3">
+                              <select id="isOutsourced" name="is_outsourced" class="form-select">
+                                <option value="No" selected>No (Own Fleet)</option>
+                                <option value="Yes">Yes (Outsourced)</option>
+                              </select>
+                              <label for="isOutsourced">Is Outsourced Vehicle?</label>
+                            </div>
+                          </div>
+
+                          <!-- Outsourcing Company List -->
+                          <div class="col-12 col-md-6 col-lg-4" id="outsourcingCompanyContainer" style="display: none;">
+                            <div class="form-floating form-floating-outline mb-3">
+                              <select id="outsourcingCompanyId" name="outsourcing_company_id" class="form-select">
+                                <option value="" disabled selected>Select Outsourcing Company</option>
+                              </select>
+                              <label for="outsourcingCompanyId">Outsourcing Company</label>
+                            </div>
+                          </div>
 
                           <!-- Vehicle Model -->
                           <div class="col-12 col-md-6 col-lg-3">
@@ -32,6 +67,14 @@
                             <div class="form-floating form-floating-outline mb-5">
                               <input type="text" class="form-control" id="vehicleNumber" placeholder="Vehicle Number" name="vehicleNumber">
                               <label for="vehicleNumber">Vehicle Number</label>
+                            </div>
+                          </div>
+                        
+                          <!-- Chassis Number -->
+                          <div class="col-12 col-md-6 col-lg-3">
+                            <div class="form-floating form-floating-outline mb-5">
+                              <input type="text" class="form-control" id="chassisNumber" placeholder="Chassis Number" name="chassisNumber">
+                              <label for="chassisNumber">Chassis Number</label>
                             </div>
                           </div>
                         
@@ -167,7 +210,7 @@
                                 </ul>
                             
                                 <!-- Right: Button -->
-                                <a href="javascript:;" class="ms-auto">
+                                <a href="javascript:;" class="ms-auto" data-permission="vehicle_registration_manage">
                                     <span class="badge bg-label-primary rounded-pill openAddRentalCarImageModal">
                                         Add Vehicle Documents
                                     </span>
@@ -189,7 +232,7 @@
                     
                          <div class="d-flex flex-column gap-2">
 
-                          <input class="form-control form-control-sm" type="file" id="vehicleImages" multiple>
+                          <input class="form-control form-control-sm" type="file" id="vehicleImages" multiple data-permission="vehicle_registration_manage">
                         
                           <ul class="list-unstyled d-flex flex-wrap gap-2 mb-0" id="imagePreview"></ul>
                         
@@ -202,14 +245,20 @@
                     </div>
                  
                    
-                   <div class="card mb-4">
-                      <div class="card-body d-flex justify-content-between">
+                    <div class="card mb-4">
+                      <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 action-buttons-wrapper p-3">
                     
-                        <button type="button" class="btn btn-secondary" id="btn_cancel">Cancel</button>
+                        <button type="button" class="btn btn-secondary" id="btn_cancel">
+                            <i class="ri-refresh-line me-1"></i> Reset / Cancel
+                        </button>
                     
                         <div class="d-flex gap-2">
-                          <button class="btn btn-primary" type="button" id="saveVehicleData">Save</button>
-                          
+                          <button type="button" class="btn btn-warning d-none" id="toggleStatusBtn" data-permission="vehicle_registration_manage">
+                              <i class="ri-toggle-line me-1"></i> Deactivate
+                          </button>
+                          <button class="btn btn-primary" type="button" id="saveVehicleData" data-permission="vehicle_registration_manage">
+                              <i class="ri-save-line me-1"></i> Save Vehicle
+                          </button>
                         </div>
                     
                       </div>
@@ -220,7 +269,25 @@
                       <div class="card shadow-sm">
                         
                          <div class="card-header p-2">
-                              <input type="text" id="vehicleSearch" class="form-control" placeholder="Type to search vehicles...">
+                              <?php
+                                $allowedCompanies = [];
+                                if (!empty($_SESSION['company_json'])) {
+                                    $companyData = json_decode($_SESSION['company_json'], true);
+                                    if (is_array($companyData)) {
+                                        $allowedCompanies = $companyData;
+                                    }
+                                }
+                                $isSingleCompany = count($allowedCompanies) <= 1;
+                              ?>
+                              <select id="companyFilter" class="form-select mb-2 form-select-sm" <?= $isSingleCompany ? 'disabled' : '' ?>>
+                                  <?php if (!$isSingleCompany): ?>
+                                      <option value="">All Companies</option>
+                                  <?php endif; ?>
+                                  <?php foreach ($allowedCompanies as $comp): ?>
+                                      <option value="<?= htmlspecialchars($comp['ids']) ?>"><?= htmlspecialchars($comp['company_name']) ?></option>
+                                  <?php endforeach; ?>
+                              </select>
+                              <input type="text" id="vehicleSearch" class="form-control form-control-sm" placeholder="Type to search vehicles...">
                             </div>
                     
                         <div class="card-body p-2">
@@ -230,8 +297,9 @@
                                 <tr>
                                   <th>#</th>
                                   <th>Model</th>
-                                  <th>No</th>
+                                  <th>Reg/Chasis</th>
                                   <th>Year</th>
+                                  <th>Status</th>
                                 </tr>
                               </thead>
                               <tbody>

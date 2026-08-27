@@ -57,6 +57,58 @@ include ROOT_PATH . '/view/envinclude.php';
      <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.css" />
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>alertmessage/css/sands_alert_style.css">
     <style>
+        /* Comprehensive override for DataTables selected row, cells, click, hover, and striped states */
+        #customerTable tbody tr,
+        #customerTable tbody tr td {
+            cursor: pointer;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        #customerTable tbody tr:focus,
+        #customerTable tbody tr:active,
+        #customerTable tbody tr:focus-visible,
+        #customerTable tbody tr td:focus,
+        #customerTable tbody tr td:active {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Selected row and all child cells in ALL states (normal, hover, active, striped) */
+        #customerTable tbody tr.selected,
+        #customerTable tbody tr.selected > td,
+        #customerTable tbody tr.selected > th,
+        #customerTable tbody tr.selected:hover,
+        #customerTable tbody tr.selected:hover > td,
+        #customerTable tbody tr.selected:hover > th,
+        #customerTable.dataTable tbody tr.selected,
+        #customerTable.dataTable tbody tr.selected > *,
+        #customerTable.dataTable tbody tr.selected:hover,
+        #customerTable.dataTable tbody tr.selected:hover > *,
+        #customerTable.dataTable.table-hover tbody tr.selected:hover,
+        #customerTable.dataTable.table-hover tbody tr.selected:hover > *,
+        #customerTable.dataTable.table-striped tbody tr.selected,
+        #customerTable.dataTable.table-striped tbody tr.selected > *,
+        #customerTable.dataTable.table-striped tbody tr.selected:hover,
+        #customerTable.dataTable.table-striped tbody tr.selected:hover > *,
+        #customerTable.dataTable.table-striped > tbody > tr:nth-of-type(odd).selected,
+        #customerTable.dataTable.table-striped > tbody > tr:nth-of-type(odd).selected > * {
+            background-color: #F87C63 !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        /* Unselected row hover state */
+        #customerTable tbody tr:not(.selected):hover,
+        #customerTable tbody tr:not(.selected):hover > td,
+        #customerTable tbody tr:not(.selected):hover > th,
+        #customerTable.dataTable tbody tr:not(.selected):hover > *,
+        #customerTable.dataTable.table-hover tbody tr:not(.selected):hover > * {
+            background-color: rgba(248, 124, 99, 0.15) !important;
+            color: inherit !important;
+        }
+
         .swiper {
             width: 400px;
             height: 300px;
@@ -802,6 +854,8 @@ function resetRentCarUploadProgress() {
             allowlicenseExpiredProceed = false;
         
             $('#saveCustomerData').text('Save');
+            $('#customerStatusBadge').removeClass('bg-label-danger').addClass('bg-label-success').text('New Entry');
+            $('#toggleCustomerStatusBtn').addClass('d-none');
         }
 
        
@@ -1049,7 +1103,10 @@ $('#cprexpiryDate').on('input', function () {
                 }
             },
             { data: 'customer_mobile' },
-            { data: 'customer_cr_cpr' }
+            { data: 'customer_cr_cpr' },
+            { data: 'status', render: function(data, type, row){
+                return (data === 'Active' || data === '1' || data === 1 || data === true) ? '<span class="badge bg-label-success">Active</span>' : '<span class="badge bg-label-danger">Inactive</span>';
+            } }
           
         ]
   });
@@ -1070,9 +1127,92 @@ $('#customerTable tbody').on('click', 'tr', function () {
     resetCustomerForm();
     let data = table.row(this).data();
     selectedVehicleData = data; 
-    
-    loadCustomerForEdit(data); 
+
+    loadCustomerForEdit(data);
+    // Show activate/deactivate button based on current status
+    let isActive = (data.status === 'Active' || data.status === '1' || data.status === 1 || data.status === true);
+    if (isActive) {
+        $('#toggleCustomerStatusBtn').removeClass('d-none').text('Deactivate');
+    } else {
+        $('#toggleCustomerStatusBtn').removeClass('d-none').text('Activate');
+    }
 });
+
+let pendingCustomerId = null;
+let pendingCustomerStatus = null;
+
+// Toggle status handler using SaNDSAlert modal
+$('#toggleCustomerStatusBtn').on('click', function(e){
+    e.preventDefault();
+    if(!selectedVehicleData) return;
+    
+    pendingCustomerId = selectedVehicleData.ids;
+    pendingCustomerStatus = selectedVehicleData.status;
+
+    SaNDSAlert(
+        'Are you sure you want to change the status?',
+        'ChangeCustomerStatus',
+        'warning',
+        '#f39c12',
+        'Yes Change',
+        'Cancel',
+        'Change Status'
+    );
+});
+
+$(document).on('click', '#msg_popup_confirmed', function () {
+    let action = $('#message_matter').attr('data-switch-values');
+    if (action === 'ChangeCustomerStatus') {
+        let isActive = (pendingCustomerStatus === 'Active' || pendingCustomerStatus === '1' || pendingCustomerStatus === 1 || pendingCustomerStatus === true);
+        let newStatus = isActive ? 'Inactive' : 'Active';
+        
+        let postData = {
+            ids: pendingCustomerId,
+            status: newStatus,
+            action: 'update_status'
+        };
+        $.ajax({
+            url: '/SaveCustomerDetails',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(postData),
+            success: function(resp){
+                if(resp.status){
+                    if (typeof setupDropdown === 'function') {
+                        setupDropdown('dropdownContent', 'success', 'Status Changed Successfully', 'click');
+                    } else {
+                        alert("Success: " + resp.message);
+                    }
+                    load_master_customer_list();
+                    $('#toggleCustomerStatusBtn').addClass('d-none');
+                } else {
+                    if (typeof setupDropdown === 'function') {
+                        setupDropdown('dropdownContent', 'error', resp.message || "Failed to update status", 'click');
+                    } else {
+                        alert("Error: " + (resp.message || "Failed to update status"));
+                    }
+                }
+            },
+            error: function(err){
+                if (typeof setupDropdown === 'function') {
+                    setupDropdown('dropdownContent', 'warning', "Server error updating status", 'click');
+                } else {
+                    alert("Error: Server error updating status");
+                }
+            }
+        });
+    }
+    closePopup();
+});
+
+$(document).on('click', '#msg_popup_canceled', function () {
+    closePopup();
+});
+
+function closePopup() {
+    $('#popupOverlay').hide();
+    $('#popupContainer').hide();
+}
 $('#emailId').on('input', function () {
     this.value = this.value.replace(/[^a-zA-Z0-9@._%+-]/g, '');
 });
@@ -1094,6 +1234,13 @@ document.getElementById('ContactNumber').addEventListener('input', function () {
 function loadCustomerForEdit(data) {
 
     $('#saveCustomerData').text('Update Customer');
+
+    let isActive = (data.status === 'Active' || data.status === '1' || data.status === 1 || data.status === true);
+    if (isActive) {
+        $('#customerStatusBadge').removeClass('bg-label-danger').addClass('bg-label-success').text('Active');
+    } else {
+        $('#customerStatusBadge').removeClass('bg-label-success').addClass('bg-label-danger').text('Inactive');
+    }
 
     // ✅ Correct field mapping
     $('#customerName').val(data.customer_name);

@@ -252,11 +252,11 @@ include ROOT_PATH . '/view/envinclude.php';
         <div class="col-md-8">
     <div class="card card-box p-3">
 
-        <h6>
+        <h6 class="mb-1">
             📅 Expected Return Due
         </h6>
 
-        <hr>
+        <hr class="my-1">
 
         <table class="table table-sm align-middle">
             <thead >

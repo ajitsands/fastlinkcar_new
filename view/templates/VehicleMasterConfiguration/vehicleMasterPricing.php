@@ -10,16 +10,15 @@
                          <div class="col-12 col-md-12 col-lg-12">
                               <div class="container">
 
-                                <button class="btn btn-primary" type="button" id="addpriceMasterBtn">+ Add Pricing Master</button>
+                                <button class="btn btn-primary d-none" type="button" id="addpriceMasterBtn" data-permission="vehicle_config_manage" style="display: none !important;">+ Add Pricing Master</button>
                             
                                 <table class="table" id="pricingTable">
-                                    <thead>
-                                        <tr>
-                                          
-                                            <th>Item</th>
-                                            <th>Amount</th>
-                                        </tr>
-                                    </thead>
+                                     <thead>
+                                         <tr>
+                                             <th style="width:75%;">Item</th>
+                                             <th class="text-end" style="width:25%;">Amount</th>
+                                         </tr>
+                                     </thead>
                             
                                     <tbody>
                                         <!-- dynamic rows -->
@@ -34,7 +33,7 @@
                          <div class="col-12 d-flex justify-content-between">
                     
                         <div class="d-flex gap-2">
-                          <button class="btn btn-primary" type="button" id="saveBtnPricing">Save</button>
+                          <button class="btn btn-primary" type="button" id="saveBtnPricing" data-permission="vehicle_config_manage">Save</button>
                           <input type="hidden" id="pricingmodelId">
                           
                         </div>
@@ -51,7 +50,7 @@
                             </div>
                         <div class="card-body p-2">
                           <div class="table-responsive">
-                            <table id="vehicleModelPricingTable" class="table table-sm table-hover align-middle customdataTable">
+                            <table id="vehicleModelPricingTable" class="table table-sm table-hover align-middle ">
                               <thead class="">
                                 <tr>
                                   <th>#</th>

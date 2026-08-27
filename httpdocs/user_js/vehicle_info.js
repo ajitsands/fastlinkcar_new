@@ -2136,13 +2136,12 @@ function renderContractTable(data) {
             </tr>
         `;
     });
-        if ($.fn.DataTable.isDataTable('#contractTable')) {
-            $('#contractTable').DataTable().clear().destroy();
+        if ($.fn.DataTable.isDataTable('#vehicleInfoModalContractTable')) {
+            $('#vehicleInfoModalContractTable').DataTable().clear().destroy();
         }
 
-   $('#contractTable tbody').empty().html(rows);
-    $('#contractTable tbody').html(rows);
-    let contractTable = $('#contractTable').DataTable({
+    $('#vehicleInfoModalContractTable tbody').empty().html(rows);
+    let contractTable = $('#vehicleInfoModalContractTable').DataTable({
     destroy: true,
     processing: true,
     serverSide: false,

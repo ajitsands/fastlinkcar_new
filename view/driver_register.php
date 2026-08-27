@@ -57,6 +57,58 @@ include ROOT_PATH . '/view/envinclude.php';
      <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.css" />
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>alertmessage/css/sands_alert_style.css">
     <style>
+        /* Comprehensive override for DataTables selected row, cells, click, hover, and striped states */
+        #driverTable tbody tr,
+        #driverTable tbody tr td {
+            cursor: pointer;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        #driverTable tbody tr:focus,
+        #driverTable tbody tr:active,
+        #driverTable tbody tr:focus-visible,
+        #driverTable tbody tr td:focus,
+        #driverTable tbody tr td:active {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Selected row and all child cells in ALL states (normal, hover, active, striped) */
+        #driverTable tbody tr.selected,
+        #driverTable tbody tr.selected > td,
+        #driverTable tbody tr.selected > th,
+        #driverTable tbody tr.selected:hover,
+        #driverTable tbody tr.selected:hover > td,
+        #driverTable tbody tr.selected:hover > th,
+        #driverTable.dataTable tbody tr.selected,
+        #driverTable.dataTable tbody tr.selected > *,
+        #driverTable.dataTable tbody tr.selected:hover,
+        #driverTable.dataTable tbody tr.selected:hover > *,
+        #driverTable.dataTable.table-hover tbody tr.selected:hover,
+        #driverTable.dataTable.table-hover tbody tr.selected:hover > *,
+        #driverTable.dataTable.table-striped tbody tr.selected,
+        #driverTable.dataTable.table-striped tbody tr.selected > *,
+        #driverTable.dataTable.table-striped tbody tr.selected:hover,
+        #driverTable.dataTable.table-striped tbody tr.selected:hover > *,
+        #driverTable.dataTable.table-striped > tbody > tr:nth-of-type(odd).selected,
+        #driverTable.dataTable.table-striped > tbody > tr:nth-of-type(odd).selected > * {
+            background-color: #F87C63 !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        /* Unselected row hover state */
+        #driverTable tbody tr:not(.selected):hover,
+        #driverTable tbody tr:not(.selected):hover > td,
+        #driverTable tbody tr:not(.selected):hover > th,
+        #driverTable.dataTable tbody tr:not(.selected):hover > *,
+        #driverTable.dataTable.table-hover tbody tr:not(.selected):hover > * {
+            background-color: rgba(248, 124, 99, 0.15) !important;
+            color: inherit !important;
+        }
+
         .swiper {
             width: 400px;
             height: 300px;
@@ -863,37 +915,83 @@ function resetRentCarUploadProgress() {
             uploadedImages = [];
             $('#rentalCarImages').html('');
             
-            bookingMaster = { vehicles: [] }; // âœ… safe reset
+            bookingMaster = { vehicles: [] }; // ✅ safe reset
         
             selectedVehicleData = null;
             allowcprExpiredProceed = false;
             allowlicenseExpiredProceed = false;
         
-            $('#saveDriverData').text('Save');
+            $('#saveDriverData').html('<i class="ri-save-line me-1"></i> Save');
+            $('#driverStatus').val('Active');
+            $('#toggleDriverStatusBtn').addClass('d-none');
+            $('#driverStatusBadge').removeClass('bg-label-danger bg-label-success').addClass('bg-label-success').text('New Entry');
         }
 
        
         $(document).on('click', '#confirmActionBtn', function () {
         
-            // ✅ allow next run to pass validation
-            //allowExpiredProceed = true;
-        
             let extra_type = confirmData.extra.type;
             if(extra_type==='license')
             {
                 allowlicenseExpiredProceed = true;
+                let modal = bootstrap.Modal.getInstance(document.getElementById('confirmActionModal'));
+                modal.hide();
+                $('#saveDriverData').trigger('click');
             }
-             if(extra_type==='cpr')
+            else if(extra_type==='cpr')
             {
                 allowcprExpiredProceed = true;
+                let modal = bootstrap.Modal.getInstance(document.getElementById('confirmActionModal'));
+                modal.hide();
+                $('#saveDriverData').trigger('click');
             }
- 
-            // close modal
-            let modal = bootstrap.Modal.getInstance(document.getElementById('confirmActionModal'));
-            modal.hide();
-        
-            // 🔥 trigger same button again
-            $('#saveDriverData').trigger('click');
+            else if(extra_type==='status_change')
+            {
+                let newStatus = confirmData.data.newStatus;
+                $('#driverStatus').val(newStatus);
+                
+                let modal = bootstrap.Modal.getInstance(document.getElementById('confirmActionModal'));
+                modal.hide();
+                
+                let isEdit = selectedVehicleData !== null;
+                let postData = {
+                    ids: isEdit ? selectedVehicleData.ids : null, 
+                    driverName: $('#driverName').val(),
+                    ContactNumber: $('#ContactNumber').val(),
+                    emailId: $('#emailId').val(),
+                    cprno : $('#cprno').val(),
+                    cprexpiryDate : $('#cprexpiryDate').val(),
+                    drivinglicenseno : $('#drivinglicenseno').val(),
+                    licenseissueplace : $('#licenseissueplace').val(),
+                    licenseissueDate : $('#licenseissueDate').val(),
+                    licenseexpiryDate : $('#licenseexpiryDate').val(),
+                    driverStatus: newStatus,
+                    driverAddress : $('#driverAddress').val(),
+                    driverDocObj:JSON.stringify(bookingMaster),
+                    action: 'UpdateDriverInformation'
+                };
+                
+                $.ajax({
+                    url: '/DriverController',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(postData),
+                    success: function (response) {
+                        setupDropdown(
+                            'dropdownContent',
+                            'success',
+                            svgSuccess + "Driver status updated successfully",
+                            'click'
+                        );
+                        load_master_driver_list();
+                        resetDriverForm();
+                        selectedVehicleData = null;
+                    },
+                    error: function (xhr) {
+                        setupDropdown('dropdownContent', 'error', svgError + "Error updating status", 'click');
+                    }
+                });
+            }
         });
 
    let confirmData = {};
@@ -958,10 +1056,6 @@ $('#licenseexpiryDate').on('input', function () {
             
             if (!$('#licenseexpiryDate').val()) {
                 setupDropdown('dropdownContent', 'error', svgError + "Please provide license expiry date", 'click');
-                return false;
-            }
-            if (!$('#driverStatus').val()) {
-                setupDropdown('dropdownContent', 'error', svgError + "Please select the driver status", 'click');
                 return false;
             }
             let today = new Date();
@@ -1160,7 +1254,7 @@ document.getElementById('ContactNumber').addEventListener('input', function () {
 
 function loadDriverForEdit(data) {
 
-    $('#saveDriverData').text('Update Driver');
+    $('#saveDriverData').html('<i class="ri-save-line me-1"></i> Update Driver');
 
     // ✅ Correct field mapping
     $('#driverName').val(data.driver_name);
@@ -1173,7 +1267,28 @@ function loadDriverForEdit(data) {
     $('#licenseissueDate').val(data.license_issue_date);
     $('#licenseexpiryDate').val(data.license_expiry_date);
     $('#driverAddress').val(data.driver_address);
-    $('#driverStatus').val(data.driver_status).trigger('change');
+    $('#driverStatus').val(data.driver_status);
+    
+    // Update status badge
+    let status = data.driver_status || 'Active';
+    let badge = $('#driverStatusBadge');
+    badge.removeClass('bg-label-success bg-label-danger');
+    if (status === 'Active') {
+        badge.addClass('bg-label-success').text('Active');
+    } else {
+        badge.addClass('bg-label-danger').text('Inactive');
+    }
+    
+    // Update activate/deactivate button state
+    let toggleBtn = $('#toggleDriverStatusBtn');
+    toggleBtn.removeClass('d-none');
+    if (data.driver_status === 'Active') {
+        toggleBtn.removeClass('btn-success').addClass('btn-warning')
+            .html('<i class="ri-close-circle-line me-1"></i> Deactivate');
+    } else {
+        toggleBtn.removeClass('btn-warning').addClass('btn-success')
+            .html('<i class="ri-checkbox-circle-line me-1"></i> Activate');
+    }
     
 
 
@@ -1236,10 +1351,31 @@ try {
     });
 }
 
-
+    if (typeof applyUiPermissions === 'function') {
+        applyUiPermissions();
+    }
 }
-
-
+    $(document).on('click', '#toggleDriverStatusBtn', function(e) {
+        e.preventDefault();
+        if (!selectedVehicleData) return;
+        let currentStatus = $('#driverStatus').val() || 'Active';
+        let nextStatus = (currentStatus === 'Active') ? 'Inactive' : 'Active';
+        let nextStatusText = (currentStatus === 'Active') ? 'deactivate' : 'activate';
+        
+        showConfirmModal({
+            title: "Change Driver Status",
+            message: `⚠️ Are you sure you want to ${nextStatusText} this driver?`,
+            confirmText: "Yes, Change",
+            type: "warning",
+            action: "change_status",
+            data: {
+                newStatus: nextStatus
+            },
+            extra: {
+                type: 'status_change'
+            }
+        });
+    });
 
 });// Jquery Close
 

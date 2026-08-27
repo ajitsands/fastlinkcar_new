@@ -1,28 +1,13 @@
 <?php
-define('ROOT_PATH', dirname(__DIR__));
-require_once ROOT_PATH . '/envfiles/vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(ROOT_PATH . '/envfiles');
+require 'envfiles/vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable('envfiles');
 $dotenv->load();
-include(ROOT_PATH . '/model/db_connection/pdo_db_connection.php');
+require 'model/db_connection/pdo_db_connection.php';
+require 'model/common/pdoCommonFunctions.php';
 
-try {
-    $db = new ClassDatabaseConnection();
-    $pdo = $db->pdo;
+$db = new CommonPDOModel();
 
-    $tables = ['customer_details', 'tbl_vehicle_bookings', 'tbl_quotation_master', 'tbl_quotation_details'];
-    
-    foreach ($tables as $table) {
-        echo "Schema for $table:\n";
-        $stmt = $pdo->query("DESC $table");
-        print_r($stmt->fetchAll(PDO::FETCH_ASSOC));
-        echo "\n";
-    }
+echo "tbl_vehicle_log_movement schema:\n";
+$stmt = $db->varDBPDO->query("SHOW COLUMNS FROM tbl_vehicle_log_movement");
+print_r($stmt->fetchAll(PDO::FETCH_ASSOC));
 
-    echo "Other tables like quotation:\n";
-    $stmt = $pdo->query("SHOW TABLES LIKE '%quotation%'");
-    print_r($stmt->fetchAll(PDO::FETCH_COLUMN));
-
-} catch (Exception $e) {
-    echo "Error: " . $e->getMessage() . "\n";
-}
-?>

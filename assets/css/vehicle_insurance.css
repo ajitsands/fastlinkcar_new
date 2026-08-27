@@ -1,0 +1,138 @@
+/* Vehicle Insurance Timeline CSS */
+#insuranceTable thead th {
+    background: #ffeff0 !important;
+    color: #d12222 !important;
+    border-bottom: 2px solid #d12222 !important;
+    font-weight: 600;
+}
+.timeline-container {
+    position: relative;
+    padding-left: 30px;
+    margin-top: 20px;
+}
+.timeline-container::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e0e0e0;
+}
+.timeline-entry {
+    position: relative;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 4px solid #007bff;
+}
+.timeline-entry:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+.timeline-entry::before {
+    content: '';
+    position: absolute;
+    left: -27px;
+    top: 20px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #007bff;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #007bff;
+}
+.timeline-entry.type-insurance {
+    border-left-color: #28a745;
+}
+.timeline-entry.type-insurance::before {
+    background: #28a745;
+    box-shadow: 0 0 0 2px #28a745;
+}
+.timeline-entry.type-passing {
+    border-left-color: #f39c12;
+}
+.timeline-entry.type-passing::before {
+    background: #f39c12;
+    box-shadow: 0 0 0 2px #f39c12;
+}
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.timeline-date {
+    font-weight: bold;
+    color: #333;
+}
+.timeline-type-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.timeline-type-badge.insurance {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+.timeline-type-badge.passing {
+    background: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+}
+.timeline-body {
+    font-size: 0.9rem;
+    color: #666;
+}
+.timeline-footer {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 10px;
+}
+.attachment-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.85rem;
+}
+.attachment-link:hover {
+    text-decoration: underline;
+}
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+.status-valid {
+    background-color: #d4edda;
+    color: #155724;
+}
+.status-expiring {
+    background-color: #fff3cd;
+    color: #856404;
+}
+.status-overdue {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+.delete-entry-btn {
+    color: #dc3545;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.delete-entry-btn:hover {
+    text-decoration: underline;
+}

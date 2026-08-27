@@ -18,11 +18,10 @@ $db = new ClassDatabaseConnection();
 $pdo = $db->pdo;
 
 $stmt = $pdo->prepare("
-    SELECT * FROM item_master WHERE status='Active' order by item_name asc
+    SELECT CONCAT(brand_name, ' ', model_name) AS item_name FROM view_vehicle_model ORDER BY item_name ASC
 ");
 
-
-
+$stmt->execute();
 $data = [];
 
 while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {

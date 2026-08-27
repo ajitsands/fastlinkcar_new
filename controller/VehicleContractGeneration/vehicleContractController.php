@@ -89,7 +89,7 @@ class VehiclesContractController
             : (json_decode($data['vehicle_accessories'] ?? '[]', true) ?? []);
       
        
-        $this->company_id = $_SESSION['company_id'] ?? 1;
+        $this->company_id = !empty($data['company_id']) ? $data['company_id'] : ($_SESSION['company_id'] ?? 1);
         $this->user_id = $_SESSION['user_id'] ?? 1;
         $this->insertedDate = date('Y-m-d');
         $this->page = isset($data['page']) ? (int)$data['page'] : 1;
@@ -258,18 +258,23 @@ class VehiclesContractController
 			
              case 'ListBookings':
 
-                        $baseQuery = "SELECT *,DATE_FORMAT(book_from_date, '%d-%m-%Y %H:%i') AS from_date_format,
-    DATE_FORMAT(book_to_date, '%d-%m-%Y %H:%i') AS to_date_format FROM tbl_vehicle_bookings WHERE company_id = :company_id";
+                        $baseQuery = "SELECT b.*, c.company_name, v.chassis_number
+    FROM tbl_vehicle_bookings b
+    LEFT JOIN tbl_company c ON b.company_id = c.ids 
+    LEFT JOIN tbl_vehicles v ON b.vehicle_id = v.ids
+    WHERE 1=1";
 
-                           
-                            $params = [
-                                ':company_id' => $this->company_id
-                            ];
+                            $params = [];
+                            
+                            if ($this->company_id !== 'all') {
+                                $baseQuery .= " AND b.company_id = :company_id";
+                                $params[':company_id'] = $this->company_id;
+                            }
                             
                             if (
                                 !($this->customer_code == '' || $this->customer_code == 'All')
                             ) {
-                                $baseQuery .= " AND customer_code = :customer_code";
+                                $baseQuery .= " AND b.customer_code = :customer_code";
                                 $params[':customer_code'] = $this->customer_code;
                             }
                             
@@ -278,16 +283,16 @@ class VehiclesContractController
                                 $baseQuery .= "
                                     AND (
                                         (
-                                            DATE(book_from_date) BETWEEN :filter_from1 AND :filter_to1
+                                            DATE(b.book_from_date) BETWEEN :filter_from1 AND :filter_to1
                                         )
                                         OR
                                         (
-                                            DATE(book_to_date) BETWEEN :filter_from2 AND :filter_to2
+                                            DATE(b.book_to_date) BETWEEN :filter_from2 AND :filter_to2
                                         )
                                         OR
                                         (
-                                            DATE(book_from_date) <= :filter_from3
-                                            AND DATE(book_to_date) >= :filter_to3
+                                            DATE(b.book_from_date) <= :filter_from3
+                                            AND DATE(b.book_to_date) >= :filter_to3
                                         )
                                     )
                                 ";
@@ -305,11 +310,11 @@ class VehiclesContractController
                             if (
                                 !($this->booking_status == '' || $this->booking_status == 'All')
                             ) {
-                                $baseQuery .= " AND book_status = :booking_status";
+                                $baseQuery .= " AND b.book_status = :booking_status";
                                 $params[':booking_status'] = $this->booking_status;
                             }
                             
-                            $baseQuery .= " ORDER BY ids DESC";
+                            $baseQuery .= " ORDER BY b.ids DESC";
                             
                             $result = $this->varPDOModelObj->selectexecuteQuery($baseQuery, $params);
                  
@@ -334,6 +339,8 @@ class VehiclesContractController
                                 "customer_name"   => $row['customer_name'],
                                 "customer_code"   => $row['customer_code'],
                                 "mobile"          => $details['phone'] ?? '-',
+                                "company_name"    => $row['company_name'],
+                                "reservation_date"=> date(defined('SYS_DATE_FORMAT') ? SYS_DATE_FORMAT : 'd-m-Y', strtotime($row['created_date'])),
                                 "entries"         => [],
                                 "pending_count"   => 0,   // ✅ initialize
                                 "confirmed_count"   => 0,   // ✅ initialize
@@ -381,8 +388,9 @@ class VehiclesContractController
                             "model_name" => $row['model_name'],
                             "from_date"  => $row['book_from_date'],
                             "to_date"    => $row['book_to_date'],
-                            "from_date_format"  => $row['from_date_format'],
-                            "to_date_format"    => $row['to_date_format']
+                            "from_date_format"  => date((defined('SYS_DATE_FORMAT') ? SYS_DATE_FORMAT : 'd-m-Y').' H:i', strtotime($row['book_from_date'])),
+                            "to_date_format"    => $row['book_to_date'] ? date((defined('SYS_DATE_FORMAT') ? SYS_DATE_FORMAT : 'd-m-Y').' H:i', strtotime($row['book_to_date'])) : null,
+                            "chassis_number" => $row['chassis_number'] ?? null
                         ];
                     }
                     

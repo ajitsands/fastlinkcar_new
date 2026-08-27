@@ -1,0 +1,514 @@
+let dataTable = null;
+let currentVehicleId = null;
+let timelineDataStore = [];
+
+const SYS_DATE_FORMAT = window.SYS_DATE_FORMAT || 'YYYY-MM-DD';
+
+$(document).ready(function () {
+    initDataTable();
+    
+    // Status Filter
+    $('#statusFilter').on('change', function() {
+        if (dataTable) {
+            dataTable.draw();
+        }
+    });
+
+    // Company Filter
+    $('#companyFilter').on('change', function() {
+        if (dataTable) {
+            dataTable.ajax.reload();
+        }
+    });
+
+    // Custom filtering function for DataTables
+    $.fn.dataTable.ext.search.push(
+        function(settings, data, dataIndex) {
+            let filterStatus = $('#statusFilter').val();
+            if (!filterStatus) return true;
+            
+            let rowData = settings.aoData[dataIndex]._aData;
+            let insDate = rowData.next_insurance_date;
+            let passDate = rowData.next_passing_date;
+            
+            let now = dayjs().startOf('day');
+            
+            // Helper function to check if a date falls in a specific bucket
+            function matchesBucket(dateStr, bucket) {
+                if (!dateStr) return false;
+                let target = dayjs(dateStr).startOf('day');
+                let diffDays = target.diff(now, 'day');
+                
+                if (bucket === 'Overdue' && diffDays < 0) return true;
+                if (bucket === '0_30' && diffDays >= 0 && diffDays <= 30) return true;
+                if (bucket === '30_60' && diffDays > 30 && diffDays <= 60) return true;
+                if (bucket === '60_90' && diffDays > 60 && diffDays <= 90) return true;
+                if (bucket === 'greater_90' && diffDays > 90) return true;
+                
+                return false;
+            }
+            
+            // If either insurance or passing matches the bucket, show the row
+            return matchesBucket(insDate, filterStatus) || matchesBucket(passDate, filterStatus);
+        }
+    );
+});
+
+function getSingleDateStatus(dateString) {
+    if (!dateString) return `<small class="text-muted d-block lh-1 mt-1">No Data</small>`;
+    
+    let now = dayjs().startOf('day');
+    let target = dayjs(dateString).startOf('day');
+    let diffDays = target.diff(now, 'day');
+    
+    if (diffDays < 0) {
+        return `<small class="text-danger fw-bold d-block lh-1 mt-1">Overdue by ${Math.abs(diffDays)} days</small>`;
+    } else if (diffDays <= 20) {
+        return `<small class="text-warning fw-bold d-block lh-1 mt-1">Expiring in ${diffDays} days</small>`;
+    } else {
+        return `<small class="text-success d-block lh-1 mt-1">Valid (${diffDays} days left)</small>`;
+    }
+}
+
+function initDataTable() {
+    dataTable = $('#insuranceTable').DataTable({
+        "processing": true,
+        "serverSide": false,
+        "ajax": {
+            "url": "/VehicleInsuranceController?action=listVehicles",
+            "type": "GET",
+            "data": function(d) {
+                d.company_id = $('#companyFilter').val();
+            },
+            "dataSrc": function (json) {
+                if (json.status) {
+                    return json.data;
+                }
+                return [];
+            }
+        },
+        "columns": [
+            {
+                "data": "vehicle_number",
+                "render": function(data, type, row) {
+                    let html = `<div class="fw-bold fs-6">${data}</div>`;
+                    if (row.is_outsourced === 'Yes') {
+                        html += `<small class="d-block text-warning mt-1 lh-1"><i class="ri ri-share-forward-line align-middle"></i> Outsource: ${row.outsourcing_company || row.outsourcing_company_name || 'N/A'}</small>`;
+                    }
+                    return html;
+                }
+            },
+            { 
+                "data": null,
+                "render": function (data, type, row) {
+                    let html = `<div>${row.brand_name || ''} - ${row.model_names || ''}</div>
+                            <small class="text-muted">Chassis: ${row.chassis_number || 'N/A'}</small>`;
+                    html += `<small class="d-block text-success mt-1 lh-1"><i class="ri ri-building-4-line align-middle"></i> Reg Co: ${row.ownership_company || 'N/A'}</small>`;
+                    return html;
+                }
+            },
+            { 
+                "data": "next_insurance_date",
+                "render": function(data) {
+                    let dateStr = data ? dayjs(data).format(SYS_DATE_FORMAT) : 'Not Set';
+                    let statusStr = getSingleDateStatus(data);
+                    return `<div>${dateStr}</div>${statusStr}`;
+                }
+            },
+            { 
+                "data": "next_passing_date",
+                "render": function(data) {
+                    let dateStr = data ? dayjs(data).format(SYS_DATE_FORMAT) : 'Not Set';
+                    let statusStr = getSingleDateStatus(data);
+                    return `<div>${dateStr}</div>${statusStr}`;
+                }
+            },
+            {
+                "data": "vehicle_status",
+                "render": function (data, type, row) {
+                    if (typeof window.getVehicleStatusBadgeHtml === 'function') {
+                        return window.getVehicleStatusBadgeHtml(data);
+                    }
+                    return data; // Fallback
+                }
+            },
+            {
+                "data": null,
+                "orderable": false,
+                "render": function (data, type, row) {
+                    let btnProfile = `<button type="button" class="btn btn-sm btn-outline-info me-1 text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="View Profile" onclick="openVehicleProfile(${row.vehicle_id})"><i class="ri ri-eye-line me-1"></i> Profile</button>`;
+                    let btnTimeline = `<button type="button" class="btn btn-sm btn-outline-primary me-1 text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="View Timeline History" onclick="openTimeline(${row.vehicle_id})"><i class="ri ri-history-line me-1"></i> Timeline</button>`;
+                    let btnIns = `<button type="button" class="btn btn-sm btn-outline-success me-1 text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="Add New Insurance Record" data-permission="vehicle_insurance_manage" onclick="openAddEntryModal(${row.vehicle_id}, 'insurance')"><i class="ri ri-shield-check-line me-1"></i> Insurance</button>`;
+                    let btnPass = `<button type="button" class="btn btn-sm btn-outline-warning text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="Add New Passing Record" data-permission="vehicle_insurance_manage" onclick="openAddEntryModal(${row.vehicle_id}, 'passing')"><i class="ri ri-car-washing-line me-1"></i> Passing</button>`;
+                    
+                    return `<div class="d-flex align-items-center">${btnProfile}${btnTimeline}${btnIns}${btnPass}</div>`;
+                }
+            }
+        ],
+        "drawCallback": function(settings) {
+            if (typeof applyUiPermissions === 'function') {
+                applyUiPermissions();
+            }
+            // Initialize Bootstrap Tooltips for the newly rendered buttons
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('#insuranceTable [data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        }
+    });
+
+    // Connect custom search box
+    $('#tableSearch').on('keyup', function () {
+        dataTable.search(this.value).draw();
+    });
+}
+
+function getStatusBadge(insuranceDate, passingDate) {
+    let now = dayjs();
+    let minDate = null;
+    
+    if (insuranceDate && passingDate) {
+        let iDate = dayjs(insuranceDate);
+        let pDate = dayjs(passingDate);
+        minDate = iDate.isBefore(pDate) ? iDate : pDate;
+    } else if (insuranceDate) {
+        minDate = dayjs(insuranceDate);
+    } else if (passingDate) {
+        minDate = dayjs(passingDate);
+    } else {
+        return `<span class="status-badge status-overdue">No Data</span>`;
+    }
+
+    let diffDays = minDate.diff(now, 'day');
+
+    if (diffDays < 0) {
+        return `<span class="status-badge status-overdue">Overdue</span>`;
+    } else if (diffDays <= 20) {
+        return `<span class="status-badge status-expiring">Expiring Soon (${diffDays} days)</span>`;
+    } else {
+        return `<span class="status-badge status-valid">Valid (${diffDays} days)</span>`;
+    }
+}
+
+function openAddEntryModal(vehicleId, type) {
+    $('#entryVehicleId').val(vehicleId);
+    $('#entryType').val(type);
+    $('#addEntryForm')[0].reset();
+    
+    let title = type === 'insurance' ? 'Add Insurance Record' : 'Add Passing Record';
+    $('#addEntryModalTitle').text(title);
+    
+    $('#addEntryModal').modal('show');
+}
+
+function submitAddEntry() {
+    let formData = new FormData($('#addEntryForm')[0]);
+    let type = $('#entryType').val();
+    let action = type === 'insurance' ? 'addInsurance' : 'addPassing';
+
+    $.ajax({
+        url: `/VehicleInsuranceController?action=${action}`,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            if (response.status) {
+                $('#addEntryModal').modal('hide');
+                Swal.fire('Success', response.message, 'success');
+                dataTable.ajax.reload(null, false); // reload without resetting pagination
+            } else {
+                Swal.fire('Error', response.message, 'error');
+            }
+        },
+        error: function() {
+            Swal.fire('Error', 'An error occurred while saving the record', 'error');
+        }
+    });
+}
+
+function openTimeline(vehicleId) {
+    currentVehicleId = vehicleId;
+    $('#timelineContainer').html('<div class="text-center p-3"><div class="spinner-border text-primary" role="status"></div></div>');
+    $('#timelineModal').modal('show');
+
+    $.ajax({
+        url: `/VehicleInsuranceController?action=getTimeline&vehicle_id=${vehicleId}`,
+        type: 'GET',
+        success: function(response) {
+            if (response.status) {
+                timelineDataStore = response.data;
+                renderTimeline();
+            } else {
+                $('#timelineContainer').html(`<div class="alert alert-danger">${response.message}</div>`);
+            }
+        },
+        error: function() {
+            $('#timelineContainer').html(`<div class="alert alert-danger">Failed to load timeline</div>`);
+        }
+    });
+}
+
+function renderTimeline() {
+    let html = '';
+    
+    if (timelineDataStore.length === 0) {
+        html = '<div class="text-center text-muted p-4">No history records found.</div>';
+    } else {
+        timelineDataStore.forEach(item => {
+            let typeClass = item.type === 'insurance' ? 'type-insurance' : 'type-passing';
+            let badgeClass = item.type === 'insurance' ? 'insurance' : 'passing';
+            let displayDate = dayjs(item.date).format(SYS_DATE_FORMAT);
+            let createdDate = item.created_at ? dayjs(item.created_at).format('MMM D, YYYY HH:mm') : '';
+            
+            let attachmentHtml = '';
+            if (item.attachment) {
+                attachmentHtml = `<a href="${item.attachment}" target="_blank" class="attachment-link"><i class="ri ri-file-download-line"></i> Download Attachment</a>`;
+            }
+
+            let deleteBtnHtml = '';
+            if (typeof window.hasPermission === 'function' && window.hasPermission('vehicle_insurance_manage')) {
+                deleteBtnHtml = `<button class="delete-entry-btn" onclick="deleteEntry('${item.id}', '${item.type}')"><i class="ri ri-delete-bin-line"></i> Delete</button>`;
+            }
+
+            let amountStr = item.amount ? `<strong>Amount:</strong> BHD ${parseFloat(item.amount).toFixed(2)}<br>` : '';
+            let remarksStr = item.remarks ? `<strong>Remarks:</strong> ${item.remarks}<br>` : '';
+
+            html += `
+                <div class="timeline-entry ${typeClass}">
+                    <div class="timeline-header">
+                        <span class="timeline-date">${displayDate}</span>
+                        <span class="timeline-type-badge ${badgeClass}">${item.type}</span>
+                    </div>
+                    <div class="timeline-body">
+                        ${amountStr}
+                        ${remarksStr}
+                        <small class="text-muted">Added: ${createdDate}</small>
+                    </div>
+                    <div class="timeline-footer">
+                        ${attachmentHtml}
+                        ${deleteBtnHtml}
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    $('#timelineContainer').html(html);
+}
+
+function deleteEntry(entryId, type) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/VehicleInsuranceController?action=deleteEntry`,
+                type: 'POST',
+                data: {
+                    vehicle_id: currentVehicleId,
+                    entry_id: entryId,
+                    type: type
+                },
+                success: function(response) {
+                    if (response.status) {
+                        Swal.fire('Deleted!', 'The record has been deleted.', 'success');
+                        openTimeline(currentVehicleId); // refresh timeline
+                        dataTable.ajax.reload(null, false); // refresh list
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error!', 'An error occurred during deletion.', 'error');
+                }
+            });
+        }
+    });
+}
+
+
+function openVehicleProfile(vehicleId) {
+    $.ajax({
+        url: "/AddVehicles",
+        type: "POST",
+        dataType: "json",
+        data: JSON.stringify({ action: "get_vehicle_profile", vehicle_id: vehicleId }),
+        contentType: "application/json",
+        success: function(response) {
+            if (response.status && response.data) {
+                let v = response.data;
+                
+                // Populate base data
+                $("#vpVehicleNumber").text(v.vehicle_number || "N/A");
+                $("#vpVehicleNumBody").text(v.vehicle_number || "N/A");
+                $("#vpCategory").text(v.category_name || "N/A");
+                $("#vpBrand").text(v.brand_name || "N/A");
+                $("#vpModel").text(v.model_names || "N/A");
+                $("#vpChassis").text(v.chassis_number || "N/A");
+                $("#vpYear").text(v.vehicle_year || "N/A");
+                $("#vpColor").text(v.vehicle_color || "N/A");
+                $("#vpPurchaseDate").text(v.formatted_purchase_date || "Not Set");
+                $("#vpNextInsurance").text(v.formatted_insurance_date || "Not Set");
+                $("#vpNextPassing").text(v.formatted_passing_date || "Not Set");
+                
+                // Current User (Rentout / Staff Use)
+                $("#vpRentoutDiv").hide();
+                $("#vpStaffDiv").hide();
+                
+                if (v.vehicle_status === 'Rentout') {
+                    if (v.current_user_name) {
+                        $("#vpRentoutDiv").show();
+                        $("#vpCurrentUserName").text(v.current_user_name);
+                        $("#vpCurrentUserContact").text(v.current_user_contact || "No Contact");
+                        $("#vpContractRef").text(v.contract_ref || "N/A");
+                        
+                        // Format expected return date
+                        let expRet = "N/A";
+                        if (v.expected_return_date) {
+                            expRet = dayjs(v.expected_return_date).format('DD-MMM-YYYY h:mm A');
+                        }
+                        $("#vpReturnDate").text(expRet);
+                    }
+                } else if (v.vehicle_status === 'Staff Use') {
+                    if (v.current_user_name) {
+                        $("#vpStaffDiv").show();
+                        $("#vpStaffName").text(v.current_user_name);
+                        $("#vpStaffContact").text(v.current_user_contact || "No Contact");
+                        $("#vpStaffRef").text(v.contract_ref || "N/A");
+                        
+                        // Format expected return date
+                        let expRet = "N/A";
+                        if (v.expected_return_date) {
+                            expRet = dayjs(v.expected_return_date).format('DD-MMM-YYYY h:mm A');
+                        }
+                        $("#vpStaffReturnDate").text(expRet);
+                    }
+                }
+                
+                // Status badge styling
+                let statusClass = "bg-label-primary";
+                if(v.vehicle_status === "Available") statusClass = "bg-label-success";
+                else if(v.vehicle_status === "Rentout") statusClass = "bg-label-danger";
+                else if(v.vehicle_status === "Maintenance") statusClass = "bg-label-warning";
+                
+                $("#vpStatusBadge").attr("class", "badge " + statusClass).text(v.vehicle_status || "Unknown");
+                
+                // Ownership
+                $("#vpRegCompany").text(v.ownership_company || "N/A");
+                if (v.is_outsourced === "Yes") {
+                    $("#vpOutsourceDiv").show();
+                    $("#vpOutsourceCompany").text(v.outsourcing_company_name || "N/A");
+                } else {
+                    $("#vpOutsourceDiv").hide();
+                }
+                
+                // Other details (JSON)
+                let od = v.other_details || {};
+                $("#vpFuelType").text(od.vehicleFuelType || "N/A");
+                $("#vpGearType").text(od.vehicleGearType || "N/A");
+                
+                // Dynamic Pricing from model
+                $("#vpPricingList").empty();
+                if (v.model_price_json && v.model_price_json !== "") {
+                    try {
+                        let prices = JSON.parse(v.model_price_json);
+                        if (prices && prices.length > 0) {
+                            let groups = { Hour: [], Day: [], Week: [], Month: [], Year: [], Other: [] };
+                            
+                            prices.forEach(p => {
+                                if (p.amount && p.amount !== "") {
+                                    let itemLower = p.item.toLowerCase();
+                                    let groupName = 'Other';
+                                    if (itemLower.includes('hour')) groupName = 'Hour';
+                                    else if (itemLower.includes('day')) groupName = 'Day';
+                                    else if (itemLower.includes('week')) groupName = 'Week';
+                                    else if (itemLower.includes('month')) groupName = 'Month';
+                                    else if (itemLower.includes('year')) groupName = 'Year';
+                                    
+                                    let displayName = p.item;
+                                    if (itemLower.includes('without driver')) displayName = 'W/O Driver';
+                                    else if (itemLower.includes('with driver')) displayName = 'With Driver';
+                                    
+                                    groups[groupName].push({ name: displayName, amount: p.amount });
+                                }
+                            });
+                            
+                            let html = '<div class="row g-2 w-100">';
+                            for (const [gName, items] of Object.entries(groups)) {
+                                if (items.length > 0) {
+                                    html += `<div class="col-6">
+                                                <div class="border rounded px-2 py-1 bg-lighter">
+                                                    <div class="text-center text-muted fw-bold border-bottom mb-1" style="font-size: 11px;">${gName}</div>`;
+                                    items.forEach(i => {
+                                        html += `<div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="text-muted" style="font-size: 11px;">${i.name}</span>
+                                                    <strong class="text-success" style="font-size: 11px;">${i.amount} AED</strong>
+                                                 </div>`;
+                                    });
+                                    html += `   </div>
+                                              </div>`;
+                                }
+                            }
+                            html += '</div>';
+                            $("#vpPricingList").html(html);
+                        }
+                    } catch(e) {
+                        console.error("Failed to parse model prices", e);
+                    }
+                }
+                if ($("#vpPricingList").is(':empty')) {
+                    $("#vpPricingList").html('<span class="text-muted fst-italic">No pricing setup</span>');
+                }
+                
+                // Status badge styling
+                let images = v.images || [];
+                let carouselInner = $("#vpCarouselInner");
+                carouselInner.empty();
+                
+                if (images.length > 0) {
+                    $("#vpNoImagesMessage").hide();
+                    $("#vpImageCarousel").show();
+                    
+                    images.forEach((img, idx) => {
+                        let activeClass = idx === 0 ? "active" : "";
+                        // Format image path correctly
+                        let imgPath = img.includes("http") ? img : ("/uploads/vehicleImages/" + img); 
+                        carouselInner.append(`
+                            <div class="carousel-item ${activeClass} h-100">
+                                <img src="${imgPath}" class="d-block w-100 h-100" style="object-fit: cover;" alt="Vehicle Image">
+                            </div>
+                        `);
+                    });
+                } else {
+                    $("#vpImageCarousel").hide();
+                    $("#vpNoImagesMessage").show();
+                }
+                
+                // Show modal
+                $("#vehicleProfileModal").modal("show");
+            } else {
+                setupDropdown("dropdownContent", "error", response.message || "Failed to load profile", "click");
+            }
+        },
+        error: function() {
+            setupDropdown("dropdownContent", "error", "Error connecting to server", "click");
+        }
+    });
+}
+
+
+
+$(document).ready(function() {
+    // Move modal to body to fix z-index overlay issues
+    if ($("#vehicleProfileModal").length) {
+        $("#vehicleProfileModal").appendTo("body");
+    }
+});
+

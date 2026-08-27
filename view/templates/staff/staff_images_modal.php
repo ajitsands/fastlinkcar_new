@@ -66,7 +66,7 @@
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
           Close
         </button>
-        <button type="button" class="btn btn-primary" id="addrentCarImageButton">Upload</button>
+        <button type="button" class="btn btn-primary" id="addrentCarImageButton" data-permission="staff_registration_manage">Upload</button>
       </div>
     </form>
     </div>
@@ -84,7 +84,7 @@
         <!-- dynamic content -->
       </div>
       <div class="modal-footer">
-            <button type="button" class="btn btn-danger" id="deletePreviewImageBtn">Delete</button>
+            <button type="button" class="btn btn-danger" id="deletePreviewImageBtn" data-permission="staff_registration_manage">Delete</button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>

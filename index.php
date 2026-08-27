@@ -135,6 +135,24 @@ class RoutingClass
             'ListofVehicles' => 'ListofVehicles',
             'ListofVehicles/' => 'ListofVehicles',
 
+            'VehicleInsurance' => 'VehicleInsurance',
+            'VehicleInsurance/' => 'VehicleInsurance',
+            
+            'VehicleInsuranceController' => 'VehicleInsuranceController',
+            'VehicleInsuranceController/' => 'VehicleInsuranceController',
+
+            'OutsourcingCompany' => 'OutsourcingCompany',
+            'OutsourcingCompany/' => 'OutsourcingCompany',
+            
+            'OutsourcingCompanyController' => 'OutsourcingCompanyController',
+            'OutsourcingCompanyController/' => 'OutsourcingCompanyController',
+
+            'GarageAndServiceMaster' => 'GarageAndServiceMaster',
+            'GarageAndServiceMaster/' => 'GarageAndServiceMaster',
+            
+            'GarageController' => 'GarageController',
+            'GarageController/' => 'GarageController',
+
             'UploadVehicleImages' => 'UploadVehicleImages',
             'UploadVehicleImages/' => 'UploadVehicleImages',
 
@@ -261,6 +279,12 @@ class RoutingClass
             
             'VehicleContract' => 'VehicleContract',
             'VehicleContract/' => 'VehicleContract',
+            
+            'ContractGeneration' => 'ContractGeneration',
+            'ContractGeneration/' => 'ContractGeneration',
+
+            'BookingReport' => 'BookingReport',
+            'BookingReport/' => 'BookingReport',
             
             'VehicleContractGeneration' => 'VehicleContractGeneration',
             'VehicleContractGeneration/' => 'VehicleContractGeneration',
@@ -581,6 +605,36 @@ class RoutingClass
     {
         $this->includeWithParams("view/vehicles_list.php", $_GET);
     }
+    
+    private function VehicleInsurance(...$params)
+    {
+        $this->includeWithParams("view/vehicle_insurance_list.php", $_GET);
+    }
+    
+    private function VehicleInsuranceController(...$params)
+    {
+        $this->includeWithParams("controller/masters/VehicleInsuranceController.php", $_GET);
+    }
+
+    private function OutsourcingCompany(...$params)
+    {
+        $this->includeWithParams("view/outsourcing_company.php", $_GET);
+    }
+    
+    private function OutsourcingCompanyController(...$params)
+    {
+        $this->includeWithParams("controller/outsourcing/OutsourcingCompanyController.php", $_GET);
+    }
+
+    private function GarageAndServiceMaster(...$params)
+    {
+        $this->includeWithParams("view/garage_and_service_master.php", $_GET);
+    }
+    
+    private function GarageController(...$params)
+    {
+        $this->includeWithParams("controller/garages/GarageController.php", $_GET);
+    }
     private function UploadVehicleImages(...$params)
     {
         $this->includeWithParams("controller/vehicles/UploadImages.php", $_GET);
@@ -716,6 +770,16 @@ class RoutingClass
      private function VehicleContract(...$params)
     {
         $this->includeWithParams("view/VehicleContractGeneration.php", $_GET);
+    }
+    
+    private function ContractGeneration(...$params)
+    {
+        $this->includeWithParams("view/ContractGeneration.php", $_GET);
+    }
+
+    private function BookingReport(...$params)
+    {
+        $this->includeWithParams("pdf/booking_report.php", $_GET);
     }
      private function VehicleContractGeneration(...$params)
     {

@@ -3695,6 +3695,13 @@ $('#QtnAddNewCustomerModal').on('shown.bs.modal', function () {
     $(this).css('z-index', 1065);
     $('.modal-backdrop').last().css('z-index', 1060);
 });
+$('#btnWalkIns').on('click mouseleave blur', function () {
+    var tooltip = bootstrap.Tooltip.getInstance(this);
+    if (tooltip) {
+        tooltip.hide();
+    }
+});
+
 $('#btnWalkIns').on('click', function () {
     var modal = new bootstrap.Modal(document.getElementById('walkInsModal'));
     modal.show();
@@ -4412,13 +4419,13 @@ $('.service_contract').on('change', function () {
     // optional: trigger recalculation
     $('.vat_contract').trigger('input');
 });
-$('.service_contract, .rate_type_contract, .from_datetime_contract, .to_datetime_contract, .price_contract, .vat_contract .duration_contract')
+$('.service_contract, .rate_type_contract, .from_datetime_contract, .to_datetime_contract, .price_contract, .vat_contract, .duration_contract')
 .on('input change', function () {
-    let modelId = $('#ModelRef_contract').val();
+    let modelId = $('#ModelRef_contract').val() || 'All';
     let fromDate = $('.from_datetime_contract').val();
     let toDate   = $('.to_datetime_contract').val();
     
-    if (modelId !== '' && fromDate !== '' && toDate !== '') {
+    if (fromDate !== '' && toDate !== '') {
         loadVehiclesTableAvailability(modelId, fromDate, toDate);
     }
     line_item_calculation_contract();

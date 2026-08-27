@@ -25,15 +25,37 @@ class VehicleStatusController
         $this->vehicleId = $_POST['vehicleId'] ?? null;
         
         
-        $this->company_id = $_SESSION['company_id'] ?? 1;
+        $this->company_id = $_POST['company_id'] ?? $_SESSION['company_id'] ?? 1;
         $this->user_id = $_SESSION['user_id'] ?? 1;
         $this->profile_name = $_SESSION['profile_name'] ?? 'Administrator';
         $this->actionevents = $_POST['action'] ?? null;
         date_default_timezone_set('Asia/Bahrain');
         $this->createdDate = date('Y-m-d H:i:s');
         $this->vehicle_id = $_POST['vehicle_id']?? null;
-        $this->from = $_POST['fromDate']?? null;
-        $this->to = $_POST['toDate']?? null;
+        $fromDate = $_POST['fromDate'] ?? null;
+        if ($fromDate) {
+            $fromDate = str_replace('T', ' ', $fromDate);
+            // If it contains a slash or dash, format it
+            if (strpos($fromDate, '/') !== false || (strpos($fromDate, '-') !== false && preg_match('/^\d{2}-\d{2}-\d{4}/', $fromDate))) {
+                $this->from = date('Y-m-d H:i:s', strtotime(str_replace('/', '-', $fromDate)));
+            } else {
+                $this->from = $fromDate;
+            }
+        } else {
+            $this->from = null;
+        }
+
+        $toDate = $_POST['toDate'] ?? null;
+        if ($toDate) {
+            $toDate = str_replace('T', ' ', $toDate);
+            if (strpos($toDate, '/') !== false || (strpos($toDate, '-') !== false && preg_match('/^\d{2}-\d{2}-\d{4}/', $toDate))) {
+                $this->to = date('Y-m-d H:i:s', strtotime(str_replace('/', '-', $toDate)));
+            } else {
+                $this->to = $toDate;
+            }
+        } else {
+            $this->to = null;
+        }
         $this->bookingid = $_POST['bookingid']?? null;
         $this->bookingstatus = $_POST['bookingstatus']?? null;
         
@@ -251,7 +273,7 @@ $this->params[6] = [
 
     COALESCE(
         JSON_ARRAYAGG(
-            DISTINCT CASE 
+            CASE 
                 WHEN b.vehicle_id IS NOT NULL THEN JSON_OBJECT(
                     'from', b.book_from_date,
                     'to', b.book_to_date,
@@ -408,7 +430,7 @@ $this->params[7] = [
 
     COALESCE(
         JSON_ARRAYAGG(
-            DISTINCT CASE 
+            CASE 
                 WHEN b.vehicle_id IS NOT NULL THEN JSON_OBJECT(
                     'from', DATE_FORMAT(b.book_from_date, '%d-%m-%y %H:%i'),
                     'to', DATE_FORMAT(b.book_to_date, '%d-%m-%y %H:%i'),
@@ -558,7 +580,7 @@ $this->params[8] = [
 
     COALESCE(
         JSON_ARRAYAGG(
-            DISTINCT CASE 
+            CASE 
                 WHEN b.vehicle_id IS NOT NULL THEN JSON_OBJECT(
                     'from', b.book_from_date,
                     'to', b.book_to_date,
@@ -775,7 +797,7 @@ $this->params[9] = [
                  $nextMaintenance = !empty($item['next_maintenance_date']) ? date('d/m/Y', strtotime($item['next_maintenance_date'])) : 'NA';
                     
                     echo '<div class="col-12 col-sm-6 col-md-6 col-lg-12 col-xl-4">
-                        <div class="vehicle-card d-flex flex-column p-2 border rounded shadow-sm">
+                        <div class="vehicle-card d-flex flex-column p-3 border-0 rounded-4 shadow bg-white">
                     
                             <!-- TOP SECTION -->
                             <div class="d-flex align-items-center">
@@ -949,101 +971,76 @@ $this->params[9] = [
             $bookingJson = $item['booking_json'] ?? '[]';
         
             ob_start();
+            $layoutClass = (isset($_POST['layout']) && $_POST['layout'] === 'fullwidth') 
+                ? 'col-12 col-sm-6 col-md-6 col-lg-3 col-xl-3' 
+                : 'col-12 col-sm-6 col-md-6 col-lg-12 col-xl-6';
         ?>
         
-            <div class="col-12 col-sm-6 col-md-6 col-lg-12 col-xl-6">
-                <div class="vehicle-card d-flex flex-column p-2 border rounded shadow-sm position-relative">
-  
-
-        <div class="d-flex align-items-center">
-
-           <div class="me-2 vehicle-image"
-             data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>'>
-             
-            <img src="uploads/vehicleImages/<?= $lastImage ?>" 
-                 class="rounded-circle border" 
-                 style="width:60px;height:60px;object-fit:cover;">
-        </div>
-
-            <div class="flex-grow-1">
-                <h5 class="card-title mb-0 veh_no"><?=$item['vehicle_number']?></h5>
-
-                <div class="text-muted small fw-bold text-dark"><?=$item['model_names']?></div>
-
-                <div class="d-flex align-items-center gap-2 mt-1 small text-muted">
-                    <span><i class="icon-base ri ri-calendar-check-line me-1"></i><?=$item['vehicle_year']?></span>
-                    <span><i class="icon-base ri ri-palette-line me-1"></i><?=$item['vehicle_color']?></span>
-                    <span><i class="icon-base ri ri-gas-station-line me-1"></i><?=$vehicleFuelType?></span>
+            <div class="<?= $layoutClass ?>">
+                                                                                                                                <div class="card h-100 shadow-sm border-0 vehicle-card rounded-4 overflow-hidden" style="transition: transform 0.2s, box-shadow 0.2s;">
+                    <div class="row g-0 h-100">
+                                                                                                <!-- Left Side Image -->
+                        <div class="col-6 bg-white border-end position-relative vehicle-image p-0" data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>' style="cursor:pointer;">
+                            <img src="uploads/vehicleImages/<?= $lastImage ?>" class="img-fluid w-100 h-100" style="object-fit: cover; object-position: center; padding: 0;" alt="Vehicle Image">
+                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem;">
+                                <?=$item['vehicle_status']?>
+                            </span>
+                        </div>
+                        <!-- Right Side Details -->
+                          <div class="col-6">
+                            <div class="card-body p-2 d-flex flex-column h-100">
+                                <div class="mb-2">
+                                    <h5 class="mb-0 fw-bold text-danger text-truncate" title="<?=$item['vehicle_number']?>"><?=$item['vehicle_number']?></h5>
+                                    <small class="text-body fw-semibold text-truncate d-block" title="<?=$item['model_names']?>" style="font-size: 1rem;"><?=$item['model_names']?></small>
+                                </div>
+                                
+                                <div class="row g-1 mb-2 mt-auto" style="font-size: 1rem;">
+                                    <div class="col-12 d-flex align-items-center text-truncate text-secondary fw-semibold" title="Chassis: <?=$item['chassis_number'] ?? 'N/A'?>">
+                                        <i class="ri ri-barcode-line me-1"></i> <?=$item['chassis_number'] ?? 'N/A'?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-calendar-check-line me-1"></i> <?=$item['vehicle_year']?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-palette-line me-1"></i> <?=$item['vehicle_color']?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-gas-station-line me-1"></i> <?=$vehicleFuelType?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-car-line me-1"></i> <?=$vehicleGearType?>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-1 border-top pt-2 mt-auto">
+                                    <button class="btn btn-sm btn-outline-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_view px-1" 
+                                        data-bs-toggle="tooltip" title="View Details" data-id="<?=$item['ids']?>" style="font-size: 1rem;">
+                                        <i class="ri ri-information-2-line me-1"></i> Details
+                                    </button>
+                                    <button class="btn btn-sm btn-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_select px-1" 
+                                        data-permission="vehicle_reservation_manage" data-bs-toggle="tooltip" title="Select Vehicle"
+                                        data-insurance="<?=$item['next_insurance_date']?>"
+                                        data-passing="<?=$item['next_passing_date']?>"
+                                        data-maintenance="<?=$item['next_maintenance_date']?>"
+                                        data-modelName="<?=$item['model_names']?>"
+                                        data-model="<?=$item['model_id']?>"
+                                        data-veh_no="<?=$item['vehicle_number']?>"
+                                        data-id="<?=$item['ids']?>"
+                                        data-priceHWD="<?= number_format($item['price_hour_with_driver'], 3) ?>"
+                                        data-priceHWOD="<?= number_format($item['price_hour_without_driver'], 3) ?>"
+                                        data-priceDWD="<?= number_format($item['price_day_with_driver'], 3) ?>"
+                                        data-priceDWOD="<?= number_format($item['price_day_without_driver'], 3) ?>"
+                                        data-priceWWD="<?= number_format($item['price_week_with_driver'], 3) ?>"
+                                        data-priceWWOD="<?= number_format($item['price_week_without_driver'], 3) ?>"
+                                        data-priceMWD="<?= number_format($item['price_month_with_driver'], 3) ?>"
+                                        data-priceMWOD="<?= number_format($item['price_month_without_driver'], 3) ?>" style="font-size: 1rem;">
+                                        <i class="ri ri-check-line me-1"></i> Select
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="mt-1">
-                    <span><i class="icon-base ri ri-car-line me-1"></i><?=$vehicleGearType?></span>
-                    <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?>">
-                        <?=$item['vehicle_status']?>
-                    </span>
-                </div>
-
-            </div>
-
-            <!-- BUTTONS -->
-            <div class="d-flex flex-column gap-2 ms-2">
-
-                <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 action-btn btn_vehicle_view"
-                    data-bs-toggle="tooltip"
-                    data-bs-trigger="hover"
-                    data-bs-placement="top"
-                    title="View Details"
-                    data-id="<?=$item['ids']?>">
-                    <i class="ri ri-information-2-line icon-18px"></i>
-                </button>
-
-                <button class="btn btn-sm btn-primary d-flex align-items-center gap-1 action-btn btn_vehicle_select"
-                    data-bs-toggle="tooltip"
-                    data-bs-trigger="hover"
-                    data-bs-placement="top"
-                    title="Select"
-                    data-insurance="<?=$item['next_insurance_date']?>"
-                    data-passing="<?=$item['next_passing_date']?>"
-                    data-maintenance="<?=$item['next_maintenance_date']?>"
-                    data-modelName="<?=$item['model_names']?>"
-                    data-model="<?=$item['model_id']?>"
-                    data-veh_no="<?=$item['vehicle_number']?>"
-                    data-id="<?=$item['ids']?>"
-                    data-priceHWD="<?= number_format($item['price_hour_with_driver'], 3) ?>"
-                    data-priceHWOD="<?= number_format($item['price_hour_without_driver'], 3) ?>"
-                    data-priceDWD="<?= number_format($item['price_day_with_driver'], 3) ?>"
-                    data-priceDWOD="<?= number_format($item['price_day_without_driver'], 3) ?>"
-                    data-priceWWD="<?= number_format($item['price_week_with_driver'], 3) ?>"
-                    data-priceWWOD="<?= number_format($item['price_week_without_driver'], 3) ?>"
-                    data-priceMWD="<?= number_format($item['price_month_with_driver'], 3) ?>"
-                    data-priceMWOD="<?= number_format($item['price_month_without_driver'], 3) ?>"
-                    >
-                    <i class="ri ri-check-line icon-18px"></i>
-                </button>
-
-            </div>
-
-        </div>
-
-        <!-- BOTTOM SECTION -->
-        <div class="mt-3 small text-muted border-top pt-2">
-
-            <div class="d-flex justify-content-between">
-                <span><i class="ri-calendar-check-line text-success me-1"></i>Passing</span>
-                <span><?= $nextPassing ?></span>
-            </div>
-
-            <div class="d-flex justify-content-between">
-                <span><i class="ri-shield-check-line text-info me-1"></i>Insurance</span>
-                <span><?=$nextInsurance?></span>
-            </div>
-
-            <div class="d-flex justify-content-between">
-                <span><i class="ri-tools-line text-danger me-1"></i>Maintenance</span>
-                <span><?=$nextMaintenance?></span>
-            </div>
-
-        </div>
 
         </div>
     </div> 
@@ -1067,20 +1064,13 @@ $this->params[9] = [
             
              case 'get_vehicle_details_reservation_avail':
 
-                
-                if($this->vehicleNumber!='NA')
-                {
-                    $this->ReturnData = $this->varPDOModelObj->ListFromTable($var[9],$this->params[9]);
-                }
-                else
-                {
-                    if($this->modelId=='All')
-                    {
-                    $this->ReturnData = $this->varPDOModelObj->ListFromTable($var[8],$this->params[8]);
-                    }
-                    else
-                    {
-                      $this->ReturnData = $this->varPDOModelObj->ListFromTable($var[7],$this->params[7]);
+                if (!empty($this->vehicleNumber) && $this->vehicleNumber != 'NA') {
+                    $this->ReturnData = $this->varPDOModelObj->ListFromTable($var[9], $this->params[9]);
+                } else {
+                    if (empty($this->modelId) || $this->modelId == 'All') {
+                        $this->ReturnData = $this->varPDOModelObj->ListFromTable($var[8], $this->params[8]);
+                    } else {
+                        $this->ReturnData = $this->varPDOModelObj->ListFromTable($var[7], $this->params[7]);
                     }
                 }
                
@@ -1111,9 +1101,9 @@ $this->params[9] = [
             
             $lastImage = count($images) > 0 ? end($images) : "default.jpg";
         
-            $data_other_details = json_decode($item['other_details_json'], true);
-            $vehicleFuelType = $data_other_details['vehicleFuelType'];
-            $vehicleGearType = $data_other_details['vehicleGearType'];
+            $data_other_details = !empty($item['other_details_json']) ? (json_decode($item['other_details_json'], true) ?? []) : [];
+            $vehicleFuelType = $data_other_details['vehicleFuelType'] ?? ($item['fuel_type'] ?? 'NA');
+            $vehicleGearType = $data_other_details['vehicleGearType'] ?? ($item['gear_type'] ?? 'NA');
         
             $nextPassing = !empty($item['next_passing_date']) ? date('d/m/Y', strtotime($item['next_passing_date'])) : 'NA';
             $nextInsurance = !empty($item['next_insurance_date']) ? date('d/m/Y', strtotime($item['next_insurance_date'])) : 'NA';
@@ -1123,101 +1113,76 @@ $this->params[9] = [
             $bookingJson = $item['booking_json'] ?? '[]';
         
             ob_start();
+            $layoutClass = (isset($_POST['layout']) && $_POST['layout'] === 'fullwidth') 
+                ? 'col-12 col-sm-6 col-md-6 col-lg-3 col-xl-3' 
+                : 'col-12 col-sm-6 col-md-6 col-lg-12 col-xl-6';
         ?>
         
-            <div class="col-12 col-sm-6 col-md-6 col-lg-12 col-xl-6">
-                <div class="vehicle-card d-flex flex-column p-2 border rounded shadow-sm position-relative">
-  
-
-        <div class="d-flex align-items-center">
-
-           <div class="me-2 vehicle-image"
-             data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>'>
-             
-            <img src="uploads/vehicleImages/<?= $lastImage ?>" 
-                 class="rounded-circle border" 
-                 style="width:60px;height:60px;object-fit:cover;">
-        </div>
-
-            <div class="flex-grow-1">
-                <h5 class="card-title mb-0 veh_no"><?=$item['vehicle_number']?></h5>
-
-                <div class="text-muted small fw-bold text-dark"><?=$item['model_names']?></div>
-
-                <div class="d-flex align-items-center gap-2 mt-1 small text-muted">
-                    <span><i class="icon-base ri ri-calendar-check-line me-1"></i><?=$item['vehicle_year']?></span>
-                    <span><i class="icon-base ri ri-palette-line me-1"></i><?=$item['vehicle_color']?></span>
-                    <span><i class="icon-base ri ri-gas-station-line me-1"></i><?=$vehicleFuelType?></span>
+            <div class="<?= $layoutClass ?>">
+                                                                                                                                <div class="card h-100 shadow-sm border-0 vehicle-card rounded-4 overflow-hidden" style="transition: transform 0.2s, box-shadow 0.2s;">
+                    <div class="row g-0 h-100">
+                                                                                                <!-- Left Side Image -->
+                        <div class="col-6 bg-white border-end position-relative vehicle-image p-0" data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>' style="cursor:pointer;">
+                            <img src="uploads/vehicleImages/<?= $lastImage ?>" class="img-fluid w-100 h-100" style="object-fit: cover; object-position: center; padding: 0;" alt="Vehicle Image">
+                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem;">
+                                <?=$item['vehicle_status']?>
+                            </span>
+                        </div>
+                        <!-- Right Side Details -->
+                          <div class="col-6">
+                            <div class="card-body p-2 d-flex flex-column h-100">
+                                <div class="mb-2">
+                                    <h5 class="mb-0 fw-bold text-danger text-truncate" title="<?=$item['vehicle_number']?>"><?=$item['vehicle_number']?></h5>
+                                    <small class="text-body fw-semibold text-truncate d-block" title="<?=$item['model_names']?>" style="font-size: 1rem;"><?=$item['model_names']?></small>
+                                </div>
+                                
+                                <div class="row g-1 mb-2 mt-auto" style="font-size: 1rem;">
+                                    <div class="col-12 d-flex align-items-center text-truncate text-secondary fw-semibold" title="Chassis: <?=$item['chassis_number'] ?? 'N/A'?>">
+                                        <i class="ri ri-barcode-line me-1"></i> <?=$item['chassis_number'] ?? 'N/A'?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-calendar-check-line me-1"></i> <?=$item['vehicle_year']?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-palette-line me-1"></i> <?=$item['vehicle_color']?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-gas-station-line me-1"></i> <?=$vehicleFuelType?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-car-line me-1"></i> <?=$vehicleGearType?>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-1 border-top pt-2 mt-auto">
+                                    <button class="btn btn-sm btn-outline-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_view px-1" 
+                                        data-bs-toggle="tooltip" title="View Details" data-id="<?=$item['ids']?>" style="font-size: 1rem;">
+                                        <i class="ri ri-information-2-line me-1"></i> Details
+                                    </button>
+                                    <button class="btn btn-sm btn-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_select px-1" 
+                                        data-permission="vehicle_reservation_manage" data-bs-toggle="tooltip" title="Select Vehicle"
+                                        data-insurance="<?=$item['next_insurance_date']?>"
+                                        data-passing="<?=$item['next_passing_date']?>"
+                                        data-maintenance="<?=$item['next_maintenance_date']?>"
+                                        data-modelName="<?=$item['model_names']?>"
+                                        data-model="<?=$item['model_id']?>"
+                                        data-veh_no="<?=$item['vehicle_number']?>"
+                                        data-id="<?=$item['ids']?>"
+                                        data-priceHWD="<?= number_format($item['price_hour_with_driver'], 3) ?>"
+                                        data-priceHWOD="<?= number_format($item['price_hour_without_driver'], 3) ?>"
+                                        data-priceDWD="<?= number_format($item['price_day_with_driver'], 3) ?>"
+                                        data-priceDWOD="<?= number_format($item['price_day_without_driver'], 3) ?>"
+                                        data-priceWWD="<?= number_format($item['price_week_with_driver'], 3) ?>"
+                                        data-priceWWOD="<?= number_format($item['price_week_without_driver'], 3) ?>"
+                                        data-priceMWD="<?= number_format($item['price_month_with_driver'], 3) ?>"
+                                        data-priceMWOD="<?= number_format($item['price_month_without_driver'], 3) ?>" style="font-size: 1rem;">
+                                        <i class="ri ri-check-line me-1"></i> Select
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="mt-1">
-                    <span><i class="icon-base ri ri-car-line me-1"></i><?=$vehicleGearType?></span>
-                    <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?>">
-                        <?=$item['vehicle_status']?>
-                    </span>
-                </div>
-
-            </div>
-
-            <!-- BUTTONS -->
-            <div class="d-flex flex-column gap-2 ms-2">
-
-                <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 action-btn btn_vehicle_view"
-                    data-bs-toggle="tooltip"
-                    data-bs-trigger="hover"
-                    data-bs-placement="top"
-                    title="View Details"
-                    data-id="<?=$item['ids']?>">
-                    <i class="ri ri-information-2-line icon-18px"></i>
-                </button>
-
-                <button class="btn btn-sm btn-primary d-flex align-items-center gap-1 action-btn btn_vehicle_select"
-                    data-bs-toggle="tooltip"
-                    data-bs-trigger="hover"
-                    data-bs-placement="top"
-                    title="Select"
-                    data-insurance="<?=$item['next_insurance_date']?>"
-                    data-passing="<?=$item['next_passing_date']?>"
-                    data-maintenance="<?=$item['next_maintenance_date']?>"
-                    data-modelName="<?=$item['model_names']?>"
-                    data-model="<?=$item['model_id']?>"
-                    data-veh_no="<?=$item['vehicle_number']?>"
-                    data-id="<?=$item['ids']?>"
-                    data-priceHWD="<?= number_format($item['price_hour_with_driver'], 3) ?>"
-                    data-priceHWOD="<?= number_format($item['price_hour_without_driver'], 3) ?>"
-                    data-priceDWD="<?= number_format($item['price_day_with_driver'], 3) ?>"
-                    data-priceDWOD="<?= number_format($item['price_day_without_driver'], 3) ?>"
-                    data-priceWWD="<?= number_format($item['price_week_with_driver'], 3) ?>"
-                    data-priceWWOD="<?= number_format($item['price_week_without_driver'], 3) ?>"
-                    data-priceMWD="<?= number_format($item['price_month_with_driver'], 3) ?>"
-                    data-priceMWOD="<?= number_format($item['price_month_without_driver'], 3) ?>"
-                    >
-                    <i class="ri ri-check-line icon-18px"></i>
-                </button>
-
-            </div>
-
-        </div>
-
-        <!-- BOTTOM SECTION -->
-        <div class="mt-3 small text-muted border-top pt-2">
-
-            <div class="d-flex justify-content-between">
-                <span><i class="ri-calendar-check-line text-success me-1"></i>Passing</span>
-                <span><?= $nextPassing ?></span>
-            </div>
-
-            <div class="d-flex justify-content-between">
-                <span><i class="ri-shield-check-line text-info me-1"></i>Insurance</span>
-                <span><?=$nextInsurance?></span>
-            </div>
-
-            <div class="d-flex justify-content-between">
-                <span><i class="ri-tools-line text-danger me-1"></i>Maintenance</span>
-                <span><?=$nextMaintenance?></span>
-            </div>
-
-        </div>
 
         </div>
     </div> 
@@ -1242,9 +1207,14 @@ $this->params[9] = [
            
             
             case 'reserve_vehicles':
-                  $this->varPDOModelObj->Begin();
-                  $year = date("Y");
-                $prefix = "AA/$year/RS/";
+                                      $this->varPDOModelObj->Begin();
+                    $year = date("Y");
+                    
+                    $cSql = "SELECT company_code FROM tbl_company WHERE ids = " . intval($this->company_id);
+                    $cRes = json_decode($this->varPDOModelObj->ListFromTable($cSql), true);
+                    $company_code = ($cRes['status'] && !empty($cRes['data'])) ? $cRes['data'][0]['company_code'] : 'AA';
+
+                    $prefix = "{$company_code}/$year/RS/";
                 
                 $sql = "SELECT booking_no 
                         FROM tbl_vehicle_bookings 
@@ -1753,3 +1723,6 @@ $this->params[9] = [
 
 $obj = new VehicleStatusController();
 $obj->DataRequest($obj->actionevents);
+
+
+

@@ -1128,11 +1128,7 @@ $(document).on('click', '.generate-contract', function () {
     }
     
     // reset progress bar
-    $('#globalProgressBar')
-        .css('width', '0%')
-        .removeClass('bg-success bg-danger');
-
-    $('#uploadLoader').addClass('d-none');
+    
     
     
      let id = $(this).data('id'); 
@@ -1227,9 +1223,34 @@ function populateContractModal(d) {
         $('#hid_model_id').val(data.vehicle.model_id || '');
         $('#hid_vehicle_no').val(data.vehicle.vehicle_number || '');
         
-       
+        // Setup Vehicle Image Carousel
+        let v_images = [];
+        try {
+            if (data.vehicle && data.vehicle.image_json) {
+                let parsed = JSON.parse(data.vehicle.image_json);
+                if (Array.isArray(parsed)) v_images = parsed;
+            }
+        } catch(e) {}
         
+        let vCarouselInner = $("#v_carousel_inner");
+        vCarouselInner.empty();
         
+        if (v_images.length > 0) {
+            $("#v_no_images").hide();
+            $("#v_image_carousel").show();
+            v_images.forEach((img, idx) => {
+                let activeClass = idx === 0 ? "active" : "";
+                let imgPath = img.includes("http") ? img : ("/uploads/vehicleImages/" + img);
+                vCarouselInner.append(`
+                    <div class="carousel-item ${activeClass} h-100">
+                        <img src="${imgPath}" class="d-block w-100 h-100" style="object-fit: cover;" alt="Vehicle Image">
+                    </div>
+                `);
+            });
+        } else {
+            $("#v_image_carousel").hide();
+            $("#v_no_images").show();
+        }
         data.price_list.forEach(function(item) {
         
             switch(item.item) {
@@ -1301,9 +1322,13 @@ function populateContractModal(d) {
         $('#b_vat').val(bookDetails.vat || 0);
         $('#b_total').val(total_amt || 0);
         $('#txt_booking_notes').val(booking_notes || '');
-       
-        $('#dropdownContainer #driverSelect').val(contract.driver_ids).trigger('change');
-       updateMinPrice();
+              let driverId = contract.driver_ids || 0;
+        if ($('#driverSelect').length) {
+            $('#driverSelect').val(driverId).trigger('change');
+        } else {
+            window.pendingDriverId = driverId;
+        }
+        updateMinPrice();
        
         $('#chk_tools').prop(
             'checked',
@@ -1328,6 +1353,13 @@ function populateContractModal(d) {
        $('#cust_driver_contact_no').val(contract.customer_driver_contact_number || '');
        let termsCondition = contract.terms_condition || '';
        fullEditorOnBody.root.innerHTML = termsCondition;
+       
+       if (termsCondition.trim() !== '') {
+           $('#selected_term_title_label').text('Saved Contract Terms');
+           $('#terms_custom').prop('checked', true);
+       } else {
+           $('#terms_default').prop('checked', true).trigger('change');
+       }
     
 // 🔥 clear preview first
 $('#contractcustdriverdocpreview').empty();
@@ -1465,6 +1497,14 @@ $('#rate_type, #service').on('change', function () {
     updateMinPrice();
 });
 
+$('#service').on('change', function () {
+    if ($(this).val() == "2") {
+        $('#assign_company_driver_section').show();
+    } else {
+        $('#assign_company_driver_section').hide();
+    }
+});
+
 
  let DecimalPositions = 3;  
 function line_item_calculation()
@@ -1587,8 +1627,12 @@ $(document).on('input change', '.watch-field', function () {
                 placeholder: "Select Driver",
                 allowClear: true,
                 width: '100%',
-                dropdownParent: $('#dropdownContainer') // 🔥 important (modal fix)
+                dropdownParent: $('#contractModal') // 🔥 important (modal fix)
             });
+            if (window.pendingDriverId) {
+                $('#driverSelect').val(window.pendingDriverId).trigger('change');
+                window.pendingDriverId = null;
+            }
             },
         error: function (xhr, status, error) {
             $('#dropdownContainer').html(`
@@ -1640,6 +1684,7 @@ $('#dropdownContainer #driverSelect').val(0).trigger('change');
     let licensePlace = selected.data('license_place');
     let licenseIssue = selected.data('license_id');
     let licenseExpiry = selected.data('license_ed');
+    let documents = selected.data('documents');
 
     $('.driverclass').show(); 
     $('#d_name').text(driver_name);
@@ -1648,6 +1693,79 @@ $('#dropdownContainer #driverSelect').val(0).trigger('change');
     $('#d_license_issue_place').text(licensePlace);
     $('#d_licenseissueDate').text(licenseIssue);
     $('#d_licenseexpiryDate').text(licenseExpiry);
+    
+    // populate `#company_driver_docs_preview`
+    let docsPreview = $("#company_driver_docs_preview");
+    let docsContainer = $("#company_driver_docs_container");
+    let driverDocCarouselInner = $("#driverDocCarouselInner");
+    
+    docsPreview.empty();
+    driverDocCarouselInner.empty();
+    
+    let docsArr = [];
+    if (documents) {
+        if (typeof documents === "string") {
+            try { 
+                let parsed = JSON.parse(documents); 
+                if (typeof parsed === "string") {
+                    parsed = JSON.parse(parsed);
+                }
+                if (parsed && parsed.vehicles && Array.isArray(parsed.vehicles)) {
+                    parsed.vehicles.forEach(item => {
+                        if (item.files && Array.isArray(item.files)) {
+                            item.files.forEach(file => {
+                                docsArr.push({
+                                    title: item.documentName || "Document",
+                                    file: file
+                                });
+                            });
+                        }
+                    });
+                } else if (Array.isArray(parsed)) {
+                    parsed.forEach(file => {
+                        docsArr.push({
+                            title: "Document",
+                            file: file
+                        });
+                    });
+                }
+            } catch(e) {}
+        }
+    }
+    
+    if (docsArr && docsArr.length > 0) {
+        docsContainer.show();
+        docsArr.forEach((doc, idx) => {
+            let docPath = doc.file.includes("http") ? doc.file : ("/" + doc.file); // path from DB already has 'uploads/...'
+            let activeClass = idx === 0 ? "active" : "";
+            
+            docsPreview.append(`
+                <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-sm pull-up" style="cursor: pointer;" title="${doc.title}">
+                    <img src="${docPath}" alt="${doc.title}" class="rounded-circle company-driver-doc-img" data-index="${idx}">
+                </li>
+            `);
+            
+            driverDocCarouselInner.append(`
+                <div class="carousel-item ${activeClass}">
+                    <div class="bg-light text-center py-2 fw-bold text-dark border-bottom mb-2">${doc.title}</div>
+                    <img src="${docPath}" class="d-block w-100" style="max-height:500px;object-fit:contain;" alt="${doc.title}">
+                </div>
+            `);
+        });
+        $('[data-bs-toggle="tooltip"]').tooltip();
+    } else {
+        docsContainer.hide();
+    }
+});
+
+$(document).on('click', '.company-driver-doc-img', function() {
+    let index = $(this).data('index');
+    let carousel = new bootstrap.Carousel(document.getElementById('driverDocCarousel'));
+    carousel.to(index);
+    
+    // Open the modal explicitly without closing the contract modal
+    let docModal = new bootstrap.Modal(document.getElementById('companyDriverDocSliderModal'));
+    docModal.show();
 });
 
 let carImageQueue = [];
@@ -1656,24 +1774,12 @@ let existingVehicleImages = [];
 let uploadedFileNames = [];
 let existingFileNames = [];
 
-
 $('#carImages').on('change', function(e) {
-
-    // reset progress bar
-    $('#globalProgressBar')
-        .css('width', '0%')
-        .removeClass('bg-success bg-danger');
-
-    $('#uploadLoader').removeClass('d-none');
-
     let files = e.target.files;
-    let formData = new FormData();
 
     Array.from(files).forEach(file => {
 
         let id = Date.now() + Math.random();
-        
-        formData.append('car_images[]', file);
 
         let reader = new FileReader();
 
@@ -1710,54 +1816,14 @@ $('#carImages').on('change', function(e) {
         };
 
         reader.readAsDataURL(file);
-
+        
+        carImageQueue.push({
+            id: id,
+            file: file
+        });
     });
 
     $(this).val('');
-    
-    if (files.length === 0) {
-        $('#uploadLoader').addClass('d-none');
-        return;
-    }
-
-    // Auto-upload
-    $.ajax({
-        url: '/CompressUploadImage',
-        type: 'POST',
-        data: formData,
-        contentType: false,
-        processData: false,
-
-        xhr: function () {
-            let xhr = new window.XMLHttpRequest();
-            xhr.upload.onprogress = function (e) {
-                if (e.lengthComputable) {
-                    let percent = Math.round((e.loaded / e.total) * 100);
-                    $('#globalProgressBar').css('width', percent + '%');
-                }
-            };
-            return xhr;
-        },
-
-        success: function (res) {
-            $('#globalProgressBar')
-                .css('width', '100%')
-                .addClass('bg-success');
-
-            uploadedFileNames.push(
-                ...(res.files || [])
-            );
-
-            // hide loader
-            $('#uploadLoader').addClass('d-none');
-        },
-
-        error: function () {
-            $('#globalProgressBar').addClass('bg-danger');
-            $('#uploadLoader').addClass('d-none');
-        }
-    });
-
 });
 let currentVehiclePreviewId = null;
 
@@ -2381,8 +2447,8 @@ function saveContractValidation(e)
         let hasHirerSign    = typeof hirerPad !== 'undefined' && hirerPad && !hirerPad.isEmpty();
         let hasDeliverySign = typeof deliveryPad !== 'undefined' && deliveryPad && !deliveryPad.isEmpty();
         
-        let hirer_name    = $.trim($('#hirer_name').val());
-        let delivery_name = $.trim($('#delivery_name').val());
+        let hirer_name    = $.trim($('#hirer_name_wizard').val());
+        let delivery_name = $.trim($('#delivery_name_wizard').val());
         
         if (hasHirerSign && hirer_name === '') {
             setupDropdown('dropdownContent', 'error', svgError + 'Please enter hirer name', 'click');
@@ -2491,8 +2557,7 @@ function saveContract()
     let data_source_val = $('#txt_contract_modal_data_source').val();
      var termsContentval = fullEditorOnBody.root.innerHTML;
   
-const allVehicleImages = existingFileNames.concat(uploadedFileNames);
-
+    // We will build vehicle_accessories.vehicle_images inside performSaveContractPayload
     let customer_data = {
                 customer_name: $('#c_name').text().trim(),
                 customer_code: $('#c_code').text().trim(),
@@ -2547,9 +2612,64 @@ let vehicle_accessories ={
                 cust_driver_name: $('#cust_driver').val(),
                 cust_driver_contact_no: $('#cust_driver_contact_no').val(),
                 cust_driver_documents: bookingMaster,
-                vehicle_images:allVehicleImages
+                vehicle_images: existingFileNames // Will be updated later
                 };
-                $.ajax({
+
+    if (carImageQueue.length > 0) {
+        let formData = new FormData();
+        let processedCount = 0;
+        
+        carImageQueue.forEach(item => {
+            let file = item.file;
+            if (file.type.startsWith('image/')) {
+                resizeImage(file, function(blob) {
+                    formData.append('car_images[]', blob, file.name);
+                    processedCount++;
+                    if (processedCount === carImageQueue.length) {
+                        uploadVehicleImagesAndSave(formData);
+                    }
+                });
+            } else {
+                formData.append('car_images[]', file);
+                processedCount++;
+                if (processedCount === carImageQueue.length) {
+                    uploadVehicleImagesAndSave(formData);
+                }
+            }
+        });
+    } else {
+        performSaveContractPayload();
+    }
+
+    function uploadVehicleImagesAndSave(formData) {
+        let totalFiles = 0; // Simplified logic, assuming handled elsewhere or not needed
+        
+        $.ajax({
+            url: '/CompressUploadImage',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: function (res) {
+                if (typeof res === 'string') {
+                    try { res = JSON.parse(res); } catch(e) { }
+                }
+                if (res && res.status) {
+                    uploadedFileNames.push(...(res.files || []));
+                }
+                performSaveContractPayload();
+            },
+            error: function () {
+                performSaveContractPayload(); // Save anyway even if upload fails
+            }
+        });
+    }
+
+    function performSaveContractPayload() {
+        vehicle_accessories.vehicle_images = existingFileNames.concat(uploadedFileNames);
+
+        $.ajax({
                     url: '/VehicleContractGeneration',
                     type: 'POST',
                     contentType: 'application/json; charset=utf-8',
@@ -2594,8 +2714,8 @@ let vehicle_accessories ={
                                     data: JSON.stringify({
                                         action: "SaveSignature",
                                         selectedBookingIds: [booking_ids],
-                                        hirer_name: $.trim($('#hirer_name').val()),
-                                        delivery_name: $.trim($('#delivery_name').val()),
+                                        hirer_name: $.trim($('#hirer_name_wizard').val()),
+                                        delivery_name: $.trim($('#delivery_name_wizard').val()),
                                         hirer_signature: hirer_signature,
                                         delivery_signature: delivery_signature
                                     })
@@ -2639,8 +2759,8 @@ let vehicle_accessories ={
                 });
         
       
-}
-
+    } // end performSaveContractPayload
+} // end saveContract
 $(document).on('input', '#modalEnableOTPPhone', function () {
     this.value = this.value.replace(/[^0-9]/g, '');
 });
@@ -2838,12 +2958,47 @@ $('#btn_verify_otp').on('click', function () {
         }
     });
 });
+$('input[name="terms_option"]').change(function() {
+    let option = $(this).val();
+    if (option === 'custom') {
+        $('#termsTable').DataTable().ajax.reload(null, false);
+        fullEditor.root.innerHTML = '';
+        $('#t_c_name').val('');
+        $('#termsAndConditionModal').modal('show');
+    } else if (option === 'default') {
+        $('#selected_term_title_label').html('<div class="spinner-border spinner-border-sm text-secondary" role="status"></div> Loading...');
+        $.ajax({
+            url: "/VehicleContractGeneration",
+            type: "POST",
+            contentType: "application/json",
+            dataType: "json",
+            data: JSON.stringify({
+                action: "LoadTermsCondition"
+            }),
+            success: function(response) {
+                if (response && response.data && Array.isArray(response.data)) {
+                    let defaultTerm = response.data.find(t => t.is_default == '1');
+                    if (defaultTerm) {
+                        fullEditorOnBody.root.innerHTML = defaultTerm.terms_condition;
+                        $('#selected_term_title_label').text(defaultTerm.t_c_name || 'Default Term');
+                    } else {
+                        fullEditorOnBody.root.innerHTML = '';
+                        $('#selected_term_title_label').text('No Default Term Set');
+                    }
+                } else {
+                    fullEditorOnBody.root.innerHTML = '';
+                    $('#selected_term_title_label').text('No Terms Available');
+                }
+            },
+            error: function() {
+                $('#selected_term_title_label').text('Error loading terms');
+            }
+        });
+    }
+});
+
 $('#btn_terms_condition').click(function(){
-    $('#termsTable').DataTable().ajax.reload(null, false);
-  
-    fullEditor.root.innerHTML ='';
-    $('#t_c_name').val('');
-    $('#termsAndConditionModal').modal('show');
+    $('#terms_custom').prop('checked', true).trigger('change');
 })
 $('#saveTermsAndConditions').click(function () {
 
@@ -2926,6 +3081,19 @@ $('#termsTable').DataTable({
             data: "terms_condition",
             className: "description"
         },
+        
+        {
+            data: null,
+            render: function(data, type, row) {
+                let isChecked = row.is_default == '1' ? 'checked' : '';
+                return `
+                    <div class="form-check form-switch text-center">
+                        <input class="form-check-input term-default-switch" type="checkbox" role="switch" data-id="${row.ids}" ${isChecked}>
+                    </div>
+                `;
+            },
+            orderable: false
+        },
 
         {
             data: null,
@@ -2944,7 +3112,7 @@ $('#termsTable').DataTable({
             data: null,
             render: function(data, type, row){
                 return `
-                    <i class="ri ri-eye-line text-primary showRowTermsCondition"
+                    <i class="ri ri-pencil-line text-primary editRowTermsCondition"
                        style="cursor:pointer; font-size:1.5rem;"
                        data-id="${row.ids}">
                     </i>
@@ -3041,7 +3209,7 @@ function deleteTermsAndCondition()
 }
 
 
-$(document).on("click", ".showRowTermsCondition", function() {
+$(document).on("click", ".editRowTermsCondition", function() {
 
     var showTCId = $(this).data("id");
 
@@ -3093,7 +3261,12 @@ $(document).on("click", ".showRowTermsCondition", function() {
 $('#copyTCBtn').click(function () {
                 
     var content = fullEditor.root.innerHTML;
+    var title = $('#t_c_name').val() || 'Custom Term';
+    
     fullEditorOnBody.root.innerHTML = content;
+    $('#selected_term_title_label').text(title);
+    $('#terms_custom').prop('checked', true);
+    
     $('#termsAndConditionModal').modal('hide');
 
 });
@@ -3232,8 +3405,7 @@ $(document).on('click', '.btnviewSignature', function () {
       
 });
 
-let hirerPad;
-let deliveryPad;
+var hirerPad = null, deliveryPad = null;
 let selectedBookingIds = [];
 
 $(document).on('click', '.btnOpenSignatureGroup', function () {
@@ -3331,70 +3503,88 @@ $(document).on('click', '.btnOpenSignature', function () {
 function initSignaturePads(customer_name = null, booking_id = null)
 {
     if(customer_name){
-        $('#hirer_name').val(customer_name);
+        $('#hirer_name_wizard').val(customer_name);
     }
      
-    $('#delivery_name').val('');
+    let loggedInUserName = <?= json_encode($_SESSION['profile_name'] ?? $_SESSION['user_name'] ?? 'User') ?>;
+    $('#delivery_name_wizard').val(loggedInUserName);
      
     // Initialize Pads on first tab show
-    const hirerCanvas = document.getElementById('hirerCanvas');
-    const deliveryCanvas = document.getElementById('deliveryCanvas');
+    const hirerCanvas = document.getElementById('hirerCanvas_wizard');
+    const deliveryCanvas = document.getElementById('deliveryCanvas_wizard');
     
-    // We bind to the stepper shown event so canvas can get correct width
-    let stepperEl = document.getElementById('contractWizard');
-    if (stepperEl) {
-        stepperEl.addEventListener('shown.bs-stepper', function onStepperShown(event) {
-            // Tab index 4 is the 5th tab (Signatures)
-            if (event.detail.indexStep === 4 || event.detail.to === 4) {
-                // Initialize if width is not set properly yet
-                if (hirerCanvas.width === 0 || hirerCanvas.width === 300) {
-                    hirerCanvas.width = hirerCanvas.offsetWidth || 400;
-                    hirerCanvas.height = 250;
-                    deliveryCanvas.width = deliveryCanvas.offsetWidth || 400;
-                    deliveryCanvas.height = 250;
+    function setupPads() {
+        if (!hirerCanvas.offsetWidth) return; // Not visible yet
+        
+        // Always ensure internal resolution matches CSS display size
+        let ratio =  Math.max(window.devicePixelRatio || 1, 1);
+        hirerCanvas.width = hirerCanvas.offsetWidth * ratio;
+        hirerCanvas.height = hirerCanvas.offsetHeight * ratio;
+        hirerCanvas.getContext("2d").scale(ratio, ratio);
+        
+        deliveryCanvas.width = deliveryCanvas.offsetWidth * ratio;
+        deliveryCanvas.height = deliveryCanvas.offsetHeight * ratio;
+        deliveryCanvas.getContext("2d").scale(ratio, ratio);
 
-                    if (!hirerPad) hirerPad = new SignaturePad(hirerCanvas);
-                    if (!deliveryPad) deliveryPad = new SignaturePad(deliveryCanvas);
-                    
-                    hirerPad.clear();
-                    deliveryPad.clear();
-                    
-                    // Load existing signatures if available
-                    if (booking_id) {
-                        $.ajax({
-                            url: '/VehicleContractGeneration',
-                            type: 'POST',
-                            contentType: 'application/json',
-                            data: JSON.stringify({ action: 'GetSignDetails', bookingid: booking_id }),
-                            success: function (response) {
-                                if (response.data && response.data.length > 0) {
-                                    let row = response.data[0];
-                                    if (row.hirer_signature && row.hirer_signature.trim() !== '') {
-                                        hirerPad.fromDataURL(row.hirer_signature);
-                                        if(row.hirer_name) $('#hirer_name').val(row.hirer_name);
-                                    }
-                                    if (row.delivered_signature && row.delivered_signature.trim() !== '') {
-                                        deliveryPad.fromDataURL(row.delivered_signature);
-                                        if(row.delivered_signatory) $('#delivery_name').val(row.delivered_signatory);
-                                    }
-                                }
-                            }
-                        });
+        if (!hirerPad) hirerPad = new SignaturePad(hirerCanvas);
+        else hirerPad.clear(); // Just clear if it already exists
+
+        if (!deliveryPad) deliveryPad = new SignaturePad(deliveryCanvas);
+        else deliveryPad.clear();
+        
+        // Load existing signatures if available
+        if (booking_id) {
+            $.ajax({
+                url: '/VehicleContractGeneration',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ action: 'GetSignDetails', bookingid: booking_id }),
+                success: function (response) {
+                    if (response.data && response.data.length > 0) {
+                        let row = response.data[0];
+                        if (row.hirer_signature && row.hirer_signature.trim() !== '') {
+                            hirerPad.fromDataURL(row.hirer_signature);
+                            if(row.hirer_name) $('#hirer_name_wizard').val(row.hirer_name);
+                        }
+                        if (row.delivered_signature && row.delivered_signature.trim() !== '') {
+                            deliveryPad.fromDataURL(row.delivered_signature);
+                            if(row.delivered_signatory) $('#delivery_name_wizard').val(row.delivered_signatory);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
+
+    // Use ResizeObserver for completely reliable initialization when the tab becomes visible
+    if (window.signatureResizeObserver) {
+        window.signatureResizeObserver.disconnect();
+    }
+    
+    window.signatureResizeObserver = new ResizeObserver(() => {
+        if (hirerCanvas.offsetWidth > 0 && deliveryCanvas.offsetWidth > 0) {
+            setupPads();
+            window.signatureResizeObserver.disconnect(); // Only need to initialize once
+        }
+    });
+    
+    let signatureTab = document.getElementById('tab-signatures');
+    if (signatureTab) {
+        window.signatureResizeObserver.observe(signatureTab);
+    }
+    
+    // If it's already visible, try setup immediately
+    setupPads();
 }
 
-$('#btnClearHirer').click(function () {
-    if (typeof hirerPad !== 'undefined' && hirerPad) {
+$('#btnClearHirer_wizard').click(function () {
+    if (hirerPad) {
         hirerPad.clear();
     }
 });
 
-$('#btnClearDelivery').click(function () {
-    if (typeof deliveryPad !== 'undefined' && deliveryPad) {
+$('#btnClearDelivery_wizard').click(function () {
+    if (deliveryPad) {
         deliveryPad.clear();
     }
 });

@@ -73,82 +73,134 @@
           
                 <!-- TAB 1: Customer & Vehicle -->
                 <div id="tab-customer-vehicle" class="content">
-                    <h6 class="fw-bold text-danger mb-2">Customer Details</h6>
-                    <div class="row g-2 mb-3 p-2 border rounded bg-lighter">
-                        <div class="col-12 col-md-4">
-                            <span class="text-muted d-block small">Customer Name</span>
-                            <span class="fw-semibold small" id="c_name"></span>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <span class="text-muted d-block small">Customer Code</span>
-                            <span class="fw-semibold small" id="c_code"></span>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <span class="text-muted d-block small">Contact Number</span>
-                            <span class="fw-semibold small" id="c_mobile"></span>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <span class="text-muted d-block small">Email</span>
-                            <span class="fw-semibold small text-truncate d-inline-block w-100" id="c_email"></span>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <span class="text-muted d-block small">Attn & Address</span>
-                            <span class="fw-semibold small"><span id="c_attn"></span> - <span id="c_attr"></span></span>
-                        </div>
-                    </div>
-                    
-                    <h6 class="fw-bold text-danger mb-2">Vehicle Details</h6>
-                    <div class="row g-2 mb-3 p-2 border rounded bg-lighter">
-                        <div class="col-12 col-md-4">
-                            <span class="text-muted d-block small">Category</span>
-                            <span class="fw-semibold small" id="v_category"></span>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <span class="text-muted d-block small">Model</span>
-                            <span class="fw-semibold small" id="v_model"></span>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <span class="text-muted d-block small">Vehicle No</span>
-                            <span class="fw-semibold small" id="v_no"></span>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <span class="text-muted d-block small">Color / Year</span>
-                            <span class="fw-semibold small"><span id="v_color"></span> / <span id="v_year"></span></span>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <span class="text-muted d-block small">Next Ins. / Pass. / Maint.</span>
-                            <span class="fw-semibold small">
-                                <span id="v_insurance" class="me-1"></span> | 
-                                <span id="v_passing" class="mx-1"></span> | 
-                                <span id="v_maintenance" class="ms-1"></span>
-                            </span>
-                            <input type="hidden" id="hid_nxt_insurance">
-                            <input type="hidden" id="hid_nxt_passing">
-                            <input type="hidden" id="hid_nxt_maintenance">
-                        </div>
-                    </div>
-
-                    <h6 class="fw-bold text-danger mb-2">Pricing Rates</h6>
-                    <div class="row g-2 mb-3">
+                    <div class="row g-2 mb-2">
                         <div class="col-12 col-md-6">
-                            <div class="p-2 border rounded bg-lighter h-100">
-                                <div class="fw-semibold mb-2 text-primary border-bottom pb-1 small">Without Driver</div>
-                                <div class="d-flex justify-content-between flex-wrap gap-2">
-                                    <div><span class="text-muted small">Hourly: </span><span class="fw-semibold small" id="wod_hourly">0.000</span></div>
-                                    <div><span class="text-muted small">Daily: </span><span class="fw-semibold small" id="wod_daily">0.000</span></div>
-                                    <div><span class="text-muted small">Weekly: </span><span class="fw-semibold small" id="wod_weekly">0.000</span></div>
-                                    <div><span class="text-muted small">Monthly: </span><span class="fw-semibold small" id="wod_monthly">0.000</span></div>
+                            <h6 class="fw-bold text-danger mb-1" style="font-size:13px;">Customer Details</h6>
+                            <div class="p-2 rounded h-100" style="background-color: #fff1f1; border: 1px solid #ffc9c9;">
+                                <div class="row g-1">
+                                    <div class="col-6 mb-1">
+                                        <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Customer Name</div>
+                                        <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;" id="c_name"></div>
+                                    </div>
+                                    <div class="col-6 mb-1">
+                                        <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Customer Code</div>
+                                        <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;" id="c_code"></div>
+                                    </div>
+                                    <div class="col-6 mb-1">
+                                        <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Contact Number</div>
+                                        <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;" id="c_mobile"></div>
+                                    </div>
+                                    <div class="col-6 mb-1">
+                                        <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Email</div>
+                                        <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;" id="c_email"></div>
+                                    </div>
+                                    <div class="col-12 mt-1">
+                                        <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Attn & Address</div>
+                                        <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;"><span id="c_attn"></span> - <span id="c_attr"></span></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-12 col-md-6">
-                            <div class="p-2 border rounded bg-lighter h-100">
-                                <div class="fw-semibold mb-2 text-info border-bottom pb-1 small">With Driver</div>
-                                <div class="d-flex justify-content-between flex-wrap gap-2">
-                                    <div><span class="text-muted small">Hourly: </span><span class="fw-semibold small" id="wd_hourly">0.000</span></div>
-                                    <div><span class="text-muted small">Daily: </span><span class="fw-semibold small" id="wd_daily">0.000</span></div>
-                                    <div><span class="text-muted small">Weekly: </span><span class="fw-semibold small" id="wd_weekly">0.000</span></div>
-                                    <div><span class="text-muted small">Monthly: </span><span class="fw-semibold small" id="wd_monthly">0.000</span></div>
+                            <h6 class="fw-bold text-danger mb-1" style="font-size:13px;">Vehicle Details</h6>
+                            <div class="p-2 rounded h-100" style="background-color: #fff1f1; border: 1px solid #ffc9c9;">
+                                <div class="d-flex align-items-start gap-2">
+                                    <div style="width: 100px; flex-shrink: 0;">
+                                        <div id="v_image_carousel" class="carousel slide" data-bs-ride="carousel" style="border-radius: 6px; overflow: hidden; height: 80px; display: none;">
+                                            <div class="carousel-inner h-100" id="v_carousel_inner"></div>
+                                        </div>
+                                        <div id="v_no_images" class="text-center text-muted small fst-italic" style="border: 1px dashed #ccc; border-radius: 6px; height: 80px; line-height: 80px; font-size: 10px;">
+                                            No Images
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="row g-1">
+                                            <div class="col-6 mb-1">
+                                                <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Category</div>
+                                                <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;" id="v_category"></div>
+                                            </div>
+                                            <div class="col-6 mb-1">
+                                                <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Model</div>
+                                                <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;" id="v_model"></div>
+                                            </div>
+                                            <div class="col-6 mb-1">
+                                                <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Vehicle No</div>
+                                                <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;" id="v_no"></div>
+                                            </div>
+                                            <div class="col-6 mb-1">
+                                                <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Chassis No</div>
+                                                <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;" id="v_chassis"></div>
+                                            </div>
+                                            <div class="col-6 mt-1">
+                                                <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Color / Year</div>
+                                                <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;"><span id="v_color"></span> / <span id="v_year"></span></div>
+                                            </div>
+                                            <div class="col-6 mt-1">
+                                                <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Next Ins. / Pass.</div>
+                                                <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;">
+                                                    <span id="v_insurance" class="me-1"></span> | <span id="v_passing" class="ms-1"></span>
+                                                </div>
+                                                <input type="hidden" id="hid_nxt_insurance">
+                                                <input type="hidden" id="hid_nxt_passing">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-danger mb-1" style="font-size:13px; margin-top: 50px;">Pricing Setup</h6>
+                    <div class="row g-2 mb-3">
+                        <div class="col-12 col-md-3">
+                            <div class="border rounded px-2 py-1 bg-lighter">
+                                <div class="text-center text-muted fw-bold border-bottom mb-1" style="font-size: 11px;">Hour</div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 10px;">W/O Driver</span>
+                                    <strong class="text-success" style="font-size: 10px;"><span id="wod_hourly">0.000</span> <?= defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD' ?></strong>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 10px;">With Driver</span>
+                                    <strong class="text-success" style="font-size: 10px;"><span id="wd_hourly">0.000</span> <?= defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD' ?></strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <div class="border rounded px-2 py-1 bg-lighter">
+                                <div class="text-center text-muted fw-bold border-bottom mb-1" style="font-size: 11px;">Day</div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 10px;">W/O Driver</span>
+                                    <strong class="text-success" style="font-size: 10px;"><span id="wod_daily">0.000</span> <?= defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD' ?></strong>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 10px;">With Driver</span>
+                                    <strong class="text-success" style="font-size: 10px;"><span id="wd_daily">0.000</span> <?= defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD' ?></strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <div class="border rounded px-2 py-1 bg-lighter">
+                                <div class="text-center text-muted fw-bold border-bottom mb-1" style="font-size: 11px;">Week</div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 10px;">W/O Driver</span>
+                                    <strong class="text-success" style="font-size: 10px;"><span id="wod_weekly">0.000</span> <?= defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD' ?></strong>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 10px;">With Driver</span>
+                                    <strong class="text-success" style="font-size: 10px;"><span id="wd_weekly">0.000</span> <?= defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD' ?></strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <div class="border rounded px-2 py-1 bg-lighter">
+                                <div class="text-center text-muted fw-bold border-bottom mb-1" style="font-size: 11px;">Month</div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 10px;">W/O Driver</span>
+                                    <strong class="text-success" style="font-size: 10px;"><span id="wod_monthly">0.000</span> <?= defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD' ?></strong>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 10px;">With Driver</span>
+                                    <strong class="text-success" style="font-size: 10px;"><span id="wd_monthly">0.000</span> <?= defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD' ?></strong>
                                 </div>
                             </div>
                         </div>
@@ -161,84 +213,62 @@
 
                 <!-- TAB 2: Booking Details -->
                 <div id="tab-booking-details" class="content">
-                    <h6 class="fw-bold text-danger mb-3">Booking Details</h6>
-                    <div class="row g-3 mb-3">
-                        <div class="col-12 col-md-4">
-                            <div class="form-floating form-floating-outline">
-                                <input type="datetime-local" id="b_from" class="form-control watch-field">
-                                <label>From</label>
-                            </div>
+                    <h6 class="fw-bold text-danger mb-2" style="font-size:13px;">Booking Details</h6>
+                    <div class="row g-2 mb-3">
+                        <div class="col-12 col-md-3 mb-1">
+                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">From</label>
+                            <input type="datetime-local" id="b_from" class="form-control form-control-sm watch-field">
                         </div>
-                        <div class="col-12 col-md-4">
-                            <div class="form-floating form-floating-outline">
-                                <input type="datetime-local" id="b_to" class="form-control watch-field">
-                                <label>To</label>
-                            </div>
+                        <div class="col-12 col-md-3 mb-1">
+                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">To</label>
+                            <input type="datetime-local" id="b_to" class="form-control form-control-sm watch-field">
                         </div>
-                        <div class="col-12 col-md-4">
-                            <div class="form-floating form-floating-outline">
-                                <select class="rate_type form-control form-control-sm watch-field" id="rate_type">
-                                    <option value="0">Select</option>
-                                    <option value="hour">Hourly</option>
-                                    <option value="day">Daily</option>
-                                    <option value="week">Weekly</option>
-                                    <option value="month">Monthly</option>
-                                </select>
-                                <label class="form-label small">Type</label>
-                            </div>
+                        <div class="col-12 col-md-3 mb-1">
+                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">Type</label>
+                            <select class="rate_type form-select form-select-sm watch-field" id="rate_type">
+                                <option value="0">Select</option>
+                                <option value="hour">Hourly</option>
+                                <option value="day">Daily</option>
+                                <option value="week">Weekly</option>
+                                <option value="month">Monthly</option>
+                            </select>
                         </div>
-                        <div class="col-12 col-md-4">
-                            <div class="form-floating form-floating-outline">
-                                <select class="service form-control form-control-sm watch-field" id="service">
-                                    <option value="0">Select Service</option>
-                                    <option value="1" data-id="10">Rental Without Driver</option>
-                                    <option value="2" data-id="0">Rental With Driver</option>
-                                </select>
-                                <label class="form-label small">Service</label>
-                            </div>
+                        <div class="col-12 col-md-3 mb-1">
+                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">Service</label>
+                            <select class="service form-select form-select-sm watch-field" id="service">
+                                <option value="0">Select Service</option>
+                                <option value="1" data-id="10">Rental Without Driver</option>
+                                <option value="2" data-id="0">Rental With Driver</option>
+                            </select>
                         </div>
-                        <div class="col-12 col-md-4">
-                            <div class="form-floating form-floating-outline">
-                                <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="b_duration" class="form-control watch-field">
-                                <label>Duration</label>
-                            </div>
+                        <div class="col-12 col-md-2 mb-1">
+                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">Duration</label>
+                            <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="b_duration" class="form-control form-control-sm watch-field">
                         </div>
-                        <div class="col-12 col-md-4">
-                            <div style="position:relative;" class="form-floating form-floating-outline">
-                                <span class="min-price-text badge bg-danger" style="position:absolute; top:-8px; right:8px; font-size:10px; z-index:2;">
-                                    Min: 0.000
-                                </span>
-                                <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" class="price nav form-control form-control-sm watch-field" value="0" style="padding-top:12px;" id="price" >
-                                <label class="form-label small">Unit Price</label>
-                            </div>
+                        <div class="col-12 col-md-2 mb-1" style="position: relative;">
+                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">Unit Price</label>
+                            <span class="min-price-text badge bg-danger" style="position:absolute; top: 0; right: 5px; font-size:9px; z-index:2; padding: 2px 4px;">Min: 0.000</span>
+                            <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" class="price nav form-control form-control-sm watch-field" value="0" id="price">
                             <input type="hidden" class="minprice nav form-control" value="0">
                         </div>
-                        <div class="col-12 col-md-4">
-                            <div class="form-floating form-floating-outline">
-                                <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="b_vat" class="form-control watch-field">
-                                <label>VAT %</label>
-                            </div>
+                        <div class="col-12 col-md-2 mb-1">
+                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">VAT %</label>
+                            <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="b_vat" class="form-control form-control-sm watch-field">
                         </div>
-                        <div class="col-12 col-md-4">
-                            <div class="form-floating form-floating-outline">
-                                <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="b_total" class="form-control">
-                                <label>Total</label>
-                            </div>
+                        <div class="col-12 col-md-3 mb-1">
+                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">Total</label>
+                            <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="b_total" class="form-control form-control-sm">
                         </div>
-                        <div class="col-12 col-md-4">
-                            <div class="form-floating form-floating-outline">
-                                <input type="text" id="b_qtn_ref_no" class="form-control" readonly>
-                                <label>Quotation Ref. No.</label>
-                            </div>
+                        <div class="col-12 col-md-3 mb-1">
+                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">Quotation Ref. No.</label>
+                            <input type="text" id="b_qtn_ref_no" class="form-control form-control-sm" readonly>
                         </div>
-                        <div class="col-12">
-                            <div class="form-floating form-floating-outline">
-                                <textarea class="form-control form-control-sm h-px-100" id="txt_booking_notes" name="txt_booking_notes" placeholder="Booking Notes"></textarea>
-                                <label for="txt_booking_notes">Booking Notes</label>
-                            </div>
+                        <div class="col-12 mt-1">
+                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">Booking Notes</label>
+                            <textarea class="form-control form-control-sm" style="height: 60px;" id="txt_booking_notes" name="txt_booking_notes" placeholder="Booking Notes"></textarea>
                         </div>
-                        <div class="col-12" id="otpdiv">
-                            <div class="alert alert-info">
+                        <div class="col-12 mt-2" id="otpdiv">
+                            <div class="alert alert-info py-1 px-2 mb-0" style="font-size: 11px;">
                                 <p class="mb-0" id="p_otp_minprice_info"></p>
                             </div>
                         </div>
@@ -254,7 +284,7 @@
                 <div id="tab-checklist-driver" class="content">
                     <h6 class="fw-bold text-danger mb-3">Vehicle Checklist & Handover</h6>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="chk_tools">
                                 <label class="form-check-label">Jack & Tools</label>
@@ -283,13 +313,13 @@
                         <div class="col-md-2">
                             <div class="form-floating form-floating-outline mb-3">
                                 <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="km_out" class="form-control">
-                                <label>KM Out</label>
+                                <label>Odometer Reading</label>
                             </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="form-floating form-floating-outline mb-3">
                                 <input type="datetime-local" id="dt_out" class="form-control">
-                                <label>Date Time Out</label>
+                                <label>Rentout Time</label>
                             </div>
                         </div>
                     </div>
@@ -320,38 +350,46 @@
                         </div>
                     </div>
                     
-                    <h6 class="fw-bold text-danger mb-3">Assign Company Driver</h6>
-                    <div class="row g-3 mb-3">
-                        <div class="col-12 col-md-4">
-                            <div class="form-floating form-floating-outline mb-1">
-                                <div id="dropdownContainer"></div>
+                    <div id="assign_company_driver_section" style="display: none;">
+                        <h6 class="fw-bold text-danger mb-1" style="font-size:13px;">Assign Company Driver</h6>
+                        <div class="row g-2 mb-3">
+                            <div class="col-12 col-md-4">
+                                <div class="form-floating form-floating-outline mb-1 h-100">
+                                    <div id="dropdownContainer"></div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-12 col-md-8 p-3 border rounded driverclass">
-                            <div class="row">
-                                <div class="col-md-6 mb-2">
-                                    <span class="text-muted d-block fs-6">Name</span>
-                                    <span class="fw-semibold driverClasstext" id="d_name"></span>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <span class="text-muted d-block fs-6">Contact Number</span>
-                                    <span class="fw-semibold driverClasstext" id="d_mobile"></span>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <span class="text-muted d-block fs-6">License Number</span>
-                                    <span class="fw-semibold driverClasstext" id="d_license_no"></span>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <span class="text-muted d-block fs-6">Issue Place</span>
-                                    <span class="fw-semibold driverClasstext" id="d_license_issue_place"></span>
-                                </div>
-                                <div class="col-md-6">
-                                    <span class="text-muted d-block fs-6">Issue Date</span>
-                                    <span class="fw-semibold driverClasstext" id="d_licenseissueDate"></span>
-                                </div>
-                                <div class="col-md-6">
-                                    <span class="text-muted d-block fs-6">Expiry Date</span>
-                                    <span class="fw-semibold driverClasstext" id="d_licenseexpiryDate"></span>
+                            <div class="col-12 col-md-8">
+                                <div class="p-2 rounded h-100 driverclass" style="background-color: #fff1f1; border: 1px solid #ffc9c9;">
+                                    <div class="row g-1">
+                                        <div class="col-4 mb-1">
+                                            <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Name</div>
+                                            <div class="fw-semibold text-truncate driverClasstext" style="font-size: 11px; line-height: 1.2;" id="d_name"></div>
+                                        </div>
+                                        <div class="col-4 mb-1">
+                                            <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Contact Number</div>
+                                            <div class="fw-semibold text-truncate driverClasstext" style="font-size: 11px; line-height: 1.2;" id="d_mobile"></div>
+                                        </div>
+                                        <div class="col-4 mb-1">
+                                            <div class="text-muted" style="font-size: 10px; line-height: 1.2;">License Number</div>
+                                            <div class="fw-semibold text-truncate driverClasstext" style="font-size: 11px; line-height: 1.2;" id="d_license_no"></div>
+                                        </div>
+                                        <div class="col-4 mb-1">
+                                            <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Issue Place</div>
+                                            <div class="fw-semibold text-truncate driverClasstext" style="font-size: 11px; line-height: 1.2;" id="d_license_issue_place"></div>
+                                        </div>
+                                        <div class="col-4 mb-1">
+                                            <div class="text-muted" style="font-size: 10px; line-height: 1.2;">License Issue Date</div>
+                                            <div class="fw-semibold text-truncate driverClasstext" style="font-size: 11px; line-height: 1.2;" id="d_licenseissueDate"></div>
+                                        </div>
+                                        <div class="col-4 mb-1">
+                                            <div class="text-muted" style="font-size: 10px; line-height: 1.2;">License Expiry Date</div>
+                                            <div class="fw-semibold text-truncate driverClasstext" style="font-size: 11px; line-height: 1.2;" id="d_licenseexpiryDate"></div>
+                                        </div>
+                                        <div class="col-12 mt-2" id="company_driver_docs_container" style="display:none;">
+                                            <div class="text-muted mb-1" style="font-size: 10px; line-height: 1.2;">Driver Documents</div>
+                                            <ul id="company_driver_docs_preview" class="list-unstyled d-flex align-items-center avatar-group mb-0"></ul>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -367,7 +405,7 @@
                 <div id="tab-images-terms" class="content">
                     <div class="row">
                         <div class="col-12 col-lg-6 border-end pe-4">
-                            <h6 class="fw-bold text-danger mb-3">Vehicle Images</h6>
+                            <h6 class="fw-bold text-danger mb-3">Rentout Images</h6>
                             <div class="p-4 border border-dashed rounded text-center mb-3">
                                 <i class="ri-camera-lens-fill text-muted" style="font-size: 2rem;"></i>
                                 <p class="mb-2 text-muted">Take photos or select images to auto-upload.</p>
@@ -378,22 +416,52 @@
                                 <input type="file" id="carImages" class="d-none" multiple accept="image/*" capture="environment">
                             </div>
                             
-                            <div class="progress mb-3" style="height:8px;">
-                                <div class="progress-bar" id="globalProgressBar" style="width:0%"></div>
-                            </div>
-                            <div id="uploadLoader" class="text-center mt-2 d-none">
-                                <div class="spinner-border spinner-border-sm text-primary"></div>
-                                <span class="ms-2">Uploading images...</span>
-                            </div>
+
+
                             <div id="preview" class="d-flex flex-wrap gap-2 mt-3"></div>
                         </div>
                         
                         <div class="col-12 col-lg-6 ps-4">
-                            <h6 class="fw-bold text-danger mb-3">Terms & Conditions</h6>
-                            <div id="full-editor-onbody" style="height: 300px; margin-bottom:10px;"></div>
-                            <button id="btn_terms_condition" class="btn btn-primary mt-3 btn-sm">
-                                <span class="ri-save-line me-1"></span> Save Terms
-                            </button>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-bold text-danger mb-0">Terms & Conditions</h6>
+                                <button id="btn_terms_condition" class="btn btn-primary btn-sm">
+                                    <span class="ri-settings-3-line me-1"></span> Manage Terms
+                                </button>
+                            </div>
+                            
+                            <div class="d-flex gap-4 mb-3 border-bottom pb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="terms_option" id="terms_default" value="default" checked>
+                                    <label class="form-check-label fw-bold" for="terms_default">
+                                        Default Terms
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="terms_option" id="terms_custom" value="custom">
+                                    <label class="form-check-label fw-bold" for="terms_custom">
+                                        Custom Terms
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Selected Term Title Display -->
+                            <div id="selected_term_display" class="border rounded p-3 bg-light" style="min-height: 80px; margin-bottom:10px;">
+                                <div class="d-flex align-items-center h-100">
+                                    <i class="ri-file-text-line fs-3 text-primary me-3"></i>
+                                    <div>
+                                        <div class="text-muted small fw-bold text-uppercase mb-1" id="selected_term_type_label">Default Term</div>
+                                        <h6 class="mb-0 fw-bold" id="selected_term_title_label">
+                                            <div class="spinner-border spinner-border-sm text-secondary" role="status"></div> Loading...
+                                        </h6>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden Editor to retain existing JS logic compatibility -->
+                            <div id="custom_terms_container" style="display: none;">
+                                <div id="full-editor-onbody"></div>
+                            </div>
+                            <input type="hidden" id="custom_term_title_hidden" value="">
                         </div>
                     </div>
                     
@@ -414,9 +482,9 @@
                             </label>
                             <input type="text"
                                    class="form-control mb-2"
-                                   id="hirer_name"
+                                   id="hirer_name_wizard"
                                    placeholder="Hirer Name">
-                            <canvas id="hirerCanvas"
+                            <canvas id="hirerCanvas_wizard"
                                     style="width:100%;
                                            height:250px;
                                            border:1px solid #ccc;
@@ -424,7 +492,7 @@
                                            background:#fff;">
                             </canvas>
                             <button class="btn btn-danger btn-sm mt-2"
-                                    id="btnClearHirer">
+                                    id="btnClearHirer_wizard">
                                 Clear
                             </button>
                         </div>
@@ -435,9 +503,9 @@
                             </label>
                             <input type="text"
                                    class="form-control mb-2"
-                                   id="delivery_name"
+                                   id="delivery_name_wizard"
                                    placeholder="Delivered By Name">
-                            <canvas id="deliveryCanvas"
+                            <canvas id="deliveryCanvas_wizard"
                                     style="width:100%;
                                            height:250px;
                                            border:1px solid #ccc;
@@ -445,7 +513,7 @@
                                            background:#fff;">
                             </canvas>
                             <button class="btn btn-danger btn-sm mt-2"
-                                    id="btnClearDelivery">
+                                    id="btnClearDelivery_wizard">
                                 Clear
                             </button>
                         </div>
@@ -462,15 +530,37 @@
       </div>
       
       <!-- FOOTER -->
-      <div class="modal-footer d-flex justify-content-end align-items-center border-top">
-        <div>
-            <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-success px-4 ladda-button" id="btn_save_contract">
-                <span class="ladda-label">Save Contract</span>
-            </button>
-        </div>
+      <div class="modal-footer d-flex justify-content-between align-items-center border-top pt-4 mt-3">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success px-4 ladda-button" id="btn_save_contract">
+            <span class="ladda-label">Save Contract</span>
+        </button>
       </div>
-
     </div>
   </div>
+</div>
+
+<!-- Driver Document Slider Modal -->
+<div class="modal fade" id="companyDriverDocSliderModal" tabindex="-1" style="z-index: 10075 !important;">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title text-white" id="driverDocModalTitle">Driver Documents</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-0 bg-light">
+                <div id="driverDocCarousel" class="carousel slide" data-bs-ride="false">
+                    <div class="carousel-inner" id="driverDocCarouselInner" style="min-height: 400px;"></div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#driverDocCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon bg-dark rounded p-2" aria-hidden="true" style="width: 2.5rem; height: 2.5rem;"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#driverDocCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon bg-dark rounded p-2" aria-hidden="true" style="width: 2.5rem; height: 2.5rem;"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

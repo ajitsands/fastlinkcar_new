@@ -443,6 +443,11 @@ class RoutingClass
               'LoadProfile' => 'LoadProfile',
             'LoadProfile/' => 'LoadProfile',
             
+            'MaintenanceRequest' => 'MaintenanceRequest',
+            'MaintenanceRequest/' => 'MaintenanceRequest',
+            
+            'MaintenanceController' => 'MaintenanceController',
+            'MaintenanceController/' => 'MaintenanceController',
 
         );
 
@@ -1006,6 +1011,16 @@ class RoutingClass
       private function LoadProfile(...$params)
     {
         $this->includeWithParams("controller/users/ProfileController.php", $_GET);
+    }
+    
+    private function MaintenanceRequest(...$params)
+    {
+        $this->includeWithParams("view/maintenance_request.php", $_GET);
+    }
+
+    private function MaintenanceController(...$params)
+    {
+        $this->includeWithParams("controller/maintenance/MaintenanceController.php", $_GET);
     }
     
     private function includeWithParams($file, $params)

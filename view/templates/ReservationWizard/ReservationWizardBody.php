@@ -38,7 +38,7 @@ $isMultiCompany = count($allowedCompanies) > 1;
     <!-- Wizard Header -->
     <div class="bs-stepper-header">
       <!-- Step 1 -->
-      <div class="step" data-target="#step-booking-type">
+      <div class="step active" data-target="#step-booking-type">
         <button type="button" class="step-trigger">
           <span class="bs-stepper-circle"><i class="icon-base ri ri-check-line"></i></span>
           <span class="bs-stepper-label">
@@ -85,7 +85,7 @@ $isMultiCompany = count($allowedCompanies) > 1;
       <form onSubmit="return false">
         
         <!-- Step 1: Booking Type -->
-        <div id="step-booking-type" class="content">
+        <div id="step-booking-type" class="content active dstepper-block">
           <div class="content-header mb-4">
             <h6 class="mb-0">Booking Type & Customer</h6>
             <small>Select the type of booking and locate the customer.</small>

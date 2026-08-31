@@ -100,7 +100,7 @@
                     <div class="card-header card-headernew d-flex justify-content-between align-items-center py-2">
                         <h4 class="mb-0 fs-6">  </h4>
                     
-                        <div class="dropdown">
+                        <div class="dropdown d-none">
                             <button 
                                 class="btn btn-primary btn-sm dropdown-toggle py-1 px-2"
                                 type="button"

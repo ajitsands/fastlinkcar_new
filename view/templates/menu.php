@@ -149,16 +149,25 @@
                <div data-i18n="Vehicle Reservation">Vehicle Reservation</div>
              </a>
            </li>
-           <li class="menu-item <?php if ($decrypt[0] == '3-10') {
-                                 echo 'active';
-                               } ?>">
+             <li class="menu-item <?php if ($decrypt[0] == '3-11') {
+                                   echo 'active';
+                                 } ?>">
+             <a href="/DirectContract?val=<?php echo $this->encryption->encrypt('3,3-11'); ?>" class="menu-link">
+  
+                <i class="menu-icon icon-base ri ri-draft-line"></i>
+              <div data-i18n="Direct Contract">Direct Contract</div>
+              </a>
+            </li>
+             <li class="menu-item <?php if ($decrypt[0] == '3-10') {
+                                   echo 'active';
+                                 } ?>">
             <a href="/Reservation?val=<?php echo $this->encryption->encrypt('3,3-10'); ?>" class="menu-link">
 
               <i class="menu-icon icon-base ri ri-survey-line"></i>
               <div data-i18n="Reservation">Reservation</div>
             </a>
           </li>
-            <li class="menu-item <?php if ($decrypt[0] == '3-3') {
+            <li class="menu-item d-none <?php if ($decrypt[0] == '3-3') {
                                   echo 'active';
                                 } ?>" data-permission="generate_contract_access">
              <a href="/VehicleContract?val=<?php echo $this->encryption->encrypt('3,3-3'); ?>" class="menu-link">
@@ -172,7 +181,7 @@
                                  } ?>" data-permission="generate_contract_access">
               <a href="/ContractGeneration?val=<?php echo $this->encryption->encrypt('3,3-10'); ?>" class="menu-link">
                 <i class="menu-icon icon-base ri ri-survey-line"></i>
-                <div data-i18n="Contract Generation">Contract Generation</div>
+                <div data-i18n="Reservation List">Reservation List</div>
               </a>
             </li>
            <li class="menu-item <?php if ($decrypt[0] == '2-6') {

@@ -187,6 +187,14 @@ tr.shown {
     padding-top: 6px !important;
     padding-bottom: 6px !important;
 }
+
+#bookingTable1 > thead > tr > th {
+    background: #ffeff0 !important;
+    color: #d12222 !important;
+    border-bottom: 2px solid #d12222 !important;
+    font-weight: 600;
+    text-transform: uppercase;
+}
     </style>
   </head>
 
@@ -280,6 +288,7 @@ tr.shown {
     <!-- endbuild -->
 
     <!-- Vendors JS -->
+    <script src="../assets/vendor/libs/moment/moment.js"></script>
      <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
     <script src="../assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
     <script src="../assets/vendor/libs/select2/select2.js"></script>
@@ -628,7 +637,16 @@ function load_booking_list(
             `;
         }
     },
-    { data: 'reservation_date' },
+      { 
+          data: 'reservation_date',
+          render: function (data, type, row) {
+              if (row.created_date) {
+                  let sysFormat = window.SYS_DATE_FORMAT ? window.SYS_DATE_FORMAT : 'DD-MM-YYYY';
+                  return moment(row.created_date).format(sysFormat);
+              }
+              return data;
+          }
+      },
     {
     data: null,
     render: function (d) {
@@ -710,7 +728,7 @@ $('#bookingTable1 tbody').on('click', 'td.dt-control', function () {
    
 });
 function format(d) {
-    
+    let hasManage = window.USER_PERMISSIONS && (window.USER_PERMISSIONS.includes('*') || window.USER_PERMISSIONS.includes('generate_contract_manage'));
 
      let html = `
         <div class="child-wrapper p-3 mt-2 mb-2 rounded">
@@ -722,7 +740,6 @@ function format(d) {
             <table class="table table-sm table-bordered table-striped mb-0">
                 <thead >
                     <tr>
-                        <th style="width: 35px !important; max-width: 35px !important;padding: 4px !important;"></th>
                         <th>Vehicle No</th>
                         <th>Model</th>
                         <th>From</th>
@@ -735,20 +752,54 @@ function format(d) {
     `;
 
     d.entries.forEach(row => {
+        let actionsHtml = '';
+        if (hasManage) {
+            // Confirm hidden for now as per request
+            // if (row.book_status === 'Pending' || row.book_status === 'Booked') {
+            //     actionsHtml += `
+            //         <li>
+            //             <a class="dropdown-item changeStatus" data-id="${row.ids}" data-status="Confirmed" data-vehicleid="${row.vehicle_id}" style="cursor: pointer;">
+            //                 ✅ Confirm
+            //             </a>
+            //         </li>`;
+            // }
+            if (row.book_status === 'Pending' || row.book_status === 'Confirmed' || row.book_status === 'Booked') {
+                actionsHtml += `
+                    <li>
+                        <a class="dropdown-item changeStatus" data-id="${row.ids}" data-status="Cancelled" data-vehicleid="${row.vehicle_id}" style="cursor: pointer;">
+                            ❌ Cancel
+                        </a>
+                    </li>`;
+            }
+            if (row.book_status === 'Pending' || row.book_status === 'Booked') {
+                actionsHtml += `
+                    <li>
+                        <a class="dropdown-item deleteBooking" data-id="${row.ids}"  style="cursor: pointer;">
+                           🗑️ Delete
+                        </a>
+                    </li>`;
+            }
+        }
+
+        let dropdownHtml = actionsHtml ? `
+            <div class="dropdown">
+                <button class="btn btn-sm btn-warning dropdown-toggle" data-bs-toggle="dropdown" >
+                   Action
+                </button>
+                <ul class="dropdown-menu">
+                   ${actionsHtml}
+                </ul>
+            </div>` : '';
+
         html += `
             <tr data-parent="${row.booking_ref}">
-            <td class="text-center">
-                    <input class="form-check-input modern-check booking_checkbox"
-                           type="checkbox"
-                           value="${row.ids}" data-id="${row.ids}">
-                </td>
                 <td>
                     ${row.vehicle_no}
                     ${row.chassis_number ? `<br><small class="text-muted">Chassis: ${row.chassis_number}</small>` : ''}
                 </td>
-                <td>${row.brand_name} ${row.model_name}</td>
-                <td>${row.from_date_format}</td>
-                <td>${row.to_date_format ?? '-'}</td>
+                <td>${row.model_name}</td>
+                <td>${row.from_date ? moment(row.from_date).format((window.SYS_DATE_FORMAT ? window.SYS_DATE_FORMAT : 'DD-MM-YYYY') + ' HH:mm') : '-'}</td>
+                <td>${row.to_date ? moment(row.to_date).format((window.SYS_DATE_FORMAT ? window.SYS_DATE_FORMAT : 'DD-MM-YYYY') + ' HH:mm') : '-'}</td>
                 <td  class="status-cell">
                     <span class="badge rounded-pill ${
                         row.book_status === 'Booked' ? 'bg-label-warning' :
@@ -765,37 +816,7 @@ function format(d) {
                 </td>
                <td class="text-nowrap">
                     <div class="d-flex gap-1">
-                         <div class="dropdown">
-                            <button class="btn btn-sm btn-warning dropdown-toggle" data-bs-toggle="dropdown" >
-                               Action
-                            </button>
-                            <ul class="dropdown-menu">
-                               
-                                <li>
-                                    <a class="dropdown-item changeStatus" data-id="${row.ids}" data-status="Confirmed" data-vehicleid="${row.vehicle_id}" style="cursor: pointer;">
-                                        ✅ Confirm
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item changeStatus" data-id="${row.ids}" data-status="Cancelled" data-vehicleid="${row.vehicle_id}" style="cursor: pointer;">
-                                        ❌ Cancel
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item changeStatus" data-id="${row.ids}" data-status="Rentout" data-vehicleid="${row.vehicle_id}" style="cursor: pointer;">
-                                        🚗 Rent Out
-                                    </a>
-                                </li>
-                                
-                                <li>
-                                    <a class="dropdown-item deleteBooking" data-id="${row.ids}"  style="cursor: pointer;">
-                                       🗑️ Delete
-                                    </a>
-                                </li>
-                               
-                              
-                            </ul>
-                        </div>
+                         ${dropdownHtml}
                         <!-- Generate Contract -->
                         <button class="btn btn-sm btn-primary generate-contract"
                                 data-id="${row.ids}" data-vehicle="${row.vehicle_id}"  data-customer_code="${row.customer_code}" data-booking_ref="${row.booking_ref}" data-model_id="${row.model_id}"
@@ -1149,29 +1170,57 @@ $(document).on('click', '.generate-contract', function () {
         openContractModal(id,vehicleid,customer_code,model_ids);
         
     } else if (status === 'Cancelled') {
-        setupDropdown(
-                'dropdownContent',
-                'danger',
-                svgSuccess + 'This booking has been cancelled. You cannot generate a contract for cancelled bookings.',
-                'click'
-            );
-            return;
+        driverloadDropdown();
+        $('#booking_ref').text(booking_ref);
+        $('#txt_contract_modal_booking_id').val(id);
+        $('#txt_contract_modal_booking_ref_no').val(booking_ref);
         
+        openContractModal(id, vehicleid, customer_code, model_ids, true, 'This booking has been cancelled. You cannot generate a contract for cancelled bookings.');
     }
    else {
-    setupDropdown(
-        'dropdownContent',
-        'danger',
-        svgSuccess + `You cannot edit the contract details at the current stage. However, you can view the generated contract by clicking the 'Print Contract' button.`,
-        'click'
-    );
-    return;
-}
+        driverloadDropdown();
+        $('#booking_ref').text(booking_ref);
+        $('#txt_contract_modal_booking_id').val(id);
+        $('#txt_contract_modal_booking_ref_no').val(booking_ref);
+        
+        openContractModal(id, vehicleid, customer_code, model_ids, true);
+    }
     
 
 });
 
-function openContractModal(id,vehicleid,customer_code,model_ids) {
+function openContractModal(id,vehicleid,customer_code,model_ids, isReadOnly = false, readOnlyMsg = '') {
+    let hasManage = window.USER_PERMISSIONS && (window.USER_PERMISSIONS.includes('*') || window.USER_PERMISSIONS.includes('generate_contract_manage'));
+    
+    if (!hasManage || isReadOnly) {
+        $('#btn_save_contract').hide();
+        $('#btn_save_rentout_contract').hide();
+        $('#btn_terms_condition').hide();
+        $('#btnClearHirer_wizard').hide();
+        $('#btnClearDelivery_wizard').hide();
+        $('[for="carImages"]').hide();
+    } else {
+        $('#btn_save_contract').show();
+        $('#btn_save_rentout_contract').show();
+        $('#btn_terms_condition').show();
+        $('#btnClearHirer_wizard').show();
+        $('#btnClearDelivery_wizard').show();
+        $('[for="carImages"]').show();
+    }
+
+    if (isReadOnly) {
+        if (!readOnlyMsg) {
+            readOnlyMsg = "The contract has already been generated, so it cannot be edited at this stage. You can only view the contract details.";
+        }
+        $('#contract_readonly_alert').remove();
+        $('#contractModal .modal-header').after(`
+            <div id="contract_readonly_alert" class="alert alert-warning m-3 mb-0" role="alert">
+                <i class="ri-alert-line me-2"></i> ${readOnlyMsg}
+            </div>
+        `);
+    } else {
+        $('#contract_readonly_alert').remove();
+    }
 
     $.ajax({
         url: '/VehicleContractGeneration',
@@ -1342,10 +1391,22 @@ function populateContractModal(d) {
             'checked',
             vehicle_accessiories_details.chk_radio && vehicle_accessiories_details.chk_radio === 'Yes'
         );
-        $('#km_out').val(vehicle_accessiories_details.vehicle_km_out || 0);
+          let currentOdo = (data.vehicle && data.vehicle.odo_meter && data.vehicle.odo_meter != '0') ? data.vehicle.odo_meter : '';
+          $('#km_out').val(vehicle_accessiories_details.vehicle_km_out || currentOdo);
         $('#fuel_level').val(vehicle_accessiories_details.fuel_level || '');
         
-        $('#dt_out').val(vehicle_accessiories_details.date_out || '');
+          let defaultDtOut = '';
+          try {
+              defaultDtOut = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Bahrain' }).replace(' ', 'T').slice(0, 16);
+          } catch(e) {
+              let now = new Date();
+              defaultDtOut = now.getFullYear() + '-' +
+                  String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                  String(now.getDate()).padStart(2, '0') + 'T' +
+                  String(now.getHours()).padStart(2, '0') + ':' +
+                  String(now.getMinutes()).padStart(2, '0');
+          }
+          $('#dt_out').val(vehicle_accessiories_details.date_out || defaultDtOut);
         let today = new Date().toISOString().split('T')[0];
         $('#dt_contract_date').val(contract.agreement_date || today);
         
@@ -2385,14 +2446,22 @@ function normalizePath(path) {
         .trim();
 }
 
+let isRentoutClick = 0;
 let laddaSaveContract = Ladda.create(
     document.querySelector('#btn_save_contract')
 );
+let laddaSaveRentoutContract = Ladda.create(
+    document.querySelector('#btn_save_rentout_contract')
+);
 
 $('#btn_save_contract').on('click', function (e) {
+    isRentoutClick = 0;
+    saveContractValidation(e);
+});
 
-saveContractValidation(e);
-
+$('#btn_save_rentout_contract').on('click', function (e) {
+    isRentoutClick = 1;
+    saveContractValidation(e);
 });
 function saveContractValidation(e)
 {
@@ -2549,7 +2618,11 @@ $('#confirmOTPYesBtn').on('click', function () {
 });
 function saveContract()
 {
-   laddaSaveContract.start();
+    if (isRentoutClick === 1) {
+        laddaSaveRentoutContract.start();
+    } else {
+        laddaSaveContract.start();
+    }
     let booking_ids = $('#txt_contract_modal_booking_id').val();
     let booking_ref_no = $('#txt_contract_modal_booking_ref_no').val();
     let agreement_date=$('#dt_contract_date').val();
@@ -2677,6 +2750,7 @@ let vehicle_accessories ={
                 
                     data: JSON.stringify({
                         action: 'contractGeneration',
+                        is_rentout: isRentoutClick,
                         company_id: $('#companySelect').val(),
                         booking_ids: booking_ids,
                         booking_ref_no: booking_ref_no,
@@ -2693,7 +2767,11 @@ let vehicle_accessories ={
                 
                     success: function (res) {
                         console.log(res);
-                        laddaSaveContract.stop();
+                        if (isRentoutClick === 1) {
+                            laddaSaveRentoutContract.stop();
+                        } else {
+                            laddaSaveContract.stop();
+                        }
                        if (res.status)
                         {
                             // Save signatures silently
@@ -2713,6 +2791,7 @@ let vehicle_accessories ={
                                     contentType: 'application/json',
                                     data: JSON.stringify({
                                         action: "SaveSignature",
+                                        is_rentout: isRentoutClick,
                                         selectedBookingIds: [booking_ids],
                                         hirer_name: $.trim($('#hirer_name_wizard').val()),
                                         delivery_name: $.trim($('#delivery_name_wizard').val()),
@@ -2735,6 +2814,11 @@ let vehicle_accessories ={
                         
                             if (modal) {
                                 modal.hide();
+                            }
+                            
+                            // Update the background datatable immediately
+                            if ($.fn.DataTable.isDataTable('#bookingTable1')) {
+                                $('#bookingTable1').DataTable().ajax.reload(null, false);
                             }
                         
                             return;

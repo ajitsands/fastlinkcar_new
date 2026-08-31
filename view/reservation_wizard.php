@@ -14,6 +14,11 @@ checkLogin();
 <?php
 include('envinclude.php');
 ?>
+<?php
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+?>
 <!doctype html>
 
 <html
@@ -497,53 +502,54 @@ let selectedVehicles = [];
 
 });
 
-$('#selectCustomerFromSelect2').select2({
-    placeholder: 'Search customer by name, mobile or cpr/cr',
-    allowClear: true,
-    minimumInputLength: 2,
-    tags: true, 
-    createTag: function (params) {
-        let term = $.trim(params.term);
+setTimeout(function() {
+    if ($('#selectCustomerFromSelect2').hasClass('select2-hidden-accessible')) {
+        $('#selectCustomerFromSelect2').select2('destroy');
+    }
 
-        if (term === '') {
-            return null;
-        }
+    $('#selectCustomerFromSelect2').select2({
+        placeholder: 'Search customer by name, mobile or cpr/cr',
+        allowClear: true,
+        minimumInputLength: 2,
+        tags: true, 
+        createTag: function (params) {
+            let term = $.trim(params.term);
 
-    },
-
-    ajax: {
-        url: '/SearchCustomerDetails',
-        dataType: 'json',
-        delay: 300,
-
-        data: function (params) {
-            return {
-                q: params.term,
-                action: 'SearchCustomer'
-            };
+            if (term === '') {
+                return null;
+            }
         },
-
-        processResults: function (data) {
-            return {
-                results: data.map(item => ({
-                    id: item.id,
-                    text: item.customer_name,
-                    customer_name: item.customer_name,
-                    customer_mobile: item.customer_mobile,
-                    customer_id: item.customer_name,
-                    customer_address: item.customer_addr,
-                    customer_email: item.customer_email,
-                    customer_code: item.customer_code,
-                    customer_attn: item.customer_attn,
-                    customer_cr_cpr:item.customer_cr_cpr
-                }))
-            };
-        }
-    },
-
-    templateResult: formatCustomer,
-    templateSelection: formatCustomerSelection
-});
+        ajax: {
+            url: '/SearchCustomerDetails',
+            dataType: 'json',
+            delay: 300,
+            data: function (params) {
+                return {
+                    q: params.term,
+                    action: 'SearchCustomer'
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.map(item => ({
+                        id: item.id,
+                        text: item.customer_name,
+                        customer_name: item.customer_name,
+                        customer_mobile: item.customer_mobile,
+                        customer_id: item.customer_name,
+                        customer_address: item.customer_addr,
+                        customer_email: item.customer_email,
+                        customer_code: item.customer_code,
+                        customer_attn: item.customer_attn,
+                        customer_cr_cpr:item.customer_cr_cpr
+                    }))
+                };
+            }
+        },
+        templateResult: formatCustomer,
+        templateSelection: formatCustomerSelection
+    });
+}, 100);
 
 function formatCustomer(customer) {
     if (!customer.id) return customer.text;
@@ -2202,7 +2208,7 @@ function openVehicleProfile(vehicleId) {
                                 if (items.length > 0) {
                                     html += `<div class="col-6"><div class="border rounded px-2 py-1 bg-lighter"><div class="text-center text-muted fw-bold border-bottom mb-1" style="font-size: 11px;">${gName}</div>`;
                                     items.forEach(i => {
-                                        html += `<div class="d-flex justify-content-between align-items-center mb-1"><span class="text-muted" style="font-size: 11px;">${i.name}</span><strong class="text-success" style="font-size: 11px;">${i.amount} <?= SYS_CURRENCY_CODE ?></strong></div>`;
+                                        html += `<div class="d-flex justify-content-between align-items-center mb-1"><span class="text-muted" style="font-size: 11px;">${i.name}</span><strong class="text-success" style="font-size: 11px;">${i.amount} <?= defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD' ?></strong></div>`;
                                     });
                                     html += `</div></div>`;
                                 }

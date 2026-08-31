@@ -39,7 +39,7 @@ class CustomerController
         $this->telephone = $data['telephone'] ?? null;
         $this->email = $data['email'] ?? null;
         $this->cprcr = $data['cprcr'] ?? null;
-        $this->cprexpiryDate = $data['cprexpiryDate'] ?? null;
+        $this->cprexpiryDate = !empty($data['cprexpiryDate']) ? $data['cprexpiryDate'] : null;
         $this->attention = $data['attention'] ?? null;
         $this->address = $data['address'] ?? null;
 
@@ -78,17 +78,25 @@ class CustomerController
                     throw new Exception("Parameter count mismatch: " . count($this->params[0]));
                 }
                 $this->ReturnData = $this->varPDOModelObj->AddToTableAndReturnSpecifiedColumn($var[0], 'customer_id', 'customer_details', $this->params[0]);
-                $customer_id = json_decode(
-                    json_decode($this->ReturnData, true)['data']['return_customer_id_value'],
-                    true
-                )['data'][0]['customer_id'] ?? null;
-
-                Logger::ActivityLog('Action', "AddNewCustomer", ['CustomerController: AddNewCustomer', "Customer ID : " . $customer_id]);
-                echo json_encode([
-                    'status' => true,
-                    'message' => "Customer Added Successfully",
-                    'customerId' => $customer_id
-                ]);
+                $ReturnArr = json_decode($this->ReturnData, true);
+                if (isset($ReturnArr['status']) && $ReturnArr['status'] === true) {
+                    $customer_id = json_decode(
+                        $ReturnArr['data']['return_customer_id_value'],
+                        true
+                    )['data'][0]['customer_id'] ?? null;
+    
+                    Logger::ActivityLog('Action', "AddNewCustomer", ['CustomerController: AddNewCustomer', "Customer ID : " . $customer_id]);
+                    echo json_encode([
+                        'status' => true,
+                        'message' => "Customer Added Successfully",
+                        'customerId' => $customer_id
+                    ]);
+                } else {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => $ReturnArr['message'] ?? "Failed to add customer"
+                    ]);
+                }
                 break;
             case 'update_status':
                 $this->updateStatus();

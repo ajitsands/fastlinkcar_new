@@ -221,6 +221,15 @@ class RoutingClass
 
             'ResetUserPassword' => 'ResetUserPassword',
             'ResetUserPassword/' => 'ResetUserPassword',
+
+            'LoadMasterPermissions' => 'LoadMasterPermissions',
+            'LoadMasterPermissions/' => 'LoadMasterPermissions',
+            'LoadUserPermissions' => 'LoadUserPermissions',
+            'LoadUserPermissions/' => 'LoadUserPermissions',
+            'LoadRolePermissions' => 'LoadRolePermissions',
+            'LoadRolePermissions/' => 'LoadRolePermissions',
+            'SaveRolePermissions' => 'SaveRolePermissions',
+            'SaveRolePermissions/' => 'SaveRolePermissions',
             
             'QuotationController' => 'QuotationController',
             'QuotationController/' => 'QuotationController',
@@ -251,7 +260,12 @@ class RoutingClass
             
              'GetQuotationDetails' => 'GetQuotationDetails',
             'GetQuotationDetails/' => 'GetQuotationDetails',
+
+            'DirectContract' => 'DirectContract',
+            'DirectContract/' => 'DirectContract',
             
+            'Reservation' => 'Reservation',
+            'Reservation/' => 'Reservation',
             'VehicleReservation' => 'VehicleReservation',
             'VehicleReservation/' => 'VehicleReservation',
             
@@ -602,6 +616,22 @@ class RoutingClass
     {
         $this->includeWithParams("controller/users/UsersController.php", $_GET);
     }
+    private function LoadMasterPermissions(...$params)
+    {
+        $this->includeWithParams("controller/users/UsersController.php", $_GET);
+    }
+    private function LoadUserPermissions(...$params)
+    {
+        $this->includeWithParams("controller/users/UsersController.php", $_GET);
+    }
+    private function LoadRolePermissions(...$params)
+    {
+        $this->includeWithParams("controller/users/UsersController.php", $_GET);
+    }
+    private function SaveRolePermissions(...$params)
+    {
+        $this->includeWithParams("controller/users/UsersController.php", $_GET);
+    }
     private function AddVehicles(...$params)
     {
         $this->includeWithParams("controller/vehicles/VehiclesController.php", $_GET);
@@ -739,6 +769,14 @@ class RoutingClass
     private function GetQuotationDetails(...$params)
     {
         $this->includeWithParams("controller/VehicleStatus/getQuotationDetails.php", $_GET);
+    }
+    private function DirectContract(...$params)
+    {
+        $this->includeWithParams("view/direct_contract.php", $_GET);
+    }
+    private function Reservation(...$params)
+    {
+        $this->includeWithParams("view/reservation_wizard.php", $_GET);
     }
     private function VehicleReservation(...$params)
     {

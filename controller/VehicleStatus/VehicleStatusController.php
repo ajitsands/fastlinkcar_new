@@ -1699,6 +1699,14 @@ $this->params[9] = [
                             ]);
                                 }
                                  
+                                } elseif ($this->bookingstatus === 'Cancelled') {
+                                    $sql_cancel_contract = "UPDATE tbl_vehicle_rentout_contracts 
+                                        SET agreement_status = 'Cancelled'
+                                        WHERE booking_ids = :id";
+                            
+                                    $this->varPDOModelObj->executeQuery($sql_cancel_contract, [
+                                        ':id' => $this->bookingid
+                                    ]);
                                 }
                                 echo json_encode(["status" => true]);
                             break;

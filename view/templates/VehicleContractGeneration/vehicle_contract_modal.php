@@ -531,10 +531,17 @@
       
       <!-- FOOTER -->
       <div class="modal-footer d-flex justify-content-between align-items-center border-top pt-4 mt-3">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-success px-4 ladda-button" id="btn_save_contract">
-            <span class="ladda-label">Save Contract</span>
-        </button>
+        <div>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-success px-4 ladda-button" id="btn_save_contract">
+              <span class="ladda-label">Save Contract</span>
+          </button>
+          <button type="button" class="btn btn-primary px-4 ladda-button" id="btn_save_rentout_contract">
+              <span class="ladda-label">Save Contract & Rentout</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

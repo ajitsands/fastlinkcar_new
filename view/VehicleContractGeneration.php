@@ -1315,10 +1315,22 @@ function populateContractModal(d) {
             'checked',
             vehicle_accessiories_details.chk_radio && vehicle_accessiories_details.chk_radio === 'Yes'
         );
-        $('#km_out').val(vehicle_accessiories_details.vehicle_km_out || 0);
+          let currentOdo = (data.vehicle && data.vehicle.odo_meter && data.vehicle.odo_meter != '0') ? data.vehicle.odo_meter : '';
+          $('#km_out').val(vehicle_accessiories_details.vehicle_km_out || currentOdo);
         $('#fuel_level').val(vehicle_accessiories_details.fuel_level || '');
         
-        $('#dt_out').val(vehicle_accessiories_details.date_out || '');
+          let defaultDtOut = '';
+          try {
+              defaultDtOut = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Bahrain' }).replace(' ', 'T').slice(0, 16);
+          } catch(e) {
+              let now = new Date();
+              defaultDtOut = now.getFullYear() + '-' +
+                  String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                  String(now.getDate()).padStart(2, '0') + 'T' +
+                  String(now.getHours()).padStart(2, '0') + ':' +
+                  String(now.getMinutes()).padStart(2, '0');
+          }
+          $('#dt_out').val(vehicle_accessiories_details.date_out || defaultDtOut);
         let today = new Date().toISOString().split('T')[0];
         $('#dt_contract_date').val(contract.agreement_date || today);
         

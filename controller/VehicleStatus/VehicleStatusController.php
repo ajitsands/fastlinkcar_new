@@ -117,6 +117,7 @@ class VehicleStatusController
          $array[5] = "
                     SELECT 
                         v.*,
+                        c.category_name,
                         0 AS has_unconfirmed_overlap,
                   IFNULL(MAX(CASE 
                         WHEN jt.item = 'Price per hour rental without driver' 
@@ -167,6 +168,8 @@ class VehicleStatusController
                     FROM tbl_vehicles v
                      LEFT JOIN tbl_vehicle_model vm 
                         ON vm.ids = v.model_id
+                     LEFT JOIN tbl_vehicle_category c 
+                        ON c.ids = v.category_id
                     
                     -- ✅ Convert JSON → rows
                     LEFT JOIN JSON_TABLE(
@@ -193,6 +196,7 @@ class VehicleStatusController
         
        $array[6] = "SELECT 
     v.*,
+    c.category_name,
 
      COUNT(v.ids) AS  has_unconfirmed_overlap,
       IFNULL(MAX(CASE 
@@ -244,6 +248,8 @@ class VehicleStatusController
 FROM tbl_vehicles v
 LEFT JOIN tbl_vehicle_model vm 
     ON vm.ids = v.model_id
+LEFT JOIN tbl_vehicle_category c 
+    ON c.ids = v.category_id
 
 -- ✅ Convert JSON → rows
 LEFT JOIN JSON_TABLE(
@@ -270,6 +276,7 @@ $this->params[6] = [
  
     $array[7] = "SELECT 
     v.*,
+    c.category_name,
 
     COALESCE(
         JSON_ARRAYAGG(
@@ -343,6 +350,8 @@ IFNULL(MAX(CASE
     ) AS model_summary_json
 
 FROM tbl_vehicles v
+LEFT JOIN tbl_vehicle_category c 
+    ON c.ids = v.category_id
 LEFT JOIN tbl_vehicle_model vm 
         ON vm.ids = v.model_id
     
@@ -427,6 +436,7 @@ $this->params[7] = [
 ];
     $array[8] = "SELECT 
     v.*,
+    c.category_name,
 
     COALESCE(
         JSON_ARRAYAGG(
@@ -502,6 +512,8 @@ IFNULL(MAX(CASE
     ) AS model_summary_json
 
 FROM tbl_vehicles v
+LEFT JOIN tbl_vehicle_category c 
+    ON c.ids = v.category_id
 LEFT JOIN tbl_vehicle_model vm 
         ON vm.ids = v.model_id
     
@@ -577,6 +589,7 @@ $this->params[8] = [
     
     $array[9] = "SELECT 
     v.*,
+    c.category_name,
 
     COALESCE(
         JSON_ARRAYAGG(
@@ -650,6 +663,8 @@ IFNULL(MAX(CASE
     ) AS model_summary_json
 
 FROM tbl_vehicles v
+LEFT JOIN tbl_vehicle_category c 
+    ON c.ids = v.category_id
 LEFT JOIN tbl_vehicle_model vm 
         ON vm.ids = v.model_id
     
@@ -1025,6 +1040,13 @@ $this->params[9] = [
                                         data-modelName="<?=$item['model_names']?>"
                                         data-model="<?=$item['model_id']?>"
                                         data-veh_no="<?=$item['vehicle_number']?>"
+                                        data-chassis="<?=$item['chassis_number'] ?? 'N/A'?>"
+                                        data-category="<?=$item['category_name'] ?? 'N/A'?>"
+                                        data-color="<?=$item['vehicle_color']?>"
+                                        data-year="<?=$item['vehicle_year']?>"
+                                        data-status="<?=$item['vehicle_status']?>"
+                                        data-image="<?=$lastImage?>"
+                                        data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>'
                                         data-id="<?=$item['ids']?>"
                                         data-priceHWD="<?= number_format($item['price_hour_with_driver'], 3) ?>"
                                         data-priceHWOD="<?= number_format($item['price_hour_without_driver'], 3) ?>"
@@ -1167,6 +1189,12 @@ $this->params[9] = [
                                         data-modelName="<?=$item['model_names']?>"
                                         data-model="<?=$item['model_id']?>"
                                         data-veh_no="<?=$item['vehicle_number']?>"
+                                        data-chassis="<?=$item['chassis_number'] ?? 'N/A'?>"
+                                        data-category="<?=$item['category_name'] ?? 'N/A'?>"
+                                        data-color="<?=$item['vehicle_color']?>"
+                                        data-year="<?=$item['vehicle_year']?>"
+                                        data-status="<?=$item['vehicle_status']?>"
+                                        data-image="<?=$lastImage?>"
                                         data-id="<?=$item['ids']?>"
                                         data-priceHWD="<?= number_format($item['price_hour_with_driver'], 3) ?>"
                                         data-priceHWOD="<?= number_format($item['price_hour_without_driver'], 3) ?>"

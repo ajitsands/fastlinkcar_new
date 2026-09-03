@@ -1164,6 +1164,339 @@ class VehiclesContractController
                     ]);
                 
                 break;
+            case 'GenerateDirectContracts':
+                try {
+                    $data = json_decode($this->json, true);
+                    
+                    $customer_code = $data['customer_code'] ?? '';
+                    $customer_name = $data['customer_name'] ?? '';
+                    $company_id = $data['company_id'] ?? ($_SESSION['company_id'] ?? 1);
+                    $user_id = $this->user_id ?? ($_SESSION['user_id'] ?? 1);
+                    $is_rentout = isset($data['is_rentout']) ? (int)$data['is_rentout'] : 0;
+                    
+                    $vehicles = $data['vehicles'] ?? [];
+                    $booking_details = $data['booking_details'] ?? [];
+                    $signatures = $data['signatures'] ?? [];
+                    
+                    $service_id = $booking_details['service'] ?? '1';
+                    $service_text = $booking_details['serviceText'] ?? 'Rental Without Driver';
+                    $rate_type_id = $booking_details['rateType'] ?? 'hour';
+                    $rate_type_text = $booking_details['rateTypeText'] ?? 'Hourly';
+                    $duration = $booking_details['duration'] ?? '0';
+                    $b_unit_price = $booking_details['unitPrice'] ?? '0';
+                    $b_min_price = $booking_details['minPrice'] ?? '0';
+                    $b_vat_perc = $booking_details['vatPerc'] ?? '0';
+                    $b_notes = $booking_details['notes'] ?? '';
+                    
+                    $raw_from_date = $booking_details['fromDate'] ?? date('Y-m-d H:i:s');
+                    $raw_to_date = $booking_details['toDate'] ?? date('Y-m-d H:i:s');
+                    
+                    $from_date = date('Y-m-d H:i:s', strtotime(str_replace('/', '-', $raw_from_date)));
+                    $to_date = date('Y-m-d H:i:s', strtotime(str_replace('/', '-', $raw_to_date)));
+                    
+                    $contract_ids = [];
+                    
+                    $this->varPDOModelObj->varDBPDO->beginTransaction();
+
+                    // Generate Sequence for this company
+                    $year = date('Y');
+                    $prefix = "AA/$year/AGR/";
+                    $sql = "SELECT agreement_no FROM tbl_vehicle_rentout_contracts WHERE agreement_no LIKE :prefix ORDER BY ids DESC LIMIT 1";
+                    $stmt = $this->varPDOModelObj->selectexecuteQuery($sql, [':prefix' => "$prefix%"]);
+                    $last = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($last && isset($last['agreement_no'])) {
+                        $nextNo = (int) substr($last['agreement_no'], -4) + 1;
+                    } else {
+                        $nextNo = 1;
+                    }
+                    
+                    // Fetch Customer
+                    $stmtCust = $this->varPDOModelObj->varDBPDO->prepare("SELECT * FROM customer_details WHERE customer_id = ? LIMIT 1");
+                    $stmtCust->execute([$customer_code]);
+                    $cData = $stmtCust->fetch(PDO::FETCH_ASSOC) ?: [];
+                    $customer_details_json = json_encode([
+                        'customer_name' => $cData['customer_name'] ?? $customer_name,
+                        'customer_code' => $customer_code,
+                        'customer_mobile' => $cData['customer_mobile'] ?? ($cData['mobile'] ?? ''),
+                        'customer_email' => $cData['customer_email'] ?? ($cData['email'] ?? ''),
+                        'customer_attention' => $cData['customer_attn'] ?? ($cData['attention'] ?? ''),
+                        'customer_address' => $cData['customer_addr'] ?? ($cData['address'] ?? '')
+                    ]);
+
+                    $terms_condition = $data['terms_and_conditions'] ?? '';
+                    
+                    foreach ($vehicles as $v) {
+                        $vehicle_id = $v['vehicle_id'];
+                        
+                        $agreement_no = $prefix . str_pad($nextNo, 4, '0', STR_PAD_LEFT);
+                        $nextNo++; // increment for next vehicle
+
+                        // Fetch Vehicle
+                        $stmtVeh = $this->varPDOModelObj->varDBPDO->prepare("
+                            SELECT v.ids as vehicle_id, v.category_id, v.model_id, v.vehicle_number as veh_no, v.vehicle_color, v.vehicle_year,
+                                   c.category_name, v.model_names as model_name 
+                            FROM tbl_vehicles v 
+                            LEFT JOIN tbl_vehicle_category c ON v.category_id = c.ids 
+                            WHERE v.ids = ?
+                        ");
+                        $stmtVeh->execute([$vehicle_id]);
+                        $vData = $stmtVeh->fetch(PDO::FETCH_ASSOC) ?: [];
+
+                        $vechile_details_json = json_encode([
+                            'vehicle_id' => $vehicle_id,
+                            'category_id' => $vData['category_id'] ?? '',
+                            'model_id' => $vData['model_id'] ?? '',
+                            'veh_no' => $vData['veh_no'] ?? '',
+                            'category_name' => $vData['category_name'] ?? '',
+                            'model_name' => $vData['model_name'] ?? '',
+                            'vehicle_color' => $vData['vehicle_color'] ?? '',
+                            'vehicle_year' => $vData['vehicle_year'] ?? ''
+                        ]);
+                        
+                        $chk = $v['checklist'] ?? [];
+                        $fuel_out = $v['handover']['fuel_out'] ?? '8';
+                        $odo_out = $v['handover']['odo_out'] ?? '0';
+                        $salik_out = $v['handover']['salik_out'] ?? '0';
+                        $date_out = $v['handover']['dt_out'] ?? date('Y-m-d\TH:i');
+                        
+                        $contract_details = json_encode([
+                            'period_from' => $from_date,
+                            'period_to' => $to_date,
+                            'rate_type_id' => $rate_type_id,
+                            'rate_type' => $rate_type_text,
+                            'service_id' => $service_id,
+                            'service_name' => $service_text,
+                            'duration' => $duration,
+                            'unit_price' => $b_unit_price,
+                            'min_price' => $b_min_price,
+                            'vat' => $b_vat_perc,
+                            'total_amt' => number_format(($b_unit_price * (float)$duration) + (($b_unit_price * (float)$duration) * ((float)$b_vat_perc / 100)), 3, '.', ''),
+                            'qtn_ref_no' => '',
+                            'booking_notes' => $b_notes,
+                            'otp_details' => ''
+                        ]);
+
+                        $vehicle_accessories_details = json_encode([
+                            'chk_tools' => (!empty($chk['tools']) ? 'Yes' : 'No'),
+                            'chk_spare' => (!empty($chk['tyre']) ? 'Yes' : 'No'),
+                            'chk_radio' => (!empty($chk['radio']) ? 'Yes' : 'No'),
+                            'date_out' => $date_out,
+                            'vehicle_km_out' => $odo_out,
+                            'fuel_level' => $fuel_out,
+                            'cust_driver_name' => $v['cust_driver'] ?? '',
+                            'cust_driver_contact_no' => $v['cust_driver_contact_no'] ?? '',
+                            'cust_driver_documents' => ['vehicles' => []],
+                            'vehicle_images' => []
+                        ]);
+
+                        $driver_ids = $v['handover']['company_driver_id'] ?? '';
+                        $driver_details_json = '[]';
+                        if ($driver_ids) {
+                            $stmtDriver = $this->varPDOModelObj->varDBPDO->prepare("SELECT * FROM tbl_drivers WHERE ids = ?");
+                            $stmtDriver->execute([$driver_ids]);
+                            $dData = $stmtDriver->fetch(PDO::FETCH_ASSOC);
+                            if ($dData) {
+                                $driver_details_json = json_encode([
+                                    'driver_id' => $dData['ids'],
+                                    'driver_name' => $dData['driver_name'],
+                                    'driver_mobile' => $dData['driver_contact_no'],
+                                    'driver_license_no' => $dData['license_no'],
+                                    'driver_license_issplace' => $dData['license_issue_place'],
+                                    'driver_license_issdate' => $dData['license_issue_date'],
+                                    'driver_license_expdate' => $dData['license_expiry_date']
+                                ]);
+                            }
+                        }
+                        
+                        $hirer_base64 = $signatures['hirer_base64'] ?? '';
+                        $delivery_base64 = $signatures['delivery_base64'] ?? '';
+                        $hirer_name = $signatures['hirer_name'] ?? '';
+                        $delivery_name = $signatures['delivery_name'] ?? '';
+                        
+                        // Upload Base64 images
+                        $hirer_sign_path = '';
+                        if (strpos($hirer_base64, 'data:image') === 0) {
+                            list($type, $hirer_base64) = explode(';', $hirer_base64);
+                            list(, $hirer_base64)      = explode(',', $hirer_base64);
+                            $hirer_base64 = base64_decode($hirer_base64);
+                            $hirer_sign_path = 'uploads/signatures/hirer_' . time() . '_' . $vehicle_id . '.png';
+                            file_put_contents($hirer_sign_path, $hirer_base64);
+                        }
+                        
+                        $delivery_sign_path = '';
+                        if (strpos($delivery_base64, 'data:image') === 0) {
+                            list($type, $delivery_base64) = explode(';', $delivery_base64);
+                            list(, $delivery_base64)      = explode(',', $delivery_base64);
+                            $delivery_base64 = base64_decode($delivery_base64);
+                            $delivery_sign_path = 'uploads/signatures/delivery_' . time() . '_' . $vehicle_id . '.png';
+                            file_put_contents($delivery_sign_path, $delivery_base64);
+                        }
+                        
+                        $scratch_path = '';
+                        $scratch_base64 = $v['scratch_base64'] ?? '';
+                        if (strpos($scratch_base64, 'data:image') === 0) {
+                            list($type, $scratch_base64) = explode(';', $scratch_base64);
+                            list(, $scratch_base64)      = explode(',', $scratch_base64);
+                            $scratch_base64 = base64_decode($scratch_base64);
+                            $scratch_path = 'uploads/contract_images/scratch_' . time() . '_' . $vehicle_id . '.png';
+                            file_put_contents($scratch_path, $scratch_base64);
+                        }
+                        
+                        $cust_driver_name = $v['handover']['cust_driver'] ?? '';
+                        $cust_driver_contact_no = $v['handover']['cust_driver_contact_no'] ?? '';
+                        $cust_driver_docs = $v['handover']['cust_driver_documents'] ?? [];
+                        
+                        $cust_driver_attachments = ['vehicles' => []];
+                        foreach ($cust_driver_docs as $doc) {
+                            $cust_driver_attachments['vehicles'][] = [
+                                'documentName' => $doc['name'] ?? '',
+                                'files' => [$doc['file'] ?? '']
+                            ];
+                        }
+                        $cust_driver_attachments_json = empty($cust_driver_attachments['vehicles']) ? '[]' : json_encode($cust_driver_attachments);
+
+                        $rentout_images = $v['handover']['rentout_images'] ?? [];
+                        if (!is_array($rentout_images)) {
+                            $rentout_images = [];
+                        }
+                        if ($scratch_path) {
+                            $rentout_images[] = $scratch_path;
+                        }
+                        $images_json = empty($rentout_images) ? '[]' : json_encode(array_values($rentout_images));
+
+                        // Save Contract
+                        $query = "INSERT INTO tbl_vehicle_rentout_contracts 
+                            (booking_ids, company_id, vehicle_id, customer_code, 
+                             agreement_date, service_start_date_time, service_end_date_time, 
+                             km_out, contract_details_json,
+                             vehicle_accessories_details, vehicle_rentout_images,
+                             hirer_signature, hirer_name, hirer_signature_date, hier_signature_status, hirer_signed_ip, hirer_signed_device,
+                             delivered_signature, delivered_signatory, delivered_signature_date, delivered_signature_status, delivered_signed_ip, delivered_signed_device,
+                             agreement_no, agreement_status,
+                             customer_name, customer_details, vehicle_category_id, vehicle_model_id, vehicle_no, vechile_details, service_type, terms_condition, driver_ids, driver_details,
+                             customer_driver_name, customer_driver_contact_number, customer_driver_attachments, log_json)
+                            VALUES 
+                            (0, :company_id, :vehicle_id, :customer_code, 
+                             :agreement_date, :rent_from, :rent_to,
+                             :odo_out, :contract_details,
+                             :accessories, :images,
+                             :hirer_sign, :hirer_name, NOW(), :hirer_sign_status, :hirer_ip, :hirer_device,
+                             :delivery_sign, :delivery_name, NOW(), :delivery_sign_status, :delivery_ip, :delivery_device,
+                             :agreement_no, :agreement_status,
+                             :customer_name, :customer_details, :category_id, :model_id, :veh_no, :vechile_details, :service_type, :terms_condition, :driver_ids, :driver_details,
+                             :cust_driver_name, :cust_driver_contact, :cust_driver_attachments, :log_json)";
+                             
+                        $params = [
+                            ':company_id' => $company_id,
+                            ':vehicle_id' => $vehicle_id,
+                            ':customer_code' => $customer_code,
+                            ':agreement_date' => date('Y-m-d'),
+                            ':rent_from' => $from_date,
+                            ':rent_to' => $to_date,
+                            ':odo_out' => $odo_out,
+                            ':contract_details' => $contract_details,
+                            ':accessories' => $vehicle_accessories_details,
+                            ':images' => $images_json,
+                            ':hirer_sign' => $hirer_sign_path,
+                            ':hirer_name' => $hirer_name,
+                            ':hirer_sign_status' => $hirer_sign_path ? 'Yes' : 'No',
+                            ':hirer_ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+                            ':hirer_device' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                            ':delivery_sign' => $delivery_sign_path,
+                            ':delivery_name' => $delivery_name,
+                            ':delivery_sign_status' => $delivery_sign_path ? 'Yes' : 'No',
+                            ':delivery_ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+                            ':delivery_device' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                            ':agreement_no' => $agreement_no,
+                            ':agreement_status' => ($is_rentout == 1) ? 'Rentout' : 'Generated',
+                            ':customer_name' => $customer_name,
+                            ':customer_details' => $customer_details_json,
+                            ':category_id' => $vData['category_id'] ?? '',
+                            ':model_id' => $vData['model_id'] ?? '',
+                            ':veh_no' => $vData['veh_no'] ?? '',
+                            ':vechile_details' => $vechile_details_json,
+                            ':service_type' => $service_text,
+                            ':terms_condition' => $terms_condition,
+                            ':driver_ids' => $driver_ids,
+                            ':driver_details' => $driver_details_json,
+                            ':cust_driver_name' => $cust_driver_name,
+                            ':cust_driver_contact' => $cust_driver_contact_no,
+                            ':cust_driver_attachments' => $cust_driver_attachments_json,
+                            ':log_json' => json_encode(['user_id' => (int)($this->user_id ?? ($_SESSION['user_id'] ?? 1)), 'datetime' => date('Y-m-d H:i:s')])
+                        ];
+                        
+                        if (!$this->varPDOModelObj->executeQuery($query, $params)) {
+                            $err = $this->varPDOModelObj->varDBPDO->errorInfo();
+                            throw new Exception("Insert failed: " . json_encode($err));
+                        }
+                        $new_contract_id = $this->varPDOModelObj->varDBPDO->lastInsertId();
+                        
+                        if ($new_contract_id) {
+                            $contract_ids[] = $new_contract_id;
+                            
+                            // Update vehicle status to Rentout if requested
+                            if ($is_rentout == 1) {
+                                // 1. Update Vehicle Status
+                                $this->varPDOModelObj->executequery("UPDATE tbl_vehicles SET vehicle_status = 'Rentout' WHERE ids = " . intval($vehicle_id));
+                                
+                                // 2. Add log to movement
+                                $this->varPDOModelObj->executeQuery("
+                                    INSERT INTO tbl_vehicle_log_movement 
+                                    (vehicle_ids, vehicle_no, log_datetime, action_type, reference_type, reference_id, reference_no, odometer, fuel_level, customer_id, created_by, created_name, created_on)
+                                    VALUES 
+                                    (:vehicle_id, :vehicle_no, NOW(), 'Rentout', 'Direct Contract', :reference_id, :reference_no, :odometer, :fuel_level, :customer_code, :user_id, :created_name, NOW())
+                                ", [
+                                    ':vehicle_id' => $vehicle_id,
+                                    ':vehicle_no' => $vData['veh_no'] ?? '',
+                                    ':reference_id' => $new_contract_id,
+                                    ':reference_no' => $agreement_no,
+                                    ':odometer' => $odo_out,
+                                    ':fuel_level' => $fuel_out,
+                                    ':customer_code' => $customer_code,
+                                    ':user_id' => $user_id,
+                                    ':created_name' => $_SESSION['full_name'] ?? 'System'
+                                ]);
+
+                                // 3. Customer Ledger
+                                $transTypeStr = 'Direct Contract Rentout';
+                                $vDesc = 'Rentout from Direct Contract (Agreement No: ' . $agreement_no . ')';
+                                $debit = number_format(($b_unit_price * (float)$duration) + (($b_unit_price * (float)$duration) * ((float)$b_vat_perc / 100)), 3, '.', '');
+
+                                try {
+                                    $this->varPDOModelObj->executeQuery("
+                                        INSERT INTO tbl_customer_ledger
+                                        (customer_code, quotation_no, booking_no, trans_date, trans_type, payment_method, debit, credit, ref_no, description, user_id, company_id, created_at, booking_ids, contract_ids, agreement_no)
+                                        VALUES
+                                        (:customer_code, '', '', :trans_date, :trans_type, 'N/A', :debit, 0, :ref_no, :description, :user_id, :company_id, :created_at, 0, :contract_ids, :agreement_no)
+                                    ", [
+                                        ':customer_code' => $customer_code,
+                                        ':trans_date'    => date('Y-m-d'),
+                                        ':trans_type'    => $transTypeStr,
+                                        ':debit'         => $debit,
+                                        ':ref_no'        => $agreement_no,
+                                        ':description'   => $vDesc,
+                                        ':user_id'       => $user_id,
+                                        ':company_id'    => $company_id,
+                                        ':created_at'    => date('Y-m-d H:i:s'),
+                                        ':contract_ids'  => $new_contract_id,
+                                        ':agreement_no'  => $agreement_no
+                                    ]);
+                                } catch (\Exception $exLedger) {}
+                            }
+                        }
+                    }
+                    
+                    $this->varPDOModelObj->varDBPDO->commit();
+                    
+                    echo json_encode(['status' => true, 'message' => 'Contracts generated successfully', 'contract_ids' => $contract_ids]);
+                    
+                } catch (Exception $e) {
+                    if ($this->varPDOModelObj->varDBPDO->inTransaction()) {
+                        $this->varPDOModelObj->varDBPDO->rollBack();
+                    }
+                    echo json_encode(['status' => false, 'message' => 'Error: ' . $e->getMessage()]);
+                }
+                break;
 			default:
         	      $noAction= json_encode([
                     'status'  => false,

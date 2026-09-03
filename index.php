@@ -78,6 +78,10 @@ class RoutingClass
         }
         // Define the routes
         $this->routes = array(
+            'SystemSettings' => 'SystemSettings',
+            'SystemSettings/' => 'SystemSettings',
+            'SystemSettingsController' => 'SystemSettingsController',
+            'SystemSettingsController/' => 'SystemSettingsController',
             '' => 'Login',
             '/' => 'Login',
             'Login' => 'Login',
@@ -1059,6 +1063,16 @@ class RoutingClass
     private function MaintenanceController(...$params)
     {
         $this->includeWithParams("controller/maintenance/MaintenanceController.php", $_GET);
+    }
+    
+    private function SystemSettings(...$params)
+    {
+        $this->includeWithParams("view/system_settings.php", $_GET);
+    }
+
+    private function SystemSettingsController(...$params)
+    {
+        $this->includeWithParams("controller/settings/SystemSettingsController.php", $_GET);
     }
     
     private function includeWithParams($file, $params)

@@ -36,6 +36,48 @@ header("Pragma: no-cache");
 
     <!-- Helpers -->
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/customParseFormat.js"></script>
+    <script>dayjs.extend(window.dayjs_plugin_customParseFormat);</script>
+    <script>
+        const SYSTEM_LOGGED_IN_USER = "<?= htmlspecialchars($_SESSION['profile_name'] ?? $_SESSION['name'] ?? $_SESSION['username'] ?? 'Administrator', ENT_QUOTES) ?>";
+    </script>
+    <?php
+    $phpDateFormat = 'd-M-Y'; // Default to DD-MMM-YYYY pattern
+    if (class_exists('CommonPDOModel')) {
+        $__pdo = new CommonPDOModel();
+        $__cid = $_SESSION['company_id'] ?? 1;
+        // First try company specific, then fallback to any
+        $__res = $__pdo->selectexecuteQuery("SELECT date_format FROM tbl_system_settings WHERE company_id = '{$__cid}' LIMIT 1");
+        if (!$__res || empty($__res->fetchAll(PDO::FETCH_ASSOC))) {
+            $__res = $__pdo->selectexecuteQuery("SELECT date_format FROM tbl_system_settings LIMIT 1");
+        } else {
+            // Re-run query because fetchAll exhausts the result set
+            $__res = $__pdo->selectexecuteQuery("SELECT date_format FROM tbl_system_settings WHERE company_id = '{$__cid}' LIMIT 1");
+        }
+        if ($__res) {
+            $__rows = $__res->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($__rows[0]['date_format'])) {
+                $phpDateFormat = $__rows[0]['date_format'];
+            }
+        }
+    } else if (defined('SYS_DATE_FORMAT')) {
+        $phpDateFormat = SYS_DATE_FORMAT;
+    }
+    $mapping = [
+        'd' => 'DD',
+        'j' => 'D',
+        'm' => 'MM',
+        'n' => 'M',
+        'Y' => 'YYYY',
+        'y' => 'YY',
+        'M' => 'MMM',
+        'F' => 'MMMM'
+    ];
+    $jsDateFormat = strtr($phpDateFormat, $mapping);
+    ?>
+    <script>
+        window.SYS_DATE_FORMAT = "<?= $jsDateFormat ?>";
+    </script>
     <script src="../assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
 
@@ -59,6 +101,12 @@ header("Pragma: no-cache");
     <link rel="stylesheet" href="../assets/vendor/libs/spinkit/spinkit.css" />
     <link rel="stylesheet" href="../assets/sands/sands_popup.css" />
     <link rel="stylesheet" href="alertmessage/css/sands_alert_style.css">
+    
+    <!-- Quill Editor CSS for Terms Management -->
+    <link rel="stylesheet" href="../assets/vendor/libs/quill/typography.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/quill/katex.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/quill/editor.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda-themeless.min.css" />
     <style>
    
     html, body {
@@ -382,6 +430,8 @@ input[type="number"] {
    
 
     <?php include('templates/vehicles/vehicle_profile_modal.php'); ?>
+    <?php include('templates/VehicleContractGeneration/customer_driver_documents_upload.php'); ?>
+    <?php include('templates/VehicleContractGeneration/terms_condition_modal.php'); ?>
     <?php include('templates/scripts.php'); ?>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
@@ -392,10 +442,46 @@ input[type="number"] {
     <script src="../assets/sands/settings.js"></script>
     <script src="../assets/sands/sands_popup.js"></script>
     <script src="../alertmessage/js/sandsalert.js"></script>
-     <script src="../assets/vendor/libs/bs-stepper/bs-stepper.js"></script>
-     <script src="../httpdocs/user_js/vehicle_info.js"></script>
-     <script src="../httpdocs/user_js/direct_contract_wizard.js"></script>
-   
+    <script src="../assets/vendor/libs/bs-stepper/bs-stepper.js"></script>
+    
+    <!-- Quill Editor JS for Terms Management -->
+    <script src="../assets/vendor/libs/quill/katex.js"></script>
+    <script src="../assets/vendor/libs/highlight/highlight.js"></script>
+    <script src="../assets/vendor/libs/quill/quill.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda.min.js"></script>
+    
+    <script src="../httpdocs/user_js/vehicle_info.js"></script>
+    <script src="../httpdocs/user_js/direct_contract_wizard.js?v=<?= time() + 1 ?>"></script>
+    
+    <script>
+        const fullToolbar = [
+            [{ font: [] }, { size: [] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ color: [] }, { background: [] }],
+            [{ script: 'super' }, { script: 'sub' }],
+            [{ header: '1' }, { header: '2' }, 'blockquote', 'code-block'],
+            [{ list: 'ordered' }, { list: 'bullet' }, { indent: '-1' }, { indent: '+1' }],
+            [{ direction: 'rtl' }],
+            ['link', 'image', 'video', 'formula'],
+            ['clean']
+        ];
+        
+        // Expose katex and hljs to window for Quill formula/syntax modules
+        if (typeof katex !== 'undefined') window.katex = katex;
+        if (typeof hljs !== 'undefined') window.hljs = hljs;
+        
+        let fullEditor = null;
+        if (document.getElementById('full-editor')) {
+            fullEditor = new Quill('#full-editor', {
+                bounds: '#full-editor',
+                placeholder: 'Type Something...',
+                modules: { syntax: true, toolbar: fullToolbar },
+                theme: 'snow'
+            });
+        }
+    </script>
+
     <script>
 function parseDDMMYYYYtoJSDate(dateStr) {
     if (!dateStr || dateStr.length < 10) return new Date("Invalid");
@@ -1089,7 +1175,7 @@ $('#vehicleSearch').on('keyup', function() {
 
         $('#vehicleContainer .vehicle-card').each(function() {
            
-            var vehicleNumber = $(this).find('.veh_no').text().toLowerCase();
+            var vehicleNumber = $(this).find('h5.text-danger').text().toLowerCase();
 
             if (vehicleNumber.indexOf(searchValue) > -1) {
                 $(this).closest('.col-12').show(); 
@@ -1237,67 +1323,74 @@ $(document).on('click', '.btn_vehicle_select', function () {
         return;
     }
     
-    if (parseDDMMYYYYtoJSDate(bookingDetails.toDate) < parseDDMMYYYYtoJSDate(bookingDetails.fromDate)) {
+    if (new Date(bookingDetails.toDate) < new Date(bookingDetails.fromDate)) {
         setupDropdown('dropdownContent', 'error', svgError + "Please provide valid date range", 'click');
         return;
     }
-    if (bookingDetails.price && bookingDetails.price != '0') {
+    if (!bookingDetails.rateType || bookingDetails.rateType === '0') {
+        setupDropdown('dropdownContent', 'error', svgError + "Please select type", 'click');
+        return;
+    }
 
-    // ✅ Correct validation
-    if (
-        !bookingDetails.rateType || bookingDetails.rateType === '0' ||
-        !bookingDetails.service || bookingDetails.service === '0'
-    ) {
-        setupDropdown('dropdownContent', 'error', svgError + "Please select type and service", 'click');
+    if (!bookingDetails.service || bookingDetails.service === '0') {
+        setupDropdown('dropdownContent', 'error', svgError + "Please select service", 'click');
+        return;
+    }
+
+    if (!bookingDetails.duration || parseFloat(bookingDetails.duration) <= 0) {
+        setupDropdown('dropdownContent', 'error', svgError + "Please provide a valid duration", 'click');
+        return;
+    }
+
+    if (!bookingDetails.price || parseFloat(bookingDetails.price) <= 0) {
+        setupDropdown('dropdownContent', 'error', svgError + "Please provide a valid unit price", 'click');
         return;
     }
 
     let minpricecondition = 0;
 
-        switch (bookingDetails.rateType) {
-    
-            case 'hour':
-                minpricecondition = bookingDetails.service === '1'
-                    ? $btn.attr('data-priceHWOD')
-                    : $btn.attr('data-priceHWD');
-                break;
-    
-            case 'day':
-                minpricecondition = bookingDetails.service === '1'
-                    ? $btn.attr('data-priceDWOD')
-                    : $btn.attr('data-priceDWD');
-                break;
-    
-            case 'week':
-                minpricecondition = bookingDetails.service === '1'
-                    ? $btn.attr('data-priceWWOD')
-                    : $btn.attr('data-priceWWD');
-                break;
-    
-            case 'month':
-                minpricecondition = bookingDetails.service === '1'
-                    ? $btn.attr('data-priceMWOD')
-                    : $btn.attr('data-priceMWD');
-                break;
-        }
+    switch (bookingDetails.rateType) {
+        case 'hour':
+            minpricecondition = bookingDetails.service === '1'
+                ? $btn.attr('data-priceHWOD')
+                : $btn.attr('data-priceHWD');
+            break;
 
-        // ✅ Convert to number
-        minpricecondition = parseFloat(minpricecondition) || 0;
-        let enteredPrice = parseFloat(bookingDetails.price) || 0;
-    
-        // ✅ Correct placement
-        if (minpricecondition > enteredPrice) {
-            setupDropdown(
-                'dropdownContent',
-                'error',
-                svgError + "Price is below minimum. Please increase the unit price.",
-                'click'
-            );
-            return;
-        }
+        case 'day':
+            minpricecondition = bookingDetails.service === '1'
+                ? $btn.attr('data-priceDWOD')
+                : $btn.attr('data-priceDWD');
+            break;
+
+        case 'week':
+            minpricecondition = bookingDetails.service === '1'
+                ? $btn.attr('data-priceWWOD')
+                : $btn.attr('data-priceWWD');
+            break;
+
+        case 'month':
+            minpricecondition = bookingDetails.service === '1'
+                ? $btn.attr('data-priceMWOD')
+                : $btn.attr('data-priceMWD');
+            break;
     }
-    let from = parseDDMMYYYYtoJSDate(bookingDetails.fromDate);
-    let to = parseDDMMYYYYtoJSDate(bookingDetails.toDate);
+
+    // ✅ Convert to number
+    minpricecondition = parseFloat(minpricecondition) || 0;
+    let enteredPrice = parseFloat(bookingDetails.price) || 0;
+
+    // ✅ Correct placement
+    if (minpricecondition > enteredPrice) {
+        setupDropdown(
+            'dropdownContent',
+            'error',
+            svgError + "Price is below minimum. Please increase the unit price.",
+            'click'
+        );
+        return;
+    }
+    let from = new Date(bookingDetails.fromDate);
+    let to = new Date(bookingDetails.toDate);
 
     let passingDate = $btn.data('passing');
     let insuranceDate = $btn.data('insurance');
@@ -1318,10 +1411,10 @@ $(document).on('click', '.btn_vehicle_select', function () {
         message += '⚠️ Insurance date falls within selected range<br>';
     }
 
-    if (maintenanceDate && new Date(maintenanceDate) >= from && new Date(maintenanceDate) <= to) {
-        showConfirm = true;
-        message += '⚠️ Maintenance date falls within selected range<br>';
-    }
+    // if (maintenanceDate && new Date(maintenanceDate) >= from && new Date(maintenanceDate) <= to) {
+    //     showConfirm = true;
+    //     message += '⚠️ Maintenance date falls within selected range<br>';
+    // }
 
     let vehicleId = $btn.data('id');
 
@@ -1377,6 +1470,15 @@ function processVehicleSelection($btn, $card, bookingDetails) {
         modelId: $btn.data('model'),
         modelName: $btn.data('modelname'),
         vehicleNumber: $btn.data('veh_no'),
+        chassisNumber: $btn.data('chassis'),
+        categoryName: $btn.data('category'),
+        vehicleColor: $btn.data('color'),
+        vehicleYear: $btn.data('year'),
+        currentStatusName: $btn.data('status'),
+        insuranceExpiry: $btn.data('insurance'),
+        passingExpiry: $btn.data('passing'),
+        vehicleImage: $btn.data('image'),
+        vehicleImages: $btn.data('images'),
         booking: bookingDetails
     };
 
@@ -1805,13 +1907,27 @@ $(document).on('click', '#proceedSelectedVehicles', function () {
         switch(serviceType)
         {
             case 'Reserve Vehicles':
+                let b_unit_price = parseFloat($('.price').val()) || 0;
+                let b_duration = parseFloat($('.duration').val()) || 0;
+                let b_vat_perc = parseFloat($('.vat').val()) || 0;
+                let b_total = b_unit_price * b_duration;
+                let b_vat_amt = b_total * (b_vat_perc / 100);
+                let b_final_total = b_total + b_vat_amt;
+
                 let bookingDetails = {
                     customerName: $('#customerName').val(),
+                    customerCode: $('#customer_code').val(),
                     fromDate: $('.from_datetime').val(),
                     toDate: $('.to_datetime').val(),
-                    rateType: $('.rate_type').val(),
-                    service: $('.service').val(),
-                    duration: $('.duration').val()
+                    rateType: $('.rate_type option:selected').text(),
+                    service: $('.service option:selected').text(),
+                    duration: $('.duration').val(),
+                    unitPrice: b_unit_price.toFixed(3),
+                    minPrice: $('.minprice').val(),
+                    vatPerc: b_vat_perc.toFixed(2),
+                    vatAmt: b_vat_amt.toFixed(3),
+                    total: b_final_total.toFixed(3),
+                    notes: $('#booking_notes').val()
                 };
                 buildDirectContractWizard(bookingDetails, selectedVehicles);
                 $('#directContractWizardModal').modal('show');
@@ -2271,7 +2387,6 @@ function openVehicleProfile(vehicleId) {
     });
 }
 </script>
-
 </body>
 
 </html>

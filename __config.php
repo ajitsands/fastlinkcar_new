@@ -1,8 +1,11 @@
 <?php
-require_once __DIR__ . '/envfiles/vendor/autoload.php';
-
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+if (file_exists(__DIR__ . '/envfiles/vendor/autoload.php')) {
+    require_once __DIR__ . '/envfiles/vendor/autoload.php';
+    if (class_exists('Dotenv\Dotenv')) {
+        $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/envfiles');
+        $dotenv->load();
+    }
+}
 
 // Access environment variables
 $dbHost = $_ENV['DB_HOST'];

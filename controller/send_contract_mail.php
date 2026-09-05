@@ -45,11 +45,14 @@ if (empty($pdf_content)) {
     die("Error generating PDF from URL: " . $pdf_url);
 }
 
-// 2. We need the customer's email. We can fetch it from the database here.
-define('ROOT_PATH', __DIR__ . '/..');
-require_once ROOT_PATH . '/envfiles/vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(ROOT_PATH . '/envfiles');
-$dotenv->load();
+if (!defined('ROOT_PATH')) {
+    define('ROOT_PATH', dirname(__DIR__));
+}
+if (empty($_ENV['DB_HOST'])) {
+    if (file_exists(ROOT_PATH . '/view/envinclude.php')) {
+        include_once ROOT_PATH . '/view/envinclude.php';
+    }
+}
 
 $mysqli = @new mysqli($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
 if ($mysqli->connect_error) {

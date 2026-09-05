@@ -12,10 +12,10 @@ function checkLogin()
 checkLogin();
 ?>
 <?php
-require_once dirname(__DIR__) . '/envfiles/vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__) . '/envfiles');
-$dotenv->load();
-define('ROOT_PATH', dirname(__DIR__));
+if (!defined('ROOT_PATH')) {
+    define('ROOT_PATH', dirname(__DIR__));
+}
+include ROOT_PATH . '/view/envinclude.php';
 ?>
 <!DOCTYPE html>
 <html lang="en" class="layout-navbar-fixed layout-menu-fixed layout-wide" dir="ltr" data-skin="default" data-bs-theme="light" data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/" data-template="horizontal-menu-template-no-customizer">
@@ -463,9 +463,8 @@ define('ROOT_PATH', dirname(__DIR__));
                 text: msg,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
+                confirmButtonColor: '#f12526',
+                cancelButtonColor: '#8592a3',
                 confirmButtonText: 'Yes, proceed!'
             }).then((result) => {
                 if (result.isConfirmed) updateStatus();

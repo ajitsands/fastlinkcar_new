@@ -1,7 +1,29 @@
 <?php
-require_once __DIR__ . '/../envfiles/vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../envfiles');
-$dotenv->load();
+if (empty($_ENV['DB_HOST']) || empty($_ENV['DB_NAME'])) {
+    $possibleEnv = [
+        dirname(__DIR__) . '/envfiles/.env',
+        __DIR__ . '/../envfiles/.env',
+        __DIR__ . '/.env'
+    ];
+    foreach ($possibleEnv as $f) {
+        if (file_exists($f)) {
+            $lines = file($f, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line === '' || $line[0] === '#') continue;
+                if (strpos($line, '=') !== false) {
+                    list($key, $val) = explode('=', $line, 2);
+                    $key = trim($key);
+                    $val = trim($val, " \t\n\r\0\x0B\"'");
+                    $_ENV[$key] = $val;
+                    $_SERVER[$key] = $val;
+                    putenv("$key=$val");
+                }
+            }
+            break;
+        }
+    }
+}
 include_once __DIR__ . '/../model/common/pdoCommonFunctions.php';
 include_once __DIR__ . '/../model/db_connection/pdo_db_connection.php';
 

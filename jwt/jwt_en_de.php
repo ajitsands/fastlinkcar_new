@@ -1,5 +1,11 @@
 <?php
-require 'vendor/autoload.php';
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+} elseif (file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {
+    require_once dirname(__DIR__) . '/vendor/autoload.php';
+} elseif (file_exists('vendor/autoload.php')) {
+    require_once 'vendor/autoload.php';
+}
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;

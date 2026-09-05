@@ -22,11 +22,52 @@ if (!function_exists('str_starts_with')) {
         return (string)$needle !== '' && strncmp($haystack, $needle, strlen($needle)) === 0;
     }
 }
+if (!function_exists('str_ends_with')) {
+    function str_ends_with($haystack, $needle) {
+        return (string)$needle !== '' && substr($haystack, -strlen($needle)) === (string)$needle;
+    }
+}
 define('ROOT_PATH', __DIR__);
-//$rootPath = realpath(__DIR__ );
-require_once ROOT_PATH . '/envfiles/vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(ROOT_PATH . '/envfiles');
-$dotenv->load();
+
+function loadEnvironmentVariables($envFilePath) {
+    if (!file_exists($envFilePath)) {
+        return false;
+    }
+    $lines = file($envFilePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines === false) return false;
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#') continue;
+        if (strpos($line, '=') !== false) {
+            list($key, $val) = explode('=', $line, 2);
+            $key = trim($key);
+            $val = trim($val);
+            if ((str_starts_with($val, '"') && str_ends_with($val, '"')) ||
+                (str_starts_with($val, "'") && str_ends_with($val, "'"))) {
+                $val = substr($val, 1, -1);
+            }
+            $_ENV[$key] = $val;
+            $_SERVER[$key] = $val;
+            putenv("$key=$val");
+        }
+    }
+    return true;
+}
+
+$envFile = ROOT_PATH . '/envfiles/.env';
+if (file_exists(ROOT_PATH . '/envfiles/vendor/autoload.php')) {
+    require_once ROOT_PATH . '/envfiles/vendor/autoload.php';
+    if (file_exists($envFile)) {
+        try {
+            $dotenv = Dotenv\Dotenv::createImmutable(ROOT_PATH . '/envfiles');
+            $dotenv->load();
+        } catch (Throwable $e) {
+            loadEnvironmentVariables($envFile);
+        }
+    }
+} else {
+    loadEnvironmentVariables($envFile);
+}
 
 if (isset($_ENV['APP_TIMEZONE'])) {
     date_default_timezone_set($_ENV['APP_TIMEZONE']);

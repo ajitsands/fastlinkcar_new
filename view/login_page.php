@@ -72,6 +72,26 @@
 		.app-logo {
 		  transition: opacity 0.3s ease;
 		}
+		.btn-primary {
+		  background-color: #f12526 !important;
+		  border-color: #f12526 !important;
+		  color: #ffffff !important;
+		  box-shadow: 0 2px 6px 0 rgba(241, 37, 38, 0.4) !important;
+		}
+		.btn-primary:hover, .btn-primary:focus {
+		  background-color: #c81e1f !important;
+		  border-color: #c81e1f !important;
+		  color: #ffffff !important;
+		  box-shadow: 0 4px 12px 0 rgba(241, 37, 38, 0.5) !important;
+		}
+		.form-check-input:checked {
+		  background-color: #f12526 !important;
+		  border-color: #f12526 !important;
+		}
+		.form-control:focus {
+		  border-color: #f12526 !important;
+		  box-shadow: 0 0 0 0.25rem rgba(241, 37, 38, 0.2) !important;
+		}
 	</style>
   </head>
 

@@ -508,7 +508,7 @@ include ROOT_PATH . '/view/envinclude.php';
                     {
                         data: 'agreement_no',
                         render: (id, type, row) => {
-                        return `<div class="view_contract " style=" cursor: pointer;text-decoration: underline;color: #0d6efd;opacity: 0.8;" data-contract="${row.agreement_no}">
+                        return `<div class="view_contract " style=" cursor: pointer;text-decoration: underline;color: #f12526;opacity: 0.8;" data-contract="${row.agreement_no}">
                             <div class="fw-bold small">${row.agreement_no}</div>
                             
                         </div>`;

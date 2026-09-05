@@ -125,7 +125,7 @@ include ROOT_PATH . '/view/envinclude.php';
 
 .contract-link:hover {
     text-decoration: underline;
-     color: #0d6efd;
+    color: #f12526;
     opacity: 0.8;
 }
     </style>

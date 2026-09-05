@@ -95,7 +95,7 @@ include('envinclude.php');
     width: 18px;
     height: 18px;
     cursor: pointer;
-    accent-color: #0d6efd;
+    accent-color: #f12526;
 }
 
 tr.shown {

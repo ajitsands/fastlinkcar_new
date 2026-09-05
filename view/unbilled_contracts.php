@@ -404,7 +404,7 @@ $(document).ready(function() {
             },
              { data: 'agreement_no' ,
                  render: function (data, type, row, meta) {
-                     return  `<div class="view_contract " style=" cursor: pointer;text-decoration: underline;color: #0d6efd;opacity: 0.8;" data-contract="${data}">
+                     return  `<div class="view_contract " style=" cursor: pointer;text-decoration: underline;color: #f12526;opacity: 0.8;" data-contract="${data}">
                             <div class="fw-bold small">${data}</div>
                             <div class="text-muted" style="font-size:11px;"><span class="status-cell">${row.source_type}</span>
                                 

@@ -23,8 +23,8 @@ include ROOT_PATH . '/view/envinclude.php';
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>alertmessage/css/sands_alert_style.css">
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/notyf/notyf.css" />
     <style>
-        .clickable-name { cursor: pointer; color: #696cff; font-weight: 500; text-decoration: none; }
-        .clickable-name:hover { text-decoration: underline; color: #5f61e6; }
+        .clickable-name { cursor: pointer; color: #f12526; font-weight: 500; text-decoration: none; }
+        .clickable-name:hover { text-decoration: underline; color: #c81e1f; }
         .balance-card { border-left: 4px solid; }
         .card-company-receives { border-left-color: #ff4d49; }
         .card-company-pays { border-left-color: #72e128; }

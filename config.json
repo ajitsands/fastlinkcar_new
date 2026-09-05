@@ -1,6 +1,6 @@
 {
     "server": {
-        "host": "aacar.sandslab.com",
+        "host": "portal.fastlinkpayment.com",
         "username": "sandsl23",
         "password": "Jn3#U85hYrg$2",
         "port": 22,
@@ -21,6 +21,6 @@
         }
     },
     "github": {
-        "repo_url": "https://github.com/ajitsands/aacar.git"
+        "repo_url": "https://github.com/ajitsands/AACarRental.git"
     }
 }

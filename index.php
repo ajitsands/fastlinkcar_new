@@ -46,20 +46,34 @@ class RoutingClass
 
     public function __construct()
     {
-        $this->server_name = $_ENV['MAINSERVER'];
-        $this->key = $_ENV['ENCRIPTION_KEY'];
-        $this->base_url = $_ENV['BASE_URL'];
+        // Built-in domains allowed across both production servers
+        $allowedDomains = [
+            'portal.fastlinkpayment.com',
+            'www.portal.fastlinkpayment.com',
+            'aacar.sandslab.com',
+            'www.aacar.sandslab.com'
+        ];
+
+        // Include any additional domains from .env MAINSERVER (supports comma-separated list)
+        if (!empty($_ENV['MAINSERVER'])) {
+            $configuredDomains = array_filter(array_map('trim', explode(',', strtolower($_ENV['MAINSERVER']))));
+            $allowedDomains = array_unique(array_merge($allowedDomains, $configuredDomains));
+        }
+
+        $currentDomain = strtolower($_SERVER['HTTP_HOST'] ?? '');
+        $hostOnly = explode(':', $currentDomain)[0];
         
-        $currentDomain = $_SERVER['HTTP_HOST'];
-        $allowedDomain = $this->server_name;
+        $this->server_name = in_array($hostOnly, $allowedDomains, true) ? $hostOnly : ($_ENV['MAINSERVER'] ?? 'portal.fastlinkpayment.com');
+        $this->key = $_ENV['ENCRIPTION_KEY'] ?? '';
+        $this->base_url = $_ENV['BASE_URL'] ?? '/';
         
-        // Allow localhost and 127.0.0.1 automatically in development mode
-        $isLocal = ($currentDomain === 'localhost' || $currentDomain === '127.0.0.1' || str_starts_with($currentDomain, 'localhost:') || str_starts_with($currentDomain, '127.0.0.1:'));
+        // Allow localhost and 127.0.0.1 automatically in development mode or local access
+        $isLocal = ($hostOnly === 'localhost' || $hostOnly === '127.0.0.1' || str_starts_with($currentDomain, 'localhost:') || str_starts_with($currentDomain, '127.0.0.1:'));
         $isDev = (isset($_ENV['APP_ENV']) && $_ENV['APP_ENV'] === 'development');
 
-        if (!$isLocal && !$isDev && $currentDomain !== $allowedDomain) {
+        if (!$isLocal && !$isDev && !in_array($hostOnly, $allowedDomains, true) && !in_array($currentDomain, $allowedDomains, true)) {
             header("HTTP/1.0 404 Not Found!");
-            echo "<p style='background-color: #7FB131; color: white;text-align: left;font-size:20px;padding:20px; font-family: Arial, Helvetica, sans-serif;'>AA CAR RENTAL- 404 Not Found - By " . $_SERVER['SERVER_NAME'] .'-- Allowed : '. $this->server_name. "</p>";
+            echo "<p style='background-color: #7FB131; color: white;text-align: left;font-size:20px;padding:20px; font-family: Arial, Helvetica, sans-serif;'>AA CAR RENTAL- 404 Not Found - By " . htmlspecialchars($_SERVER['SERVER_NAME'] ?? $currentDomain) .'-- Allowed : '. htmlspecialchars(implode(', ', $allowedDomains)). "</p>";
             exit();
         }
 

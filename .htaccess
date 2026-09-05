@@ -2,12 +2,17 @@ RewriteEngine On
 RewriteBase /
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{HTTP_HOST} ^aacar\.sandslab\.com$ [NC]
-RewriteRule ^(.*)$ index.php?url=$1&origin=aacar.sandslab.com [QSA,L]
+RewriteCond %{HTTP_HOST} ^(portal\.fastlinkpayment\.com|www\.portal\.fastlinkpayment\.com|aacar\.sandslab\.com|www\.aacar\.sandslab\.com)$ [NC]
+RewriteRule ^(.*)$ index.php?url=$1&origin=%{HTTP_HOST} [QSA,L]
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{HTTP_HOST} ^(localhost|127\.0\.0\.1)(:\d+)?$ [NC]
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
+# Universal fallback for any custom domain / subdomain
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
 
 # BEGIN cPanel-generated php ini directives, do not edit

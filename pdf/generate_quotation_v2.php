@@ -286,7 +286,8 @@ foreach ($items as $item) {
     $grand_total += $amount_incl;
 
     if (!empty($item['item_model_pic'])) {
-       $img_file = 'https://aacar.sandslab.com/httpdocs/images/vehicle_model_images/'.$item['item_model_pic'];
+       $serverHost = !empty($_SERVER['HTTP_HOST']) ? explode(':', $_SERVER['HTTP_HOST'])[0] : ($_ENV['MAINSERVER'] ?? 'portal.fastlinkpayment.com');
+       $img_file = 'https://' . $serverHost . '/httpdocs/images/vehicle_model_images/' . $item['item_model_pic'];
        if (!in_array($img_file, $quotation_images)) {
            $quotation_images[] = $img_file;
        }

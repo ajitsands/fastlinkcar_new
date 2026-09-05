@@ -1,4 +1,4 @@
-﻿-- MySQL dump 10.13  Distrib 8.0.17, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.17, for Win64 (x86_64)
 --
 -- Host: 127.0.0.1    Database: aacar_local
 -- ------------------------------------------------------
@@ -70,11 +70,11 @@ UNLOCK TABLES;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
 /*!50003 SET character_set_client  = utf8mb4 */ ;
 /*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET collation_connection  = utf8mb4_unicode_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_booking_id` BEFORE INSERT ON `booking_info` FOR EACH ROW BEGIN
+/*!50003 CREATE*/ /*!50003 TRIGGER `trg_booking_id` BEFORE INSERT ON `booking_info` FOR EACH ROW BEGIN
 
     SET NEW.booking_id = CONCAT(
 
@@ -230,11 +230,11 @@ UNLOCK TABLES;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
 /*!50003 SET character_set_client  = utf8mb4 */ ;
 /*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET collation_connection  = utf8mb4_unicode_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_customer_id` BEFORE INSERT ON `customer_details` FOR EACH ROW BEGIN
+/*!50003 CREATE*/ /*!50003 TRIGGER `trg_customer_id` BEFORE INSERT ON `customer_details` FOR EACH ROW BEGIN
 
     SET NEW.customer_id = CONCAT(
 
@@ -796,7 +796,7 @@ CREATE TABLE `tbl_maintenance_request_services` (
   PRIMARY KEY (`ids`),
   KEY `request_id` (`request_id`),
   CONSTRAINT `tbl_maintenance_request_services_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `tbl_maintenance_requests` (`ids`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -829,7 +829,7 @@ CREATE TABLE `tbl_maintenance_requests` (
   `created_on` datetime DEFAULT NULL,
   `created_by` int(11) DEFAULT NULL,
   PRIMARY KEY (`ids`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1068,7 +1068,7 @@ CREATE TABLE `tbl_system_settings` (
   `updated_by` int(11) DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_company` (`company_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1155,7 +1155,7 @@ CREATE TABLE `tbl_user_permissions` (
   `updated_date` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`ids`),
   UNIQUE KEY `uniq_user_perm` (`user_id`,`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=175 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=175 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1831,9 +1831,8 @@ SET character_set_client = @saved_cs_client;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET collation_connection      = utf8mb4_unicode_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`sandsl23`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `view_vehicle_details` AS select `v`.`ids` AS `ids`,`v`.`category_id` AS `category_id`,`c`.`category_name` AS `category_name`,`v`.`brand_id` AS `brand_id`,`b`.`brand_name` AS `brand_name`,`v`.`model_id` AS `model_id`,`m`.`modal_name` AS `model_name`,`v`.`model_names` AS `model_names`,`v`.`company_id` AS `company_id`,`v`.`vehicle_number` AS `vehicle_number`,`v`.`vehicle_year` AS `vehicle_year`,`v`.`vehicle_color` AS `vehicle_color`,`v`.`image_json` AS `image_json`,`v`.`other_details_json` AS `other_details_json`,`v`.`vehicle_attachments` AS `vehicle_attachments`,`v`.`vehicle_status` AS `vehicle_status`,`v`.`created_on` AS `created_on`,`v`.`created_by` AS `created_by`,`v`.`vehicle_purchase_date` AS `vehicle_purchase_date`,`v`.`next_passing_date` AS `next_passing_date`,`v`.`passing_histroy` AS `passing_histroy`,`v`.`next_insurance_date` AS `next_insurance_date`,`v`.`insurance_histroy` AS `insurance_histroy`,`v`.`next_maintenance_date` AS `next_maintenance_date`,`v`.`maintenance_histroy` AS `maintenance_histroy` from (((`tbl_vehicles` `v` left join `tbl_vehicle_category` `c` on((`v`.`category_id` = `c`.`ids`))) left join `tbl_vehicle_brand` `b` on((`v`.`brand_id` = `b`.`ids`))) left join `tbl_vehicle_model` `m` on((`v`.`model_id` = `m`.`ids`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -1849,9 +1848,8 @@ SET character_set_client = @saved_cs_client;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET collation_connection      = utf8mb4_unicode_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`sandsl23`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `view_vehicle_model` AS select `v`.`ids` AS `model_ids`,`v`.`modal_name` AS `model_name`,`v`.`vehicle_modal_pic` AS `vehicle_modal_pic`,`v`.`category_id` AS `category_id`,`c`.`category_name` AS `category_name`,`c`.`category_image` AS `category_image`,`c`.`category_description` AS `category_description`,`c`.`category_status` AS `category_status`,`v`.`brand_id` AS `brand_id`,`b`.`brand_name` AS `brand_name` from ((`tbl_vehicle_model` `v` left join `tbl_vehicle_category` `c` on((`v`.`category_id` = `c`.`ids`))) left join `tbl_vehicle_brand` `b` on((`v`.`brand_id` = `b`.`ids`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;

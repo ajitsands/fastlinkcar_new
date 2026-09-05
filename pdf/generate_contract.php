@@ -18,18 +18,60 @@ if (!extension_loaded('curl')) {
     }
 }
 
-// define('ROOT_PATH', __DIR__);
-// require_once ROOT_PATH . '/../envfiles/vendor/autoload.php';
-// $dotenv = Dotenv\Dotenv::createImmutable(ROOT_PATH . '/../envfiles');
-// $dotenv->load();
+// Load autoloader from pdf/vendor, root vendor, or envfiles
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+} elseif (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+} elseif (file_exists(__DIR__ . '/../envfiles/vendor/autoload.php')) {
+    require_once __DIR__ . '/../envfiles/vendor/autoload.php';
+} elseif (file_exists('vendor/autoload.php')) {
+    require_once 'vendor/autoload.php';
+}
 
-require_once 'vendor/autoload.php';
+if (!class_exists('TCPDF')) {
+    if (file_exists(__DIR__ . '/vendor/tecnickcom/tcpdf/tcpdf.php')) {
+        require_once __DIR__ . '/vendor/tecnickcom/tcpdf/tcpdf.php';
+    }
+}
+
+// Fallback environment loader if accessed directly
+if (empty($_ENV['DB_HOST']) || empty($_ENV['DB_NAME'])) {
+    $possibleEnv = [
+        dirname(__DIR__) . '/envfiles/.env',
+        __DIR__ . '/../envfiles/.env',
+        __DIR__ . '/.env'
+    ];
+    foreach ($possibleEnv as $f) {
+        if (file_exists($f)) {
+            $lines = file($f, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line === '' || $line[0] === '#') continue;
+                if (strpos($line, '=') !== false) {
+                    list($key, $val) = explode('=', $line, 2);
+                    $key = trim($key);
+                    $val = trim($val, " \t\n\r\0\x0B\"'");
+                    $_ENV[$key] = $val;
+                    $_SERVER[$key] = $val;
+                    putenv("$key=$val");
+                }
+            }
+            break;
+        }
+    }
+}
 
 // Database configurations
-define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
-define('DB_USER', $_ENV['DB_USER'] ?? 'root');
-define('DB_PASS', $_ENV['DB_PASS'] ?? '');
-define('DB_NAME', $_ENV['DB_NAME'] ?? 'sandsl23_aa_car_rental');
+$dbHost = $_ENV['DB_HOST'] ?? (defined('DB_HOST') ? DB_HOST : 'localhost');
+$dbUser = $_ENV['DB_USER'] ?? (defined('DB_USER') ? DB_USER : 'root');
+$dbPass = $_ENV['DB_PASS'] ?? (defined('DB_PASS') ? DB_PASS : '');
+$dbName = $_ENV['DB_NAME'] ?? (defined('DB_NAME') ? DB_NAME : 'sandsl23_aa_car_rental');
+
+if (!defined('DB_HOST')) define('DB_HOST', $dbHost);
+if (!defined('DB_USER')) define('DB_USER', $dbUser);
+if (!defined('DB_PASS')) define('DB_PASS', $dbPass);
+if (!defined('DB_NAME')) define('DB_NAME', $dbName);
 
 if (isset($_ENV['APP_TIMEZONE'])) {
     date_default_timezone_set($_ENV['APP_TIMEZONE']);
@@ -122,8 +164,8 @@ class AA_Contract_PDF extends TCPDF {
     /* --------------------------
        COMPANY LOGO
     -------------------------- */
-    $logo_jpg = 'assets/img/logo/logo.jpg';
-    $logo_png = 'assets/img/logo/logo.png';
+    $logo_jpg = file_exists('assets/img/logo/logo.jpg') ? 'assets/img/logo/logo.jpg' : dirname(__DIR__) . '/assets/img/logo/logo.jpg';
+    $logo_png = file_exists('assets/img/logo/logo.png') ? 'assets/img/logo/logo.png' : dirname(__DIR__) . '/assets/img/logo/logo.png';
 
     if (file_exists($logo_jpg)) {
         $this->Image($logo_jpg, 15, 6, 48, 0, 'JPG');

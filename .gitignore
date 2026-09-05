@@ -6,6 +6,8 @@ cache/
 logs/
 node_modules/
 vendor/
+!pdf/vendor/
+!pdf/vendor/**
 *.log
 *.zip
 backup/

@@ -1,5 +1,10 @@
 RewriteEngine On
 RewriteBase /
+
+# Map assets/vendor directly to dist directory if assets/vendor is not present on disk
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^assets/vendor/(.*)$ dist/$1 [L,NC]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{HTTP_HOST} ^(portal\.fastlinkpayment\.com|www\.portal\.fastlinkpayment\.com|aacar\.sandslab\.com|www\.aacar\.sandslab\.com)$ [NC]

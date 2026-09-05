@@ -1167,6 +1167,7 @@ break;
                     "status" => "success",
                     "data" => $decoded['data'] ?? []
                 ]);
+            break;
             case 'get_vehicle_profile':
                 $inputData = json_decode($this->json, true);
                 $vehicleId = $inputData['vehicle_id'] ?? ($_GET['vehicle_id'] ?? null);

@@ -992,11 +992,11 @@ $this->params[9] = [
         ?>
         
             <div class="<?= $layoutClass ?>">
-                                                                                                                                <div class="card h-100 shadow-sm border-0 vehicle-card rounded-4 overflow-hidden" style="transition: transform 0.2s, box-shadow 0.2s;">
+                                                                                                                                <div class="card h-100 shadow-sm border-0 vehicle-card rounded-4 overflow-hidden" style="transition: transform 0.2s, box-shadow 0.2s; min-height: 180px;">
                     <div class="row g-0 h-100">
                                                                                                 <!-- Left Side Image -->
                         <div class="col-6 bg-white border-end position-relative vehicle-image p-0" data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>' style="cursor:pointer;">
-                            <img src="uploads/vehicleImages/<?= $lastImage ?>" class="img-fluid w-100 h-100" style="object-fit: cover; object-position: center; padding: 0;" alt="Vehicle Image">
+                            <img src="uploads/vehicleImages/<?= $lastImage ?>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; padding: 0.5rem;" alt="Vehicle Image">
                             <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem;">
                                 <?=$item['vehicle_status']?>
                             </span>
@@ -1141,11 +1141,11 @@ $this->params[9] = [
         ?>
         
             <div class="<?= $layoutClass ?>">
-                                                                                                                                <div class="card h-100 shadow-sm border-0 vehicle-card rounded-4 overflow-hidden" style="transition: transform 0.2s, box-shadow 0.2s;">
+                                                                                                                                <div class="card h-100 shadow-sm border-0 vehicle-card rounded-4 overflow-hidden" style="transition: transform 0.2s, box-shadow 0.2s; min-height: 180px;">
                     <div class="row g-0 h-100">
                                                                                                 <!-- Left Side Image -->
                         <div class="col-6 bg-white border-end position-relative vehicle-image p-0" data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>' style="cursor:pointer;">
-                            <img src="uploads/vehicleImages/<?= $lastImage ?>" class="img-fluid w-100 h-100" style="object-fit: cover; object-position: center; padding: 0;" alt="Vehicle Image">
+                            <img src="uploads/vehicleImages/<?= $lastImage ?>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; padding: 0.5rem;" alt="Vehicle Image">
                             <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem;">
                                 <?=$item['vehicle_status']?>
                             </span>

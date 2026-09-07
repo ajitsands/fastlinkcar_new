@@ -4,7 +4,7 @@
                         <h5 class="card-title mb-0">Contract Generation</h5>
                 
                      <button type="button"
-        class="btn btn-dark fw-semibold px-3"
+        class="btn btn-dark fw-semibold px-3 d-none"
         id="btnWalkIns"
         data-bs-toggle="tooltip"
         data-bs-trigger="hover"

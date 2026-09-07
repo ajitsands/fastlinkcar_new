@@ -303,6 +303,75 @@ tr.shown {
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
      <script src="../httpdocs/user_js/vehicle_info.js"></script>
     <script>
+
+$(document).ready(function() {
+    $(document).on('input', '.from_datetime_contract, .to_datetime_contract', function(e) {
+        let input = $(this).val().replace(/\D/g, ''); // Remove all non-digits
+        let formatted = '';
+
+        if (input.length > 0) formatted += input.substring(0, 2);
+        if (input.length > 2) formatted += '-' + input.substring(2, 4);
+        if (input.length > 4) formatted += '-' + input.substring(4, 8);
+        if (input.length > 8) formatted += ' ' + input.substring(8, 10);
+        if (input.length > 10) formatted += ':' + input.substring(10, 12);
+
+        $(this).val(formatted);
+    });
+});
+
+
+// --- Date Helpers ---
+function parseDDMMYYYYtoJSDate(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return new Date('');
+    let parts = dateStr.split(' ');
+    // If only date is provided, default time to 00:00
+    let timeStr = (parts.length > 1) ? parts.slice(1).join(' ') : "00:00";
+    
+    let dParts = parts[0].split('-');
+    if (dParts.length < 3) return new Date(dateStr);
+    
+    // Check if parts[2] is a year or parts[0] is year
+    let year, month, day;
+    if (dParts[0].length === 4) {
+        // YYYY-MM-DD
+        year = dParts[0]; month = dParts[1]; day = dParts[2];
+    } else {
+        // DD-MM-YYYY
+        day = dParts[0]; month = dParts[1]; year = dParts[2];
+    }
+    
+    return new Date(year + '-' + month + '-' + day + 'T' + timeStr + ':00');
+}
+
+function formatServerDateToDDMMYYYY(serverDate) {
+    if (!serverDate) return '';
+    if (serverDate.includes('-') && serverDate.split('-')[0].length === 4) {
+        // Looks like YYYY-MM-DD
+        let d = new Date(serverDate.replace(' ', 'T'));
+        if (isNaN(d)) return serverDate;
+        let day = String(d.getDate()).padStart(2, '0');
+        let month = String(d.getMonth() + 1).padStart(2, '0');
+        let year = d.getFullYear();
+        let hours = String(d.getHours()).padStart(2, '0');
+        let minutes = String(d.getMinutes()).padStart(2, '0');
+        return day + '-' + month + '-' + year + ' ' + hours + ':' + minutes;
+    }
+    return serverDate; // Already formatted or unknown
+}
+
+function convertDDMMYYYYtoYYYYMMDD(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return dateStr;
+    let parts = dateStr.split(' ');
+    let dParts = parts[0].split('-');
+    if (dParts.length < 3) return dateStr;
+    
+    if (dParts[0].length === 4) return dateStr; // Already YYYY-MM-DD
+    
+    let timeStr = parts.length > 1 ? ' ' + parts.slice(1).join(' ') : '';
+    return dParts[2] + '-' + dParts[1] + '-' + dParts[0] + timeStr;
+}
+// -------------------
+
          const fullToolbar = [
                 [
                   {
@@ -1359,8 +1428,8 @@ function populateContractModal(d) {
             : bookDetails.notes;
         
         // Set values
-        $('#b_from').val(contract.service_start_date_time || '');
-        $('#b_to').val(contract.service_end_date_time || '');
+        $('#b_from').val(formatServerDateToDDMMYYYY(contract.service_start_date_time || ''));
+        $('#b_to').val(formatServerDateToDDMMYYYY(contract.service_end_date_time || ''));
         $('#b_qtn_ref_no').val(contract.quotation_number || '');
         
         $('#rate_type').val(rate_type).trigger('change');
@@ -1571,8 +1640,8 @@ $('#service').on('change', function () {
 function line_item_calculation()
 {
    
-   let from = new Date($('#b_from').val());
-   let to = new Date($('#b_to').val());
+   let from = parseDDMMYYYYtoJSDate($('#b_from').val());
+   let to = parseDDMMYYYYtoJSDate($('#b_to').val());
    let rateType = $('.rate_type').val();;
 
     if(from && to && to >= from){
@@ -1614,11 +1683,11 @@ $(document).on('blur','#b_to',function(){
     let from = $('#b_from').val();
     let to = $(this).val();
        
-        let fromDate = new Date(from);
-        let toDate   = new Date(to);
+        let fromDate = parseDDMMYYYYtoJSDate(from);
+        let toDate   = parseDDMMYYYYtoJSDate(to);
         if(toDate < fromDate){
-        let fromDate = new Date(from);
-        let toDate   = new Date(to);
+        let fromDate = parseDDMMYYYYtoJSDate(from);
+        let toDate   = parseDDMMYYYYtoJSDate(to);
 
         if(toDate < fromDate){
              setupDropdown('dropdownContent','error',svgSuccess+'To date must be after from date','click');
@@ -2479,11 +2548,11 @@ function saveContractValidation(e)
         return;
     }
     
-    if (new Date($('#b_to').val()) < new Date($('#b_from').val())) {
+    if (parseDDMMYYYYtoJSDate($('#b_to').val()) < parseDDMMYYYYtoJSDate($('#b_from').val())) {
         setupDropdown('dropdownContent', 'error', svgError + "Please provide valid date range", 'click');
         return;
     }
-    if (new Date($('#b_to').val()) < new Date($('#b_from').val())) {
+    if (parseDDMMYYYYtoJSDate($('#b_to').val()) < parseDDMMYYYYtoJSDate($('#b_from').val())) {
         setupDropdown('dropdownContent', 'error', svgError + "Please provide valid date range", 'click');
         return;
     }
@@ -2500,8 +2569,8 @@ function saveContractValidation(e)
             unit_price: unitPrice,
             min_price: minPrice,
             booking_ref_no: $('#booking_ref').text().trim(),
-            book_period_from: $('#b_from').val(),
-            book_period_to: $('#b_to').val()
+            book_period_from: convertDDMMYYYYtoYYYYMMDD($('#b_from').val()),
+            book_period_to: convertDDMMYYYYtoYYYYMMDD($('#b_to').val())
         };
 
         $('#otp_require_basic_details').val(JSON.stringify(data));
@@ -2535,8 +2604,8 @@ function saveContractValidation(e)
 
 function proceedContractValidations()
 {
-     let from = new Date($('#b_from').val());
-     let to = new Date($('#b_to').val());
+     let from = parseDDMMYYYYtoJSDate($('#b_from').val());
+     let to = parseDDMMYYYYtoJSDate($('#b_to').val());
 
     let passingDate = $('#hid_nxt_passing').val();
     let insuranceDate = $('#hid_nxt_insurance').val();
@@ -2650,8 +2719,8 @@ function saveContract()
                 vehicle_year: $('#v_year').text().trim()
                 };
     let contract_details = {
-                period_from: $('#b_from').val(),
-                period_to: $('#b_to').val(),
+                period_from: convertDDMMYYYYtoYYYYMMDD($('#b_from').val()),
+                period_to: convertDDMMYYYYtoYYYYMMDD($('#b_to').val()),
                 rate_type_id: $('#rate_type').val(),
                 rate_type: $('#rate_type option:selected').text(),
                 service_id: $('#service').val(),
@@ -4067,7 +4136,7 @@ function loadVehiclesTable(modelId, vehicleNumber) {
         content = `<strong class="me-3">Total: ${total}</strong>` + content;
 
                     $('#vehicleAvailabilityContent').html(content);
-                    $('#vehicleAvailabilityBar').show();
+                    $('#vehicleAvailabilityBar').hide();
                     
                 }
             else {
@@ -4266,8 +4335,8 @@ $('.btn_vehicle_select')
 
 function getBookingDetails() {
     return {
-        fromDate: $('.from_datetime_contract').val(),
-        toDate: $('.to_datetime_contract').val(),
+        fromDate: convertDDMMYYYYtoYYYYMMDD($('.from_datetime_contract').val()),
+        toDate: convertDDMMYYYYtoYYYYMMDD($('.to_datetime_contract').val()),
         rateType: $('.rate_type_contract').val(),
         service: $('.service_contract').val(),
         rateTypeText:  $.trim($('.rate_type_contract option:selected').text()),
@@ -4317,7 +4386,7 @@ $(document).on('click', '.btn_vehicle_select', function () {
         return;
     }
     
-    if (new Date(bookingDetails.toDate) < new Date(bookingDetails.fromDate)) {
+    if (new Date(bookingDetails.toDate.replace(' ', 'T')) < new Date(bookingDetails.fromDate.replace(' ', 'T'))) {
         setupDropdown('dropdownContent', 'error', svgError + "Please provide valid date range", 'click');
         return;
     }
@@ -4376,8 +4445,8 @@ $(document).on('click', '.btn_vehicle_select', function () {
             return;
         }
     }
-    let from = new Date(bookingDetails.fromDate);
-    let to = new Date(bookingDetails.toDate);
+    let from = new Date(bookingDetails.fromDate.replace(' ', 'T'));
+    let to = new Date(bookingDetails.toDate.replace(' ', 'T'));
 
     let passingDate = $btn.data('passing');
     let insuranceDate = $btn.data('insurance');
@@ -4489,8 +4558,8 @@ function processVehicleSelection($btn, $card, bookingDetails) {
 function line_item_calculation_contract()
 {
    
-   let from = new Date($('.from_datetime_contract').val());
-   let to = new Date($('.to_datetime_contract').val());
+   let from = parseDDMMYYYYtoJSDate($('.from_datetime_contract').val());
+   let to = parseDDMMYYYYtoJSDate($('.to_datetime_contract').val());
    let rateType = $('.rate_type_contract').val();;
 
     if(from && to && to >= from){
@@ -4531,11 +4600,11 @@ $(document).on('blur','.to_datetime_contract',function(){
     let from = $('.from_datetime_contract').val();
     let to = $(this).val();
        
-        let fromDate = new Date(from);
-        let toDate   = new Date(to);
+        let fromDate = parseDDMMYYYYtoJSDate(from);
+        let toDate   = parseDDMMYYYYtoJSDate(to);
         if(toDate < fromDate){
-        let fromDate = new Date(from);
-        let toDate   = new Date(to);
+        let fromDate = parseDDMMYYYYtoJSDate(from);
+        let toDate   = parseDDMMYYYYtoJSDate(to);
 
         if(toDate < fromDate){
              setupDropdown('dropdownContent','error',svgSuccess+'To date must be after From date','click');
@@ -4580,8 +4649,8 @@ $(document).on('input change', '.watch-field_contract', function () {
 $(document).on('click', '#recalcBtn', function () {
     let fromDate = $('.from_datetime_contract').val();
         let toDate = $('.to_datetime_contract').val();
-        let from = new Date(fromDate);
-        let to = new Date(toDate);
+        let from = parseDDMMYYYYtoJSDate(fromDate);
+        let to = parseDDMMYYYYtoJSDate(toDate);
         let service = $('.service_contract').val();
         let rateType = $('.rate_type_contract').val();
         let modelId = $('#ModelRef_contract').val();
@@ -4656,8 +4725,8 @@ function recalculate()
 {
     let fromDate = $('.from_datetime_contract').val();
     let toDate = $('.to_datetime_contract').val();
-    let from = new Date(fromDate);
-    let to = new Date(toDate);
+    let from = parseDDMMYYYYtoJSDate(fromDate);
+    let to = parseDDMMYYYYtoJSDate(toDate);
        
     let service = $('.service_contract').val();
     let service_text = $('.service_contract option:selected').text();
@@ -4761,8 +4830,8 @@ $(document).on('click', '#proceedSelectedVehicles', function () {
     
         let fromDate = $('.from_datetime_contract').val();
         let toDate = $('.to_datetime_contract').val();
-        let from = new Date(fromDate);
-        let to = new Date(toDate);
+        let from = parseDDMMYYYYtoJSDate(fromDate);
+        let to = parseDDMMYYYYtoJSDate(toDate);
         
        
    // let serviceType = $('#select_service_type').val();
@@ -4826,8 +4895,8 @@ function validateDateRange(from, to) {
         return { valid: false, message: 'Please select both From and To date & time' };
     }
 
-    let fromDate = new Date(from);
-    let toDate = new Date(to);
+    let fromDate = parseDDMMYYYYtoJSDate(from);
+    let toDate = parseDDMMYYYYtoJSDate(to);
 
     if (isNaN(fromDate) || isNaN(toDate)) {
         return { valid: false, message: 'Invalid date format' };
@@ -4881,7 +4950,7 @@ function loadVehiclesTableAvailability(modelId, fromDate, toDate,VehicleNo = nul
         content = `<strong class="me-3">Total: ${total}</strong>` + content;
 
                     $('#vehicleAvailabilityContent').html(content);
-                    $('#vehicleAvailabilityBar').show();
+                    $('#vehicleAvailabilityBar').hide();
                     
                 }
             else {
@@ -4958,7 +5027,7 @@ function loadVehiclesTableAvailability(modelId, fromDate, toDate,VehicleNo = nul
         content = `<strong class="me-3">Total: ${total}</strong>` + content;
 
                     $('#vehicleAvailabilityContent').html(content);
-                    $('#vehicleAvailabilityBar').show();
+                    $('#vehicleAvailabilityBar').hide();
                     
                 }
             else {

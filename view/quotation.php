@@ -763,12 +763,15 @@ function parseDDMMYYYYtoJSDate(dateStr) {
 }
 
 function convertDDMMYYYYtoYYYYMMDD(dateStr) {
-    if (!dateStr || dateStr.length < 10) return dateStr;
+    if (!dateStr || typeof dateStr !== 'string') return dateStr;
     let parts = dateStr.split(' ');
     let dParts = parts[0].split('-');
-    let time = parts[1] || '00:00';
-    if(dParts.length !== 3) return dateStr;
-    return dParts[2] + '-' + dParts[1] + '-' + dParts[0] + ' ' + time;
+    if (dParts.length < 3) return dateStr;
+    
+    if (dParts[0].length === 4) return dateStr; // Already YYYY-MM-DD
+    
+    let timeStr = parts.length > 1 ? ' ' + parts.slice(1).join(' ') : '';
+    return dParts[2] + '-' + dParts[1] + '-' + dParts[0] + timeStr;
 }
 
 function formatYYYYMMDDtoDDMMYYYY(dateStr) {

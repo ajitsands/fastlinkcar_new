@@ -126,7 +126,7 @@ class VehiclesContractListController
       
         $this->close_otp_msg    = $data['close_otp_msg'] ?? '';
         $this->service_name    = $data['service_name'] ?? '';
-        $this->company_id = $_SESSION['company_id'] ?? 1;
+        $this->company_id = !empty($data['company_id']) ? $data['company_id'] : ($_SESSION['company_id'] ?? 1);
         $this->user_id = $_SESSION['user_id'] ?? 1;
         $this->insertedDate = date('Y-m-d');
         $this->page = isset($data['page']) ? (int)$data['page'] : 1;
@@ -260,27 +260,30 @@ class VehiclesContractListController
 		case 'ListContracts':
 
                     $baseQuery = "
-                        SELECT *,
-                            DATE_FORMAT(service_start_date_time, '%d-%m-%Y %H:%i') AS from_date_format,
-                            DATE_FORMAT(service_end_date_time, '%d-%m-%Y %H:%i') AS to_date_format,DATE_FORMAT(agreement_date, '%d-%m-%Y') AS agreement_date_format
+                        SELECT tbl_vehicle_rentout_contracts.*, tc.company_name,
+                            DATE_FORMAT(tbl_vehicle_rentout_contracts.service_start_date_time, '%d-%m-%Y %H:%i') AS from_date_format,
+                            DATE_FORMAT(tbl_vehicle_rentout_contracts.service_end_date_time, '%d-%m-%Y %H:%i') AS to_date_format,DATE_FORMAT(tbl_vehicle_rentout_contracts.agreement_date, '%d-%m-%Y') AS agreement_date_format
                         FROM tbl_vehicle_rentout_contracts
-                        WHERE company_id = :company_id
+                        LEFT JOIN tbl_company tc ON tc.ids = tbl_vehicle_rentout_contracts.company_id
+                        WHERE 1=1
                     ";
                 
-                    $params = [
-                        ':company_id' => $this->company_id
-                    ];
+                    $params = [];
+                    if ($this->company_id !== 'all') {
+                        $baseQuery .= " AND tbl_vehicle_rentout_contracts.company_id = :company_id";
+                        $params[':company_id'] = $this->company_id;
+                    }
                 
                     if (!($this->customer_code == '' || $this->customer_code == 'All')) {
                 
-                        $baseQuery .= " AND customer_code = :customer_code";
+                        $baseQuery .= " AND tbl_vehicle_rentout_contracts.customer_code = :customer_code";
                         $params[':customer_code'] = $this->customer_code;
                     }
                 
                     if ($this->filter_from != '' && $this->filter_to != '') {
                 
                         $baseQuery .= "
-                            AND DATE(agreement_date)
+                            AND DATE(tbl_vehicle_rentout_contracts.agreement_date)
                             BETWEEN :filter_from AND :filter_to
                         ";
                 
@@ -290,11 +293,11 @@ class VehiclesContractListController
                 
                     if (!($this->booking_status == '' || $this->booking_status == 'All')) {
                 
-                        $baseQuery .= " AND agreement_status = :booking_status";
+                        $baseQuery .= " AND tbl_vehicle_rentout_contracts.agreement_status = :booking_status";
                         $params[':booking_status'] = $this->booking_status;
                     }
                 
-                    $baseQuery .= " ORDER BY ids DESC";
+                    $baseQuery .= " ORDER BY tbl_vehicle_rentout_contracts.ids DESC";
                 
                     $result = $this->varPDOModelObj
                         ->selectexecuteQuery($baseQuery, $params);
@@ -322,6 +325,7 @@ class VehiclesContractListController
                             "booking_ids"       => $row['booking_ids'],
                             "booking_no"       => $row['agreement_group_ref_no'],
                             "agreement_no"      => $row['agreement_no'],
+                            "company_name"      => $row['company_name'] ?? 'Direct Contract',
                             "agreement_date"  => $row['agreement_date'],
                             "agreement_date_format"  => $row['agreement_date_format'],
                             "customer_name"     => $row['customer_name'],
@@ -651,7 +655,8 @@ class VehiclesContractListController
                             v.ids, 
                             COALESCE(v.category_id, m.category_id) AS category_id, 
                             v.model_id, 
-                            v.vehicle_number, 
+                            v.vehicle_number,
+                            v.chassis_number, 
                             v.vehicle_year, 
                             v.vehicle_color,
                             c.category_name, 
@@ -662,7 +667,8 @@ class VehiclesContractListController
                             v.next_passing_date,
                             DATE_FORMAT(v.next_insurance_date, '%d/%m/%Y') AS formatted_next_insurance_date,
                             DATE_FORMAT(v.next_maintenance_date, '%d/%m/%Y') AS formatted_next_maintenance_date,
-                            DATE_FORMAT(v.next_passing_date, '%d/%m/%Y') AS formatted_next_passing_date  
+                            DATE_FORMAT(v.next_passing_date, '%d/%m/%Y') AS formatted_next_passing_date,
+                            v.image_json AS vehicle_images
                          FROM tbl_vehicles v
                          LEFT JOIN tbl_vehicle_model m ON m.ids = v.model_id
                          LEFT JOIN tbl_vehicle_category c ON c.ids = COALESCE(v.category_id, m.category_id)

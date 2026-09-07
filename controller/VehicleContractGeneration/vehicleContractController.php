@@ -58,6 +58,7 @@ class VehiclesContractController
         $this->filter_from = $data['filter_from'] ?? '';
         $this->filter_to = $data['filter_to'] ?? '';
         $this->selectedBookingIds   = $data['selectedBookingIds'] ?? [];
+        $this->is_rentout = isset($data['is_rentout']) ? (int)$data['is_rentout'] : 0;
         $this->hirer_name         = $data['hirer_name'] ?? '';
         $this->delivery_name      = $data['delivery_name'] ?? '';
         $this->hirer_signature    = $data['hirer_signature'] ?? '';
@@ -144,7 +145,8 @@ class VehiclesContractController
             customer_driver_attachments,
             minprice_otp_details,
             log_json,
-            terms_condition
+            terms_condition,
+            agreement_status
         ) VALUES (
             :booking_ids,
             :company_id,
@@ -174,7 +176,8 @@ class VehiclesContractController
             :cust_driver_docs,
             :otp_details,
             :log_details,
-            :terms_condition
+            :terms_condition,
+            :agreement_status
         )";
 
         $array[2] = "UPDATE tbl_vehicle_rentout_contracts SET
@@ -207,7 +210,8 @@ class VehiclesContractController
                 customer_driver_attachments = :cust_driver_docs,
                 minprice_otp_details = :otp_details,
                 log_json = :log_details,
-                terms_condition = :terms_condition
+                terms_condition = :terms_condition,
+                agreement_status = :agreement_status
             WHERE ids = :contract_id";
             
         $array[3] = "SELECT t_c_name, terms_condition FROM tbl_terms_and_condition_contract WHERE ids = :tc_ids";
@@ -251,7 +255,7 @@ class VehiclesContractController
     
         $year = date('Y');
     
-        $prefix = "$companyCode/$year/AGR/";
+        $prefix = "$companyCode/AGR/$year/";
     
         // Get last agreement number for this year and company
         $sql = "SELECT agreement_no 
@@ -654,9 +658,76 @@ class VehiclesContractController
                                                     $this->termsContent,
                                         
                                                 // ✅ for WHERE condition
-                                                ':contract_id' => $this->contract_ids
+                                                ':contract_id' => $this->contract_ids,
+                                                ':agreement_status' => ($this->is_rentout == 1) ? 'Rentout' : 'Generated'
                                             ]
                                         );
+                                        
+                                if ($this->ReturnData) {
+                                    $updateBookingQuery = "
+                                        UPDATE tbl_vehicle_bookings
+                                        SET book_status = " . ($this->is_rentout == 1 ? "'Rentout'" : "'Confirmed'") . "
+                                        WHERE ids = :booking_id
+                                    ";
+                                
+                                    $updateBookingParams = [
+                                        ':booking_id' => $this->booking_ids
+                                    ];
+                                
+                                    $this->varPDOModelObj->executeQuery(
+                                        $updateBookingQuery,
+                                        $updateBookingParams
+                                    );
+                                }
+
+                                if ($this->is_rentout == 1) {
+                                    $actual_vehicle_id = !empty($this->vehicleid) ? $this->vehicleid : ($this->vehicle_data['vehicle_id'] ?? 0);
+                                    $this->varPDOModelObj->executeQuery("UPDATE tbl_vehicles SET vehicle_status = 'Rentout' WHERE ids = " . intval($actual_vehicle_id));
+                                    
+                                    $existing_agreement_no = $this->generateAgreementNo($this->varPDOModelObj, $this->company_id, $this->contract_ids);
+
+                                    $this->varPDOModelObj->executeQuery("
+                                        INSERT INTO tbl_vehicle_log_movement 
+                                        (vehicle_ids, vehicle_no, log_datetime, action_type, reference_type, reference_id, reference_no, odometer, fuel_level, customer_id, created_by, created_name, created_on)
+                                        VALUES 
+                                        (:vehicle_id, :vehicle_no, NOW(), 'Rentout', 'Direct Contract', :reference_id, :reference_no, :odometer, :fuel_level, :customer_code, :user_id, :created_name, NOW())
+                                    ", [
+                                        ':vehicle_id' => $actual_vehicle_id,
+                                        ':vehicle_no' => $this->vehicle_data['veh_no'] ?? '',
+                                        ':reference_id' => $this->contract_ids,
+                                        ':reference_no' => $existing_agreement_no,
+                                        ':odometer' => $this->vehicle_accessories['vehicle_km_out'] ?? 0,
+                                        ':fuel_level' => $this->vehicle_accessories['fuel_level'] ?? '',
+                                        ':customer_code' => $this->customer_data['customer_code'] ?? '',
+                                        ':user_id' => $this->user_id,
+                                        ':created_name' => $_SESSION['full_name'] ?? 'System'
+                                    ]);
+
+                                    $b_unit_price = $this->contract_details['unit_price'] ?? 0;
+                                    $duration = $this->contract_details['duration'] ?? 1;
+                                    $b_vat_perc = $this->contract_details['vat'] ?? 0;
+                                    $debit = number_format(($b_unit_price * (float)$duration) + (($b_unit_price * (float)$duration) * ((float)$b_vat_perc / 100)), 3, '.', '');
+                                    
+                                    $this->varPDOModelObj->executeQuery("
+                                        INSERT INTO tbl_customer_ledger
+                                        (customer_code, quotation_no, booking_no, trans_date, trans_type, payment_method, debit, credit, ref_no, description, user_id, company_id, created_at, booking_ids, contract_ids, agreement_no)
+                                        VALUES
+                                        (:customer_code, '', '', :trans_date, 'Direct Contract Rentout', 'N/A', :debit, 0, :ref_no, :description, :user_id, :company_id, :created_at, :booking_ids, :contract_ids, :agreement_no)
+                                    ", [
+                                        ':customer_code' => $this->customer_data['customer_code'] ?? '',
+                                        ':trans_date'    => date('Y-m-d'),
+                                        ':debit'         => $debit,
+                                        ':ref_no'        => $existing_agreement_no,
+                                        ':description'   => 'Rentout from Direct Contract (Agreement No: ' . $existing_agreement_no . ')',
+                                        ':user_id'       => $this->user_id,
+                                        ':company_id'    => $this->company_id,
+                                        ':created_at'    => date('Y-m-d H:i:s'),
+                                        ':booking_ids'   => $this->booking_ids,
+                                        ':contract_ids'  => $this->contract_ids,
+                                        ':agreement_no'  => $existing_agreement_no
+                                    ]);
+                                }
+
                                 echo json_encode([
                                     "status" => true,
                                     "message" => "Saved successfully",
@@ -762,14 +833,16 @@ class VehiclesContractController
                                         ':log_details' => $json_log,
                         
                                         ':terms_condition' =>
-                                            $this->termsContent
+                                            $this->termsContent,
+                                            
+                                        ':agreement_status' => ($this->is_rentout == 1) ? 'Rentout' : 'Generated'
                                     ]
                                 );
                              if ($this->ReturnData) {
 
                                     $updateBookingQuery = "
                                         UPDATE tbl_vehicle_bookings
-                                        SET book_status = 'Confirmed'
+                                        SET book_status = " . ($this->is_rentout == 1 ? "'Rentout'" : "'Confirmed'") . "
                                         WHERE ids = :booking_id
                                     ";
                                 
@@ -784,6 +857,53 @@ class VehiclesContractController
                                         $updateBookingParams
                                     );
                                 
+                                    if ($this->is_rentout == 1) {
+                                        $this->varPDOModelObj->executeQuery("UPDATE tbl_vehicles SET vehicle_status = 'Rentout' WHERE ids = " . intval($this->vehicleid));
+                                        
+                                        $inserted_contract_id = $this->varPDOModelObj->varDBPDO->lastInsertId();
+                                        $inserted_agreement_no = $this->generateAgreementNo($this->varPDOModelObj, $bookingCompanyId, $inserted_contract_id);
+                                        
+                                        $this->varPDOModelObj->executeQuery("
+                                            INSERT INTO tbl_vehicle_log_movement 
+                                            (vehicle_ids, vehicle_no, log_datetime, action_type, reference_type, reference_id, reference_no, odometer, fuel_level, customer_id, created_by, created_name, created_on)
+                                            VALUES 
+                                            (:vehicle_id, :vehicle_no, NOW(), 'Rentout', 'Direct Contract', :reference_id, :reference_no, :odometer, :fuel_level, :customer_code, :user_id, :created_name, NOW())
+                                        ", [
+                                            ':vehicle_id' => $this->vehicleid,
+                                            ':vehicle_no' => $this->vehicle_data['veh_no'] ?? '',
+                                            ':reference_id' => $inserted_contract_id,
+                                            ':reference_no' => $inserted_agreement_no,
+                                            ':odometer' => $this->vehicle_accessories['vehicle_km_out'] ?? 0,
+                                            ':fuel_level' => $this->vehicle_accessories['fuel_level'] ?? '',
+                                            ':customer_code' => $this->customer_data['customer_code'] ?? '',
+                                            ':user_id' => $this->user_id,
+                                            ':created_name' => $_SESSION['full_name'] ?? 'System'
+                                        ]);
+    
+                                        $b_unit_price = $this->contract_details['unit_price'] ?? 0;
+                                        $duration = $this->contract_details['duration'] ?? 1;
+                                        $b_vat_perc = $this->contract_details['vat'] ?? 0;
+                                        $debit = number_format(($b_unit_price * (float)$duration) + (($b_unit_price * (float)$duration) * ((float)$b_vat_perc / 100)), 3, '.', '');
+                                        
+                                        $this->varPDOModelObj->executeQuery("
+                                            INSERT INTO tbl_customer_ledger
+                                            (customer_code, quotation_no, booking_no, trans_date, trans_type, payment_method, debit, credit, ref_no, description, user_id, company_id, created_at, booking_ids, contract_ids, agreement_no)
+                                            VALUES
+                                            (:customer_code, '', '', :trans_date, 'Direct Contract Rentout', 'N/A', :debit, 0, :ref_no, :description, :user_id, :company_id, :created_at, :booking_ids, :contract_ids, :agreement_no)
+                                        ", [
+                                            ':customer_code' => $this->customer_data['customer_code'] ?? '',
+                                            ':trans_date'    => date('Y-m-d'),
+                                            ':debit'         => $debit,
+                                            ':ref_no'        => $inserted_agreement_no,
+                                            ':description'   => 'Rentout from Direct Contract (Agreement No: ' . $inserted_agreement_no . ')',
+                                            ':user_id'       => $this->user_id,
+                                            ':company_id'    => $this->company_id,
+                                            ':created_at'    => date('Y-m-d H:i:s'),
+                                            ':booking_ids'   => $this->booking_ids,
+                                            ':contract_ids'  => $inserted_contract_id,
+                                            ':agreement_no'  => $inserted_agreement_no
+                                        ]);
+                                    }
                                 }
                                 echo json_encode([
                                     "status" => true,
@@ -1198,9 +1318,22 @@ class VehiclesContractController
                     
                     $this->varPDOModelObj->varDBPDO->beginTransaction();
 
+                    // Fetch Company Code
+                    $companyCode = 'AA'; // Default fallback
+                    if (!empty($company_id) && $company_id !== 'all') {
+                        $stmtComp = $this->varPDOModelObj->selectexecuteQuery(
+                            "SELECT company_code FROM tbl_company WHERE ids = :company_id",
+                            [':company_id' => $company_id]
+                        );
+                        $compRow = $stmtComp->fetch(PDO::FETCH_ASSOC);
+                        if ($compRow && !empty($compRow['company_code'])) {
+                            $companyCode = $compRow['company_code'];
+                        }
+                    }
+
                     // Generate Sequence for this company
                     $year = date('Y');
-                    $prefix = "AA/$year/AGR/";
+                    $prefix = "$companyCode/AGR/$year/";
                     $sql = "SELECT agreement_no FROM tbl_vehicle_rentout_contracts WHERE agreement_no LIKE :prefix ORDER BY ids DESC LIMIT 1";
                     $stmt = $this->varPDOModelObj->selectexecuteQuery($sql, [':prefix' => "$prefix%"]);
                     $last = $stmt->fetch(PDO::FETCH_ASSOC);

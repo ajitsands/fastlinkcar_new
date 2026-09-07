@@ -52,6 +52,7 @@ include('envinclude.php');
     <link rel="stylesheet" href="../assets/vendor/libs/quill/katex.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/quill/editor.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda-themeless.min.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/bs-stepper/bs-stepper.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/fullcalendar/fullcalendar.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/notyf/notyf.css" />
      <style>
@@ -191,6 +192,13 @@ tr.shown {
     z-index: 99999 !important;
 }
 
+#contractTable > thead > tr > th {
+    background: #ffeff0 !important;
+    color: #d12222 !important;
+    border-bottom: 2px solid #d12222 !important;
+    font-weight: 600;
+    text-transform: uppercase;
+}
     </style>
   </head>
 
@@ -272,6 +280,7 @@ tr.shown {
 
     <!-- build:js assets/vendor/js/theme.js  -->
     <?php include('templates/scripts.php'); ?>
+    <script src="../assets/vendor/libs/bs-stepper/bs-stepper.js"></script>
 
     <!-- endbuild -->
 
@@ -840,6 +849,33 @@ $('#selectCustomerFromSelect2').on('select2:clear', function () {
 }); 
 
 
+function loadCompanies() {
+    $.ajax({
+        url: '/LoadCompanies',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ action: 'LoadCompanies' }),
+        success: function(response) {
+            let companies = response.data;
+            $('#companySelect').empty();
+            if (companies.length > 1) {
+                $('#companySelect').append(new Option('All Companies', 'all', true, true));
+            } else {
+                $('#companySelect').prop('disabled', true);
+            }
+            companies.forEach(function(company) {
+                let option = new Option(company.company_name, company.ids, false, false);
+                $('#companySelect').append(option);
+            });
+            $('#companySelect').trigger('change');
+        }
+    });
+}
+
+$('#companySelect').on('change', function() {
+    searchContractList();
+});
+
  $(document).on("click", "#btnMainSearch", function () {
     
    
@@ -852,6 +888,7 @@ function searchContractList()
     let filter_from=$('#filter_from_date').val();
     let filter_to=$('#filter_to_date').val();
     let booking_status=$('#select_booking_status').val();
+    let company_id = $('#companySelect').val() || 'all';
      
   
         if (
@@ -867,16 +904,19 @@ function searchContractList()
             return;
         }
   
-   load_contract_list(customer_code, filter_from, filter_to, booking_status);
+   load_contract_list(customer_code, filter_from, filter_to, booking_status, company_id);
 }
 
   var table;
- load_contract_list();
+ loadCompanies();
+ // load_contract_list() will be called by the change event of companySelect when it finishes loading.
+
 function load_contract_list(
     customer_code = 'All',
     filter_from = '',
     filter_to = '',
-    booking_status = 'All'
+    booking_status = 'All',
+    company_id = 'all'
 ) {
 
     // Destroy existing table
@@ -900,7 +940,8 @@ function load_contract_list(
                   customer_code: customer_code,
                     filter_from: filter_from,
                     filter_to: filter_to,
-                    booking_status: booking_status
+                    booking_status: booking_status,
+                    company_id: company_id
             });
         },
         dataSrc: 'data'
@@ -935,6 +976,21 @@ function load_contract_list(
                 return `
                     <div class="fw-semibold">
                         ${data}
+                    </div>
+                `;
+            }
+        },
+        
+        // Company & Ref No
+        {
+            data: null,
+            render: function (data, type, row) {
+                let badge = `<span class="badge bg-label-danger">${row.company_name}</span>`;
+                let ref = row.booking_no ? row.booking_no : 'Direct Contract';
+                return `
+                    <div>
+                        ${badge}<br>
+                        <small>${ref}</small>
                     </div>
                 `;
             }
@@ -1055,48 +1111,8 @@ function load_contract_list(
             
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 p-2 action-menu">
                             
-                                ${row.agreement_status === 'Generated' ? `
                                 <li>
-                                    <a class="dropdown-item text-danger fw-semibold changeStatus"
-                                       data-id="${row.booking_ids}"
-                                       data-status="Rentout"
-                                       data-vehicleid="${row.vehicle_id}"
-                                       style="cursor:pointer;">
-                                        🚗 Rent Out
-                                    </a>
-                                </li>
-                                ` : ''}
-                                <li>
-                                    <a class="dropdown-item rounded text-success fw-semibold print_agreement_btn" href="javascript:void(0)"
-                                       data-id="${row.ids}"
-                                       data-vehicle="${row.vehicle_id}"
-                                       data-model="${row.model_id}"
-                                       data-customer="${row.customer_code}"
-                                       data-contract="${row.agreement_no}"
-                                       data-booking_id="${row.booking_ids}"
-                                      >
-            
-                                        <i class="ri ri-printer-fill me-2"></i>
-                                        Print Agreement
-                                    </a>
-                                </li>
-            
-                                <li>
-                                    <a class="dropdown-item rounded text-info fw-semibold send_agreement_btn"
-                                       href="javascript:void(0)"
-                                       data-id="${row.ids}"
-                                       data-vehicle="${row.vehicle_id}"
-                                       data-model="${row.model_id}"
-                                       data-customer="${row.customer_code}"
-                                       data-contract="${row.agreement_no}"
-                                       data-booking_id="${row.booking_ids}">
-                                        <i class="ri ri-send-plane-fill me-2"></i>
-                                        Send Agreement
-                                    </a>
-                                </li>
-            
-                                <li>
-                                    <a class="dropdown-item rounded text-warning fw-semibold extend_contract_btn"
+                                    <a class="dropdown-item rounded fw-semibold extend_contract_btn"
                                        href="javascript:void(0)"
                                        data-id="${row.ids}"
                                        data-vehicle="${row.vehicle_id}"
@@ -1112,7 +1128,7 @@ function load_contract_list(
                                 </li>
             
                                 <li>
-                                    <a class="dropdown-item rounded text-primary fw-semibold extend_list_btn"
+                                    <a class="dropdown-item rounded fw-semibold extend_list_btn"
                                        href="javascript:void(0)"
                                         data-id="${row.ids}"
                                        data-vehicle="${row.vehicle_id}"
@@ -1122,14 +1138,12 @@ function load_contract_list(
                                        data-booking_id="${row.booking_ids}">
             
                                         <i class="ri ri-calendar-event-line me-2"></i>
-                                        Extended List
+                                        Contract Extensions
                                     </a>
                                 </li>
-            
-                                <li><hr class="dropdown-divider my-2"></li>
                                 
                                  <li>
-                                    <a class="dropdown-item rounded text-warning fw-semibold return_contract_btn"
+                                    <a class="dropdown-item rounded fw-semibold return_contract_btn"
                                        href="javascript:void(0)"
                                          data-id="${row.ids}"
                                        data-vehicle="${row.vehicle_id}"
@@ -1143,7 +1157,7 @@ function load_contract_list(
                                     </a>
                                 </li>
                                  <li>
-                                    <a class="dropdown-item rounded text-danger fw-semibold replace_contract_btn"
+                                    <a class="dropdown-item rounded fw-semibold replace_contract_btn"
                                        href="javascript:void(0)"
                                          data-id="${row.ids}"
                                        data-vehicle="${row.vehicle_id}"
@@ -1157,21 +1171,65 @@ function load_contract_list(
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item rounded text-success fw-semibold close_contract_button"
+                                    <a class="dropdown-item rounded fw-semibold close_contract_button"
                                        href="javascript:void(0)"
                                         data-id="${row.ids}"
                                        data-vehicle="${row.vehicle_id}"
                                        data-model="${row.model_id}"
                                        data-customer="${row.customer_code}"
                                        data-contract="${row.agreement_no}"
-                                       data-booking_id="${row.booking_ids}"">
+                                       data-booking_id="${row.booking_ids}">
             
                                         <i class="ri ri-lock-line me-2"></i>
                                         Close Contract
                                     </a>
                                 </li>
+                                
+                                <li><hr class="dropdown-divider my-2"></li>
+
+                                ${row.agreement_status === 'Generated' ? `
+                                <li>
+                                    <a class="dropdown-item fw-semibold changeStatus"
+                                       data-id="${row.booking_ids}"
+                                       data-status="Rentout"
+                                       data-vehicleid="${row.vehicle_id}"
+                                       style="cursor:pointer;">
+                                        🚗 Rent Out
+                                    </a>
+                                </li>
+                                ` : ''}
+
+                                <li>
+                                    <a class="dropdown-item rounded fw-semibold print_agreement_btn" href="javascript:void(0)"
+                                       data-id="${row.ids}"
+                                       data-vehicle="${row.vehicle_id}"
+                                       data-model="${row.model_id}"
+                                       data-customer="${row.customer_code}"
+                                       data-contract="${row.agreement_no}"
+                                       data-booking_id="${row.booking_ids}"
+                                      >
+            
+                                        <i class="ri ri-printer-fill me-2"></i>
+                                        Print Agreement
+                                    </a>
+                                </li>
+            
+                                <li>
+                                    <a class="dropdown-item rounded fw-semibold send_agreement_btn"
+                                       href="javascript:void(0)"
+                                       data-id="${row.ids}"
+                                       data-vehicle="${row.vehicle_id}"
+                                       data-model="${row.model_id}"
+                                       data-customer="${row.customer_code}"
+                                       data-contract="${row.agreement_no}"
+                                       data-booking_id="${row.booking_ids}">
+                                        <i class="ri ri-send-plane-fill me-2"></i>
+                                        Send Agreement
+                                    </a>
+                                </li>
+                                
                                <li>
-                                    <a class="dropdown-item rounded text-primary fw-semibold view_contract_details"
+                                    <a class="dropdown-item rounded fw-semibold view_contract_details"
                                        href="javascript:void(0)"
                                        data-id="${row.ids}"
                                        data-vehicle="${row.vehicle_id}"
@@ -2100,9 +2158,9 @@ $(document).on('click', '#contractTable li a.extend_list_btn', function (e) {
         
         
          $('#elist_agreement_ref').text(agreement_no);
-         $('#elist_txt_extend_modal_agreement_id').val(id);
-         $('#elist_txt_extend_modal_agreement_no').val(agreement_no);
-          $('#elist_txt_extend_modal_booking_ids').val(booking_ids);
+         $('#txt_elist_modal_agreement_id').val(id);
+         $('#txt_elist_modal_agreement_no').val(agreement_no);
+          $('#txt_elist_modal_booking_ids').val(booking_ids);
          
         openExtendList(id,vehicleid,customer_code,model_ids);
         
@@ -2137,198 +2195,212 @@ function openExtendList(id,vehicleid,customer_code,model_ids) {
 function populateelistContractModal(d) {
 
     let data = (typeof d === "string") ? JSON.parse(d) : d;
-   
-        $('#elist_c_name').text(data.customer.customer_name || '');
-        $('#elist_c_code').text(data.customer.customer_id || '');
-        $('#elist_c_mobile').text(data.customer.customer_mobile || '');
-        $('#elist_c_email').text(data.customer.customer_email || '');
-        $('#elist_c_attn').text(data.customer.customer_attn || '');
-        $('#elist_c_attr').text(data.customer.customer_addr || '');
-        
-        $('#elist_v_no').text(data.vehicle.vehicle_number || '');
-        $('#elist_v_model').text(data.vehicle.model_names || '');
-        $('#elist_v_brand').text(data.vehicle.brand_name || '');
-        $('#elist_v_category').text(data.vehicle.category_name || '');
-        $('#elist_v_color').text(data.vehicle.vehicle_color || '');
-        $('#elist_v_year').text(data.vehicle.vehicle_year || '');
-        $('#elist_v_passing').text(data.vehicle.formatted_next_passing_date || '');
-        $('#elist_hid_nxt_passing').val(data.vehicle.next_passing_date || '');  
-        $('#elist_v_maintenance').text(data.vehicle.formatted_next_maintenance_date || '');
-        $('#elist_hid_nxt_maintenance').val(data.vehicle.next_maintenance_date || '');  
-        $('#elist_v_insurance').text(data.vehicle.formatted_next_insurance_date || ''); 
-        $('#elist_hid_nxt_insurance').val(data.vehicle.next_insurance_date || '');  
-        
-        
-        $('#elist_hid_vehicle_id').val(data.vehicle.ids || '');
-        $('#elist_hid_category_id').val(data.vehicle.category_id || '');
-        $('#elist_hid_model_id').val(data.vehicle.model_id || '');
-        $('#elist_hid_vehicle_no').val(data.vehicle.vehicle_number || '');
-        
-       
-        
-        
-        data.price_list.forEach(function(item) {
-        
-            switch(item.item) {
-                case "Price per hour rental without driver":
-                    $('#elist_wod_hourly').text(parseFloat(item.amount).toFixed(3) || '0.000');
-                    break;
-                case "Price per hour rental with driver":
-                    $('#elist_wd_hourly').text(parseFloat(item.amount).toFixed(3) || '0.000');
-                    break;
-                case "Price per day rental without driver":
-                    $('#elist_wod_daily').text(parseFloat(item.amount).toFixed(3) || '0.000');
-                    break;
-                case "Price per day rental with driver":
-                    $('#elist_wd_daily').text(parseFloat(item.amount).toFixed(3) || '0.000');
-                    break;
-                case "Price per week rental without driver":
-                    $('#elist_wod_weekly').text(parseFloat(item.amount).toFixed(3) || '0.000');
-                    break;
-                case "Price per week rental with driver":
-                    $('#elist_wd_weekly').text(parseFloat(item.amount).toFixed(3) || '0.000');
-                    break;
-                case "Price per month rental without driver":
-                    $('#elist_wod_monthly').text(parseFloat(item.amount).toFixed(3) || '0.000');
-                    break;
-                case "Price per month rental with driver":
-                   $('#elist_wd_monthly').text(parseFloat(item.amount).toFixed(3) || '0.000');
-                    break;
+
+    // ── Customer ──────────────────────────────────────────────────────
+    $('#elist_c_name').text(data.customer.customer_name || '');
+    $('#elist_c_code').text(data.customer.customer_id || '');
+    $('#elist_c_mobile').text(data.customer.customer_mobile || '');
+    $('#elist_c_email').text(data.customer.customer_email || '');
+    let eAttn = data.customer.customer_attn || '';
+    let eAddr = data.customer.customer_addr || '';
+    $('#elist_c_attn').text(eAttn);
+    $('#elist_c_attr').text(eAttn && eAddr ? ' - ' + eAddr : eAddr);
+
+    // ── Vehicle ───────────────────────────────────────────────────────
+    $('#elist_v_no').text(data.vehicle.vehicle_number || '');
+    $('#elist_v_model').text(data.vehicle.model_names || '');
+    $('#elist_v_brand').text(data.vehicle.brand_name || '');
+    $('#elist_v_category').text(data.vehicle.category_name || '');
+    $('#elist_v_color').text(data.vehicle.vehicle_color || '');
+    $('#elist_v_year').text(data.vehicle.vehicle_year || '');
+    $('#elist_v_chassis').text(data.vehicle.chassis_number || '-');
+    $('#elist_v_passing').text(data.vehicle.formatted_next_passing_date || '');
+    $('#elist_hid_nxt_passing').val(data.vehicle.next_passing_date || '');
+    $('#elist_v_maintenance').text(data.vehicle.formatted_next_maintenance_date || '');
+    $('#elist_hid_nxt_maintenance').val(data.vehicle.next_maintenance_date || '');
+    $('#elist_v_insurance').text(data.vehicle.formatted_next_insurance_date || '');
+    $('#elist_hid_nxt_insurance').val(data.vehicle.next_insurance_date || '');
+    $('#elist_hid_vehicle_id').val(data.vehicle.ids || '');
+    $('#elist_hid_category_id').val(data.vehicle.category_id || '');
+    $('#elist_hid_model_id').val(data.vehicle.model_id || '');
+    $('#elist_hid_vehicle_no').val(data.vehicle.vehicle_number || '');
+
+    // ── Vehicle image mini-slider ──────────────────────────────────────
+    let eImages = data.vehicle.vehicle_images;
+    if (typeof eImages === "string") { try { eImages = JSON.parse(eImages); } catch(e) { eImages = []; } }
+    if (!Array.isArray(eImages)) eImages = [];
+    eImages = eImages.filter(img => img && img !== "default.jpg");
+    if (eImages.length === 0) eImages = ["default.jpg"];
+
+    let eSliderImg  = document.getElementById("elistVSliderImg");
+    let eSliderDots = document.getElementById("elistVSliderDots");
+    let eSliderPrev = document.getElementById("elistVSliderPrev");
+    let eSliderNext = document.getElementById("elistVSliderNext");
+    let eSliderIdx  = 0;
+
+    function elistSliderShow(idx) {
+        eSliderIdx = (idx + eImages.length) % eImages.length;
+        eSliderImg.src = eImages[eSliderIdx] === "default.jpg"
+            ? "uploads/vehicleImages/default.jpg"
+            : "uploads/vehicleImages/" + eImages[eSliderIdx];
+        if (eSliderDots) {
+            eSliderDots.querySelectorAll(".slider-dot").forEach((d, i) =>
+                d.classList.toggle("active", i === eSliderIdx));
+        }
+    }
+
+    if (eSliderDots) {
+        eSliderDots.innerHTML = "";
+        if (eImages.length > 1) {
+            eImages.forEach((_, i) => {
+                let dot = document.createElement("span");
+                dot.className = "slider-dot" + (i === 0 ? " active" : "");
+                dot.addEventListener("click", () => elistSliderShow(i));
+                eSliderDots.appendChild(dot);
+            });
+        }
+    }
+    if (eSliderPrev) { eSliderPrev.style.display = eImages.length > 1 ? "" : "none"; eSliderPrev.onclick = () => elistSliderShow(eSliderIdx - 1); }
+    if (eSliderNext) { eSliderNext.style.display = eImages.length > 1 ? "" : "none"; eSliderNext.onclick = () => elistSliderShow(eSliderIdx + 1); }
+    elistSliderShow(0);
+
+    // ── Pricing ───────────────────────────────────────────────────────
+    data.price_list.forEach(function(item) {
+        switch(item.item) {
+            case "Price per hour rental without driver":  $('#elist_wod_hourly').text(parseFloat(item.amount).toFixed(3)); break;
+            case "Price per hour rental with driver":     $('#elist_wd_hourly').text(parseFloat(item.amount).toFixed(3)); break;
+            case "Price per day rental without driver":   $('#elist_wod_daily').text(parseFloat(item.amount).toFixed(3)); break;
+            case "Price per day rental with driver":      $('#elist_wd_daily').text(parseFloat(item.amount).toFixed(3)); break;
+            case "Price per week rental without driver":  $('#elist_wod_weekly').text(parseFloat(item.amount).toFixed(3)); break;
+            case "Price per week rental with driver":     $('#elist_wd_weekly').text(parseFloat(item.amount).toFixed(3)); break;
+            case "Price per month rental without driver": $('#elist_wod_monthly').text(parseFloat(item.amount).toFixed(3)); break;
+            case "Price per month rental with driver":    $('#elist_wd_monthly').text(parseFloat(item.amount).toFixed(3)); break;
+        }
+    });
+
+    // ── Stepper: reset to step 1 ──────────────────────────────────────
+    if (window.elistStepper) {
+        try { window.elistStepper.destroy(); } catch(e) {}
+    }
+    let elistStepperEl = document.querySelector('#elistStepper');
+    if (elistStepperEl) {
+        window.elistStepper = new Stepper(elistStepperEl, {
+            linear: false,
+            animation: true
+        });
+        elistStepperEl.addEventListener('shown.bs-stepper', function (event) {
+            if (typeof extensiontable !== 'undefined') {
+                extensiontable.columns.adjust().draw();
             }
         });
-       
-        let contract = data.contract || {};
-     
-       listExtendedList(data.contract.ids);
-}     
-
-
-  var extensiontable;
-function listExtendedList(agreement_ids) 
-{
-
-    if ($.fn.DataTable.isDataTable('#contractExtensionTable')) {
-       $('#contractExtensionTable').DataTable().destroy();
-        $('#contractExtensionTable tbody').empty();
     }
-    
-    
-   extensiontable = $('#contractExtensionTable').DataTable({
+    extensiontable = $('#contractExtensionTable').DataTable({
     processing: true,
+    destroy: true,
     serverSide: false,
+    pageLength: 10,
+    scrollX: true,
     ajax: {
         url: '/ContractListController',
         type: 'POST',
         contentType: 'application/json',
         data: function () {
-
             return JSON.stringify({
                 action: 'ListContractExtensions',
-                  agreementid: agreement_ids
+                agreementid: $('#txt_elist_modal_agreement_id').val()
             });
         },
         dataSrc: 'data'
     },
 
-    columns: [
+    columnDefs: [
+        { targets: 0,  width: '40px',  className: 'text-center align-middle' },
+        { targets: 1,  width: '120px', className: 'align-middle' },
+        { targets: 2,  width: '100px', className: 'text-center align-middle text-nowrap' },
+        { targets: 3,  width: '160px', className: 'align-middle text-nowrap' },
+        { targets: 4,  width: '180px', className: 'align-middle' },
+        { targets: 5,  width: '150px', className: 'align-middle' },
+        { targets: 6,  width: '130px', className: 'align-middle' },
+        { targets: 7,  width: '110px', className: 'text-center align-middle' },
+    ],
 
-       {
+    columns: [
+        // #
+        {
             data: null,
             orderable: false,
             searchable: false,
             render: function (data, type, row, meta) {
-        
-                return `
-                    <div class="d-flex align-items-center gap-2">
-        
-                        <span>
-                            ${meta.row + 1}
-                        </span>
-        
-                        
-                    </div>
-                `;
+                return `<span class="text-muted fw-semibold">${meta.row + 1}</span>`;
             }
         },
- 
+        // Agreement No
         {
             data: 'agreement_no',
-            render: function (data, type, row) {
-
-                return `
-                    <div class="fw-semibold">
-                        ${data}
-                    </div>
-                `;
+            render: function (data) {
+                return `<span class="badge bg-label-primary fw-semibold">${data || '-'}</span>`;
             }
         },
-
-        {
-            data: 'extension_date_format'
-        },
+        // Date
+        { data: 'extension_date_format' },
+        // Extension Period
         {
             data: null,
             render: function (data, type, row) {
-                return `
-                        <div>
-                            <strong><small>${row.from_date_format} - ${row.to_date_format}</small>
-                         </strong>
-                        </div>
-                        `;
-               
+                return `<div class="lh-sm">
+                    <div class="fw-semibold small">${row.from_date_format || '-'}</div>
+                    <div class="text-muted" style="font-size:0.75rem;">to</div>
+                    <div class="fw-semibold small">${row.to_date_format || '-'}</div>
+                </div>`;
             }
         },
-       
+        // Details
         {
             data: null,
             render: function (data, type, row) {
-                return `
-                        <div>
-                            <strong>${row.service_name}</strong><br>
-                            <small>${row.rate_type}</small><small>, Duration: ${row.duration}</small><br>
-                         <small>Min Price: ${row.min_price}</small> , Qtn Ref: ${row.qtn_ref_no}</small>
-                        </div>
-                        `;
-                
+                return `<div class="lh-sm small">
+                    <div class="fw-semibold">${row.service_name || '-'}</div>
+                    <div class="text-muted">${row.rate_type || ''} &bull; Duration: <strong>${row.duration || 0}</strong></div>
+                    <div class="text-muted">Min: ${row.min_price || '0.000'} &bull; Qtn: ${row.qtn_ref_no || '-'}</div>
+                </div>`;
             }
         },
+        // Pricing
         {
             data: null,
             render: function (data, type, row) {
-                return `
-                        <div>
-                            <strong>Total: ${row.total_amt}</strong><br>
-                            <small>Unit Price: ${row.unit_price}</small><small>, VAT: ${row.duration}</small><br>
-                            <small>${row.otp_details}</small>
-                            
-                        </div>
-                        `;
-                
+                return `<div class="lh-sm small">
+                    <div class="fw-bold text-danger">Total: ${row.total_amt || '0.000'}</div>
+                    <div class="text-muted">Unit: ${row.unit_price || '0.000'} &bull; VAT: ${row.vat || '0'}%</div>
+                    <div class="text-muted" style="font-size:0.72rem;">${row.otp_details || ''}</div>
+                </div>`;
             }
         },
-       {
-            data: 'booking_notes'
+        // Notes
+        {
+            data: 'booking_notes',
+            render: function(data) {
+                return `<span class="small text-muted">${data || '-'}</span>`;
+            }
         },
-
-        
         // Actions
         {
             data: null,
             orderable: false,
             render: function (data, type, row) {
-
                 return `
-            
-                    <button class="btn btn-sm btn-primary shadow-sm rounded-pill deleteExtension"
-                                data-id="${row.ids}"
-                                 data-agreement_ids="${row.agreement_ids}"
-                                data-contract="${row.agreement_no}"
-                                data-customer_code="${row.customer_code}"
-                                data-booking_id="${row.booking_ids}"
+                        <button type="button" class="btn btn-sm btn-icon btn-danger deleteExtension text-white" style="background-color: #ff3e1d; color: white;"
+                                data-id="${row.id}"
                                 data-vehicle="${row.vehicle_id}"
+                                data-customer="${row.customer_code}"
+                                data-contract="${row.agreement_no}"
+                                data-agreement_ids="${row.agreement_ids}"
+                                data-booking_id="${row.booking_ids}"
+                                data-bs-toggle="tooltip" 
+                                data-bs-placement="top" 
+                                title="Delete Extension"
                               >
-                           Delete Extension
-            
+                           <i class="ri ri-delete-bin-line text-white"></i>
                         </button>
                 `;
             }
@@ -2500,6 +2572,77 @@ $(document).on('click', '#contractTable li a.extend_contract_btn', function (e) 
 
 });
 
+var extendStepper;
+$(document).ready(function() {
+    const extWizard = document.getElementById('extendContractWizard');
+    if (extWizard) {
+        extendStepper = new Stepper(extWizard, { linear: false });
+        
+        $(extWizard).find('.btn-next').on('click', function() {
+            extendStepper.next();
+        });
+        $(extWizard).find('.btn-prev').on('click', function() {
+            extendStepper.previous();
+        });
+    }
+});
+
+// ── Extend Contract Date Helpers ──────────────────────────────────────────────
+
+// Convert DB datetime (yyyy-mm-dd hh:mm:ss  OR  yyyy-mm-dd hh:mm) → dd-mm-yyyy hh:mm
+function extendDbToDisplay(dbDate) {
+    if (!dbDate) return '';
+    // Handle ISO strings with T separator as well
+    let str = String(dbDate).replace('T', ' ').trim();
+    let parts = str.split(' ');
+    if (parts.length < 2) return '';
+    let dateParts = parts[0].split('-');   // [yyyy, mm, dd]
+    let timeParts = parts[1].split(':');   // [hh, mm, (ss)]
+    if (dateParts.length < 3 || timeParts.length < 2) return '';
+    return `${dateParts[2]}-${dateParts[1]}-${dateParts[0]} ${timeParts[0]}:${timeParts[1]}`;
+}
+
+// Parse display value (dd-mm-yyyy hh:mm  OR  dd-mm-yyyy) → JS Date object
+// If no time given, defaults to 00:00
+function extendDisplayToDate(displayVal) {
+    if (!displayVal) return null;
+    // Full format: dd-mm-yyyy hh:mm
+    let m = displayVal.match(/^(\d{2})-(\d{2})-(\d{4}) (\d{2}):(\d{2})$/);
+    if (m) return new Date(+m[3], +m[2]-1, +m[1], +m[4], +m[5]);
+    // Date only: dd-mm-yyyy  → default time 00:00
+    let d = displayVal.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (d) return new Date(+d[3], +d[2]-1, +d[1], 0, 0);
+    return null;
+}
+
+// Convert display value (dd-mm-yyyy hh:mm  OR  dd-mm-yyyy) → DB string (yyyy-mm-dd hh:mm:00)
+// If no time given, defaults to 00:00:00
+function extendDisplayToDbStr(displayVal) {
+    if (!displayVal) return '';
+    // Full format
+    let m = displayVal.match(/^(\d{2})-(\d{2})-(\d{4}) (\d{2}):(\d{2})$/);
+    if (m) return `${m[3]}-${m[2]}-${m[1]} ${m[4]}:${m[5]}:00`;
+    // Date only → default 00:00:00
+    let d = displayVal.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (d) return `${d[3]}-${d[2]}-${d[1]} 00:00:00`;
+    return displayVal;
+}
+
+// Auto-format as user types in To field: dd-mm-yyyy hh:mm
+// Uses strict > so separators only appear once the preceding group has digits after it
+// This ensures backspace works correctly without fighting the formatter
+function extendFormatDateInput(el) {
+    let raw = el.value.replace(/\D/g, '').substring(0, 12); // strip non-digits, cap at 12 digits
+    let out = raw.substring(0, 2);                              // dd
+    if (raw.length > 2)  out += '-' + raw.substring(2, 4);     // -mm
+    if (raw.length > 4)  out += '-' + raw.substring(4, 8);     // -yyyy
+    if (raw.length > 8)  out += ' ' + raw.substring(8, 10);    // ' 'hh
+    if (raw.length > 10) out += ':' + raw.substring(10, 12);   // :mm
+    el.value = out;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 function openExtendContractModal(id,vehicleid,customer_code,model_ids) {
 
     $.ajax({
@@ -2513,6 +2656,9 @@ function openExtendContractModal(id,vehicleid,customer_code,model_ids) {
         success: function (res) {
           populateExtendContractModal(res);
             new bootstrap.Modal(document.getElementById('extendcontractModal')).show();
+            if (typeof extendStepper !== 'undefined') {
+                extendStepper.to(1);
+            }
         }
     });
 }
@@ -2525,8 +2671,10 @@ function populateExtendContractModal(d) {
         $('#extend_c_code').text(data.customer.customer_id || '');
         $('#extend_c_mobile').text(data.customer.customer_mobile || '');
         $('#extend_c_email').text(data.customer.customer_email || '');
-        $('#extend_c_attn').text(data.customer.customer_attn || '');
-        $('#extend_c_attr').text(data.customer.customer_addr || '');
+        let attn = data.customer.customer_attn || '';
+        let addr = data.customer.customer_addr || '';
+        $('#extend_c_attn').text(attn);
+        $('#extend_c_attr').text(attn && addr ? ' - ' + addr : addr);
         
         $('#extend_v_no').text(data.vehicle.vehicle_number || '');
         $('#extend_v_model').text(data.vehicle.model_names || '');
@@ -2534,6 +2682,7 @@ function populateExtendContractModal(d) {
         $('#extend_v_category').text(data.vehicle.category_name || '');
         $('#extend_v_color').text(data.vehicle.vehicle_color || '');
         $('#extend_v_year').text(data.vehicle.vehicle_year || '');
+        $('#extend_v_chassis').text(data.vehicle.chassis_number || '-');
         $('#extend_v_passing').text(data.vehicle.formatted_next_passing_date || '');
         $('#extend_hid_nxt_passing').val(data.vehicle.next_passing_date || '');  
         $('#extend_v_maintenance').text(data.vehicle.formatted_next_maintenance_date || '');
@@ -2547,9 +2696,56 @@ function populateExtendContractModal(d) {
         $('#extend_hid_model_id').val(data.vehicle.model_id || '');
         $('#extend_hid_vehicle_no').val(data.vehicle.vehicle_number || '');
         
-       
-        
-        
+        let images = data.vehicle.vehicle_images;
+        if (typeof images === "string") {
+            try { images = JSON.parse(images); } catch (e) { images = []; }
+        }
+        if (!Array.isArray(images)) images = [];
+        images = images.filter(img => img && img !== "default.jpg");
+        if (images.length === 0) images = ["default.jpg"];
+
+        // Build mini slider
+        let sliderImg  = document.getElementById("extendVSliderImg");
+        let sliderDots = document.getElementById("extendVSliderDots");
+        let sliderPrev = document.getElementById("extendVSliderPrev");
+        let sliderNext = document.getElementById("extendVSliderNext");
+        let sliderIdx  = 0;
+
+        function extendSliderShow(idx) {
+            sliderIdx = (idx + images.length) % images.length;
+            let src = images[sliderIdx] === "default.jpg"
+                ? "uploads/vehicleImages/default.jpg"
+                : "uploads/vehicleImages/" + images[sliderIdx];
+            sliderImg.src = src;
+            // update dots
+            if (sliderDots) {
+                sliderDots.querySelectorAll(".slider-dot").forEach((d, i) => {
+                    d.classList.toggle("active", i === sliderIdx);
+                });
+            }
+        }
+
+        if (sliderDots) {
+            sliderDots.innerHTML = "";
+            if (images.length > 1) {
+                images.forEach((_, i) => {
+                    let dot = document.createElement("span");
+                    dot.className = "slider-dot" + (i === 0 ? " active" : "");
+                    dot.addEventListener("click", () => extendSliderShow(i));
+                    sliderDots.appendChild(dot);
+                });
+            }
+        }
+        if (sliderPrev) {
+            sliderPrev.style.display = images.length > 1 ? "" : "none";
+            sliderPrev.onclick = () => extendSliderShow(sliderIdx - 1);
+        }
+        if (sliderNext) {
+            sliderNext.style.display = images.length > 1 ? "" : "none";
+            sliderNext.onclick = () => extendSliderShow(sliderIdx + 1);
+        }
+        extendSliderShow(0);
+
         data.price_list.forEach(function(item) {
         
             switch(item.item) {
@@ -2595,10 +2791,18 @@ function populateExtendContractModal(d) {
         let unit_price = bookDetails.unit_price;
         let total_amt = bookDetails.total_amt;
         let booking_notes = bookDetails.booking_notes;
-        let extend_end_date=data.extend_end_date
-        // Set values
-        
-        $('#extend_b_from').val(extend_end_date || contract.service_end_date_time);
+        let extend_end_date = data.extend_end_date;
+        let contract_status = contract.agreement_status || '';
+
+        // Determine from date based on contract status:
+        // If Extended → use latest extension end date; otherwise use contract service_end_date_time
+        let rawFromDate = '';
+        if (contract_status === 'Extended' && extend_end_date) {
+            rawFromDate = extend_end_date;
+        } else {
+            rawFromDate = contract.service_end_date_time || '';
+        }
+        $('#extend_b_from').val(extendDbToDisplay(rawFromDate));
         $('#extend_b_to').val('');
         $('#extend_b_qtn_ref_no').val(contract.quotation_number || '');
         
@@ -2650,8 +2854,8 @@ $('#extend_rate_type, #extend_service').on('change', function () {
 function extend_line_item_calculation()
 {
    
-   let from = new Date($('#extend_b_from').val());
-   let to = new Date($('#extend_b_to').val());
+   let from = extendDisplayToDate($('#extend_b_from').val());
+   let to = extendDisplayToDate($('#extend_b_to').val());
    let rateType = $('.extend_rate_type').val();;
 
     if(from && to && to >= from){
@@ -2688,26 +2892,24 @@ function extend_line_item_calculation()
 
 
 $(document).on('blur','#extend_b_to',function(){
-
-  
     let from = $('#extend_b_from').val();
     let to = $(this).val();
-       
-        let fromDate = new Date(from);
-        let toDate   = new Date(to);
-        if(toDate < fromDate){
-        let fromDate = new Date(from);
-        let toDate   = new Date(to);
 
-        if(toDate < fromDate){
-             setupDropdown('dropdownContent','error',svgSuccess+'To date must be after from date','click');
-            
-            $(this).val('');
-        }
+    let fromDate = extendDisplayToDate(from);
+    let toDate   = extendDisplayToDate(to);
 
+    // Only validate if BOTH dates parsed successfully
+    if (fromDate && toDate && toDate < fromDate) {
+        setupDropdown('dropdownContent','error', svgError + 'To date must be after from date','click');
+        $(this).val('');
     }
-
 });
+
+// Ensure the date formatter is bound via jQuery as well (fallback for inline oninput)
+$(document).on('input', '#extend_b_to, #extend_b_from', function() {
+    extendFormatDateInput(this);
+});
+
 
 $('.extend_service').on('change', function () {
 
@@ -2769,7 +2971,7 @@ function saveExtendContractValidation(e)
         return;
     }
     
-    if (new Date($('#extend_b_to').val()) < new Date($('#extend_b_from').val())) {
+    if (new Date(extendDisplayToDate($('#extend_b_to').val())) < new Date(extendDisplayToDate($('#extend_b_from').val()))) {
         setupDropdown('dropdownContent', 'error', svgError + "Please provide valid date range", 'click');
         return;
     }
@@ -2787,8 +2989,8 @@ function saveExtendContractValidation(e)
             unit_price: unitPrice,
             min_price: minPrice,
             booking_ref_no: $('#agreement_ref').text().trim(),
-            book_period_from: $('#extend_b_from').val(),
-            book_period_to: $('#extend_b_to').val()
+            book_period_from: extendDisplayToDbStr($('#extend_b_from').val()),
+            book_period_to: extendDisplayToDbStr($('#extend_b_to').val())
         };
 
         $('#otp_require_basic_details').val(JSON.stringify(data));
@@ -2808,8 +3010,8 @@ function saveExtendContractValidation(e)
 
 function proceedExtendContractValidations()
 {
-     let from = new Date($('#extend_b_from').val());
-     let to = new Date($('#extend_b_to').val());
+     let from = extendDisplayToDate($('#extend_b_from').val());
+     let to = extendDisplayToDate($('#extend_b_to').val());
 
     let passingDate = $('#extend_hid_nxt_passing').val();
     let insuranceDate = $('#extend_hid_nxt_insurance').val();
@@ -2900,8 +3102,8 @@ function extendContract()
                 vehicle_year: $('#extend_v_year').text().trim()
                 };
     let contract_details = {
-                period_from: $('#extend_b_from').val(),
-                period_to: $('#extend_b_to').val(),
+                period_from: extendDisplayToDbStr($('#extend_b_from').val()),
+                period_to: extendDisplayToDbStr($('#extend_b_to').val()),
                 rate_type_id: $('#extend_rate_type').val(),
                 rate_type: $('#extend_rate_type option:selected').text(),
                 service_id: $('#extend_service').val(),

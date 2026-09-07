@@ -1222,7 +1222,7 @@ $(document).on('click', '.btn_vehicle_select', function () {
         return;
     }
     
-    if (parseDDMMYYYYtoJSDate(bookingDetails.toDate) < parseDDMMYYYYtoJSDate(bookingDetails.fromDate)) {
+    if (new Date(bookingDetails.toDate) < new Date(bookingDetails.fromDate)) {
         setupDropdown('dropdownContent', 'error', svgError + "Please provide valid date range", 'click');
         return;
     }
@@ -1281,8 +1281,8 @@ $(document).on('click', '.btn_vehicle_select', function () {
             return;
         }
     }
-    let from = parseDDMMYYYYtoJSDate(bookingDetails.fromDate);
-    let to = parseDDMMYYYYtoJSDate(bookingDetails.toDate);
+    let from = new Date(bookingDetails.fromDate);
+    let to = new Date(bookingDetails.toDate);
 
     let passingDate = $btn.data('passing');
     let insuranceDate = $btn.data('insurance');

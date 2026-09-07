@@ -4,7 +4,15 @@
                     
                   <h5 class="card-title mb-4">Contract List</h5>
                  <div class="row align-items-end g-2">
-                <div class="col-md-4">
+                <div class="col-md-2">
+                    <div class="form-floating form-floating-outline flex-grow-1">
+                        <select id="companySelect" name="companySelect" class="form-select" data-allow-clear="true" style="width:100%">
+                            <!-- Populated via AJAX -->
+                        </select>
+                        <label for="companySelect">Company</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
                     <div class="d-flex align-items-stretch gap-2">
             
                     <div class="form-floating form-floating-outline flex-grow-1">
@@ -96,6 +104,7 @@
                                 <tr>
                                     <th></th>
                                     <th>Agreement No</th>
+                                    <th>Company / Ref No</th>
                                     <th>Agreement Date</th>
                                     <th>Customer</th>
                                     <th>Vehicle</th>

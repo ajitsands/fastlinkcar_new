@@ -1,304 +1,212 @@
 <div class="modal fade" id="elistcontractModal">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:95%;">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
 
       <!-- HEADER -->
       <div class="modal-header custom-modal-header">
         <div>
-          <h5 class="mb-0 text-white">Extension Details</h5>
+          <h5 class="mb-0 text-white">Contract Extensions</h5>
           <small>
-            Agreement No: <span class=" fw-bold" id="elist_agreement_ref"></span>
+            Agreement No: <span class="fw-bold" id="elist_agreement_ref"></span>
           </small>
         </div>
-         <input type="hidden" value="" id="txt_elist_modal_agreement_id">
-          <input type="hidden" value="" id="txt_elist_modal_agreement_no">
-          <input type="hidden" value="" id="txt_elist_modal_booking_ids">
-          
-          
-          <input type="hidden" value="" id="elist_hid_vehicle_id">
-          <input type="hidden" value="" id="elist_hid_category_id">
-          <input type="hidden" value="" id="elist_hid_model_id">
-          <input type="hidden" value="" id="elist_hid_vehicle_no">
-          
+        <input type="hidden" value="" id="txt_elist_modal_agreement_id">
+        <input type="hidden" value="" id="txt_elist_modal_agreement_no">
+        <input type="hidden" value="" id="txt_elist_modal_booking_ids">
+        <input type="hidden" value="" id="elist_hid_vehicle_id">
+        <input type="hidden" value="" id="elist_hid_category_id">
+        <input type="hidden" value="" id="elist_hid_model_id">
+        <input type="hidden" value="" id="elist_hid_vehicle_no">
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      
-      
-      <div class="modal-body">
-       <div class="row">
-           <div class="col-12 col-md-6">
-               <div class="accordion mt-4 accordion-collapse collapse show" id="accordion1">
-                    <div class="accordion-item mb-1">
-                        <h1 class="accordion-header fw-bold">
-                          <button class="accordion-button text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#elistcustSec">
-                            Customer Details
-                          </button>
-                        </h1>
 
-                      <div id="elistcustSec" class="accordion-collapse collapse show">
-              <div class="accordion-body">
-
-                <div class="row g-3">
-                   
-                  <div class="col-12 col-md-6">
-                  <div class="p-1 d-flex justify-content-between">
-                    <span class="text-muted fs-6">Customer Name: </span>
-                    <span class="fw-semibold" id="elist_c_name"></span>
-                  </div>
-                </div>
-                 <div class="col-12 col-md-6">
-                  <div class="p-1 d-flex justify-content-between">
-                    <span class="text-muted fs-6">Customer Code: </span>
-                    <span class="fw-semibold" id="elist_c_code"></span>
-                  </div>
-                </div>
-                <div class="col-12 col-md-6">
-                  <div class="p-1 d-flex justify-content-between">
-                    <span class="text-muted fs-6">Contact Number: </span>
-                    <span class="fw-semibold" id="elist_c_mobile"></span>
-                  </div>
-                </div>
-                <div class="col-12 col-md-6">
-                  <div class="p-1 d-flex justify-content-between">
-                    <span class="text-muted fs-6">Email: </span>
-                    <span class="fw-semibold" id="elist_c_email"></span>
-                  </div>
-                </div>
-                <div class="col-12 col-md-6">
-                  <div class="p-1 d-flex justify-content-between">
-                    <span class="text-muted fs-6">Attn: </span>
-                    <span class="fw-semibold" id="elist_c_attn"></span>
-                  </div>
-                </div>
-                 <div class="col-12 col-md-6">
-                  <div class="p-1 d-flex justify-content-between">
-                    <span class="text-muted fs-6">Address: </span>
-                    <span class="fw-semibold" id="elist_c_attr"></span>
-                  </div>
-                </div>
-                </div>
-                 
-
-                </div>
-
-              </div>
-                    </div>
-                   
-                   
-                    
-                     
-                  </div>
-           </div>
-           <div class="col-12 col-md-6">
-               <div class="accordion mt-4 accordion-collapse collapse show" id="accordion2">
-                    <div class="accordion-item mb-1">
-                        <h1 class="accordion-header  fw-bold">
-                        <button class="accordion-button text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#elistvehSec">
-                          Vehicle Details
-                        </button>
-                        
-                      </h1>
-                     <div id="elistvehSec" class="accordion-collapse collapse show">
-                <div class="accordion-body">
-            
-                 <div class="row g-3">
-
-                      <div class="col-12">
-                       
-                    
-                          <div class="row g-1">
-
-                            <!-- Category -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1 d-flex justify-content-between">
-                                <span class="text-muted fs-6">Category: </span>
-                                <span class="fw-semibold" id="elist_v_category"></span>
-                              </div>
-                            </div>
-                    
-                            <!-- Model -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1 d-flex justify-content-between">
-                                <span class="text-muted fs-6">Model: </span>
-                                <span class="fw-semibold" id="elist_v_model"></span>
-                              </div>
-                            </div>
-                    
-                            <!-- Vehicle No -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1  d-flex justify-content-between">
-                                <span class="text-muted fs-6">Vehicle No: </span>
-                                <span class="fw-semibold" id="elist_v_no"></span>
-                              </div>
-                            </div>
-                    
-                            <!-- Color -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1  d-flex justify-content-between">
-                                <span class="text-muted fs-6">Color: </span>
-                                <span class="fw-semibold" id="elist_v_color"></span>
-                              </div>
-                            </div>
-                            <!-- Year -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1  d-flex justify-content-between">
-                                <span class="text-muted fs-6">Year: </span>
-                                <span class="fw-semibold" id="elist_v_year"></span>
-                              </div>
-                            </div>
-                    
-                            
-                    
-                            <!-- Insurance -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1  d-flex justify-content-between">
-                                <span class="text-muted fs-6">NextInsurance: </span>
-                                <span class="fw-semibold" id="elist_v_insurance"></span>
-                                <input type="hidden" id="elist_hid_nxt_insurance">
-                              </div>
-                            </div>
-                    
-                            <!-- Passing -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1  bg-white d-flex justify-content-between">
-                                <span class="text-muted fs-6">Next Passing: </span>
-                                <span class="fw-semibold" id="elist_v_passing"></span>
-                                <input type="hidden" id="elist_hid_nxt_passing">
-                              </div>
-                            </div>
-                            
-                            <!-- Maintenance -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1 d-flex justify-content-between">
-                                <span class="text-muted fs-6">Next Maintenance: </span>
-                                <span class="fw-semibold" id="elist_v_maintenance"></span>
-                                <input type="hidden" id="elist_hid_nxt_maintenance">
-                              </div>
-                            </div>
-                            
-                          </div>
-                        
-                      </div>
-                    
-                    </div>
-                <div class="row g-3" style="display:none">
-                    <div class="col-12 col-md-6">
-                        <div class="p-3 border rounded bg-white">
-                
-                          <div class="fw-semibold mb-2 text-primary">
-                            Price Rate - Without Driver
-                          </div>
-                
-                          <div class="row g-2">
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Hourly</span>
-                              <span class="fw-semibold" id="elist_wod_hourly">0.000</span>
-                            </div>
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Daily</span>
-                              <span class="fw-semibold" id="elist_wod_daily">0.000</span>
-                            </div>
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Weekly</span>
-                              <span class="fw-semibold" id="elist_wod_weekly">0.000</span>
-                            </div>
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Monthly</span>
-                              <span class="fw-semibold" id="elist_wod_monthly">0.000</span>
-                            </div>
-                
-                          </div>
-                
-                        </div>
-                      </div>
-                      <div class="col-12 col-md-6">
-                        <div class="p-3 border rounded bg-white">
-                
-                          <div class="fw-semibold mb-2 text-info">
-                            Price Rate - With Driver
-                          </div>
-                
-                          <div class="row g-2">
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Hourly</span>
-                              <span class="fw-semibold" id="elist_wd_hourly">0.000</span>
-                            </div>
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Daily</span>
-                              <span class="fw-semibold" id="elist_wd_daily">0.000</span>
-                            </div>
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Weekly</span>
-                              <span class="fw-semibold" id="elist_wd_weekly">0.000</span>
-                            </div>
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Monthly</span>
-                              <span class="fw-semibold" id="elist_wd_monthly">0.000</span>
-                            </div>
-                
-                          </div>
-                
-                        </div>
-                      </div>
-                </div>
-            
-                </div>
-              </div>
-                    </div>
-                  
-                    
-                  </div>
-           </div>
-           <div class="col-12 col-md-12">
-                <div class="accordion-item mb-1 ">
-                      <h2 class="accordion-header fw-bold">
-                          <button class="accordion-button text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#elistbookSec">
-                           List of Extensions
-                          </button>
-                        </h2>
-
-                      <div id="elistbookSec" class="accordion-collapse collapse show">
-                          <div class="accordion-body">
-            
-                            <div class="row g-3">
-            
-                               <table id="contractExtensionTable" class="table table-bordered table-sm">
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>Agreement No</th>
-                                    <th> Date</th>
-                                    <th>Extension Period</th>
-                                    <th>Details</th>
-                                    <th>Pricing</th>
-                                    <th>Notes</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                        </table>
-        
-                        </div>
-        
-                      </div>
-                    </div>
-                    </div>
+      <!-- STEPPER HEADER -->
+      <div class="modal-body pb-0">
+        <div id="elistStepper" class="bs-stepper linear">
+          <div class="bs-stepper-header" role="tablist">
+            <div class="step" data-target="#tab-elist-customer-vehicle">
+              <button type="button" class="step-trigger" role="tab" id="elist-step-1-trigger">
+                <span class="bs-stepper-circle">1</span>
+                <span class="bs-stepper-label">Customer &amp; Vehicle</span>
+              </button>
             </div>
-           <hr>
-       </div>
-        </div>
-      <!-- FOOTER -->
-      <div class="modal-footer">
-        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        
-      </div>
+            <div class="line"></div>
+            <div class="step" data-target="#tab-elist-extensions">
+              <button type="button" class="step-trigger" role="tab" id="elist-step-2-trigger">
+                <span class="bs-stepper-circle">2</span>
+                <span class="bs-stepper-label">Extension List</span>
+              </button>
+            </div>
+          </div><!-- /stepper-header -->
+
+          <div class="bs-stepper-content">
+
+            <!-- ── STEP 1: Customer & Vehicle ──────────────────────── -->
+            <div id="tab-elist-customer-vehicle" class="content">
+              <style>
+                .elist-info-card { background: #fff5f5; border: 1px solid #f5c6c6; border-radius: 8px; padding: 14px; }
+                .elist-info-card .section-title { color: #c0392b; font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; }
+                .elist-field-label { color: #888; font-size: 0.75rem; margin-bottom: 1px; }
+                .elist-field-value { font-weight: 600; font-size: 0.88rem; color: #222; }
+                .elist-pricing-title { color: #c0392b; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
+                .elist-pricing-col { flex: 1; border: 1px solid #eee; border-radius: 4px; overflow: hidden; }
+                .elist-pricing-col-header { background: #f5f5f5; text-align: center; font-weight: 700; font-size: 0.82rem; color: #444; padding: 7px 4px; border-bottom: 1px solid #eee; }
+                .elist-pricing-col-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; font-size: 0.82rem; border-bottom: 1px solid #f5f5f5; }
+                .elist-pricing-col-row:last-child { border-bottom: none; }
+                .elist-pricing-col-row .p-label { color: #666; }
+                .elist-pricing-col-row .p-value { font-weight: 700; color: #27ae60; }
+                /* Mini slider */
+                .elist-v-slider { width: 90px; height: 70px; flex-shrink: 0; border-radius: 6px; overflow: hidden; position: relative; background: #ddd; }
+                .elist-v-slider img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
+                .elist-v-slider .slider-dot-wrap { position: absolute; bottom: 3px; left: 0; right: 0; display: flex; justify-content: center; gap: 3px; }
+                .elist-v-slider .slider-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.6); cursor: pointer; transition: background 0.2s; }
+                .elist-v-slider .slider-dot.active { background: #fff; }
+                .elist-v-slider .slider-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.4); color: #fff; border: none; padding: 0 4px; font-size: 10px; line-height: 18px; cursor: pointer; border-radius: 2px; display: none; }
+                .elist-v-slider:hover .slider-arrow { display: block; }
+                .elist-v-slider .slider-arrow.prev { left: 1px; }
+                .elist-v-slider .slider-arrow.next { right: 1px; }
+              </style>
+
+              <!-- Row 1: Customer + Vehicle cards -->
+              <div class="row g-3 mb-3">
+                <!-- Customer -->
+                <div class="col-12 col-md-6">
+                  <div class="elist-info-card h-100">
+                    <div class="section-title">Customer Details</div>
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <div class="elist-field-label">Customer Name</div>
+                        <div class="elist-field-value" id="elist_c_name">-</div>
+                      </div>
+                      <div class="col-6">
+                        <div class="elist-field-label">Customer Code</div>
+                        <div class="elist-field-value" id="elist_c_code">-</div>
+                      </div>
+                      <div class="col-6">
+                        <div class="elist-field-label">Contact Number</div>
+                        <div class="elist-field-value" id="elist_c_mobile">-</div>
+                      </div>
+                      <div class="col-6">
+                        <div class="elist-field-label">Email</div>
+                        <div class="elist-field-value" id="elist_c_email">-</div>
+                      </div>
+                      <div class="col-12">
+                        <div class="elist-field-label">Attn &amp; Address</div>
+                        <div class="elist-field-value"><span id="elist_c_attn"></span><span id="elist_c_attr"></span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Vehicle -->
+                <div class="col-12 col-md-6">
+                  <div class="elist-info-card h-100">
+                    <div class="section-title">Vehicle Details</div>
+                    <div class="d-flex gap-3 align-items-start">
+                      <!-- Mini Slider -->
+                      <div class="elist-v-slider" id="elistVSlider">
+                        <img id="elistVSliderImg" src="uploads/vehicleImages/default.jpg" alt="Vehicle">
+                        <button class="slider-arrow prev" id="elistVSliderPrev">&#8249;</button>
+                        <button class="slider-arrow next" id="elistVSliderNext">&#8250;</button>
+                        <div class="slider-dot-wrap" id="elistVSliderDots"></div>
+                      </div>
+                      <!-- Info grid -->
+                      <div class="row g-2 flex-grow-1">
+                        <div class="col-6">
+                          <div class="elist-field-label">Category</div>
+                          <div class="elist-field-value" id="elist_v_category">-</div>
+                        </div>
+                        <div class="col-6">
+                          <div class="elist-field-label">Model</div>
+                          <div class="elist-field-value" id="elist_v_model">-</div>
+                        </div>
+                        <div class="col-6">
+                          <div class="elist-field-label">Vehicle No</div>
+                          <div class="elist-field-value" id="elist_v_no">-</div>
+                        </div>
+                        <div class="col-6">
+                          <div class="elist-field-label">Chassis No</div>
+                          <div class="elist-field-value" id="elist_v_chassis">-</div>
+                        </div>
+                        <div class="col-6">
+                          <div class="elist-field-label">Color / Year</div>
+                          <div class="elist-field-value"><span id="elist_v_color">-</span> / <span id="elist_v_year">-</span></div>
+                        </div>
+                        <div class="col-6">
+                          <div class="elist-field-label">Next Ins. / Pass.</div>
+                          <div class="elist-field-value">
+                            <span id="elist_v_insurance">-</span>
+                            <input type="hidden" id="elist_hid_nxt_insurance">
+                            <input type="hidden" id="elist_hid_nxt_passing">
+                            <input type="hidden" id="elist_hid_nxt_maintenance">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 2: Pricing Setup -->
+              <div class="mb-3">
+                <div class="elist-pricing-title">Pricing Setup</div>
+                <div class="d-flex gap-2">
+                  <div class="elist-pricing-col">
+                    <div class="elist-pricing-col-header">Hour</div>
+                    <div class="elist-pricing-col-row"><span class="p-label">W/O Driver</span><span class="p-value" id="elist_wod_hourly">0.000 BHD</span></div>
+                    <div class="elist-pricing-col-row"><span class="p-label">With Driver</span><span class="p-value" id="elist_wd_hourly">0.000 BHD</span></div>
+                  </div>
+                  <div class="elist-pricing-col">
+                    <div class="elist-pricing-col-header">Day</div>
+                    <div class="elist-pricing-col-row"><span class="p-label">W/O Driver</span><span class="p-value" id="elist_wod_daily">0.000 BHD</span></div>
+                    <div class="elist-pricing-col-row"><span class="p-label">With Driver</span><span class="p-value" id="elist_wd_daily">0.000 BHD</span></div>
+                  </div>
+                  <div class="elist-pricing-col">
+                    <div class="elist-pricing-col-header">Week</div>
+                    <div class="elist-pricing-col-row"><span class="p-label">W/O Driver</span><span class="p-value" id="elist_wod_weekly">0.000 BHD</span></div>
+                    <div class="elist-pricing-col-row"><span class="p-label">With Driver</span><span class="p-value" id="elist_wd_weekly">0.000 BHD</span></div>
+                  </div>
+                  <div class="elist-pricing-col">
+                    <div class="elist-pricing-col-header">Month</div>
+                    <div class="elist-pricing-col-row"><span class="p-label">W/O Driver</span><span class="p-value" id="elist_wod_monthly">0.000 BHD</span></div>
+                    <div class="elist-pricing-col-row"><span class="p-label">With Driver</span><span class="p-value" id="elist_wd_monthly">0.000 BHD</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end mt-3">
+                <button type="button" class="btn btn-danger px-5" onclick="elistStepper.next()">Next</button>
+              </div>
+            </div><!-- /step 1 -->
+
+            <!-- ── STEP 2: Extension List ───────────────────────────── -->
+            <div id="tab-elist-extensions" class="content">
+              <div class="table-responsive mt-2">
+                <table id="contractExtensionTable" class="table table-bordered table-sm">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Agreement No</th>
+                      <th>Date</th>
+                      <th>Extension Period</th>
+                      <th>Details</th>
+                      <th>Pricing</th>
+                      <th>Notes</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+
+              <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-outline-secondary px-4" onclick="elistStepper.previous()">Back</button>
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div><!-- /step 2 -->
+
+          </div><!-- /bs-stepper-content -->
+        </div><!-- /bs-stepper -->
+      </div><!-- /modal-body -->
 
     </div>
   </div>

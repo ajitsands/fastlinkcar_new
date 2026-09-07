@@ -332,7 +332,7 @@ $isMultiCompany = count($allowedCompanies) > 1;
                 <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
                 <span class="align-middle">Previous</span>
               </button>
-              <button type="button" class="btn btn-success btn-submit d-none" id="proceedSelectedVehicles">Submit Reservation</button>
+              <button type="button" class="btn btn-success btn-submit d-none" id="proceedSelectedVehicles" data-permission="generate_contract_manage">Submit Reservation</button>
             </div>
           </div>
         </div>

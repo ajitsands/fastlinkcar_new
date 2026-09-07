@@ -147,14 +147,14 @@
 
             <div class="col-md-6">
               <label class="form-label small">From Date</label>
-              <input type="datetime-local"
-                     class="from_datetime_contract form-control form-control-sm watch-field_contract">
+              <input type="text"
+                     class="from_datetime_contract form-control form-control-sm watch-field_contract datetime_col" placeholder="DD-MM-YYYY HH:mm" maxlength="16">
             </div>
 
             <div class="col-md-6">
               <label class="form-label small">To Date</label>
-              <input type="datetime-local"
-                     class="to_datetime_contract form-control form-control-sm watch-field_contract">
+              <input type="text"
+                     class="to_datetime_contract form-control form-control-sm watch-field_contract datetime_col" placeholder="DD-MM-YYYY HH:mm" maxlength="16">
             </div>
 
             <div class="col-md-6">

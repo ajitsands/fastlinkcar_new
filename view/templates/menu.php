@@ -184,14 +184,6 @@
                 <div data-i18n="Reservation List">Reservation List</div>
               </a>
             </li>
-           <li class="menu-item <?php if ($decrypt[0] == '2-6') {
-                                  echo 'active';
-                                } ?>" data-permission="maintenance_request_access">
-             <a href="/MaintenanceRequest?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
-               <i class="menu-icon icon-base ri ri-tools-line"></i>
-               <div data-i18n="Maintenance Request">Maintenance Request</div>
-             </a>
-           </li>
            <li class="menu-item <?php if ($decrypt[0] == '3-4') {
                                   echo 'active';
                                 } ?>" data-permission="contract_list_access">
@@ -199,6 +191,14 @@
 
                <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
                <div data-i18n="Contract List">Contract List</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($decrypt[0] == '2-6') {
+                                  echo 'active';
+                                } ?>" data-permission="maintenance_request_access">
+             <a href="/MaintenanceRequest?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-tools-line"></i>
+               <div data-i18n="Maintenance Request">Maintenance Request</div>
              </a>
            </li>
            <li class="menu-item" data-permission="send_contract_access">

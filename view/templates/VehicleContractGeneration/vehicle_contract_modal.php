@@ -216,12 +216,12 @@
                     <h6 class="fw-bold text-danger mb-2" style="font-size:13px;">Booking Details</h6>
                     <div class="row g-2 mb-3">
                         <div class="col-12 col-md-3 mb-1">
-                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">From</label>
-                            <input type="datetime-local" id="b_from" class="form-control form-control-sm watch-field">
+                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">From Date</label>
+                            <input type="text" id="b_from" class="from_datetime_contract form-control form-control-sm watch-field" placeholder="DD-MM-YYYY HH:mm" maxlength="16">
                         </div>
                         <div class="col-12 col-md-3 mb-1">
-                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">To</label>
-                            <input type="datetime-local" id="b_to" class="form-control form-control-sm watch-field">
+                            <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">To Date</label>
+                            <input type="text" id="b_to" class="to_datetime_contract form-control form-control-sm watch-field" placeholder="DD-MM-YYYY HH:mm" maxlength="16">
                         </div>
                         <div class="col-12 col-md-3 mb-1">
                             <label class="text-muted d-block" style="font-size: 10px; margin-bottom: 2px;">Type</label>

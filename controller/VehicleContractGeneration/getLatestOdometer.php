@@ -1,7 +1,11 @@
 <?php
-require_once __DIR__ . '/../../envfiles/vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../envfiles');
-$dotenv->load();
+if (file_exists(__DIR__ . '/../../envfiles/vendor/autoload.php')) {
+    require_once __DIR__ . '/../../envfiles/vendor/autoload.php';
+    if (class_exists('Dotenv\Dotenv')) {
+        $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../envfiles');
+        $dotenv->safeLoad();
+    }
+}
 
 include_once __DIR__ . '/../../model/db_connection/pdo_db_connection.php';
 $db = new ClassDatabaseConnection();

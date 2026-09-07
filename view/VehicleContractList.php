@@ -1379,8 +1379,9 @@ $(document).on('click', '#confirmActionBtn', function () {
                     svgSuccess + 'The contract extension has been deleted.',
                     'click'
                 );
-
-                listExtendedList(agreement_ids);
+                if (typeof extensiontable !== 'undefined') {
+                    extensiontable.ajax.reload(null, false);
+                }
 
             } else {
 
@@ -1578,6 +1579,9 @@ function populatereturnContractModal(d) {
     let customer = data.customer || {};
     let vehicle = data.vehicle || {};
     let price_list = Array.isArray(data.price_list) ? data.price_list : [];
+    
+    let sessionStaffName = '<?php echo htmlspecialchars($_SESSION['profile_name'] ?? $_SESSION['user_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>';
+    $('#received_by_name').val(sessionStaffName);
    
         $('#return_c_name').text(customer.customer_name || '');
         $('#return_c_code').text(customer.customer_id || '');
@@ -1598,15 +1602,60 @@ function populatereturnContractModal(d) {
         $('#return_hid_nxt_maintenance').val(vehicle.next_maintenance_date || '');  
         $('#return_v_insurance').text(vehicle.formatted_next_insurance_date || ''); 
         $('#return_hid_nxt_insurance').val(vehicle.next_insurance_date || '');  
+        $('#return_v_chassis').text(vehicle.chassis_number || '-');
         
         $('#return_hid_vehicle_id').val(vehicle.ids || '');
         $('#return_hid_category_id').val(vehicle.category_id || '');
         $('#return_hid_model_id').val(vehicle.model_id || '');
         $('#return_hid_vehicle_no').val(vehicle.vehicle_number || '');
         
-       
-        
-        
+        let images = vehicle.vehicle_images;
+        if (typeof images === "string") {
+            try { images = JSON.parse(images); } catch (e) { images = []; }
+        }
+        if (!Array.isArray(images)) images = [];
+        images = images.filter(img => img && img !== "default.jpg");
+        if (images.length === 0) images = ["default.jpg"];
+
+        let sliderImg  = document.getElementById("returnVSliderImg");
+        let sliderDots = document.getElementById("returnVSliderDots");
+        let sliderPrev = document.getElementById("returnVSliderPrev");
+        let sliderNext = document.getElementById("returnVSliderNext");
+        let sliderIdx  = 0;
+
+        function returnSliderShow(idx) {
+            sliderIdx = (idx + images.length) % images.length;
+            let src = images[sliderIdx] === "default.jpg"
+                ? "uploads/vehicleImages/default.jpg"
+                : "uploads/vehicleImages/" + images[sliderIdx];
+            if(sliderImg) sliderImg.src = src;
+            if (sliderDots) {
+                sliderDots.querySelectorAll(".slider-dot").forEach((d, i) => {
+                    d.classList.toggle("active", i === sliderIdx);
+                });
+            }
+        }
+
+        if (sliderDots) {
+            sliderDots.innerHTML = "";
+            if (images.length > 1) {
+                images.forEach((_, i) => {
+                    let dot = document.createElement("span");
+                    dot.className = "slider-dot" + (i === 0 ? " active" : "");
+                    dot.addEventListener("click", () => returnSliderShow(i));
+                    sliderDots.appendChild(dot);
+                });
+            }
+        }
+        if (sliderPrev) {
+            sliderPrev.style.display = images.length > 1 ? "" : "none";
+            sliderPrev.onclick = () => returnSliderShow(sliderIdx - 1);
+        }
+        if (sliderNext) {
+            sliderNext.style.display = images.length > 1 ? "" : "none";
+            sliderNext.onclick = () => returnSliderShow(sliderIdx + 1);
+        }
+        returnSliderShow(0);
         price_list.forEach(function(item) {
         
             switch(item.item) {
@@ -1657,6 +1706,9 @@ function populatereturnContractModal(d) {
         );
         $('#km_out').val(vehicle_accessiories_details.vehicle_km_out || 0);
          $('#km_in').val(vehicle_accessiories_details.vehicle_km_in || 0);
+         if (typeof calcOdoDiff === "function") {
+             calcOdoDiff();
+         }
         $('#fuel_level').val(vehicle_accessiories_details.fuel_level || '');
         
         let getCurrentDateTimeLocal = function() {
@@ -1689,11 +1741,14 @@ function populatereturnContractModal(d) {
        $('#cust_driver_contact_no').val(contract.customer_driver_contact_number || '');
         $('.driverclass').show(); 
      
-        $('#d_name').text(
-            driverDetails.driver_name === 'Select Driver'
-                ? ''
-                : driverDetails.driver_name
-        );
+        let dName = driverDetails.driver_name;
+        if (!dName || dName === 'Select Driver' || dName.trim() === '') {
+            $('#company_driver_section').hide();
+            $('#d_name').text('');
+        } else {
+            $('#company_driver_section').show();
+            $('#d_name').text(dName);
+        }
         $('#d_mobile').text(driverDetails.driver_mobile);
         $('#d_license_no').text(driverDetails.driver_license_no);
         $('#d_license_issue_place').text(driverDetails.driver_license_issplace);
@@ -1842,6 +1897,42 @@ let violationHeadsMap = {};
 
       if (contract && contract.ids) {
           listExtendedListReturn(contract.ids);
+      }
+
+      let returnStepperEl = document.querySelector('#returnStepper');
+      if (returnStepperEl) {
+          if (!window.returnStepperInstance) {
+              window.returnStepperInstance = new Stepper(returnStepperEl, {
+                  linear: false,
+                  animation: true
+              });
+              
+              $(returnStepperEl).find('.btn-next').on('click', function() {
+                  window.returnStepperInstance.next();
+              });
+              $(returnStepperEl).find('.btn-prev').on('click', function() {
+                  window.returnStepperInstance.previous();
+              });
+              
+              returnStepperEl.addEventListener('shown.bs-stepper', function (event) {
+                  if (typeof returnextensiontable !== 'undefined') {
+                      returnextensiontable.columns.adjust().draw();
+                  }
+                  if (event.detail.indexStep === 5) {
+                      // Signature step is shown, resize canvas if needed
+                      if (typeof returnSignaturePad !== 'undefined' && returnSignaturePad) {
+                          const canvas = document.getElementById('Returnsignature-pad');
+                          const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                          canvas.width = canvas.offsetWidth * ratio;
+                          canvas.height = 200 * ratio;
+                          const ctx = canvas.getContext("2d");
+                          ctx.scale(ratio, ratio);
+                          returnSignaturePad.clear();
+                      }
+                  }
+              });
+          }
+          window.returnStepperInstance.to(1); // Reset to first step
       }
 } 
 
@@ -3941,20 +4032,24 @@ function saveReturnContractValidation(e,customer_code)
     }
 
        if (!$('#km_in').val()) {
+        if (window.returnStepperInstance) window.returnStepperInstance.to(2);
         setupDropdown('dropdownContent', 'error', svgError + "Please provide km in", 'click');
         return;
     }
 
     if (!$('#dt_in').val()) {
+        if (window.returnStepperInstance) window.returnStepperInstance.to(2);
         setupDropdown('dropdownContent', 'error', svgError + "Please provide date in", 'click');
         return;
     }
     if (!$('#received_by_name').val()) {
+        if (window.returnStepperInstance) window.returnStepperInstance.to(6);
         setupDropdown('dropdownContent', 'error', svgError + "Please provide receiver name", 'click');
         return;
     }
 
     if (!$('#chk_violations_checked').is(':checked')) {
+        if (window.returnStepperInstance) window.returnStepperInstance.to(4);
         setupDropdown('dropdownContent', 'error', svgError + "Please confirm vehicle violations are checked", 'click');
         return;
     }
@@ -3997,7 +4092,38 @@ $('#returnconfirmYesBtn').on('click', function () {
 
 });
 
-function returnContract(customer_code)
+function returnContract(customer_code) {
+    if (ReturncarImageQueue.length > 0) {
+        laddaReturnContract.start();
+        
+        let formData = new FormData();
+        ReturncarImageQueue.forEach((item) => {
+            formData.append('car_images[]', item.file);
+        });
+
+        $.ajax({
+            url: '/ReturnCompressUploadImage',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (res) {
+                ReturnuploadedFileNames.push(...(res.files || []));
+                ReturncarImageQueue = [];
+                executeReturnContract(customer_code);
+            },
+            error: function () {
+                laddaReturnContract.stop();
+                setupDropdown('dropdownContent', 'error', svgError + "Failed to upload return images.", 'click');
+            }
+        });
+    } else {
+        laddaReturnContract.start();
+        executeReturnContract(customer_code);
+    }
+}
+
+function executeReturnContract(customer_code)
 {
    
    
@@ -4030,6 +4156,7 @@ function returnContract(customer_code)
 
     
     if (!hasReceiverSign ) {
+        if (window.returnStepperInstance) window.returnStepperInstance.to(6);
         setupDropdown(
             'dropdownContent',
             'error',
@@ -6685,6 +6812,64 @@ $(document).on('click', '#btn_submit_replace_contract', function() {
         }
     });
 });
+
+// Other Fees Logic
+function addOtherFeeRow(item, price, actual_amount, remarks) {
+    item = item || '';
+    price = price || '';
+    actual_amount = actual_amount || '';
+    remarks = remarks || '';
+    let rowCount = $('#other_fee_tbody tr').length + 1;
+    let $row = $(`
+        <tr>
+            <td class="text-center align-middle fee-row-num">${rowCount}</td>
+            <td>
+                <input type="text" class="form-control form-control-sm fee-item" placeholder="Fee Item" value="${item}">
+            </td>
+            <td>
+                <input type="text" class="form-control form-control-sm fee-price" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="0.000" value="${price}">
+            </td>
+            <td>
+                <input type="text" class="form-control form-control-sm fee-actual-amount" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="0.000" value="${actual_amount}">
+            </td>
+            <td>
+                <textarea class="form-control form-control-sm fee-remarks" rows="1" placeholder="Enter remarks">${remarks}</textarea>
+            </td>
+            <td class="text-center align-middle">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-remove-fee px-2 py-1" title="Remove">
+                    <i class="ri ri-delete-bin-line fs-5"></i>
+                </button>
+            </td>
+        </tr>
+    `);
+    $('#other_fee_tbody').append($row);
+    renumberFeeRows();
+}
+
+function renumberFeeRows() {
+    $('#other_fee_tbody tr').each(function(idx) {
+        $(this).find('.fee-row-num').text(idx + 1);
+    });
+}
+
+$(document).on('click', '#add_other_fee_row', function() {
+    addOtherFeeRow();
+});
+
+$(document).on('click', '.btn-remove-fee', function() {
+    $(this).closest('tr').remove();
+    renumberFeeRows();
+});
+
+window.calcOdoDiff = function() {
+    let kmOut = parseFloat($('#km_out').val()) || 0;
+    let kmIn = parseFloat($('#km_in').val()) || 0;
+    if (kmIn >= kmOut) {
+        $('#odo_diff').val(kmIn - kmOut);
+    } else {
+        $('#odo_diff').val('');
+    }
+};
 
 });
 

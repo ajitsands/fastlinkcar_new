@@ -1,5 +1,5 @@
 <div class="modal fade" id="ReturncontractModal">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:95%;">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
 
       <!-- HEADER -->
@@ -25,248 +25,184 @@
       
       
       <div class="modal-body">
-       <div class="row">
-           <div class="col-12 col-md-6">
-               <div class="accordion mt-4 accordion-collapse collapse show" id="accordion1">
-                    <div class="accordion-item mb-1">
-                        <h1 class="accordion-header fw-bold">
-                          <button class="accordion-button text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#custSec">
-                            Customer Details
-                          </button>
-                        </h1>
 
-                      <div id="custSec" class="accordion-collapse collapse show">
-              <div class="accordion-body">
+        
+        <div id="returnStepper" class="bs-stepper linear">
+          <div class="bs-stepper-header" role="tablist">
+            <!-- Step 1 -->
+            <div class="step" data-target="#tab-return-step-1">
+              <button type="button" class="step-trigger" role="tab" id="return-step-1-trigger">
+                <span class="bs-stepper-circle">1</span>
+                <span class="bs-stepper-label">
+                  <span class="bs-stepper-title">Customer &amp; Vehicle</span>
+                </span>
+              </button>
+            </div>
+            <div class="line"></div>
+            <!-- Step 2 -->
+            <div class="step" data-target="#tab-return-step-2">
+              <button type="button" class="step-trigger" role="tab" id="return-step-2-trigger">
+                <span class="bs-stepper-circle">2</span>
+                <span class="bs-stepper-label">
+                  <span class="bs-stepper-title">Checklist &amp; Driver</span>
+                </span>
+              </button>
+            </div>
+            <div class="line"></div>
+            <!-- Step 3 -->
+            <div class="step" data-target="#tab-return-step-3">
+              <button type="button" class="step-trigger" role="tab" id="return-step-3-trigger">
+                <span class="bs-stepper-circle">3</span>
+                <span class="bs-stepper-label">
+                  <span class="bs-stepper-title">Return Images</span>
+                </span>
+              </button>
+            </div>
+            <div class="line"></div>
+            <!-- Step 4 -->
+            <div class="step" data-target="#tab-return-step-4">
+              <button type="button" class="step-trigger" role="tab" id="return-step-4-trigger">
+                <span class="bs-stepper-circle">4</span>
+                <span class="bs-stepper-label">
+                  <span class="bs-stepper-title">Violations</span>
+                </span>
+              </button>
+            </div>
+            <div class="line"></div>
+            <!-- Step 5 -->
+            <div class="step" data-target="#tab-return-step-5">
+              <button type="button" class="step-trigger" role="tab" id="return-step-5-trigger">
+                <span class="bs-stepper-circle">5</span>
+                <span class="bs-stepper-label">
+                  <span class="bs-stepper-title">Other Fees</span>
+                </span>
+              </button>
+            </div>
+            <div class="line"></div>
+            <!-- Step 6 -->
 
-                <div class="row g-3">
-                   
-                  <div class="col-12 col-md-6">
-                  <div class="p-1 d-flex justify-content-between">
-                    <span class="text-muted fs-6">Customer Name: </span>
-                    <span class="fw-semibold" id="return_c_name"></span>
-                  </div>
-                </div>
-                 <div class="col-12 col-md-6">
-                  <div class="p-1 d-flex justify-content-between">
-                    <span class="text-muted fs-6">Customer Code: </span>
-                    <span class="fw-semibold" id="return_c_code"></span>
-                  </div>
-                </div>
+            <div class="step" data-target="#tab-return-step-6">
+              <button type="button" class="step-trigger" role="tab" id="return-step-6-trigger">
+                <span class="bs-stepper-circle">6</span>
+                <span class="bs-stepper-label">
+                  <span class="bs-stepper-title">Signature</span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div class="bs-stepper-content">
+            <!-- Step 1 -->
+            <div id="tab-return-step-1" class="content">
+              <style>
+                .return-info-card { background: #fff5f5; border: 1px solid #f5c6c6; border-radius: 8px; padding: 14px; }
+                .return-info-card .section-title { color: #c0392b; font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; }
+                .return-field-label { color: #888; font-size: 0.75rem; margin-bottom: 1px; }
+                .return-field-value { font-weight: 600; font-size: 0.88rem; color: #222; }
+                .pricing-setup-title { color: #c0392b; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
+                /* Pricing block columns */
+                .pricing-col { flex: 1; border: 1px solid #eee; border-radius: 4px; overflow: hidden; }
+                .pricing-col-header { background: #f5f5f5; text-align: center; font-weight: 700; font-size: 0.82rem; color: #444; padding: 7px 4px; border-bottom: 1px solid #eee; }
+                .pricing-col-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; font-size: 0.82rem; border-bottom: 1px solid #f5f5f5; }
+                .pricing-col-row:last-child { border-bottom: none; }
+                .pricing-col-row .p-label { color: #666; }
+                .pricing-col-row .p-value { font-weight: 700; color: #27ae60; }
+                /* Vehicle mini-slider */
+                .return-v-slider { width: 90px; height: 70px; flex-shrink: 0; border-radius: 6px; overflow: hidden; position: relative; background: #ddd; }
+                .return-v-slider img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; transition: opacity 0.4s; }
+                .return-v-slider .slider-dot-wrap { position: absolute; bottom: 3px; left: 0; right: 0; display: flex; justify-content: center; gap: 3px; }
+                .return-v-slider .slider-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.6); cursor: pointer; transition: background 0.2s; }
+                .return-v-slider .slider-dot.active { background: #fff; }
+                .return-v-slider .slider-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.4); color: #fff; border: none; padding: 0 4px; font-size: 10px; line-height: 18px; cursor: pointer; border-radius: 2px; display: none; }
+                .return-v-slider:hover .slider-arrow { display: block; }
+                .return-v-slider .slider-arrow.prev { left: 1px; }
+                .return-v-slider .slider-arrow.next { right: 1px; }
+              </style>
+
+              <!-- Row 1: Customer + Vehicle cards -->
+              <div class="row g-3 mb-3">
+                <!-- Customer Details -->
                 <div class="col-12 col-md-6">
-                  <div class="p-1 d-flex justify-content-between">
-                    <span class="text-muted fs-6">Contact Number: </span>
-                    <span class="fw-semibold" id="return_c_mobile"></span>
-                  </div>
-                </div>
-                <div class="col-12 col-md-6">
-                  <div class="p-1 d-flex justify-content-between">
-                    <span class="text-muted fs-6">Email: </span>
-                    <span class="fw-semibold" id="return_c_email"></span>
-                  </div>
-                </div>
-                <div class="col-12 col-md-6">
-                  <div class="p-1 d-flex justify-content-between">
-                    <span class="text-muted fs-6">Attn: </span>
-                    <span class="fw-semibold" id="return_c_attn"></span>
-                  </div>
-                </div>
-                 <div class="col-12 col-md-6">
-                  <div class="p-1 d-flex justify-content-between">
-                    <span class="text-muted fs-6">Address: </span>
-                    <span class="fw-semibold" id="return_c_attr"></span>
-                  </div>
-                </div>
-                </div>
-                 
-
-                </div>
-
-              </div>
-                    </div>
-                   
-                    
-                     
-                  </div>
-           </div>
-           <div class="col-12 col-md-6">
-               <div class="accordion mt-4 accordion-collapse collapse show" id="accordion2">
-                    <div class="accordion-item mb-1">
-                        <h1 class="accordion-header  fw-bold">
-                        <button class="accordion-button text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#vehSec">
-                          Vehicle Details
-                        </button>
-                        
-                      </h1>
-                     <div id="vehSec" class="accordion-collapse collapse show">
-                <div class="accordion-body">
-            
-                 <div class="row g-3">
-
+                  <div class="return-info-card h-100">
+                    <div class="section-title">Customer Details</div>
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <div class="return-field-label">Customer Name</div>
+                        <div class="return-field-value" id="return_c_name">-</div>
+                      </div>
+                      <div class="col-6">
+                        <div class="return-field-label">Customer Code</div>
+                        <div class="return-field-value" id="return_c_code">-</div>
+                      </div>
+                      <div class="col-6">
+                        <div class="return-field-label">Contact Number</div>
+                        <div class="return-field-value" id="return_c_mobile">-</div>
+                      </div>
+                      <div class="col-6">
+                        <div class="return-field-label">Email</div>
+                        <div class="return-field-value" id="return_c_email">-</div>
+                      </div>
                       <div class="col-12">
-                       
-                    
-                          <div class="row g-1">
-
-                            <!-- Category -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1 d-flex justify-content-between">
-                                <span class="text-muted fs-6">Category: </span>
-                                <span class="fw-semibold" id="return_v_category"></span>
-                              </div>
-                            </div>
-                    
-                            <!-- Model -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1 d-flex justify-content-between">
-                                <span class="text-muted fs-6">Model: </span>
-                                <span class="fw-semibold" id="return_v_model"></span>
-                              </div>
-                            </div>
-                    
-                            <!-- Vehicle No -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1  d-flex justify-content-between">
-                                <span class="text-muted fs-6">Vehicle No: </span>
-                                <span class="fw-semibold" id="return_v_no"></span>
-                              </div>
-                            </div>
-                    
-                            <!-- Color -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1  d-flex justify-content-between">
-                                <span class="text-muted fs-6">Color: </span>
-                                <span class="fw-semibold" id="return_v_color"></span>
-                              </div>
-                            </div>
-                            <!-- Year -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1  d-flex justify-content-between">
-                                <span class="text-muted fs-6">Year: </span>
-                                <span class="fw-semibold" id="return_v_year"></span>
-                              </div>
-                            </div>
-                    
-                            
-                    
-                            <!-- Insurance -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1  d-flex justify-content-between">
-                                <span class="text-muted fs-6">NextInsurance: </span>
-                                <span class="fw-semibold" id="return_v_insurance"></span>
-                                <input type="hidden" id="return_hid_nxt_insurance">
-                              </div>
-                            </div>
-                    
-                            <!-- Passing -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1  bg-white d-flex justify-content-between">
-                                <span class="text-muted fs-6">Next Passing: </span>
-                                <span class="fw-semibold" id="return_v_passing"></span>
-                                <input type="hidden" id="return_hid_nxt_passing">
-                              </div>
-                            </div>
-                            
-                            <!-- Maintenance -->
-                            <div class="col-12 col-md-6">
-                              <div class="p-1 d-flex justify-content-between">
-                                <span class="text-muted fs-6">Next Maintenance: </span>
-                                <span class="fw-semibold" id="return_v_maintenance"></span>
-                                <input type="hidden" id="return_hid_nxt_maintenance">
-                              </div>
-                            </div>
-                            
-                          </div>
-                        
+                        <div class="return-field-label">Attn &amp; Address</div>
+                        <div class="return-field-value"><span id="return_c_attn"></span><span id="return_c_attr"></span></div>
                       </div>
-                    
                     </div>
-                <div class="row g-3" style="display:none">
-                    <div class="col-12 col-md-6">
-                        <div class="p-3 border rounded bg-white">
-                
-                          <div class="fw-semibold mb-2 text-primary">
-                            Price Rate - Without Driver
-                          </div>
-                
-                          <div class="row g-2">
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Hourly</span>
-                              <span class="fw-semibold" id="return_wod_hourly">0.000</span>
-                            </div>
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Daily</span>
-                              <span class="fw-semibold" id="return_wod_daily">0.000</span>
-                            </div>
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Weekly</span>
-                              <span class="fw-semibold" id="return_wod_weekly">0.000</span>
-                            </div>
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Monthly</span>
-                              <span class="fw-semibold" id="return_wod_monthly">0.000</span>
-                            </div>
-                
-                          </div>
-                
-                        </div>
-                      </div>
-                      <div class="col-12 col-md-6">
-                        <div class="p-3 border rounded bg-white">
-                
-                          <div class="fw-semibold mb-2 text-info">
-                            Price Rate - With Driver
-                          </div>
-                
-                          <div class="row g-2">
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Hourly</span>
-                              <span class="fw-semibold" id="return_wd_hourly">0.000</span>
-                            </div>
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Daily</span>
-                              <span class="fw-semibold" id="return_wd_daily">0.000</span>
-                            </div>
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Weekly</span>
-                              <span class="fw-semibold" id="return_wd_weekly">0.000</span>
-                            </div>
-                
-                            <div class="col-6 d-flex justify-content-between">
-                              <span class="text-muted fs-6">Monthly</span>
-                              <span class="fw-semibold" id="return_wd_monthly">0.000</span>
-                            </div>
-                
-                          </div>
-                
-                        </div>
-                      </div>
+                  </div>
                 </div>
-            
+
+                <!-- Vehicle Details -->
+                <div class="col-12 col-md-6">
+                  <div class="return-info-card h-100">
+                    <div class="section-title">Vehicle Details</div>
+                    <div class="d-flex gap-3 align-items-start">
+                      <!-- Mini Slider -->
+                      <div class="return-v-slider" id="returnVSlider">
+                        <img id="returnVSliderImg" src="uploads/vehicleImages/default.jpg" alt="Vehicle">
+                        <button class="slider-arrow prev" id="returnVSliderPrev">&#8249;</button>
+                        <button class="slider-arrow next" id="returnVSliderNext">&#8250;</button>
+                        <div class="slider-dot-wrap" id="returnVSliderDots"></div>
+                      </div>
+                      <!-- Info grid -->
+                      <div class="row g-2 flex-grow-1">
+                        <div class="col-6">
+                          <div class="return-field-label">Category</div>
+                          <div class="return-field-value" id="return_v_category">-</div>
+                        </div>
+                        <div class="col-6">
+                          <div class="return-field-label">Model</div>
+                          <div class="return-field-value" id="return_v_model">-</div>
+                        </div>
+                        <div class="col-6">
+                          <div class="return-field-label">Vehicle No</div>
+                          <div class="return-field-value" id="return_v_no">-</div>
+                        </div>
+                        <div class="col-6">
+                          <div class="return-field-label">Chassis No</div>
+                          <div class="return-field-value" id="return_v_chassis">-</div>
+                        </div>
+                        <div class="col-6">
+                          <div class="return-field-label">Color / Year</div>
+                          <div class="return-field-value"><span id="return_v_color">-</span> / <span id="return_v_year">-</span></div>
+                        </div>
+                        <div class="col-6">
+                          <div class="return-field-label">Next Ins. / Pass.</div>
+                          <div class="return-field-value">
+                            <span id="return_v_insurance">-</span>
+                            <input type="hidden" id="return_hid_nxt_insurance">
+                            <input type="hidden" id="return_hid_nxt_passing">
+                            <input type="hidden" id="return_hid_nxt_maintenance">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-                    </div>
-                   
-          
-                  </div>
-           </div>
-           <div class="col-12 col-md-12">
-                <div class="accordion mt-4 accordion-collapse collapse show" id="accordion1">
-                     <div class="accordion-item mb-1 ">
-                      <h2 class="accordion-header fw-bold">
-                          <button class="accordion-button text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#alllistbookSec">
-                           Bookings & Extensions
-                          </button>
-                        </h2>
 
-                      <div id="alllistbookSec" class="accordion-collapse collapse show">
-                          <div class="accordion-body">
+              
+              <hr>
+              <h5 class="mb-3 fw-bold text-danger">Bookings & Extensions</h5>
+
             
                             <div class="row g-3">
             
@@ -285,23 +221,180 @@
         
                         </div>
         
-                      </div>
+                 
+              
+              <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-next">Next <i class="ri-arrow-right-line ms-1"></i></button>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div id="tab-return-step-2" class="content">
+              <h5 class="mb-3 fw-bold text-danger">Vehicle Rentout Images</h5>
+
+               
+
+                <div id="preview" class="d-flex flex-wrap gap-2"></div>
+                
+               
+         
+              <hr>
+                            <h5 class="mb-3 fw-bold text-danger">Vehicle Checklist & Rentout Details</h5>
+              <div class="return-info-card mb-4">
+                <div class="row mb-2">
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="chk_tools" disabled>
+                      <label>Jack & Tools</label>
                     </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="chk_spare" disabled>
+                      <label>Spare Tyre</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="chk_radio" disabled>
+                      <label>Radio</label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                     <div class="form-floating form-floating-outline mb-3">
+                      <input type="date" id="dt_contract_date" class="form-control" value="<?php echo date('Y-m-d') ?>" readonly>
+                      <label>Contract Date</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                     <div class="col-md-4">
+                        <div class="form-floating form-floating-outline mb-3">
+                          <input type="text" id="fuel_level" class="form-control" readonly>
+                          <label>Fuel Level</label>
+                        </div>
+                    </div>
+                     <div class="col-md-4">
+                        <div class="form-floating form-floating-outline mb-3">
+                          <input type="text" id="km_out" class="form-control" readonly>
+                          <label>Rentout Odometer Reading</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating form-floating-outline mb-3">
+                          <input type="datetime-local" id="dt_out" class="form-control" readonly>
+                          <label>Date Time Out</label>
+                        </div>
                     </div>
                 </div>
-           </div>
-           <!-- Vehicle Violations Section -->
-           <div class="col-12 col-md-12">
-               <div class="accordion mt-4 accordion-collapse collapse show" id="accordionViolations">
-                   <div class="accordion-item mb-1">
-                       <h2 class="accordion-header fw-bold">
-                           <button class="accordion-button text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#violationsSec">
-                               Vehicle Violations
-                           </button>
-                       </h2>
+                <div class="row">
+                   <div class="col-md-6">
+                    <div class="form-floating form-floating-outline mb-3">
+                      <input type="text" id="cust_driver" class="form-control" readonly>
+                      <label>Customer Driver</label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                     <div class="form-floating form-floating-outline mb-3">
+                      <input type="text" id="cust_driver_contact_no" class="form-control" readonly>
+                      <label>Contact Number</label>
+                     </div>
+                   </div>
+                   <div class="col-md-12">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-2">
+                        <ul id="contractcustdriverdocpreview" class="list-unstyled d-flex align-items-center avatar-group mb-0"></ul>
+                    </div>
+                   </div>
+                </div>
+              </div>
 
-                       <div id="violationsSec" class="accordion-collapse collapse show">
-                           <div class="accordion-body">
+              <h5 class="mb-3 fw-bold text-primary">Return Details (To Fill)</h5>
+              <div class="row mb-4">
+                  <div class="col-md-4">
+                      <div class="form-floating form-floating-outline mb-3">
+                        <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,''); calcOdoDiff();" id="km_in" class="form-control border-primary" required>
+                        <label>Return Odometer Reading <span class="text-danger">*</span></label>
+                      </div>
+                  </div>
+                  <div class="col-md-4">
+                      <div class="form-floating form-floating-outline mb-3">
+                        <input type="text" id="odo_diff" class="form-control bg-light" readonly>
+                        <label>Odometer Difference</label>
+                      </div>
+                  </div>
+                  <div class="col-md-4">
+                      <div class="form-floating form-floating-outline mb-3">
+                        <input type="datetime-local" id="dt_in" class="form-control border-primary" required>
+                        <label>Date Time In <span class="text-danger">*</span></label>
+                      </div>
+                  </div>
+              </div>
+
+              <div id="company_driver_section">
+                <hr>
+                <h5 class="mb-3 fw-bold text-danger">Company Driver Details</h5>
+                <div class="return-info-card mb-4">
+                    <div class="row g-3">
+                         <div class="col-12 col-md-6 driverclass">
+                          <div class="p-1 d-flex justify-content-between">
+                            <span class="text-muted fs-6">Name: </span>
+                            <span class="fw-semibold driverClasstext" id="d_name"></span>
+                          </div>
+                        </div>
+                         <div class="col-12 col-md-6 driverclass">
+                          <div class="p-1 d-flex justify-content-between">
+                            <span class="text-muted fs-6">Contact Number: </span>
+                            <span class="fw-semibold driverClasstext" id="d_mobile"></span>
+                          </div>
+                        </div>
+                        <div class="col-12 col-md-6 driverclass">
+                          <div class="p-1 d-flex justify-content-between">
+                            <span class="text-muted fs-6">License Number: </span>
+                            <span class="fw-semibold driverClasstext" id="d_license_no"></span>
+                          </div>
+                        </div>
+                        <div class="col-12 col-md-6 driverclass">
+                          <div class="p-1 d-flex justify-content-between">
+                            <span class="text-muted fs-6">Issue Place: </span>
+                            <span class="fw-semibold driverClasstext" id="d_license_issue_place"></span>
+                          </div>
+                        </div>
+                        <div class="col-12 col-md-6 driverclass">
+                          <div class="p-1 d-flex justify-content-between">
+                            <span class="text-muted fs-6">Issue Date: </span>
+                            <span class="fw-semibold driverClasstext" id="d_licenseissueDate"></span>
+                          </div>
+                        </div>
+                         <div class="col-12 col-md-6 driverclass">
+                          <div class="p-1 d-flex justify-content-between">
+                            <span class="text-muted fs-6">Expiry Date: </span>
+                            <span class="fw-semibold driverClasstext" id="d_licenseexpiryDate"></span>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+              </div>
+<div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-secondary btn-prev"><i class="ri-arrow-left-line me-1"></i> Previous</button>
+                <button type="button" class="btn btn-primary btn-next">Next <i class="ri-arrow-right-line ms-1"></i></button>
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div id="tab-return-step-3" class="content">
+              <h5 class="mb-3 fw-bold text-danger">Vehicle Return Images</h5>
+
+            
+                            <input type="file" id="returncarImages" class="form-control mb-3" multiple accept="image/*" capture="environment">
+            
+                            <div id="returnpreview" class="d-flex flex-wrap gap-2"></div>
+              <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-secondary btn-prev"><i class="ri-arrow-left-line me-1"></i> Previous</button>
+                <button type="button" class="btn btn-primary btn-next">Next <i class="ri-arrow-right-line ms-1"></i></button>
+              </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div id="tab-return-step-4" class="content">
+              <h5 class="mb-3 fw-bold text-danger">Vehicle Violations</h5>
+
                                 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                                     <div>
                                         <a href="https://services.bahrain.bh" target="_blank" rel="noopener noreferrer" class="text-primary fw-bold text-decoration-underline d-inline-flex align-items-center gap-1">
@@ -343,36 +436,16 @@
                                        I confirm that vehicle violations have been checked on services.bahrain.bh
                                    </label>
                                </div>
-                           </div>
-                       </div>
-                   </div>
-               </div>
-           </div>
-          <div class="col-12 col-md-12" style="display:none">
+                      
+                            <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-secondary btn-prev"><i class="ri-arrow-left-line me-1"></i> Previous</button>
+                <button type="button" class="btn btn-primary btn-next">Next <i class="ri-arrow-right-line ms-1"></i></button>
+              </div>
+            </div>
+            <!-- Step 5 -->
+            <div id="tab-return-step-5" class="content">
+              <h5 class="mb-3 fw-bold text-danger">Other Fees Entries</h5>
 
-    <!-- Accordion -->
-    <div class="accordion mt-4" id="otherFeesAccordion">
-
-        <div class="accordion-item">
-
-            <h2 class="accordion-header" id="headingOtherFees">
-
-                <button class="accordion-button"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#collapseOtherFees">
-
-                    Other Fees Entries
-
-                </button>
-
-            </h2>
-
-            <div id="collapseOtherFees"
-                 class="accordion-collapse collapse show"
-                 data-bs-parent="#otherFeesAccordion">
-
-                <div class="accordion-body">
 
                     <div class="mb-3 text-end">
 
@@ -408,83 +481,16 @@
                         </table>
 
                     </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-            <div class="col-12 col-md-6">
-               <div class="accordion mt-4 accordion-collapse collapse show" id="accordion1">
-                   
-                     <div class="accordion-item mb-1">
-            <h2 class="accordion-header fw-bold">
-              <button class="accordion-button text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#imgSec">
-                Vehicle Rentout Images
-              </button>
-            </h2>
-
-            <div id="imgSec" class="accordion-collapse collapse show">
-              <div class="accordion-body">
-               
-
-                <div id="preview" class="d-flex flex-wrap gap-2"></div>
-                
-               
+              <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-secondary btn-prev"><i class="ri-arrow-left-line me-1"></i> Previous</button>
+                <button type="button" class="btn btn-primary btn-next">Next <i class="ri-arrow-right-line ms-1"></i></button>
               </div>
             </div>
-          </div>
-                     <div class="accordion-item">
-                        <h2 class="accordion-header fw-bold">
-                          <button class="accordion-button text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#returnimgSec">
-                            Vehicle Return Images
-                          </button>
-                        </h2>
-            
-                        <div id="returnimgSec" class="accordion-collapse collapse show">
-                          <div class="accordion-body">
-            
-                            <input type="file" id="returncarImages" class="form-control mb-3" multiple accept="image/*" capture="environment">
-            
-                            <div id="returnpreview" class="d-flex flex-wrap gap-2"></div>
-                            
-                           <div class="progress mt-3" style="height:8px;">
-                                <div class="return-progress-bar" id="returnglobalProgressBar" style="width:0%"></div>
-                            </div>
-                            <div id="returnuploadLoader" class="text-center mt-2 d-none">
-                                <div class="spinner-border spinner-border-sm text-primary"></div>
-                                <span class="ms-2">Uploading images...</span>
-                            </div>
-                            <button id="returnuploadBtn" class="btn btn-primary mt-3">Upload Return Vehicle Images</button>
-                          </div>
-                        </div>
-                      </div>
-                      <!-- Signature Accordion -->
-                    <div class="accordion mt-4 accordion-collapse collapse show" id="receivedSignatureAccordion">
-            
-                <div class="accordion-item mb-1">
-            
-                    <h2 class="accordion-header fw-bold" id="headingReceivedSignature">
-            
-                        <button class="accordion-button text-danger"
-                                type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#collapseReceivedSignature">
-            
-                            Receiver Signature
-                        </button>
-            
-                    </h2>
-            
-                    <div id="collapseReceivedSignature"
-                         class="accordion-collapse collapse show"
-                         data-bs-parent="#receivedSignatureAccordion">
-            
-                        <div class="accordion-body">
+
+            <!-- Step 6 -->
+            <div id="tab-return-step-6" class="content">
+              <h5 class="mb-3 fw-bold text-danger">Receiver Signature</h5>
+
             
                             <div class="row">
             
@@ -540,194 +546,14 @@
                                 </div>
             
                             </div>
-            
-                        </div>
-            
-                    </div>
-            
-                </div>
-            
-            </div>
-                     
-                  </div>
-           </div>
-           <div class="col-12 col-md-6">
-               <div class="accordion mt-4 accordion-collapse collapse show" id="accordion2">
-                    
-                    <div class="accordion-item mb-1">
-                <h2 class="accordion-header fw-bold">
-                  <button class="accordion-button text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#checkSec">
-                    Vehicle Checklist
-                  </button>
-                </h2>
-
-            <div id="checkSec" class="accordion-collapse collapse show">
-              <div class="accordion-body">
-
-                <div class="row mb-2">
-
-                  <div class="col-md-6">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="chk_tools" disabled>
-                      <label>Jack & Tools</label>
-                    </div>
-
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="chk_spare" disabled>
-                      <label>Spare Tyre</label>
-                    </div>
-
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="chk_radio" disabled>
-                      <label>Radio</label>
-                    </div>
-                  </div>
-                
-                  <div class="col-md-6">
-                     <div class="form-floating form-floating-outline mb-3">
-                      <input type="date" id="dt_contract_date" class="form-control"  value="<?php echo date('Y-m-d') ?>" readonly>
-                      <label>Contract Date</label>
-                    </div>
-                    </div>
-                   
-                  
-                   
-
-                </div>
-               <div class="row ">
-                     <div class="col-md-3">
-                        <div class="form-floating form-floating-outline mb-3">
-                          <input type="text"  id="fuel_level" class="form-control" readonly>
-                          <label>Fuel Level</label>
-                        </div>
-                    </div>
-                     <div class="col-md-3">
-                        <div class="form-floating form-floating-outline mb-3">
-                          <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="km_out" class="form-control" readonly>
-                          <label>KM Out</label>
-                        </div>
-                    </div>
-                     <div class="col-md-3">
-                        <div class="form-floating form-floating-outline mb-3">
-                          <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="km_in" class="form-control">
-                          <label>KM In</label>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-floating form-floating-outline mb-3">
-                          <input type="datetime-local" id="dt_out" class="form-control" readonly>
-                          <label>Date Time Out</label>
-                        </div>
-                  </div>
-                   <div class="col-md-3">
-                        <div class="form-floating form-floating-outline mb-3">
-                          <input type="datetime-local" id="dt_in" class="form-control">
-                          <label>Date Time In</label>
-                        </div>
-                  </div>
-                   <div class="col-md-4">
-                    <div class="form-floating form-floating-outline mb-3">
-                      <input type="text" id="cust_driver" class="form-control" readonly>
-                      <label>Customer Driver</label>
-                    </div>
-
-                    
-                  </div>
-                  <div class="col-md-4 ">
-                     <div class="form-floating form-floating-outline">
-                      <input type="text" id="cust_driver_contact_no" class="form-control" readonly>
-                      <label>Contact Number</label>
-                     </div>
-                   </div>
-                   <div class="col-md-12">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-5 pt-1">
-
-                        <!-- Left: Image Preview -->
-                        <ul id="contractcustdriverdocpreview"
-                            class="list-unstyled d-flex align-items-center avatar-group mb-0">
-                        </ul>
-                    
-                        
-                  
-                    </div>
-                    </div>
-                </div>
-             
-
+              <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-secondary btn-prev"><i class="ri-arrow-left-line me-1"></i> Previous</button>
+                <button type="button" class="btn btn-success px-4 ladda-button" id="btn_return_contract"><span class="ladda-label">Return Contract</span></button>
               </div>
             </div>
           </div>
-            <div class="accordion-item mb-1">
-                     <h1 class="accordion-header fw-bold">
-                          <button class="accordion-button text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#driverSec">
-                             Company Driver Details
-                          </button>
-                        </h1>
-                     <div id="driverSec" class="accordion-collapse collapse show">
-                      <div class="accordion-body">
-        
-                        <div class="row g-3">
-                           
-                             <div class="col-12 col-md-6 driverclass">
-                              <div class="p-1 d-flex justify-content-between">
-                                <span class="text-muted fs-6">Name: </span>
-                                <span class="fw-semibold driverClasstext" id="d_name"></span>
-                              </div>
-                            </div>
-                             <div class="col-12 col-md-6 driverclass">
-                              <div class="p-1 d-flex justify-content-between">
-                                <span class="text-muted fs-6">Contact Number: </span>
-                                <span class="fw-semibold driverClasstext" id="d_mobile"></span>
-                              </div>
-                            </div>
-                            <div class="col-12 col-md-6 driverclass">
-                              <div class="p-1 d-flex justify-content-between">
-                                <span class="text-muted fs-6">License Number: </span>
-                                <span class="fw-semibold driverClasstext" id="d_license_no"></span>
-                              </div>
-                            </div>
-                            <div class="col-12 col-md-6 driverclass">
-                              <div class="p-1 d-flex justify-content-between">
-                                <span class="text-muted fs-6">Issue Place: </span>
-                                <span class="fw-semibold driverClasstext" id="d_license_issue_place"></span>
-                              </div>
-                            </div>
-                            <div class="col-12 col-md-6 driverclass">
-                              <div class="p-1 d-flex justify-content-between">
-                                <span class="text-muted fs-6">Issue Date: </span>
-                                <span class="fw-semibold driverClasstext" id="d_licenseissueDate"></span>
-                              </div>
-                            </div>
-                             <div class="col-12 col-md-6 driverclass">
-                              <div class="p-1 d-flex justify-content-between">
-                                <span class="text-muted fs-6">Expiry Date: </span>
-                                <span class="fw-semibold driverClasstext" id="d_licenseexpiryDate"></span>
-                              </div>
-                            </div>
-                            
-                        </div>
-        
-                      </div>
-                    </div>
-                    </div>
-                      
-                  
-                     
-           
-          
-                  </div>
-           </div>
-           <hr>
-       </div>
         </div>
-      <!-- FOOTER -->
-      <div class="modal-footer">
-        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-success px-4 ladda-button" id="btn_return_contract"><span class="ladda-label">
-        Return Contract
-    </span></button>
       </div>
-
     </div>
   </div>
 </div>

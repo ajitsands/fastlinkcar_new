@@ -473,7 +473,7 @@ class VehiclesContractListController
                         
                                     rc.minprice_otp_details AS otp_details,
                         
-                                    rc.rentout_log_json AS extend_log_json
+                                    rc.log_json AS extend_log_json
                         
                                 FROM tbl_vehicle_rentout_contracts rc
                         
@@ -542,11 +542,11 @@ class VehiclesContractListController
                         
                         foreach ($rows as $row) {
                         
-                            $custdetails = json_decode($row['customer_details'], true) ?? [];
-                            $vehicledetails = json_decode($row['vehicle_details'], true) ?? [];
-                            $extend_details = json_decode($row['extend_details'], true) ?? [];
-                            $otp_details = json_decode($row['otp_details'], true) ?? [];
-                            $extend_log_json = json_decode($row['extend_log_json'], true) ?? [];
+                            $custdetails = json_decode($row['customer_details'] ?? '{}', true) ?? [];
+                            $vehicledetails = json_decode($row['vehicle_details'] ?? '{}', true) ?? [];
+                            $extend_details = json_decode($row['extend_details'] ?? '{}', true) ?? [];
+                            $otp_details = json_decode($row['otp_details'] ?? '{}', true) ?? [];
+                            $extend_log_json = json_decode($row['extend_log_json'] ?? '{}', true) ?? [];
                         
                             $data[] = [
                         
@@ -905,6 +905,85 @@ class VehiclesContractListController
                         
                         break;
             case 'delete_extension':
+
+                // 1. Fetch extension details to reverse the ledger charges
+                $extQry = $this->varPDOModelObj->selectexecuteQuery(
+                    "SELECT * FROM tbl_vehicle_contract_extensions WHERE ids = :extend_ids",
+                    [':extend_ids' => $this->extend_ids]
+                );
+                $extData = $extQry->fetch(PDO::FETCH_ASSOC);
+
+                if ($extData) {
+                    $extendDetails = json_decode($extData['extend_details'] ?? '{}', true);
+                    $duration   = (float)($extendDetails['duration'] ?? 0);
+                    $unitPrice  = (float)($extendDetails['unit_price'] ?? 0);
+                    $vatPercent = (float)($extendDetails['vat'] ?? 0);
+
+                    $extensionFee = $duration * $unitPrice;
+                    $vatAmount = ($extensionFee * $vatPercent) / 100;
+
+                    $custCode = $extData['customer_code'];
+                    $agreementNo = $extData['agreement_no'];
+                    $bookingIds = $extData['booking_ids'];
+                    $agreementIds = $extData['agreement_ids'];
+
+                    $agreeQry = $this->varPDOModelObj->selectexecuteQuery(
+                        "SELECT quotation_number FROM tbl_vehicle_rentout_contracts WHERE ids = :agreement_ids",
+                        [':agreement_ids' => $agreementIds]
+                    );
+                    $agreeData = $agreeQry->fetch(PDO::FETCH_ASSOC);
+                    $quotationNo = $agreeData['quotation_number'] ?? '';
+                    $bookingNo   = '';
+                    
+                    $userId = $_SESSION['user_id'] ?? 1;
+                    $companyId = $_SESSION['company_id'] ?? 1;
+                    $transDate = date('Y-m-d');
+                    $transDateTime = date('Y-m-d H:i:s');
+                    
+                    if ($extensionFee > 0) {
+                        $this->varPDOModelObj->executeQuery("
+                            INSERT INTO tbl_customer_ledger
+                            (customer_code, quotation_no, booking_no, trans_date, trans_type, payment_method, debit, credit, description, user_id, company_id, created_at, booking_ids, contract_ids, agreement_no)
+                            VALUES
+                            (:customer_code, :quotation_no, :booking_no, :trans_date, 'Extension Deleted', 'N/A', 0, :credit, :description, :user_id, :company_id, :created_at, :booking_ids, :contract_ids, :agreement_no)
+                        ", [
+                            ':customer_code' => $custCode,
+                            ':quotation_no' => $quotationNo,
+                            ':booking_no' => $bookingNo,
+                            ':trans_date' => $transDate,
+                            ':credit' => $extensionFee,
+                            ':description' => 'Reversal of Extension Amount (Agreement No: ' . $agreementNo . ')',
+                            ':user_id' => $userId,
+                            ':company_id' => $companyId,
+                            ':created_at' => $transDateTime,
+                            ':booking_ids' => $bookingIds,
+                            ':contract_ids' => $agreementIds,
+                            ':agreement_no' => $agreementNo
+                        ]);
+                    }
+                    
+                    if ($vatAmount > 0) {
+                        $this->varPDOModelObj->executeQuery("
+                            INSERT INTO tbl_customer_ledger
+                            (customer_code, quotation_no, booking_no, trans_date, trans_type, payment_method, debit, credit, description, user_id, company_id, created_at, booking_ids, contract_ids, agreement_no)
+                            VALUES
+                            (:customer_code, :quotation_no, :booking_no, :trans_date, 'Extension Deleted VAT', 'N/A', 0, :credit, :description, :user_id, :company_id, :created_at, :booking_ids, :contract_ids, :agreement_no)
+                        ", [
+                            ':customer_code' => $custCode,
+                            ':quotation_no' => $quotationNo,
+                            ':booking_no' => $bookingNo,
+                            ':trans_date' => $transDate,
+                            ':credit' => $vatAmount,
+                            ':description' => 'Reversal of Extension VAT (Agreement No: ' . $agreementNo . ')',
+                            ':user_id' => $userId,
+                            ':company_id' => $companyId,
+                            ':created_at' => $transDateTime,
+                            ':booking_ids' => $bookingIds,
+                            ':contract_ids' => $agreementIds,
+                            ':agreement_no' => $agreementNo
+                        ]);
+                    }
+                }
              
                $deleteExtensionQry = $this->varPDOModelObj->executeQuery(
                     "DELETE FROM tbl_vehicle_contract_extensions

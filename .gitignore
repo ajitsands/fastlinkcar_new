@@ -17,3 +17,5 @@ fix*.php
 desc_*.php
 replace.php
 reload_permissions.php
+httpdocs/images/
+assets/img/logo/

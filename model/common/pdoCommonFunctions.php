@@ -423,7 +423,7 @@ class Logger
     private static function getLogPath($fileName = 'DB_ERROR')
     {
         
-        $basePath = realpath(__DIR__ . '/../../logs');
+        $basePath = __DIR__ . '/../../logs';
     
         $year  = date('Y');
         $month = date('m');

@@ -14,7 +14,7 @@ checkLogin();
 
 <?php
 include('envinclude.php');
-$decimals = $_ENV['DECIMALS'];
+$decimals = $_ENV['DECIMALS'] ?? 2;
 ?>
 <!doctype html>
 
@@ -482,7 +482,7 @@ $('#selectCustomerFromSelect2_filter').on('select2:clear', function () {
             let today = new Date().toISOString().split('T')[0];
             $('#quotation_date').val(today);    
          
-      let DecimalPositions = <?php echo $decimals;?>;   
+      let DecimalPositions = <?php echo (int)$decimals;?>;   
         let saved = localStorage.getItem('printSettings');
         if (saved) {
             let settings = JSON.parse(saved);

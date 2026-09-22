@@ -1506,7 +1506,7 @@ class VehiclesContractController
                              hirer_signature, hirer_name, hirer_signature_date, hier_signature_status, hirer_signed_ip, hirer_signed_device,
                              delivered_signature, delivered_signatory, delivered_signature_date, delivered_signature_status, delivered_signed_ip, delivered_signed_device,
                              agreement_no, agreement_status,
-                             customer_name, customer_details, vehicle_category_id, vehicle_model_id, vehicle_no, vechile_details, service_type, terms_condition, driver_ids, driver_details,
+                             customer_name, customer_details, quotation_number, vehicle_category_id, vehicle_model_id, vehicle_no, vechile_details, service_type, terms_condition, driver_ids, driver_details,
                              customer_driver_name, customer_driver_contact_number, customer_driver_attachments, log_json)
                             VALUES 
                             (0, :company_id, :vehicle_id, :customer_code, 
@@ -1516,7 +1516,7 @@ class VehiclesContractController
                              :hirer_sign, :hirer_name, NOW(), :hirer_sign_status, :hirer_ip, :hirer_device,
                              :delivery_sign, :delivery_name, NOW(), :delivery_sign_status, :delivery_ip, :delivery_device,
                              :agreement_no, :agreement_status,
-                             :customer_name, :customer_details, :category_id, :model_id, :veh_no, :vechile_details, :service_type, :terms_condition, :driver_ids, :driver_details,
+                             :customer_name, :customer_details, :quotation_number, :category_id, :model_id, :veh_no, :vechile_details, :service_type, :terms_condition, :driver_ids, :driver_details,
                              :cust_driver_name, :cust_driver_contact, :cust_driver_attachments, :log_json)";
                              
                         $params = [
@@ -1544,6 +1544,7 @@ class VehiclesContractController
                             ':agreement_status' => ($is_rentout == 1) ? 'Rentout' : 'Generated',
                             ':customer_name' => $customer_name,
                             ':customer_details' => $customer_details_json,
+                            ':quotation_number' => '',
                             ':category_id' => $vData['category_id'] ?? '',
                             ':model_id' => $vData['model_id'] ?? '',
                             ':veh_no' => $vData['veh_no'] ?? '',

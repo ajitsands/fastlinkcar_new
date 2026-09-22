@@ -1200,7 +1200,7 @@ function load_contract_list(
 
                                 ${row.agreement_status === 'Generated' ? `
                                 <li>
-                                    <a class="dropdown-item fw-semibold changeStatus"
+                                    <a class="dropdown-item fw-semibold rentoutContractStatus"
                                        data-id="${row.booking_ids}"
                                        data-status="Rentout"
                                        data-vehicleid="${row.vehicle_id}"
@@ -1294,7 +1294,7 @@ function load_contract_list(
     });
 }); 
 
-$(document).on('click', '.changeStatus', function () {
+$(document).on('click', '.rentoutContractStatus', function () {
 
     let id = $(this).data('id');
     let vehicleid = $(this).data('vehicleid');

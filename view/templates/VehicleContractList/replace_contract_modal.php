@@ -68,83 +68,79 @@
              </div>
           </div>
 
-          <div class="col-12">
-            <div class="card border border-primary-subtle shadow-sm mb-2">
-              <div class="card-header bg-primary-subtle text-primary fw-bold py-2 d-flex align-items-center justify-content-between">
-                <span><i class="ri-car-line me-1"></i> Current Contract Vehicle Info</span>
-                <span id="replace_v_brand" class="d-none"></span>
-                <span id="replace_v_passing" class="d-none"></span>
-                <span id="replace_v_maintenance" class="d-none"></span>
-              </div>
-              <div class="card-body py-3">
-                <div class="row g-3 fs-6">
-                  <div class="col-6 col-md-4 col-lg-2">
-                    <span class="text-muted small d-block mb-1"><i class="ri-price-tag-3-line me-1"></i>Category</span>
-                    <span class="fw-semibold text-dark" id="replace_v_category">-</span>
-                  </div>
-                  <div class="col-6 col-md-4 col-lg-2">
-                    <span class="text-muted small d-block mb-1"><i class="ri-car-fill me-1"></i>Model</span>
-                    <span class="fw-semibold text-dark" id="replace_v_model">-</span>
-                  </div>
-                  <div class="col-6 col-md-4 col-lg-2">
-                    <span class="text-muted small d-block mb-1"><i class="ri-hashtag me-1"></i>Vehicle No</span>
-                    <span class="fw-semibold text-dark" id="replace_v_no">-</span>
-                  </div>
-                  <div class="col-6 col-md-4 col-lg-2">
-                    <span class="text-muted small d-block mb-1"><i class="ri-palette-line me-1"></i>Color</span>
-                    <span class="fw-semibold text-dark" id="replace_v_color">-</span>
-                  </div>
-                  <div class="col-6 col-md-4 col-lg-2">
-                    <span class="text-muted small d-block mb-1"><i class="ri-calendar-line me-1"></i>Year</span>
-                    <span class="fw-semibold text-dark" id="replace_v_year">-</span>
-                  </div>
-                  <div class="col-6 col-md-4 col-lg-2">
-                    <span class="text-muted small d-block mb-1"><i class="ri-shield-check-line me-1"></i>Next Insurance</span>
-                    <span class="fw-semibold text-dark" id="replace_v_insurance">-</span>
-                  </div>
+
+
+          <!-- SECTION 2: OLD VEHICLE RETURN & VIOLATIONS (Stepper Wrapper) -->
+          <div class="col-12 mt-2">
+            <div id="replaceVehicleStepper" class="bs-stepper linear">
+              <div class="bs-stepper-header" role="tablist">
+                <div class="step" data-target="#replace-step-1">
+                  <button type="button" class="step-trigger" role="tab" id="replace-step-1-trigger">
+                    <span class="bs-stepper-circle">1</span>
+                    <span class="bs-stepper-label">
+                      <span class="bs-stepper-title">Return Old Vehicle</span>
+                    </span>
+                  </button>
+                </div>
+                <div class="line"></div>
+                <div class="step" data-target="#replace-step-2">
+                  <button type="button" class="step-trigger" role="tab" id="replace-step-2-trigger">
+                    <span class="bs-stepper-circle">2</span>
+                    <span class="bs-stepper-label">
+                      <span class="bs-stepper-title">Select Replacement</span>
+                    </span>
+                  </button>
                 </div>
               </div>
-            </div>
-          </div>
+              <div class="bs-stepper-content pt-3">
+                <form id="replaceVehicleForm" onSubmit="return false">
+                  <!-- Step 1: Return Old Vehicle -->
+                  <div id="replace-step-1" class="content">
 
-          <!-- BOOKINGS & EXTENSIONS LIST -->
-          <div class="col-12 d-none">
-             <div class="accordion" id="acc_replace_bookings">
-               <div class="accordion-item mb-1">
-                 <h2 class="accordion-header fw-bold">
-                   <button class="accordion-button text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#replace_bookingsSec">
-                     <i class="ri-file-list-line me-1"></i> Bookings & Extensions Details
-                   </button>
-                 </h2>
-                 <div id="replace_bookingsSec" class="accordion-collapse collapse show">
-                   <div class="accordion-body">
-                     <div class="table-responsive">
-                       <table id="contractReplaceTable" class="table table-bordered table-sm align-middle w-100">
-                         <thead class="table-light">
-                           <tr>
-                             <th>#</th>
-                             <th>Date</th>
-                             <th>Period</th>
-                             <th>Details</th>
-                             <th>Pricing</th>
-                             <th>Notes</th>
-                           </tr>
-                         </thead>
-                       </table>
-                     </div>
-                   </div>
-                 </div>
-               </div>
-             </div>
-          </div>
+                    <div class="card border border-primary-subtle shadow-sm mb-3">
+                      <div class="card-header bg-primary-subtle text-primary fw-bold py-2 d-flex align-items-center justify-content-between">
+                        <span><i class="ri-car-line me-1"></i> Current Contract Vehicle Info</span>
+                        <span id="replace_v_brand" class="d-none"></span>
+                        <span id="replace_v_passing" class="d-none"></span>
+                        <span id="replace_v_maintenance" class="d-none"></span>
+                      </div>
+                      <div class="card-body py-3">
+                        <div class="row g-3 fs-6">
+                          <div class="col-6 col-md-4 col-lg-2">
+                            <span class="text-muted small d-block mb-1"><i class="ri-price-tag-3-line me-1"></i>Category</span>
+                            <span class="fw-semibold text-dark" id="replace_v_category">-</span>
+                          </div>
+                          <div class="col-6 col-md-4 col-lg-2">
+                            <span class="text-muted small d-block mb-1"><i class="ri-car-fill me-1"></i>Model</span>
+                            <span class="fw-semibold text-dark" id="replace_v_model">-</span>
+                          </div>
+                          <div class="col-6 col-md-4 col-lg-2">
+                            <span class="text-muted small d-block mb-1"><i class="ri-hashtag me-1"></i>Vehicle No</span>
+                            <span class="fw-semibold text-dark" id="replace_v_no">-</span>
+                          </div>
+                          <div class="col-6 col-md-4 col-lg-2">
+                            <span class="text-muted small d-block mb-1"><i class="ri-palette-line me-1"></i>Color</span>
+                            <span class="fw-semibold text-dark" id="replace_v_color">-</span>
+                          </div>
+                          <div class="col-6 col-md-4 col-lg-2">
+                            <span class="text-muted small d-block mb-1"><i class="ri-calendar-line me-1"></i>Year</span>
+                            <span class="fw-semibold text-dark" id="replace_v_year">-</span>
+                          </div>
+                          <div class="col-6 col-md-4 col-lg-2">
+                            <span class="text-muted small d-block mb-1"><i class="ri-shield-check-line me-1"></i>Next Insurance</span>
+                            <span class="fw-semibold text-dark" id="replace_v_insurance">-</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-          <!-- SECTION 2: OLD VEHICLE RETURN & VIOLATIONS -->
-          <div class="col-12">
-             <div class="card border border-danger mb-3">
-               <div class="card-header bg-danger-subtle text-danger fw-bold d-flex justify-content-between align-items-center">
-                 <span><i class="ri-logout-box-r-line me-1"></i> STEP 1: RETURN OLD VEHICLE DETAILS & TRAFFIC VIOLATIONS</span>
-                 <span class="badge bg-danger text-white fs-6" id="badge_old_veh_no"></span>
-               </div>
+
+
+                     <div class="card border border-danger mb-0">
+                       <div class="card-header bg-danger-subtle text-danger fw-bold d-flex justify-content-between align-items-center">
+                         <span><i class="ri-logout-box-r-line me-1"></i> OLD VEHICLE DETAILS & TRAFFIC VIOLATIONS</span>
+                         <span class="badge bg-danger text-white fs-6" id="badge_old_veh_no"></span>
+                       </div>
                <div class="card-body">
                  <div class="row g-3 mt-1">
                    
@@ -176,37 +172,37 @@
                        <div class="col-6 col-md-3">
                          <div class="form-floating form-floating-outline">
                            <input type="text" id="replace_old_km_out" class="form-control form-control-sm" readonly>
-                           <label for="replace_old_km_out">KM Out</label>
+                           <label for="replace_old_km_out">Rentout Odometer reading</label>
                          </div>
                        </div>
                        <div class="col-6 col-md-3">
                          <div class="form-floating form-floating-outline">
-                           <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="replace_old_km_in" class="form-control form-control-sm" placeholder="Enter KM In">
-                           <label for="replace_old_km_in">KM In *</label>
+                           <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="replace_old_km_in" class="form-control form-control-sm" placeholder="Enter Return Odometer reading">
+                           <label for="replace_old_km_in">Return Odometer reading *</label>
                          </div>
                        </div>
                        <div class="col-6 col-md-3">
                          <div class="form-floating form-floating-outline">
                            <input type="text" id="replace_old_km_used" class="form-control form-control-sm bg-light" readonly>
-                           <label for="replace_old_km_used">KM Used</label>
+                           <label for="replace_old_km_used">Odometer difference</label>
                          </div>
                        </div>
                        <div class="col-6 col-md-3">
                          <div class="form-floating form-floating-outline">
                            <input type="text" id="replace_old_fuel_in" class="form-control form-control-sm" placeholder="e.g. Full, Half">
-                           <label for="replace_old_fuel_in">Fuel In</label>
+                           <label for="replace_old_fuel_in">Fuel Level</label>
                          </div>
                        </div>
                        <div class="col-12 col-md-6">
                          <div class="form-floating form-floating-outline">
                            <input type="datetime-local" id="replace_old_dt_out" class="form-control form-control-sm" readonly>
-                           <label for="replace_old_dt_out">Date Time Out</label>
+                           <label for="replace_old_dt_out">Vehicle Out Date Time</label>
                          </div>
                        </div>
                        <div class="col-12 col-md-6">
                          <div class="form-floating form-floating-outline">
                            <input type="datetime-local" id="replace_old_dt_in" class="form-control form-control-sm">
-                           <label for="replace_old_dt_in">Date Time In *</label>
+                           <label for="replace_old_dt_in">Vehicle In Date Time *</label>
                          </div>
                        </div>
                      </div>
@@ -222,13 +218,6 @@
                        <label class="form-label fw-semibold text-dark">Upload Old Vehicle Return Images</label>
                        <input type="file" id="replace_old_return_car_images" class="form-control form-control-sm mb-2" multiple accept="image/*" capture="environment">
                        <div id="replace_old_return_preview" class="d-flex flex-wrap gap-2 mb-2"></div>
-                       <div class="progress mb-2" style="height:6px;">
-                         <div class="progress-bar bg-danger" id="replace_old_return_progressBar" style="width:0%"></div>
-                       </div>
-                       <button type="button" id="replace_old_return_uploadBtn" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1">
-                         <span class="spinner-border spinner-border-sm d-none" id="replace_old_return_loader" role="status" aria-hidden="true"></span>
-                         <i class="ri-upload-cloud-line me-1" id="replace_old_return_icon"></i> Upload Return Images
-                       </button>
                      </div>
                    </div>
 
@@ -280,15 +269,22 @@
                    </div>
 
                  </div>
-               </div>
-             </div>
-          </div>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-next" id="btn_replace_next_step">
+                  <span class="align-middle d-sm-inline-block d-none">Next</span> <i class="ri-arrow-right-line"></i>
+                </button>
+              </div>
+            </div>
 
           <!-- SECTION 3: NEW REPLACEMENT VEHICLE SELECTION & RENT OUT -->
-          <div class="col-12">
-             <div class="card border border-success">
+          <!-- Step 2: Select Replacement -->
+          <div id="replace-step-2" class="content">
+             <div class="card border border-success mb-0">
                <div class="card-header bg-success-subtle text-success fw-bold d-flex justify-content-between align-items-center">
-                 <span><i class="ri-login-box-r-line me-1"></i> STEP 2: SELECT NEW REPLACEMENT VEHICLE & RENT OUT CHECKLIST</span>
+                 <span><i class="ri-login-box-r-line me-1"></i> NEW REPLACEMENT VEHICLE & RENT OUT CHECKLIST</span>
                  <span class="badge bg-success text-white fs-6">Available Vehicles</span>
                </div>
                <div class="card-body">
@@ -303,62 +299,58 @@
                        <label for="replace_select_new_vehicle">Choose Available Vehicle *</label>
                      </div>
 
-                      <!-- Selected Vehicle Card (Exact App vehicle-card Style) -->
-                      <div id="replace_new_veh_card" class="vehicle-card d-flex flex-column p-2 border rounded shadow-sm position-relative bg-white d-none mt-2">
-                        <div class="d-flex align-items-center">
-                          <div class="me-2 vehicle-image">
-                            <img id="replace_new_v_img" src="uploads/vehicleImages/default.jpg" class="rounded-circle border" style="width:60px;height:60px;object-fit:cover;" onerror="this.src='uploads/vehicleImages/default.jpg';">
-                          </div>
-
-                          <div class="flex-grow-1">
-                            <h5 class="card-title mb-0 veh_no text-dark fw-bold" id="replace_new_v_no">-</h5>
-
-                            <div class="text-muted small fw-bold text-dark" id="replace_new_v_title">-</div>
-
-                            <div class="d-flex align-items-center gap-2 mt-1 small text-muted flex-wrap">
-                              <span><i class="icon-base ri ri-calendar-check-line me-1"></i><span id="replace_new_v_year">-</span></span>
-                              <span><i class="icon-base ri ri-palette-line me-1"></i><span id="replace_new_v_color">-</span></span>
-                              <span><i class="icon-base ri ri-gas-station-line me-1"></i><span id="replace_new_v_fuel">Petrol</span></span>
-                            </div>
-
-                            <div class="mt-1 d-flex align-items-center gap-2">
-                              <span><i class="icon-base ri ri-car-line me-1"></i><span id="replace_new_v_gear">Automatic</span></span>
-                              <span class="badge rounded-pill bg-success text-white" id="replace_new_v_status">Available</span>
-                            </div>
-                          </div>
-
-                          <!-- BUTTONS -->
-                          <div class="d-flex flex-column gap-2 ms-2">
-                            <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 action-btn btn_vehicle_view" id="replace_new_v_view_btn" data-id="" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="View Details">
-                              <i class="ri ri-information-2-line icon-18px"></i>
-                            </button>
-                          </div>
+                       <!-- Selected Vehicle Card (DirectContract App Style) -->
+                       <div id="replace_new_veh_card" class="d-none mt-2">
+                         <div class="card h-100 shadow-sm border-0 vehicle-card rounded-4 overflow-hidden" style="transition: transform 0.2s, box-shadow 0.2s;">
+                           <div class="row g-0 h-100">
+                             <!-- Left Side Image -->
+                             <div class="col-5 bg-white border-end position-relative vehicle-image p-0" style="cursor:pointer; min-height:140px;">
+                               <img id="replace_new_v_img" src="uploads/vehicleImages/default.jpg" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center;padding:0.5rem;" alt="Vehicle Image" onerror="this.src='uploads/vehicleImages/default.jpg';">
+                               <span class="badge rounded-pill bg-success shadow-sm position-absolute top-0 start-0 m-2" id="replace_new_v_status_badge" style="font-size:0.65rem;">Available</span>
+                             </div>
+                             <!-- Right Side Details -->
+                             <div class="col-7">
+                               <div class="card-body p-2 d-flex flex-column h-100">
+                                 <div class="mb-2">
+                                   <h5 class="mb-0 fw-bold text-danger text-truncate" id="replace_new_v_no">-</h5>
+                                   <small class="text-body fw-semibold text-truncate d-block" id="replace_new_v_title" style="font-size:0.95rem;">-</small>
+                                 </div>
+                                 <div class="row g-1 mb-2 mt-auto" style="font-size:0.85rem;">
+                                   <div class="col-12 d-flex align-items-center text-truncate text-secondary fw-semibold">
+                                     <i class="ri ri-barcode-line me-1"></i> <span id="replace_new_v_chassis">N/A</span>
+                                   </div>
+                                   <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                     <i class="ri ri-calendar-check-line me-1"></i> <span id="replace_new_v_year">-</span>
+                                   </div>
+                                   <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                     <i class="ri ri-palette-line me-1"></i> <span id="replace_new_v_color">-</span>
+                                   </div>
+                                   <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                     <i class="ri ri-gas-station-line me-1"></i> <span id="replace_new_v_fuel">Petrol</span>
+                                   </div>
+                                   <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                     <i class="ri ri-car-line me-1"></i> <span id="replace_new_v_gear">Automatic</span>
+                                   </div>
+                                 </div>
+                                 <div class="d-flex gap-1 border-top pt-2 mt-auto">
+                                   <button type="button" class="btn btn-sm btn-outline-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_view px-1" id="replace_new_v_view_btn" data-id="" data-bs-toggle="tooltip" title="View Details" style="font-size:0.85rem;">
+                                     <i class="ri ri-information-2-line me-1"></i> Details
+                                   </button>
+                                 </div>
+                               </div>
+                             </div>
+                           </div>
+                         </div>
+                         <!-- Hidden helper fields -->
+                         <span id="replace_new_v_category" class="d-none"></span>
+                         <span id="replace_new_v_model" class="d-none"></span>
+                         <span id="replace_new_v_fuel_level" class="d-none"></span>
+                         <span id="replace_new_v_status" class="d-none"></span>
+                         <span id="replace_new_v_passing" class="d-none"></span>
+                         <span id="replace_new_v_insurance" class="d-none"></span>
+                         <span id="replace_new_v_maintenance" class="d-none"></span>
                         </div>
-
-                        <!-- BOTTOM SECTION -->
-                        <div class="mt-3 small text-muted border-top pt-2">
-                          <div class="d-flex justify-content-between">
-                            <span><i class="ri-calendar-check-line text-success me-1"></i>Passing</span>
-                            <span id="replace_new_v_passing">NA</span>
-                          </div>
-
-                          <div class="d-flex justify-content-between">
-                            <span><i class="ri-shield-check-line text-info me-1"></i>Insurance</span>
-                            <span id="replace_new_v_insurance">NA</span>
-                          </div>
-
-                          <div class="d-flex justify-content-between">
-                            <span><i class="ri-tools-line text-danger me-1"></i>Maintenance</span>
-                            <span id="replace_new_v_maintenance">NA</span>
-                          </div>
-                        </div>
-
-                        <!-- Hidden helper elements -->
-                        <span id="replace_new_v_category" class="d-none"></span>
-                        <span id="replace_new_v_model" class="d-none"></span>
-                        <span id="replace_new_v_fuel_level" class="d-none"></span>
-                      </div>
-                   </div>
+                    </div>
 
                    <!-- New Vehicle Rentout Checklist & Images -->
                    <div class="col-12 col-md-6">
@@ -388,7 +380,7 @@
                        <div class="col-6 col-md-4">
                          <div class="form-floating form-floating-outline">
                            <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="replace_new_km_out" class="form-control form-control-sm" placeholder="0">
-                           <label for="replace_new_km_out">KM Out (New) *</label>
+                           <label for="replace_new_km_out">Rentout Km (New) *</label>
                          </div>
                        </div>
                        <div class="col-6 col-md-4">
@@ -400,7 +392,7 @@
                        <div class="col-12 col-md-4">
                          <div class="form-floating form-floating-outline">
                            <input type="datetime-local" id="replace_new_dt_out" class="form-control form-control-sm">
-                           <label for="replace_new_dt_out">Date Out (New)</label>
+                           <label for="replace_new_dt_out">Rentout Date (New)</label>
                          </div>
                        </div>
                      </div>
@@ -410,13 +402,6 @@
                        <label class="form-label fw-semibold text-dark">Upload Replacement Vehicle Rentout Images</label>
                        <input type="file" id="replace_new_car_images" class="form-control form-control-sm mb-2" multiple accept="image/*" capture="environment">
                        <div id="replace_new_preview" class="d-flex flex-wrap gap-2 mb-2"></div>
-                       <div class="progress mb-2" style="height:6px;">
-                         <div class="progress-bar bg-success" id="replace_new_progressBar" style="width:0%"></div>
-                       </div>
-                       <button type="button" id="replace_new_uploadBtn" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1">
-                         <span class="spinner-border spinner-border-sm d-none" id="replace_new_loader" role="status" aria-hidden="true"></span>
-                         <i class="ri-upload-cloud-line me-1" id="replace_new_icon"></i> Upload Rentout Images
-                       </button>
                      </div>
                    </div>
 
@@ -433,10 +418,8 @@
                       <h6 class="fw-bold text-dark mb-3"><i class="ri-user-follow-line"></i> Responsible Staff Details</h6>
                       <div class="row g-3 align-items-start">
                         <div class="col-12 col-md-5">
-                          <div class="form-floating form-floating-outline mb-2">
-                            <input type="text" id="replace_staff_name" class="form-control" placeholder="Enter Staff Name" value="<?php echo htmlspecialchars($_SESSION['profile_name'] ?? $_SESSION['user_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                            <label for="replace_staff_name">Responsible Staff Name</label>
-                          </div>
+                          <label class="form-label fw-semibold text-dark mb-1" for="replace_staff_name">Responsible Staff Name</label>
+                          <input type="text" id="replace_staff_name" class="form-control" placeholder="Enter Staff Name" value="<?php echo htmlspecialchars($_SESSION['profile_name'] ?? $_SESSION['user_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                         </div>
                         <div class="col-12 col-md-7">
                           <label class="form-label fw-semibold text-dark mb-1">Responsible Staff Signature</label>
@@ -455,17 +438,21 @@
                   </div>
                 </div>
               </div>
+              <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-outline-secondary btn-prev" id="btn_replace_prev_step">
+                  <i class="ri-arrow-left-line"></i> <span class="align-middle d-sm-inline-block d-none">Previous</span>
+                </button>
+                <button type="button" class="btn btn-success px-4 ladda-button" id="btn_submit_replace_contract">
+                  <span class="ladda-label"><i class="ri-refresh-line me-1"></i> Replace Vehicle</span>
+                </button>
+              </div>
+            </div>
+            </form>
           </div>
-
         </div>
       </div>
 
-      <!-- FOOTER -->
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary px-4 ladda-button" id="btn_submit_replace_contract">
-          <span class="ladda-label"><i class="ri-refresh-line me-1"></i> Replace Vehicle</span>
-        </button>
+        </div>
       </div>
 
     </div>

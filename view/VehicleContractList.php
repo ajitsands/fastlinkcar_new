@@ -245,6 +245,7 @@ tr.shown {
                 <?php include('templates/VehicleContractList/contract_ledger_modal.php'); ?>
                 <?php include('templates/VehicleContractList/contract_ledger_supporting_modals.php'); ?>
                 <?php include('templates/VehicleStatus/vehicleInfoModal.php'); ?>
+                <?php include('templates/vehicles/vehicle_profile_modal.php'); ?>
                        
               <?php include('templates/VehicleContractList/close_otp_verify_modal.php'); ?>
               <?php include('templates/VehicleContractList/close_otp_submit_modal.php'); ?>
@@ -441,7 +442,17 @@ $(document).on('click', '#clear_returnsignature', function () {
 // --- REPLACEMENT STAFF SIGNATURE PAD ---
 let replaceStaffSignaturePad;
 
+let replaceStepper;
+
 $('#ReplacecontractModal').on('shown.bs.modal', function () {
+    const stepperEl = document.getElementById('replaceVehicleStepper');
+    if (stepperEl) {
+        if (!replaceStepper) {
+            replaceStepper = new Stepper(stepperEl, { linear: false, animation: true });
+        }
+        replaceStepper.to(1);
+    }
+
     const canvas = document.getElementById('ReplaceStaffSignature-pad');
     if (!canvas) return;
 
@@ -6130,9 +6141,7 @@ function populatereplaceContractModal(d) {
             if (img) {
                 $('#replace_old_preview').append(`
                     <div class="position-relative">
-                        <a href="../uploads/rentvehicleImages/${img}" target="_blank" title="View Full Image">
-                            <img src="../uploads/rentvehicleImages/${img}" class="rounded border vehicle-preview-img" style="width:75px;height:75px;object-fit:cover;cursor:pointer;">
-                        </a>
+                        <img src="../uploads/rentvehicleImages/${img}" class="rounded border vehicle-preview-img" style="width:75px;height:75px;object-fit:cover;cursor:pointer;" title="View Full Image">
                     </div>
                 `);
             }
@@ -6388,11 +6397,27 @@ $(document).on('change select2:select select2:clear', '#replace_select_new_vehic
         $('#replace_new_v_model').text(selected.model_name || '-');
         $('#replace_new_v_color').text(selected.vehicle_color || '-');
         $('#replace_new_v_year').text(selected.manufacture_year || selected.vehicle_year || '-');
-        $('#replace_new_v_fuel').text(selected.fuel_type || selected.fuel_level || 'Petrol');
+        $('#replace_new_v_fuel').text(selected.fuel_type || 'Petrol');
         $('#replace_new_v_fuel_level').text(selected.fuel_level || '-');
         $('#replace_new_v_gear').text(selected.gear_type || 'Automatic');
-        $('#replace_new_v_status').text(selected.vehicle_status || 'Available');
-        
+        $('#replace_new_v_chassis').text(selected.chassis_number || 'N/A');
+
+        let status = selected.vehicle_status || 'Available';
+        $('#replace_new_v_status').text(status);
+
+        // Status badge color
+        let $badge = $('#replace_new_v_status_badge');
+        $badge.text(status).removeClass('bg-success bg-danger bg-warning bg-secondary bg-info');
+        if (status === 'Available' || status === 'Parking') {
+            $badge.addClass('bg-success');
+        } else if (status === 'Rentout') {
+            $badge.addClass('bg-danger');
+        } else if (status === 'Maintenance') {
+            $badge.addClass('bg-warning');
+        } else {
+            $badge.addClass('bg-secondary');
+        }
+
         $('#replace_new_v_passing').text(selected.next_passing_date || 'NA');
         $('#replace_new_v_insurance').text(selected.next_insurance_date || 'NA');
         $('#replace_new_v_maintenance').text(selected.next_maintenance_date || 'NA');
@@ -6433,7 +6458,7 @@ $(document).on('change', '#replace_old_return_car_images', function(e) {
         reader.onload = function(evt) {
             $('#replace_old_return_preview').append(`
                 <div class="position-relative me-1 mb-1" id="img-${id}">
-                    <img src="${evt.target.result}" class="rounded border" style="width:75px;height:75px;object-fit:cover;">
+                    <img src="${evt.target.result}" class="rounded border vehicle-preview-img" style="width:75px;height:75px;object-fit:cover;cursor:pointer;">
                     <span class="btn-remove-replace-old-img" data-id="${id}" style="position:absolute;top:-5px;right:-5px;background:#dc3545;color:white;border-radius:50%;padding:1px 5px;cursor:pointer;font-size:11px;line-height:1;" title="Remove image">✕</span>
                 </div>
             `);
@@ -6449,58 +6474,36 @@ $(document).on('click', '.btn-remove-replace-old-img', function() {
     $(`#img-${id}`).remove();
 });
 
-$(document).on('click', '#replace_old_return_uploadBtn', function() {
-    if (replaceOldReturnImageQueue.length === 0) {
-        setupDropdown('dropdownContent', 'error', svgError + 'Please select or capture return images first.', 'click');
-        return;
-    }
-
-    $('#replace_old_return_progressBar').css('width', '0%').removeClass('bg-success bg-danger');
-    let formData = new FormData();
-    replaceOldReturnImageQueue.forEach(item => {
-        formData.append('car_images[]', item.file);
-    });
-
-    let $btn = $(this);
-    $btn.prop('disabled', true);
-    $('#replace_old_return_loader').removeClass('d-none');
-    $('#replace_old_return_icon').addClass('d-none');
-
-    $.ajax({
-        url: '/ReturnCompressUploadImage',
-        type: 'POST',
-        data: formData,
-        contentType: false,
-        processData: false,
-        xhr: function() {
-            let xhr = new window.XMLHttpRequest();
-            xhr.upload.onprogress = function(e) {
-                if (e.lengthComputable) {
-                    let percent = Math.round((e.loaded / e.total) * 100);
-                    $('#replace_old_return_progressBar').css('width', percent + '%');
-                }
-            };
-            return xhr;
-        },
-        success: function(res) {
-            $btn.prop('disabled', false);
-            $('#replace_old_return_loader').addClass('d-none');
-            $('#replace_old_return_icon').removeClass('d-none');
-            $('#replace_old_return_progressBar').css('width', '100%').addClass('bg-success');
-            let uploaded = res.files || [];
-            oldVehicleReturnUploadedImages.push(...uploaded);
-            replaceOldReturnImageQueue = [];
-            setupDropdown('dropdownContent', 'success', svgSuccess + 'Return images uploaded successfully!', 'click');
-        },
-        error: function() {
-            $btn.prop('disabled', false);
-            $('#replace_old_return_loader').addClass('d-none');
-            $('#replace_old_return_icon').removeClass('d-none');
-            $('#replace_old_return_progressBar').addClass('bg-danger');
-            setupDropdown('dropdownContent', 'error', svgError + 'Failed to upload return images.', 'click');
+function uploadReplaceOldReturnImages() {
+    return new Promise((resolve, reject) => {
+        if (replaceOldReturnImageQueue.length === 0) {
+            resolve();
+            return;
         }
+
+        let formData = new FormData();
+        replaceOldReturnImageQueue.forEach(item => {
+            formData.append('car_images[]', item.file);
+        });
+
+        $.ajax({
+            url: '/ReturnCompressUploadImage',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(res) {
+                let uploaded = res.files || [];
+                oldVehicleReturnUploadedImages.push(...uploaded);
+                replaceOldReturnImageQueue = [];
+                resolve();
+            },
+            error: function() {
+                reject('Failed to upload old vehicle return images.');
+            }
+        });
     });
-});
+}
 
 // 2. New Replacement Vehicle Rentout Images Selection / Camera & Preview
 $(document).on('change', '#replace_new_car_images', function(e) {
@@ -6514,7 +6517,7 @@ $(document).on('change', '#replace_new_car_images', function(e) {
         reader.onload = function(evt) {
             $('#replace_new_preview').append(`
                 <div class="position-relative me-1 mb-1" id="img-${id}">
-                    <img src="${evt.target.result}" class="rounded border" style="width:75px;height:75px;object-fit:cover;">
+                    <img src="${evt.target.result}" class="rounded border vehicle-preview-img" style="width:75px;height:75px;object-fit:cover;cursor:pointer;">
                     <span class="btn-remove-replace-new-img" data-id="${id}" style="position:absolute;top:-5px;right:-5px;background:#dc3545;color:white;border-radius:50%;padding:1px 5px;cursor:pointer;font-size:11px;line-height:1;" title="Remove image">✕</span>
                 </div>
             `);
@@ -6530,58 +6533,36 @@ $(document).on('click', '.btn-remove-replace-new-img', function() {
     $(`#img-${id}`).remove();
 });
 
-$(document).on('click', '#replace_new_uploadBtn', function() {
-    if (replaceNewRentoutImageQueue.length === 0) {
-        setupDropdown('dropdownContent', 'error', svgError + 'Please select or capture replacement vehicle images first.', 'click');
-        return;
-    }
-
-    $('#replace_new_progressBar').css('width', '0%').removeClass('bg-success bg-danger');
-    let formData = new FormData();
-    replaceNewRentoutImageQueue.forEach(item => {
-        formData.append('car_images[]', item.file);
-    });
-
-    let $btn = $(this);
-    $btn.prop('disabled', true);
-    $('#replace_new_loader').removeClass('d-none');
-    $('#replace_new_icon').addClass('d-none');
-
-    $.ajax({
-        url: '/CompressUploadImage',
-        type: 'POST',
-        data: formData,
-        contentType: false,
-        processData: false,
-        xhr: function() {
-            let xhr = new window.XMLHttpRequest();
-            xhr.upload.onprogress = function(e) {
-                if (e.lengthComputable) {
-                    let percent = Math.round((e.loaded / e.total) * 100);
-                    $('#replace_new_progressBar').css('width', percent + '%');
-                }
-            };
-            return xhr;
-        },
-        success: function(res) {
-            $btn.prop('disabled', false);
-            $('#replace_new_loader').addClass('d-none');
-            $('#replace_new_icon').removeClass('d-none');
-            $('#replace_new_progressBar').css('width', '100%').addClass('bg-success');
-            let uploaded = res.files || [];
-            newVehicleRentoutUploadedImages.push(...uploaded);
-            replaceNewRentoutImageQueue = [];
-            setupDropdown('dropdownContent', 'success', svgSuccess + 'Replacement vehicle images uploaded successfully!', 'click');
-        },
-        error: function() {
-            $btn.prop('disabled', false);
-            $('#replace_new_loader').addClass('d-none');
-            $('#replace_new_icon').removeClass('d-none');
-            $('#replace_new_progressBar').addClass('bg-danger');
-            setupDropdown('dropdownContent', 'error', svgError + 'Failed to upload replacement vehicle images.', 'click');
+function uploadReplaceNewRentoutImages() {
+    return new Promise((resolve, reject) => {
+        if (replaceNewRentoutImageQueue.length === 0) {
+            resolve();
+            return;
         }
+
+        let formData = new FormData();
+        replaceNewRentoutImageQueue.forEach(item => {
+            formData.append('car_images[]', item.file);
+        });
+
+        $.ajax({
+            url: '/CompressUploadImage',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(res) {
+                let uploaded = res.files || [];
+                newVehicleRentoutUploadedImages.push(...uploaded);
+                replaceNewRentoutImageQueue = [];
+                resolve();
+            },
+            error: function() {
+                reject('Failed to upload replacement vehicle images.');
+            }
+        });
     });
-});
+}
 
 $(document).on('input', '#replace_old_km_in', function() {
     let kmOut = parseFloat($('#replace_old_km_out').val()) || 0;
@@ -6667,6 +6648,36 @@ $(document).on('click', '#btn_replace_add_violation_head_master', function() {
     setTimeout(function() {
         $('#new_violation_head_name').focus();
     }, 400);
+});
+
+$(document).on('click', '#btn_replace_next_step', function() {
+    let oldKmOut = parseFloat($('#replace_old_km_out').val()) || 0;
+    let oldKmInRaw = $.trim($('#replace_old_km_in').val());
+    if (oldKmInRaw === '') {
+        setupDropdown('dropdownContent', 'error', svgError + 'Please enter KM In for the current vehicle.', 'click');
+        return;
+    }
+    let oldKmIn = parseFloat(oldKmInRaw);
+    if (isNaN(oldKmIn) || oldKmIn < oldKmOut) {
+        setupDropdown('dropdownContent', 'error', svgError + 'KM In for current vehicle must be greater than or equal to KM Out (' + oldKmOut + ').', 'click');
+        return;
+    }
+
+    let hasViolations = $('#replace_violations_tbody tr').length > 0;
+    if (hasViolations && !$('#chk_replace_violations_checked').is(':checked')) {
+        setupDropdown('dropdownContent', 'error', svgError + 'Please confirm checking traffic violations by checking the checkbox.', 'click');
+        return;
+    }
+
+    if (replaceStepper) {
+        replaceStepper.next();
+    }
+});
+
+$(document).on('click', '#btn_replace_prev_step', function() {
+    if (replaceStepper) {
+        replaceStepper.previous();
+    }
 });
 
 $(document).on('click', '#btn_submit_replace_contract', function() {
@@ -6784,33 +6795,45 @@ $(document).on('click', '#btn_submit_replace_contract', function() {
     let $btn = $(this);
     $btn.prop('disabled', true);
 
-    $.ajax({
-        url: '/ContractListController',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(payload),
-        dataType: 'json',
-        success: function(res) {
-            $btn.prop('disabled', false);
-            if (res && res.status) {
-                let modalEl = document.getElementById('ReplacecontractModal');
-                let modalInstance = bootstrap.Modal.getInstance(modalEl);
-                if (modalInstance) {
-                    modalInstance.hide();
+    // Upload both image queues first, then submit
+    Promise.all([uploadReplaceOldReturnImages(), uploadReplaceNewRentoutImages()])
+        .then(function() {
+            // Update payload with freshly uploaded images
+            payload.old_return_images = oldVehicleReturnUploadedImages;
+            payload.new_rentout_images = newVehicleRentoutUploadedImages;
+
+            $.ajax({
+                url: '/ContractListController',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                dataType: 'json',
+                success: function(res) {
+                    $btn.prop('disabled', false);
+                    if (res && res.status) {
+                        let modalEl = document.getElementById('ReplacecontractModal');
+                        let modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+                        setupDropdown('dropdownContent', 'success', svgSuccess + (res.message || 'Vehicle replaced successfully!'), 'click');
+                        if (typeof table !== 'undefined' && table.ajax) {
+                            table.ajax.reload(null, false);
+                        }
+                    } else {
+                        setupDropdown('dropdownContent', 'error', svgError + (res.message || 'Failed to replace vehicle'), 'click');
+                    }
+                },
+                error: function() {
+                    $btn.prop('disabled', false);
+                    setupDropdown('dropdownContent', 'error', svgError + 'An error occurred while replacing vehicle.', 'click');
                 }
-                setupDropdown('dropdownContent', 'success', svgSuccess + (res.message || 'Vehicle replaced successfully!'), 'click');
-                if (typeof table !== 'undefined' && table.ajax) {
-                    table.ajax.reload(null, false);
-                }
-            } else {
-                setupDropdown('dropdownContent', 'error', svgError + (res.message || 'Failed to replace vehicle'), 'click');
-            }
-        },
-        error: function() {
+            });
+        })
+        .catch(function(errMsg) {
             $btn.prop('disabled', false);
-            setupDropdown('dropdownContent', 'error', svgError + 'An error occurred while replacing vehicle.', 'click');
-        }
-    });
+            setupDropdown('dropdownContent', 'error', svgError + (errMsg || 'Failed to upload images before replacing vehicle.'), 'click');
+        });
 });
 
 // Other Fees Logic
@@ -6873,8 +6896,171 @@ window.calcOdoDiff = function() {
 
 });
 
-</script>
+// OVERRIDE btn_vehicle_view to open Vehicle Profile modal (same as DirectContract)
+$(document).ready(function() {
+    $(document).off('click', '.btn_vehicle_view').on('click', '.btn_vehicle_view', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let vehicleId = $(this).data('id') || $(this).attr('data-id');
+        if (vehicleId) {
+            openVehicleProfile(vehicleId);
+        }
+    });
+});
 
+$(document).on('show.bs.modal', '#vehicleProfileModal', function() {
+    let highestZ = 1050;
+    $('.modal.show').each(function() {
+        if (this.id !== 'vehicleProfileModal') {
+            let z = parseInt($(this).css('z-index')) || 1050;
+            if (z > highestZ) highestZ = z;
+        }
+    });
+    $(this).css('z-index', highestZ + 20);
+    setTimeout(function() {
+        $('.modal-backdrop').last().css('z-index', highestZ + 10);
+    }, 10);
+});
+
+$(document).on('hidden.bs.modal', '#vehicleProfileModal', function() {
+    if ($('.modal.show').length > 0) {
+        $('body').addClass('modal-open');
+    }
+});
+
+function openVehicleProfile(vehicleId) {
+    $.ajax({
+        url: "/AddVehicles",
+        type: "POST",
+        dataType: "json",
+        data: JSON.stringify({ action: "get_vehicle_profile", vehicle_id: vehicleId }),
+        contentType: "application/json",
+        success: function(response) {
+            if (response.status && response.data) {
+                let v = response.data;
+                
+                // Populate base data
+                $("#vpVehicleNumber").text(v.vehicle_number || "N/A");
+                $("#vpVehicleNumBody").text(v.vehicle_number || "N/A");
+                $("#vpCategory").text(v.category_name || "N/A");
+                $("#vpBrand").text(v.brand_name || "N/A");
+                $("#vpModel").text(v.model_names || "N/A");
+                $("#vpChassis").text(v.chassis_number || "N/A");
+                $("#vpYear").text(v.vehicle_year || "N/A");
+                $("#vpColor").text(v.vehicle_color || "N/A");
+                $("#vpPurchaseDate").text(v.formatted_purchase_date || "Not Set");
+                $("#vpNextInsurance").text(v.formatted_insurance_date || "Not Set");
+                $("#vpNextPassing").text(v.formatted_passing_date || "Not Set");
+                
+                // Current User
+                $("#vpRentoutDiv").hide();
+                $("#vpStaffDiv").hide();
+                if (v.vehicle_status === 'Rentout' && v.current_user_name) {
+                    $("#vpRentoutDiv").show();
+                    $("#vpCurrentUserName").text(v.current_user_name);
+                    $("#vpCurrentUserContact").text(v.current_user_contact || "No Contact");
+                    $("#vpContractRef").text(v.contract_ref || "N/A");
+                    let expRet = v.expected_return_date ? (window.dayjs ? dayjs(v.expected_return_date).format('DD-MMM-YYYY h:mm A') : (window.moment ? moment(v.expected_return_date).format('DD-MMM-YYYY h:mm A') : v.expected_return_date)) : "N/A";
+                    $("#vpReturnDate").text(expRet);
+                } else if (v.vehicle_status === 'Staff Use' && v.current_user_name) {
+                    $("#vpStaffDiv").show();
+                    $("#vpStaffName").text(v.current_user_name);
+                    $("#vpStaffContact").text(v.current_user_contact || "No Contact");
+                    $("#vpStaffRef").text(v.contract_ref || "N/A");
+                    let expRet = v.expected_return_date ? (window.dayjs ? dayjs(v.expected_return_date).format('DD-MMM-YYYY h:mm A') : (window.moment ? moment(v.expected_return_date).format('DD-MMM-YYYY h:mm A') : v.expected_return_date)) : "N/A";
+                    $("#vpStaffReturnDate").text(expRet);
+                }
+                
+                // Status badge
+                let statusClass = "bg-label-primary";
+                if(v.vehicle_status === "Available") statusClass = "bg-label-success";
+                else if(v.vehicle_status === "Rentout") statusClass = "bg-label-danger";
+                else if(v.vehicle_status === "Maintenance") statusClass = "bg-label-warning";
+                $("#vpStatusBadge").attr("class", "badge " + statusClass).text(v.vehicle_status || "Unknown");
+                
+                // Ownership
+                $("#vpRegCompany").text(v.ownership_company || "N/A");
+                if (v.is_outsourced === "Yes") {
+                    $("#vpOutsourceDiv").show();
+                    $("#vpOutsourceCompany").text(v.outsourcing_company_name || "N/A");
+                } else {
+                    $("#vpOutsourceDiv").hide();
+                }
+                
+                // Other details (JSON)
+                let od = v.other_details || {};
+                $("#vpFuelType").text(od.vehicleFuelType || "N/A");
+                $("#vpGearType").text(od.vehicleGearType || "N/A");
+                
+                // Dynamic Pricing
+                $("#vpPricingList").empty();
+                if (v.model_price_json && v.model_price_json !== "") {
+                    try {
+                        let prices = JSON.parse(v.model_price_json);
+                        if (prices && prices.length > 0) {
+                            let groups = { Hour: [], Day: [], Week: [], Month: [], Year: [], Other: [] };
+                            prices.forEach(p => {
+                                if (p.amount && p.amount !== "") {
+                                    let itemLower = p.item.toLowerCase();
+                                    let groupName = 'Other';
+                                    if (itemLower.includes('hour')) groupName = 'Hour';
+                                    else if (itemLower.includes('day')) groupName = 'Day';
+                                    else if (itemLower.includes('week')) groupName = 'Week';
+                                    else if (itemLower.includes('month')) groupName = 'Month';
+                                    else if (itemLower.includes('year')) groupName = 'Year';
+                                    
+                                    let displayName = p.item;
+                                    if (itemLower.includes('without driver')) displayName = 'W/O Driver';
+                                    else if (itemLower.includes('with driver')) displayName = 'With Driver';
+                                    groups[groupName].push({ name: displayName, amount: p.amount });
+                                }
+                            });
+                            let html = '<div class="row g-2 w-100">';
+                            for (const [gName, items] of Object.entries(groups)) {
+                                if (items.length > 0) {
+                                    html += `<div class="col-6"><div class="border rounded px-2 py-1 bg-lighter"><div class="text-center text-muted fw-bold border-bottom mb-1" style="font-size: 11px;">${gName}</div>`;
+                                    items.forEach(i => {
+                                        html += `<div class="d-flex justify-content-between align-items-center mb-1"><span class="text-muted" style="font-size: 11px;">${i.name}</span><strong class="text-success" style="font-size: 11px;">${i.amount} <?= defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD' ?></strong></div>`;
+                                    });
+                                    html += `</div></div>`;
+                                }
+                            }
+                            html += '</div>';
+                            $("#vpPricingList").html(html);
+                        }
+                    } catch(e) {}
+                }
+                if ($("#vpPricingList").is(':empty')) {
+                    $("#vpPricingList").html('<span class="text-muted fst-italic">No pricing setup</span>');
+                }
+                
+                // Status badge styling / Images
+                let images = v.images || [];
+                let carouselInner = $("#vpCarouselInner");
+                carouselInner.empty();
+                if (images.length > 0) {
+                    $("#vpNoImagesMessage").hide();
+                    $("#vpImageCarousel").show();
+                    images.forEach((img, idx) => {
+                        let activeClass = idx === 0 ? "active" : "";
+                        let imgPath = img.includes("http") ? img : ("/uploads/vehicleImages/" + img); 
+                        carouselInner.append(`<div class="carousel-item ${activeClass} h-100"><img src="${imgPath}" class="d-block w-100 h-100" style="object-fit: cover;" alt="Vehicle Image"></div>`);
+                    });
+                } else {
+                    $("#vpImageCarousel").hide();
+                    $("#vpNoImagesMessage").show();
+                }
+                
+                if ($("#vehicleProfileModal").length) {
+                    $("#vehicleProfileModal").appendTo("body");
+                }
+                $("#vehicleProfileModal").modal("show");
+            }
+        }
+    });
+}
+</script>
+<script src="../assets/vendor/libs/bs-stepper/bs-stepper.js"></script>
    
   </body>
   

@@ -17,7 +17,7 @@
             ?>
         </select>
         <button id="btnPrint" class="btn btn-sm btn-outline-primary ms-2" onclick="downloadPDF()">
-            <i class="ri-file-pdf-line me-1"></i> PDF
+            <i class="ri-file-pdf-line me-1"></i> Export Pdf
         </button>
     </div>
  </div>

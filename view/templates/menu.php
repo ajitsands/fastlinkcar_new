@@ -293,6 +293,18 @@
                        <div data-i18n="Vehicle Insight">Vehicle Insight</div>
                      </a>
                    </li>
+                   <li class="menu-item <?php if ($decrypt[0] == '6-8') { echo 'active'; } ?>" data-permission="vehicle_insight_access">
+                     <a href="/VehicleMovementReport?val=<?php echo $this->encryption->encrypt('6,6-8'); ?>" class="menu-link">
+                       <i class="menu-icon icon-base ri ri-route-line"></i>
+                       <div data-i18n="Vehicle Movement Report">Vehicle Movement Report</div>
+                     </a>
+                   </li>
+                   <li class="menu-item <?php if ($decrypt[0] == '6-9') { echo 'active'; } ?>" data-permission="vehicle_insight_access">
+                     <a href="/VehicleUtilizationReport?val=<?php echo $this->encryption->encrypt('6,6-9'); ?>" class="menu-link">
+                       <i class="menu-icon icon-base ri ri-pie-chart-line"></i>
+                       <div data-i18n="Vehicle Utilization Report">Vehicle Utilization Report</div>
+                     </a>
+                   </li>
                    <li class="menu-item <?php if ($decrypt[0] == '6-2') { echo 'active'; } ?>" data-permission="expected_returns_access">
                       <a href="/ReturnReport?val=<?php echo $this->encryption->encrypt('6,6-2'); ?>" class="menu-link">
                         <i class="menu-icon icon-base ri ri-calendar-check-line"></i>

@@ -470,6 +470,16 @@ class RoutingClass
             'VehicleInsightController' => 'VehicleInsightController',
             'VehicleInsightController/' => 'VehicleInsightController', 
             
+            'VehicleMovementReport' => 'VehicleMovementReport',
+            'VehicleMovementReport/' => 'VehicleMovementReport', 
+            'VehicleMovementReportController' => 'VehicleMovementReportController',
+            'VehicleMovementReportController/' => 'VehicleMovementReportController', 
+            
+            'VehicleUtilizationReport' => 'VehicleUtilizationReport',
+            'VehicleUtilizationReport/' => 'VehicleUtilizationReport', 
+            'VehicleUtilizationReportController' => 'VehicleUtilizationReportController',
+            'VehicleUtilizationReportController/' => 'VehicleUtilizationReportController', 
+            
             'DashboardStatic' => 'DashboardStatic',
             'DashboardStatic/' => 'DashboardStatic',
             
@@ -1028,6 +1038,24 @@ class RoutingClass
      private function VehicleInsightController(...$params)
     {
         $this->includeWithParams("controller/VehicleStatus/VehicleInsightController.php", $_GET);
+    }
+    
+     private function VehicleMovementReport(...$params)
+    {
+        $this->includeWithParams("view/vehicle_movement_report.php", $_GET);
+    }
+     private function VehicleMovementReportController(...$params)
+    {
+        $this->includeWithParams("controller/reports/VehicleMovementReportController.php", $_GET);
+    }
+    
+    private function VehicleUtilizationReport(...$params)
+    {
+        $this->includeWithParams("view/vehicle_utilization_report.php", $_GET);
+    }
+    private function VehicleUtilizationReportController(...$params)
+    {
+        $this->includeWithParams("controller/reports/VehicleUtilizationReportController.php", $_GET);
     }
      private function Dashboard(...$params)
     {

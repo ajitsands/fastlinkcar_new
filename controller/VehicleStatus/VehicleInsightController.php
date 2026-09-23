@@ -1631,7 +1631,7 @@ $this->params[15] = [
                     }
                     
                     $html = '<div class="row g-3 d-print-none">';
-                    $printHtml = '<div class="d-none d-print-block"><table class="table table-bordered table-sm text-start" style="font-size: 12px;"><thead><tr><th>Vehicle No</th><th>Make & Model</th><th>Year</th><th>Color</th><th>Odometer</th><th>Status</th><th>Company</th><th>Remarks / Details</th></tr></thead><tbody>';
+                    $printHtml = '<div class="d-none d-print-block"><table class="table table-bordered table-sm text-start" style="font-size: 12px;"><thead><tr><th>Vehicle Details</th><th>Color</th><th>Type</th><th>Status</th><th>Company</th><th>Remarks / Details</th></tr></thead><tbody>';
                 foreach ($resultvehicle['data'] as $item) {
 
                     
@@ -1675,7 +1675,7 @@ $this->params[15] = [
                     $exp_return_date = $return_date
                         ? $return_date->format('d M Y, h:i A')
                         : '';
-                    $odo = $item['odo_meter'] ?? ($item['current_km'] ?? ($item['km'] ?? '0'));
+                    $odo = ($vehicleFuelType ?? 'N/A') . ' / ' . ($vehicleGearType ?? 'N/A');
                     $companyName = $companyMap[$item['company_id']] ?? 'Unknown';
                     $remarksText = '';
                     if ($item['vehicle_status'] == 'Rentout') {
@@ -1691,10 +1691,12 @@ $this->params[15] = [
                         $remarksText = !empty($item['vehicle_status_notes']) ? $item['vehicle_status_notes'] : '';
                     }
 
+                    $chassis = htmlspecialchars($item['chassis_number'] ?? 'N/A');
+                    $detailsStr = htmlspecialchars(($item['vehicle_number'] ?? '') . ' - ' . ($item['model_names'] ?? '') . ' (' . ($item['vehicle_year'] ?? '') . ')');
+                    $vehicleDetails = "<strong>{$detailsStr}</strong><br><span class='badge bg-label-info mt-1 me-1'>Chassis: {$chassis}</span>";
+
                     $printHtml .= '<tr>';
-                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_number'] ?? '') . '</td>';
-                    $printHtml .= '<td>' . htmlspecialchars($item['model_names'] ?? '') . '</td>';
-                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_year'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . $vehicleDetails . '</td>';
                     $printHtml .= '<td>' . htmlspecialchars($item['vehicle_color'] ?? '') . '</td>';
                     $printHtml .= '<td>' . htmlspecialchars($odo) . '</td>';
                     $printHtml .= '<td>' . htmlspecialchars($item['vehicle_status'] ?? '') . '</td>';
@@ -1838,7 +1840,7 @@ $this->params[15] = [
             }
             
                     $html = '<div class="row g-3 d-print-none">';
-                    $printHtml = '<div class="d-none d-print-block"><table class="table table-bordered table-sm text-start" style="font-size: 12px;"><thead><tr><th>Vehicle No</th><th>Make & Model</th><th>Year</th><th>Color</th><th>Odometer</th><th>Status</th><th>Company</th><th>Remarks / Details</th></tr></thead><tbody>';
+                    $printHtml = '<div class="d-none d-print-block"><table class="table table-bordered table-sm text-start" style="font-size: 12px;"><thead><tr><th>Vehicle Details</th><th>Color</th><th>Type</th><th>Status</th><th>Company</th><th>Remarks / Details</th></tr></thead><tbody>';
         foreach ($resultvehicle['data'] as $item) {
 
                     
@@ -1884,7 +1886,7 @@ $this->params[15] = [
             : '';
             
             
-            $odo = $item['odo_meter'] ?? ($item['current_km'] ?? ($item['km'] ?? '0'));
+            $odo = ($vehicleFuelType ?? 'N/A') . ' / ' . ($vehicleGearType ?? 'N/A');
                     $companyName = $companyMap[$item['company_id']] ?? 'Unknown';
                     $remarksText = '';
                     if ($item['vehicle_status'] == 'Rentout') {
@@ -1900,10 +1902,12 @@ $this->params[15] = [
                         $remarksText = !empty($item['vehicle_status_notes']) ? $item['vehicle_status_notes'] : '';
                     }
 
+                    $chassis = htmlspecialchars($item['chassis_number'] ?? 'N/A');
+                    $detailsStr = htmlspecialchars(($item['vehicle_number'] ?? '') . ' - ' . ($item['model_names'] ?? '') . ' (' . ($item['vehicle_year'] ?? '') . ')');
+                    $vehicleDetails = "<strong>{$detailsStr}</strong><br><span class='badge bg-label-info mt-1 me-1'>Chassis: {$chassis}</span>";
+
                     $printHtml .= '<tr>';
-                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_number'] ?? '') . '</td>';
-                    $printHtml .= '<td>' . htmlspecialchars($item['model_names'] ?? '') . '</td>';
-                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_year'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . $vehicleDetails . '</td>';
                     $printHtml .= '<td>' . htmlspecialchars($item['vehicle_color'] ?? '') . '</td>';
                     $printHtml .= '<td>' . htmlspecialchars($odo) . '</td>';
                     $printHtml .= '<td>' . htmlspecialchars($item['vehicle_status'] ?? '') . '</td>';
@@ -2126,6 +2130,7 @@ $this->params[15] = [
                         exit;
                     }
                     $html = '';
+                    $printHtml = '<div class="d-none d-print-block"><table class="table table-bordered table-sm text-start" style="font-size: 12px;"><thead><tr><th>Vehicle Details</th><th>Color</th><th>Type</th><th>Status</th><th>Company</th><th>Remarks / Details</th></tr></thead><tbody>';
                 foreach ($resultvehicle['data'] as $item) {
                 
                     $images = [];
@@ -2167,7 +2172,7 @@ $this->params[15] = [
                     $exp_return_date = $return_date
                         ? $return_date->format('d M Y, h:i A')
                         : '';
-                    $odo = $item['odo_meter'] ?? ($item['current_km'] ?? ($item['km'] ?? '0'));
+                    $odo = ($vehicleFuelType ?? 'N/A') . ' / ' . ($vehicleGearType ?? 'N/A');
                     $companyName = $companyMap[$item['company_id']] ?? 'Unknown';
                     $remarksText = '';
                     if ($item['vehicle_status'] == 'Rentout') {
@@ -2183,10 +2188,12 @@ $this->params[15] = [
                         $remarksText = !empty($item['vehicle_status_notes']) ? $item['vehicle_status_notes'] : '';
                     }
 
+                    $chassis = htmlspecialchars($item['chassis_number'] ?? 'N/A');
+                    $detailsStr = htmlspecialchars(($item['vehicle_number'] ?? '') . ' - ' . ($item['model_names'] ?? '') . ' (' . ($item['vehicle_year'] ?? '') . ')');
+                    $vehicleDetails = "<strong>{$detailsStr}</strong><br><span class='badge bg-label-info mt-1 me-1'>Chassis: {$chassis}</span>";
+
                     $printHtml .= '<tr>';
-                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_number'] ?? '') . '</td>';
-                    $printHtml .= '<td>' . htmlspecialchars($item['model_names'] ?? '') . '</td>';
-                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_year'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . $vehicleDetails . '</td>';
                     $printHtml .= '<td>' . htmlspecialchars($item['vehicle_color'] ?? '') . '</td>';
                     $printHtml .= '<td>' . htmlspecialchars($odo) . '</td>';
                     $printHtml .= '<td>' . htmlspecialchars($item['vehicle_status'] ?? '') . '</td>';

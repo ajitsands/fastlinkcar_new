@@ -37,7 +37,6 @@
                     <option value="0">Select Status</option>
                     <option value="Available">Available</option>
                     <option value="Parking">Parking</option>
-                    <option value="Maintenance">Maintenance</option>
                     <option value="Blocked">Blocked</option>
                 </select>
             </div>

@@ -1,5 +1,26 @@
 <div class="container-fluid flex-grow-1 container-p-y" style="padding-top: 50px !important;">
- <h4 class="fw-bold py-3">Vehicle Insights</h4>
+ <div class="d-flex justify-content-between align-items-center py-3">
+    <h4 class="fw-bold mb-0">Vehicle Insights</h4>
+    <div class="d-flex align-items-center">
+        <label for="filterCompany" class="form-label mb-0 me-2 fw-bold text-nowrap">Company:</label>
+        <select id="filterCompany" class="form-select form-select-sm" style="width: 250px;">
+            <option value="All">All</option>
+            <?php
+            if (!empty($_SESSION['company_json'])) {
+                $cData = json_decode($_SESSION['company_json'], true);
+                if (is_array($cData)) {
+                    foreach ($cData as $c) {
+                        echo '<option value="' . htmlspecialchars($c['ids']) . '">' . htmlspecialchars($c['company_name']) . '</option>';
+                    }
+                }
+            }
+            ?>
+        </select>
+        <button id="btnPrint" class="btn btn-sm btn-outline-primary ms-2" onclick="downloadPDF()">
+            <i class="ri-file-pdf-line me-1"></i> PDF
+        </button>
+    </div>
+ </div>
           
          
   <!-- Nav Tabs -->

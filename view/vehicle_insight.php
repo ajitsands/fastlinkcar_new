@@ -202,6 +202,74 @@ include ROOT_PATH . '/view/envinclude.php';
     pointer-events: auto !important;
 }
 
+@media print {
+    body {
+        background: #fff;
+    }
+    /* Hide layout elements */
+    .layout-menu,
+    .layout-navbar,
+    .content-footer,
+    .nav-tabs,
+    #dropdownContent,
+    .btn, 
+    #btnPrint,
+    #filterCompany,
+    label[for="filterCompany"],
+    #selectedVehiclesFooter {
+        display: none !important;
+    }
+    
+    /* Remove padding/margins */
+    .layout-page, .container-fluid {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Format header */
+    h4.fw-bold {
+        text-align: center;
+        margin-bottom: 20px !important;
+        font-size: 24px !important;
+    }
+    
+    /* Only show active tab pane */
+    .tab-content > .tab-pane {
+        display: none !important;
+    }
+    .tab-content > .active {
+        display: block !important;
+        visibility: visible !important;
+    }
+    
+    /* Search tab specific: hide categories/models */
+    #divsearch .col-xl-3 {
+        display: none !important;
+    }
+    
+    /* Expand vehicle container */
+    #divsearch .col-xl-6, 
+    .col-xl-12 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+    
+    /* Card formatting */
+    .vehicle-card {
+        border: 1px solid #ddd !important;
+        page-break-inside: avoid;
+        margin-bottom: 15px !important;
+        box-shadow: none !important;
+    }
+    
+    /* Force background colors to print for badges */
+    .badge {
+        border: 1px solid #000;
+        color: #000 !important;
+    }
+}
+
 </style>
 </head>
 
@@ -230,6 +298,7 @@ include ROOT_PATH . '/view/envinclude.php';
                          <?php include ROOT_PATH . '/view/templates/VehicleInsight/vehicleFloatingFooter.php'; ?>
                          <?php include ROOT_PATH . '/view/templates/VehicleStatus/vehicle_filepreview_modal.php'; ?>
                          <?php include ROOT_PATH . '/view/templates/VehicleInsight/vehicle_change_status_modal.php'; ?>
+                         <?php include ROOT_PATH . '/view/templates/VehicleInsight/maintenance_request_view_modal.php'; ?>
                         <!--/ Layout Demo -->
                     
                     <!--/ Content -->
@@ -248,6 +317,7 @@ include ROOT_PATH . '/view/envinclude.php';
     </div>
     <div id="dropdownContent" style="text-align:center;"></div> 
      <?php include('templates/VehicleStatus/vehicleInfoModal.php'); ?>
+     <?php include('templates/vehicles/vehicle_profile_modal.php'); ?>
    
 
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
@@ -260,6 +330,8 @@ include ROOT_PATH . '/view/envinclude.php';
     <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/settings.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>alertmessage/js/sandsalert.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
      <script src="../httpdocs/user_js/vehicle_info.js"></script>
     <script>
 $(document).ready(function() {
@@ -412,7 +484,8 @@ $('#modelsTable tbody').on('click', 'tr', function () {
       data: {
         modelId: modelId,
         vehicleNumber:vehicleNumber,
-        action: 'get_vehicle_details_insight_search'
+        action: 'get_vehicle_details_insight_search',
+        filter_company_id: $('#filterCompany').val()
       },
       dataType: 'json',
       success: function(response) {
@@ -1018,7 +1091,8 @@ $(document).on('click', '.li_Vehicle_list', function () {
       method: 'POST',
       data: {
         action: 'get_vehicle_details_insight',
-        status:status
+        status: status,
+        filter_company_id: $('#filterCompany').val()
       },
      dataType: 'json',
       success: function(response) {
@@ -1136,6 +1210,300 @@ $(document).on('click', '.li_Vehicle_list', function () {
     
   
 });
+
+// OVERRIDE btn_vehicle_view to open profile modal instead of old details modal
+$(document).ready(function() {
+    $(document).off('click', '.btn_vehicle_view').on('click', '.btn_vehicle_view', function(e) {
+        e.preventDefault();
+        let vehicleId = $(this).data('id');
+        openVehicleProfile(vehicleId);
+    });
+});
+
+function openVehicleProfile(vehicleId) {
+    $.ajax({
+        url: "/AddVehicles",
+        type: "POST",
+        dataType: "json",
+        data: JSON.stringify({ action: "get_vehicle_profile", vehicle_id: vehicleId }),
+        contentType: "application/json",
+        success: function(response) {
+            if (response.status && response.data) {
+                let v = response.data;
+                
+                // Populate base data
+                $("#vpVehicleNumber").text(v.vehicle_number || "N/A");
+                $("#vpVehicleNumBody").text(v.vehicle_number || "N/A");
+                $("#vpCategory").text(v.category_name || "N/A");
+                $("#vpBrand").text(v.brand_name || "N/A");
+                $("#vpModel").text(v.model_names || "N/A");
+                $("#vpChassis").text(v.chassis_number || "N/A");
+                $("#vpYear").text(v.vehicle_year || "N/A");
+                $("#vpColor").text(v.vehicle_color || "N/A");
+                $("#vpPurchaseDate").text(v.formatted_purchase_date || "Not Set");
+                $("#vpNextInsurance").text(v.formatted_insurance_date || "Not Set");
+                $("#vpNextPassing").text(v.formatted_passing_date || "Not Set");
+                
+                // Current User
+                $("#vpRentoutDiv").hide();
+                $("#vpStaffDiv").hide();
+                if (v.vehicle_status === 'Rentout' && v.current_user_name) {
+                    $("#vpRentoutDiv").show();
+                    $("#vpCurrentUserName").text(v.current_user_name);
+                    $("#vpCurrentUserContact").text(v.current_user_contact || "No Contact");
+                    $("#vpContractRef").text(v.contract_ref || "N/A");
+                    let expRet = v.expected_return_date ? (new Date(v.expected_return_date).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}).replace(',', '')) : "N/A";
+                    if (typeof dayjs !== 'undefined') {
+                        expRet = v.expected_return_date ? dayjs(v.expected_return_date).format('DD-MMM-YYYY h:mm A') : "N/A";
+                    }
+                    $("#vpReturnDate").text(expRet);
+                } else if (v.vehicle_status === 'Staff Use' && v.current_user_name) {
+                    $("#vpStaffDiv").show();
+                    $("#vpStaffName").text(v.current_user_name);
+                    $("#vpStaffContact").text(v.current_user_contact || "No Contact");
+                    $("#vpStaffRef").text(v.contract_ref || "N/A");
+                    let expRet = v.expected_return_date ? (new Date(v.expected_return_date).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}).replace(',', '')) : "N/A";
+                    if (typeof dayjs !== 'undefined') {
+                        expRet = v.expected_return_date ? dayjs(v.expected_return_date).format('DD-MMM-YYYY h:mm A') : "N/A";
+                    }
+                    $("#vpStaffReturnDate").text(expRet);
+                }
+                
+                // Status Remarks
+                $("#vpRemarksDiv").hide();
+                if (v.vehicle_status_notes && v.vehicle_status_notes.trim() !== "") {
+                    // Only show if it's a manual status change like Parking, Blocked, etc.
+                    if (v.vehicle_status === 'Parking' || v.vehicle_status === 'Blocked' || v.vehicle_status === 'Maintenance') {
+                        $("#vpRemarksDiv").show();
+                        $("#vpStatusRemarks").text(v.vehicle_status_notes);
+                    }
+                }
+                
+                // Status badge
+                let statusClass = "bg-label-primary";
+                if(v.vehicle_status === "Available") statusClass = "bg-label-success";
+                else if(v.vehicle_status === "Rentout") statusClass = "bg-label-danger";
+                else if(v.vehicle_status === "Maintenance") statusClass = "bg-label-warning";
+                $("#vpStatusBadge").attr("class", "badge " + statusClass).text(v.vehicle_status || "Unknown");
+                
+                // Ownership
+                $("#vpRegCompany").text(v.ownership_company || "N/A");
+                if (v.is_outsourced === "Yes") {
+                    $("#vpOutsourceDiv").show();
+                    $("#vpOutsourceCompany").text(v.outsourcing_company_name || "N/A");
+                } else {
+                    $("#vpOutsourceDiv").hide();
+                }
+                
+                // Other details (JSON)
+                let od = v.other_details || {};
+                $("#vpFuelType").text(od.vehicleFuelType || "N/A");
+                $("#vpGearType").text(od.vehicleGearType || "N/A");
+                
+                // Dynamic Pricing
+                $("#vpPricingList").empty();
+                if (v.model_price_json && v.model_price_json !== "") {
+                    try {
+                        let prices = JSON.parse(v.model_price_json);
+                        if (prices && prices.length > 0) {
+                            let groups = { Hour: [], Day: [], Week: [], Month: [], Year: [], Other: [] };
+                            prices.forEach(p => {
+                                if (p.amount && p.amount !== "") {
+                                    let itemLower = p.item.toLowerCase();
+                                    let groupName = 'Other';
+                                    if (itemLower.includes('hour')) groupName = 'Hour';
+                                    else if (itemLower.includes('day')) groupName = 'Day';
+                                    else if (itemLower.includes('week')) groupName = 'Week';
+                                    else if (itemLower.includes('month')) groupName = 'Month';
+                                    else if (itemLower.includes('year')) groupName = 'Year';
+                                    
+                                    let displayName = p.item;
+                                    if (itemLower.includes('without driver')) displayName = 'W/O Driver';
+                                    else if (itemLower.includes('with driver')) displayName = 'With Driver';
+                                    groups[groupName].push({ name: displayName, amount: p.amount });
+                                }
+                            });
+                            let html = '<div class="row g-2 w-100">';
+                            for (const [gName, items] of Object.entries(groups)) {
+                                if (items.length > 0) {
+                                    html += `<div class="col-6"><div class="border rounded px-2 py-1 bg-lighter"><div class="text-center text-muted fw-bold border-bottom mb-1" style="font-size: 11px;">${gName}</div>`;
+                                    items.forEach(i => {
+                                        html += `<div class="d-flex justify-content-between align-items-center mb-1"><span class="text-muted" style="font-size: 11px;">${i.name}</span><strong class="text-success" style="font-size: 11px;">${i.amount} <?= defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD' ?></strong></div>`;
+                                    });
+                                    html += `</div></div>`;
+                                }
+                            }
+                            html += '</div>';
+                            $("#vpPricingList").html(html);
+                        }
+                    } catch(e) {}
+                }
+                if ($("#vpPricingList").is(':empty')) {
+                    $("#vpPricingList").html('<span class="text-muted fst-italic">No pricing setup</span>');
+                }
+                
+                // Status badge styling / Images
+                let images = v.images || [];
+                let carouselInner = $("#vpCarouselInner");
+                carouselInner.empty();
+                if (images.length > 0) {
+                    $("#vpNoImagesMessage").hide();
+                    $("#vpImageCarousel").show();
+                    images.forEach((img, idx) => {
+                        let activeClass = idx === 0 ? "active" : "";
+                        let imgPath = img.includes("http") ? img : ("/uploads/vehicleImages/" + img); 
+                        carouselInner.append(`<div class="carousel-item ${activeClass} h-100"><img src="${imgPath}" class="d-block w-100 h-100" style="object-fit: cover;" alt="Vehicle Image"></div>`);
+                    });
+                } else {
+                    $("#vpImageCarousel").hide();
+                    $("#vpNoImagesMessage").show();
+                }
+                
+                if ($("#vehicleProfileModal").length) {
+                    $("#vehicleProfileModal").appendTo("body");
+                }
+                $("#vehicleProfileModal").modal("show");
+            }
+        }
+    });
+}
+
+$(document).on('click', '.view-maintenance-request', function(e) {
+    e.preventDefault();
+    let reqId = $(this).data('id');
+    
+    $('#viewReqServicesList').html('<tr><td colspan="3" class="text-center text-muted"><i class="ri-loader-4-line spin"></i> Loading services...</td></tr>');
+    
+    if ($("#maintenanceRequestViewModal").length) {
+        $("#maintenanceRequestViewModal").appendTo("body");
+    }
+    $('#maintenanceRequestViewModal').modal('show');
+    
+    $.ajax({
+        url: '/MaintenanceController',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ action: 'get_request_details', request_id: reqId }),
+        success: function(res) {
+            if(res.status === 'success') {
+                let req = res.data.request;
+                let srvs = res.data.services;
+                
+                $('#viewReqNo').text(req.request_no || '--');
+                let reqDate = req.created_on ? new Date(req.created_on).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}).replace(',', '') : '--';
+                if (typeof dayjs !== 'undefined' && req.created_on) {
+                    reqDate = dayjs(req.created_on).format('DD-MMM-YYYY h:mm A');
+                }
+                $('#viewReqDate').text(reqDate);
+                $('#viewReqStatus').text(req.status || '--');
+                
+                let garageName = req.garage_name || req.garage_id || '--';
+                $('#viewReqGarage').text(garageName);
+                
+                $('#viewReqVehicle').text(req.vehicle_number || '--');
+                $('#viewReqOdoOut').text(req.odometer_out || '--');
+                
+                if (srvs && srvs.length > 0) {
+                    let sHtml = '';
+                    srvs.forEach(s => {
+                        sHtml += `<tr>
+                            <td>${s.service_name || s.service_id}</td>
+                            <td>${s.qty || '--'}</td>
+                            <td>${s.unit || '--'}</td>
+                        </tr>`;
+                    });
+                    $('#viewReqServicesList').html(sHtml);
+                } else {
+                    $('#viewReqServicesList').html('<tr><td colspan="3" class="text-center text-muted">No services found</td></tr>');
+                }
+            } else {
+                $('#viewReqServicesList').html('<tr><td colspan="3" class="text-center text-danger">Failed to load request details</td></tr>');
+            }
+        },
+        error: function() {
+            $('#viewReqServicesList').html('<tr><td colspan="3" class="text-center text-danger">Error loading request details</td></tr>');
+        }
+    });
+});
+
+$('#filterCompany').on('change', function() {
+    if ($('#navs-justified-home').hasClass('active')) {
+        let vehicleNos = $('#vehicleSearch').val().trim();
+        if(vehicleNos !== '') {
+            loadVehiclesTable('0', vehicleNos);
+        } else {
+            let modelId = $('#hid_model_id').val();
+            if (modelId && modelId !== '0') {
+                loadVehiclesTable(modelId, '0');
+            }
+        }
+    } else {
+        // Trigger active tab to reload
+        let activeTab = $('.li_Vehicle_list .nav-link.active').parent();
+        if (activeTab.length) {
+            activeTab.click();
+        } else {
+            // Default load All Vehicles
+            $('.li_Vehicle_list[data-status="All"]').click();
+        }
+    }
+});
+
+function downloadPDF() {
+    let activeTabContent = $('.tab-content > .active');
+    let tableContainer = activeTabContent.find('.d-print-block');
+    
+    if (tableContainer.length === 0) {
+        setupDropdown('dropdownContent', 'error', svgError + "No data available to print", 'click');
+        return;
+    }
+    
+    let table = activeTabContent.find('.d-print-block table')[0];
+    
+    if (!table) {
+        setupDropdown('dropdownContent', 'error', svgError + "No data available to print", 'click');
+        return;
+    }
+    
+    if (typeof window.jspdf === 'undefined') {
+        alert("PDF generator library failed to load. Please check your internet connection.");
+        return;
+    }
+    
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'pt', 'letter'); // Landscape, points, letter format
+        
+        let activeTabName = $('.nav.nav-tabs .nav-link.active').text().trim() || "All Vehicles";
+        
+        // Add Header
+        doc.setFontSize(16);
+        doc.text("Vehicle Insights Report - " + activeTabName, 40, 40);
+        
+        // Add Date
+        doc.setFontSize(10);
+        doc.text("Generated on: " + new Date().toLocaleString(), 40, 60);
+        
+        // Generate AutoTable
+        doc.autoTable({
+            html: table,
+            startY: 70,
+            theme: 'grid',
+            styles: { fontSize: 8, font: 'helvetica' },
+            headStyles: { fillColor: [241, 37, 38], textColor: 255 }, // Red theme to match UI
+            margin: { top: 70, bottom: 40, left: 40, right: 40 }
+        });
+        
+        // Save PDF
+        let dateStr = new Date().toISOString().split('T')[0];
+        let safeTabName = activeTabName.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
+        doc.save(`Vehicle_Insight_${safeTabName}_${dateStr}.pdf`);
+    } catch (err) {
+        console.error("PDF Error: ", err);
+        alert("An error occurred while generating the PDF. Check console for details.");
+    }
+}
+
 </script>
 
 </body>

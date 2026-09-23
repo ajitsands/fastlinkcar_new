@@ -26,7 +26,31 @@ class VehicleInsightController
        
         $this->filter_from_date = date('Y-m-d 00:00:00', strtotime($_POST['filter_from_date']))?? null;;
         $this->filter_to_date   = date('Y-m-d 23:59:59', strtotime($_POST['filter_to_date']))?? null;;
-        $this->company_id = $_SESSION['company_id'] ?? 1;
+        $this->filter_company_id = $_POST['filter_company_id'] ?? 'All';
+
+        $allowedCompanyIds = [];
+        if (!empty($_SESSION['company_json'])) {
+            $cData = json_decode($_SESSION['company_json'], true);
+            if (is_array($cData)) {
+                foreach ($cData as $c) {
+                    $allowedCompanyIds[] = $c['ids'];
+                }
+            }
+        }
+        
+        // If the user selected a specific company and they have access to it, use it.
+        // Otherwise, use all their allowed companies as a comma-separated string.
+        if ($this->filter_company_id !== 'All' && in_array($this->filter_company_id, $allowedCompanyIds)) {
+            $this->company_id = $this->filter_company_id;
+        } else {
+            $this->company_id = implode(',', $allowedCompanyIds);
+        }
+        
+        // If still empty (no allowed companies), fallback to -1 or similar so we don't break queries
+        if (empty($this->company_id)) {
+            $this->company_id = '-1';
+        }
+
         $this->user_id = $_SESSION['user_id'] ?? 1;
         $this->actionevents = $_POST['action'] ?? null;
         date_default_timezone_set('Asia/Bahrain');
@@ -76,7 +100,7 @@ class VehicleInsightController
             $this->modelId
         ];
      
-        $array[11] = "SELECT * FROM  tbl_vehicles WHERE  company_id = ?  ORDER BY vehicle_number ASC";
+        $array[11] = "SELECT * FROM  tbl_vehicles WHERE  FIND_IN_SET(company_id, ?) > 0  ORDER BY vehicle_number ASC";
         
         $this->params[11] = [
             $this->company_id
@@ -135,7 +159,7 @@ COALESCE(ext.extend_end_date, '') AS extend_end_date,
                                 FROM tbl_vehicles v2
                                 WHERE 
                                     v2.model_id = ?
-                                    AND v2.company_id = ?
+                                    AND FIND_IN_SET(v2.company_id, ?) > 0
                                 GROUP BY v2.model_names
                             ) t
                         ) AS model_summary_json
@@ -173,7 +197,7 @@ COALESCE(ext.extend_end_date, '') AS extend_end_date,
                     ) jt ON TRUE
                     WHERE 
                         v.model_id = ? 
-                        AND v.company_id = ? 
+                        AND FIND_IN_SET(v.company_id, ?) > 0 
                         GROUP BY v.ids
                     ORDER BY v.ids DESC
                     ";
@@ -231,7 +255,7 @@ COALESCE(ext.extend_end_date, '') AS extend_end_date,
             FROM tbl_vehicles v2
             WHERE 
                 v2.vehicle_number = ?
-                AND v2.company_id = ?
+                AND FIND_IN_SET(v2.company_id, ?) > 0
                
             GROUP BY v2.model_names
         ) t
@@ -270,7 +294,7 @@ LEFT JOIN JSON_TABLE(
 ) jt ON TRUE
 WHERE 
     v.vehicle_number = ? 
-    AND v.company_id = ? 
+    AND FIND_IN_SET(v.company_id, ?) > 0 
    
     GROUP BY v.ids
 ORDER BY v.ids DESC
@@ -329,7 +353,7 @@ COALESCE(ext.extend_end_date, '') AS extend_end_date,
             FROM tbl_vehicles v2
             WHERE 
               
-                 v2.company_id = ?
+                 FIND_IN_SET(v2.company_id, ?) > 0
                
             GROUP BY v2.model_names
         ) t
@@ -367,7 +391,7 @@ LEFT JOIN JSON_TABLE(
         amount DECIMAL(10,3) PATH '$.amount'
     )
 ) jt ON TRUE
-WHERE  v.company_id = ? 
+WHERE  FIND_IN_SET(v.company_id, ?) > 0 
    
     GROUP BY v.ids
 ORDER BY v.ids DESC
@@ -443,7 +467,7 @@ IFNULL(MAX(CASE
                 )
 
             WHERE 
-                v2.company_id = ?
+                FIND_IN_SET(v2.company_id, ?) > 0
                AND v2.model_id = ?
                 AND v2.vehicle_status = 'Available'
                 AND bc2.vehicle_id IS NULL
@@ -496,7 +520,7 @@ LEFT JOIN (
         )
 
     WHERE 
-        v3.company_id = ?
+        FIND_IN_SET(v3.company_id, ?) > 0
         AND v3.model_id = ?
         AND v3.vehicle_status = 'Available'
         AND bc3.vehicle_id IS NULL
@@ -506,7 +530,7 @@ LEFT JOIN (
     ON mc.model_names = v.model_names
 
 WHERE 
-    v.company_id = ?
+    FIND_IN_SET(v.company_id, ?) > 0
     AND v.model_id = ?
     AND v.vehicle_status = 'Available'
     AND bc.vehicle_id IS NULL
@@ -603,7 +627,7 @@ IFNULL(MAX(CASE
                 )
 
             WHERE 
-                v2.company_id = ?
+                FIND_IN_SET(v2.company_id, ?) > 0
                 AND v2.vehicle_status = 'Available'
                 AND bc2.vehicle_id IS NULL
 
@@ -655,7 +679,7 @@ LEFT JOIN (
         )
 
     WHERE 
-        v3.company_id = ?
+        FIND_IN_SET(v3.company_id, ?) > 0
         AND v3.vehicle_status = 'Available'
         AND bc3.vehicle_id IS NULL
 
@@ -664,7 +688,7 @@ LEFT JOIN (
     ON mc.model_names = v.model_names
 
 WHERE 
-    v.company_id = ?
+    FIND_IN_SET(v.company_id, ?) > 0
     AND v.vehicle_status = 'Available'
     AND bc.vehicle_id IS NULL
 
@@ -750,7 +774,7 @@ IFNULL(MAX(CASE
                 )
 
             WHERE 
-                v2.company_id = ?
+                FIND_IN_SET(v2.company_id, ?) > 0
                 AND v2.vehicle_number = ?
                 AND v2.vehicle_status = 'Available'
                 AND bc2.vehicle_id IS NULL
@@ -789,7 +813,7 @@ LEFT JOIN tbl_vehicle_bookings b
     )
 
 WHERE 
-    v.company_id = ?
+    FIND_IN_SET(v.company_id, ?) > 0
     AND v.vehicle_status = 'Available'
     AND v.vehicle_number = ?
     AND bc.vehicle_id IS NULL
@@ -821,10 +845,14 @@ $this->params[9] = [
 
  $array[13] = "SELECT 
     v.*,
-COALESCE(rc.customer_name, '') AS customer_name,
+ COALESCE(rc.customer_name, '') AS customer_name,
 COALESCE(rc.agreement_no, '') AS agreement_no,
 COALESCE(rc.service_end_date_time, '') AS service_end_date_time,
 COALESCE(ext.extend_end_date, '') AS extend_end_date,
+COALESCE(mr.garage_name, '') AS garage_name,
+COALESCE(mr.request_no, '') AS maintenance_request_no,
+COALESCE(mr.request_id, '') AS maintenance_request_id,
+COALESCE(mr.status, '') AS maintenance_request_status,
      COUNT(v.ids) AS  has_unconfirmed_overlap,
       IFNULL(MAX(CASE 
         WHEN jt.item = 'Price per hour rental without driver' 
@@ -866,7 +894,7 @@ COALESCE(ext.extend_end_date, '') AS extend_end_date,
             FROM tbl_vehicles v2
             WHERE 
               
-                 v2.company_id = ? AND v2.vehicle_status = ?
+                 FIND_IN_SET(v2.company_id, ?) > 0 AND v2.vehicle_status = ?
                
             GROUP BY v2.model_names
         ) t
@@ -895,6 +923,16 @@ LEFT JOIN tbl_vehicle_contract_extensions ext
         WHERE ext2.agreement_no = rc.agreement_no
           AND ext2.vehicle_ids = v.ids
     )
+LEFT JOIN (
+    SELECT req.vehicle_id, g.garage_name, req.request_no, req.status, req.ids AS request_id 
+    FROM tbl_maintenance_requests req
+    LEFT JOIN tbl_garages g ON g.ids = req.garage_id
+    INNER JOIN (
+        SELECT vehicle_id, MAX(ids) AS max_id 
+        FROM tbl_maintenance_requests 
+        GROUP BY vehicle_id
+    ) r2 ON req.ids = r2.max_id
+) mr ON mr.vehicle_id = v.ids
 -- ✅ Convert JSON → rows
 LEFT JOIN JSON_TABLE(
     vm.price_json,
@@ -903,7 +941,7 @@ LEFT JOIN JSON_TABLE(
         amount DECIMAL(10,3) PATH '$.amount'
     )
 ) jt ON TRUE
-WHERE  v.company_id = ? AND v.vehicle_status = ?
+WHERE  FIND_IN_SET(v.company_id, ?) > 0 AND v.vehicle_status = ?
    
     GROUP BY v.ids
 ORDER BY v.ids DESC
@@ -964,7 +1002,7 @@ COALESCE(rc.book_ids, '') AS book_ids,
             FROM tbl_vehicles v2
             WHERE 
               
-                 v2.company_id = ? AND v2.vehicle_status in ('Staff Use')
+                 FIND_IN_SET(v2.company_id, ?) > 0 AND v2.vehicle_status in ('Staff Use')
                
             GROUP BY v2.model_names
         ) t
@@ -997,7 +1035,7 @@ LEFT JOIN JSON_TABLE(
         amount DECIMAL(10,3) PATH '$.amount'
     )
 ) jt ON TRUE
-WHERE  v.company_id = ? AND v.vehicle_status in ('Staff Use')
+WHERE  FIND_IN_SET(v.company_id, ?) > 0 AND v.vehicle_status in ('Staff Use')
    
     GROUP BY v.ids
 ORDER BY v.ids DESC
@@ -1111,7 +1149,7 @@ $this->params[17] = [
             )
 
         WHERE  v2.model_id = ? 
-                        AND v2.company_id = ?
+                        AND FIND_IN_SET(v2.company_id, ?) > 0
 
         AND (
             ? = '' OR
@@ -1184,7 +1222,7 @@ LEFT JOIN JSON_TABLE(
 
 WHERE
    v.model_id = ? AND
-    v.company_id = ?
+    FIND_IN_SET(v.company_id, ?) > 0
 
     AND (
     ? IS NULL OR
@@ -1337,7 +1375,7 @@ $this->params[16] = [
                 AND e.vehicle_ids = v2.ids
             )
 
-        WHERE v2.company_id = ?
+        WHERE FIND_IN_SET(v2.company_id, ?) > 0
 
         AND (
             ? = '' OR
@@ -1409,7 +1447,7 @@ LEFT JOIN JSON_TABLE(
 ) jt ON TRUE
 
 WHERE
-    v.company_id = ?
+    FIND_IN_SET(v.company_id, ?) > 0
 
     AND (
     ? IS NULL OR
@@ -1484,6 +1522,16 @@ $this->params[15] = [
     function DataRequest($action)
     {
         $var = $this->SQLArray();
+
+        $companyMap = [];
+        if (!empty($_SESSION['company_json'])) {
+            $cData = json_decode($_SESSION['company_json'], true);
+            if (is_array($cData)) {
+                foreach ($cData as $c) {
+                    $companyMap[$c['ids']] = $c['company_name'];
+                }
+            }
+        }
 
         switch ($action) {
 
@@ -1581,8 +1629,12 @@ $this->params[15] = [
                         ]);
                         exit;
                     }
-                    $html = '';
+                    
+                    $html = '<div class="row g-3 d-print-none">';
+                    $printHtml = '<div class="d-none d-print-block"><table class="table table-bordered table-sm text-start" style="font-size: 12px;"><thead><tr><th>Vehicle No</th><th>Make & Model</th><th>Year</th><th>Color</th><th>Odometer</th><th>Status</th><th>Company</th><th>Remarks / Details</th></tr></thead><tbody>';
                 foreach ($resultvehicle['data'] as $item) {
+
+                    
                 
                     $images = [];
         
@@ -1623,130 +1675,121 @@ $this->params[15] = [
                     $exp_return_date = $return_date
                         ? $return_date->format('d M Y, h:i A')
                         : '';
+                    $odo = $item['odo_meter'] ?? ($item['current_km'] ?? ($item['km'] ?? '0'));
+                    $companyName = $companyMap[$item['company_id']] ?? 'Unknown';
+                    $remarksText = '';
+                    if ($item['vehicle_status'] == 'Rentout') {
+                        $remarksText = 'On Rent: ' . ($item['customer_name'] ?? '') . ' | Agr No: ' . ($item['agreement_no'] ?? '') . ' | Exp Return: ' . (!empty($exp_return_date) ? $exp_return_date : '');
+                    } else if ($item['vehicle_status'] == 'Staff Use') {
+                        $remarksText = 'Staff: ' . ($item['customer_name'] ?? '') . ' | Ref No: ' . ($item['agreement_no'] ?? '') . ' | Exp Return: ' . (!empty($exp_return_date) ? $exp_return_date : '');
+                    } else if ($item['vehicle_status'] == 'Maintenance') {
+                        $garageName = !empty($item['garage_name']) ? $item['garage_name'] : 'N/A';
+                        $reqNo = !empty($item['maintenance_request_no']) ? $item['maintenance_request_no'] : 'N/A';
+                        $reqStatus = !empty($item['maintenance_request_status']) ? $item['maintenance_request_status'] : 'N/A';
+                        $remarksText = 'Garage: ' . $garageName . ' | Req No: ' . $reqNo . ' | Status: ' . $reqStatus;
+                    } else {
+                        $remarksText = !empty($item['vehicle_status_notes']) ? $item['vehicle_status_notes'] : '';
+                    }
+
+                    $printHtml .= '<tr>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_number'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['model_names'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_year'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_color'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($odo) . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_status'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($companyName) . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($remarksText) . '</td>';
+                    $printHtml .= '</tr>';
                     ob_start();
                 ?>
                 
                     <div class="col-12 col-sm-6 col-md-6 col-lg-12 col-xl-6">
-                        <div class="vehicle-card d-flex flex-column p-2 border rounded shadow-sm position-relative">
-          
-        
-                <div class="d-flex align-items-center">
-        
-                   <div class="me-2 vehicle-image"
-                     data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>'>
-                     
-                    <img src="uploads/vehicleImages/<?= $lastImage ?>" 
-                         class="rounded-circle border" 
-                         style="width:60px;height:60px;object-fit:cover;">
-                </div>
-        
-                    <div class="flex-grow-1">
-                        <h5 class="card-title mb-0 veh_no"><?=$item['vehicle_number']?></h5>
-        
-                        <div class="text-muted small fw-bold text-dark"><?=$item['model_names']?></div>
-        
-                        <div class="d-flex align-items-center gap-2 mt-1 small text-muted">
-                            <span><i class="icon-base ri ri-calendar-check-line me-1"></i><?=$item['vehicle_year']?></span>
-                            <span><i class="icon-base ri ri-palette-line me-1"></i><?=$item['vehicle_color']?></span>
-                            <span><i class="icon-base ri ri-gas-station-line me-1"></i><?=$vehicleFuelType?></span>
-                        </div>
-        
-                        <div class="mt-1">
-                            <span><i class="icon-base ri ri-car-line me-1"></i><?=$vehicleGearType?></span>
-                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?>">
+                <div class="card h-100 shadow-sm border-0 vehicle-card rounded-4 overflow-hidden" style="transition: transform 0.2s, box-shadow 0.2s; min-height: 180px;">
+                    <div class="row g-0 h-100">
+                        <!-- Left Side Image -->
+                        <div class="col-6 bg-white border-end position-relative vehicle-image p-0" data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>' style="cursor:pointer;">
+                            <img src="uploads/vehicleImages/<?= $lastImage ?>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; padding: 0.5rem;" alt="Vehicle Image">
+                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem;">
                                 <?=$item['vehicle_status']?>
                             </span>
                         </div>
-        
+                        <!-- Right Side Details -->
+                        <div class="col-6">
+                            <div class="card-body p-2 d-flex flex-column h-100">
+                                <div class="mb-2">
+                                    <h5 class="mb-0 fw-bold text-danger text-truncate veh_no" title="<?=$item['vehicle_number']?>"><?=$item['vehicle_number']?></h5>
+                                    <small class="text-body fw-semibold text-truncate d-block" title="<?=$item['model_names']?>" style="font-size: 1rem;"><?=$item['model_names']?></small>
+                                </div>
+                                
+                                <div class="row g-1 mb-2 mt-auto" style="font-size: 1rem;">
+                                    <div class="col-12 d-flex align-items-center text-truncate text-secondary fw-semibold" title="Chassis: <?=$item['chassis_number'] ?? 'N/A'?>">
+                                        <i class="ri ri-barcode-line me-1"></i> <?=$item['chassis_number'] ?? 'N/A'?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-calendar-check-line me-1"></i> <?=$item['vehicle_year']?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-palette-line me-1"></i> <?=$item['vehicle_color']?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-gas-station-line me-1"></i> <?=$vehicleFuelType?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-car-line me-1"></i> <?=$vehicleGearType?>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-1 border-top pt-2 mt-auto flex-wrap">
+                                    <button class="btn btn-sm btn-outline-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_view px-1" 
+                                        data-bs-toggle="tooltip" title="View Details" data-id="<?=$item['ids']?>" style="font-size: 1rem;">
+                                        <i class="ri ri-information-2-line me-1"></i> Details
+                                    </button>
+                                    
+                                    <?php if ($item['vehicle_status'] == 'Rentout') { ?>
+                                        <div class="small w-100 mt-2 border-top pt-1">
+                                            <strong>On Rent:</strong> <?= $item['customer_name'] ?? '' ?><br>
+                                            <strong class="text-danger">Agr No:</strong> <?= $item['agreement_no'] ?? '' ?><br>
+                                            <strong class="text-danger">Exp Return:</strong><br>
+                                            <?= !empty($exp_return_date) ? $exp_return_date : '' ?>
+                                        </div>
+                                    <?php } else { ?>
+                                        <button class="btn btn-sm btn-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_select px-1" 
+                                            data-bs-toggle="tooltip" title="Select"
+                                            data-insurance="<?=$item['next_insurance_date']?>"
+                                            data-passing="<?=$item['next_passing_date']?>"
+                                            data-maintenance="<?=$item['next_maintenance_date']?>"
+                                            data-modelName="<?=$item['model_names']?>"
+                                            data-model="<?=$item['model_id']?>"
+                                            data-veh_no="<?=$item['vehicle_number']?>"
+                                            data-id="<?=$item['ids']?>"
+                                            data-priceHWD="<?= number_format($item['price_hour_with_driver'] ?? 0, 3) ?>"
+                                            data-priceHWOD="<?= number_format($item['price_hour_without_driver'] ?? 0, 3) ?>"
+                                            data-priceDWD="<?= number_format($item['price_day_with_driver'] ?? 0, 3) ?>"
+                                            data-priceDWOD="<?= number_format($item['price_day_without_driver'] ?? 0, 3) ?>"
+                                            data-priceWWD="<?= number_format($item['price_week_with_driver'] ?? 0, 3) ?>"
+                                            data-priceWWOD="<?= number_format($item['price_week_without_driver'] ?? 0, 3) ?>"
+                                            data-priceMWD="<?= number_format($item['price_month_with_driver'] ?? 0, 3) ?>"
+                                            data-priceMWOD="<?= number_format($item['price_month_without_driver'] ?? 0, 3) ?>" style="font-size: 1rem;">
+                                            <i class="ri ri-check-line me-1"></i> Select
+                                        </button>
+                                    <?php } ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-        
-                    <!-- BUTTONS -->
-                     <div class="d-flex flex-column gap-2 ms-2">
-
-                <button class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center gap-1 action-btn btn_vehicle_view flex-shrink-0" style=" width: fit-content;"
-                    data-bs-toggle="tooltip"
-                    data-bs-trigger="hover"
-                    data-bs-placement="top"
-                    title="View Details"
-                    data-id="<?=$item['ids']?>">
-                    <i class="ri ri-information-2-line icon-18px"></i>
-                </button>
-            
-                <?php if ($item['vehicle_status'] == 'Rentout') { ?>
-                    
-                    <div class="small">
-        <strong>On Rent:</strong> <?= $item['customer_name'] ?? '' ?><br>
-                
-                        <strong class="text-danger">Agr No:</strong>
-                        <?= $item['agreement_no'] ?? '' ?><br>
-                
-                         <strong class="text-danger">Exp Return:</strong><br>
-                        <?= !empty($exp_return_date)
-                            ? $exp_return_date
-                            : '' ?>
-                    </div>
-
-            
-                <?php } else { ?>
-            
-                    <button class="btn btn-sm btn-primary d-flex align-items-center gap-1 action-btn btn_vehicle_select"
-                        data-bs-toggle="tooltip"
-                        data-bs-trigger="hover"
-                        data-bs-placement="top"
-                        title="Select"
-                        data-insurance="<?=$item['next_insurance_date']?>"
-                        data-passing="<?=$item['next_passing_date']?>"
-                        data-maintenance="<?=$item['next_maintenance_date']?>"
-                        data-modelName="<?=$item['model_names']?>"
-                        data-model="<?=$item['model_id']?>"
-                        data-veh_no="<?=$item['vehicle_number']?>"
-                        data-id="<?=$item['ids']?>"
-                         data-priceHWD="<?= number_format($item['price_hour_with_driver'], 3) ?>"
-                    data-priceHWOD="<?= number_format($item['price_hour_without_driver'], 3) ?>"
-                    data-priceDWD="<?= number_format($item['price_day_with_driver'], 3) ?>"
-                    data-priceDWOD="<?= number_format($item['price_day_without_driver'], 3) ?>"
-                    data-priceWWD="<?= number_format($item['price_week_with_driver'], 3) ?>"
-                    data-priceWWOD="<?= number_format($item['price_week_without_driver'], 3) ?>"
-                    data-priceMWD="<?= number_format($item['price_month_with_driver'], 3) ?>"
-                    data-priceMWOD="<?= number_format($item['price_month_without_driver'], 3) ?>"
-                    >
-                        <i class="ri ri-check-line icon-18px"></i>
-                    </button>
-            
-                <?php } ?>
-            
+                </div>
             </div>
-        
-                </div>
-        
-                <!-- BOTTOM SECTION -->
-                <div class="mt-3 small text-muted border-top pt-2">
-        
-                    <div class="d-flex justify-content-between">
-                        <span><i class="ri-calendar-check-line text-success me-1"></i>Passing</span>
-                        <span><?= $nextPassing ?></span>
-                    </div>
-        
-                    <div class="d-flex justify-content-between">
-                        <span><i class="ri-shield-check-line text-info me-1"></i>Insurance</span>
-                        <span><?=$nextInsurance?></span>
-                    </div>
-        
-                    <div class="d-flex justify-content-between">
-                        <span><i class="ri-tools-line text-danger me-1"></i>Maintenance</span>
-                        <span><?=$nextMaintenance?></span>
-                    </div>
-        
-                </div>
-        
-                </div>
-            </div> 
             
              
            
             <?php
                 $html .= ob_get_clean();
-            } 
+            }
+                    $html .= '</div>';
+                    $printHtml .= '</tbody></table></div>';
+                    $html .= $printHtml;
+ 
                 // ✅ Extract summary from FIRST ROW
             $summary = null;
             if (!empty($resultvehicle['data'][0]['model_summary_json'])) {
@@ -1793,8 +1836,12 @@ $this->params[15] = [
                 ]);
                 exit;
             }
-            $html = '';
+            
+                    $html = '<div class="row g-3 d-print-none">';
+                    $printHtml = '<div class="d-none d-print-block"><table class="table table-bordered table-sm text-start" style="font-size: 12px;"><thead><tr><th>Vehicle No</th><th>Make & Model</th><th>Year</th><th>Color</th><th>Odometer</th><th>Status</th><th>Company</th><th>Remarks / Details</th></tr></thead><tbody>';
         foreach ($resultvehicle['data'] as $item) {
+
+                    
         
             $images = [];
 
@@ -1837,144 +1884,138 @@ $this->params[15] = [
             : '';
             
             
-            ob_start();
+            $odo = $item['odo_meter'] ?? ($item['current_km'] ?? ($item['km'] ?? '0'));
+                    $companyName = $companyMap[$item['company_id']] ?? 'Unknown';
+                    $remarksText = '';
+                    if ($item['vehicle_status'] == 'Rentout') {
+                        $remarksText = 'On Rent: ' . ($item['customer_name'] ?? '') . ' | Agr No: ' . ($item['agreement_no'] ?? '') . ' | Exp Return: ' . (!empty($exp_return_date) ? $exp_return_date : '');
+                    } else if ($item['vehicle_status'] == 'Staff Use') {
+                        $remarksText = 'Staff: ' . ($item['customer_name'] ?? '') . ' | Ref No: ' . ($item['agreement_no'] ?? '') . ' | Exp Return: ' . (!empty($exp_return_date) ? $exp_return_date : '');
+                    } else if ($item['vehicle_status'] == 'Maintenance') {
+                        $garageName = !empty($item['garage_name']) ? $item['garage_name'] : 'N/A';
+                        $reqNo = !empty($item['maintenance_request_no']) ? $item['maintenance_request_no'] : 'N/A';
+                        $reqStatus = !empty($item['maintenance_request_status']) ? $item['maintenance_request_status'] : 'N/A';
+                        $remarksText = 'Garage: ' . $garageName . ' | Req No: ' . $reqNo . ' | Status: ' . $reqStatus;
+                    } else {
+                        $remarksText = !empty($item['vehicle_status_notes']) ? $item['vehicle_status_notes'] : '';
+                    }
+
+                    $printHtml .= '<tr>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_number'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['model_names'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_year'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_color'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($odo) . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_status'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($companyName) . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($remarksText) . '</td>';
+                    $printHtml .= '</tr>';
+                    ob_start();
         ?>
         
             <div class="col-12 col-sm-6 col-md-6 col-lg-12 col-xl-4">
-                <div class="vehicle-card d-flex flex-column p-2 border rounded shadow-sm position-relative">
-  
-
-        <div class="d-flex align-items-center">
-
-           <div class="me-2 vehicle-image"
-             data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>'>
-             
-            <img src="uploads/vehicleImages/<?= $lastImage ?>" 
-                 
-                 style="width:80px;height:80px;object-fit:cover;">
-        </div>
-
-            <div class="flex-grow-1">
-                <h5 class="card-title mb-0 veh_no"><?=$item['vehicle_number']?></h5>
-
-                <div class="text-muted small fw-bold text-dark"><?=$item['model_names']?></div>
-
-                <div class="d-flex align-items-center gap-2 mt-1 small text-muted">
-                    <span><i class="icon-base ri ri-calendar-check-line me-1"></i><?=$item['vehicle_year']?></span>
-                    <span><i class="icon-base ri ri-palette-line me-1"></i><?=$item['vehicle_color']?></span>
-                    <span><i class="icon-base ri ri-gas-station-line me-1"></i><?=$vehicleFuelType?></span>
-                </div>
-
-                <div class="mt-1">
-                    <span><i class="icon-base ri ri-car-line me-1"></i><?=$vehicleGearType?></span>
-                    <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?>">
-                        <?=$item['vehicle_status']?>
-                    </span>
-                </div>
-
-            </div>
-
-            <!-- BUTTONS -->
-            <div class="d-flex flex-column gap-2 ms-2">
-
-                <button class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center gap-1 action-btn btn_vehicle_view flex-shrink-0" style=" width: fit-content;"
-                    data-bs-toggle="tooltip"
-                    data-bs-trigger="hover"
-                    data-bs-placement="top"
-                    title="View Details"
-                    data-id="<?=$item['ids']?>">
-                    <i class="ri ri-information-2-line icon-18px"></i>
-                </button>
-            
-                <?php if ($item['vehicle_status'] == 'Rentout') { ?>
-                    
-                    <div class="small">
-        <strong>On Rent:</strong> <?= $item['customer_name'] ?? '' ?><br>
-                
-                        <strong class="text-danger">Agr No:</strong>
-                        <?= $item['agreement_no'] ?? '' ?><br>
-                
-                        <strong class="text-danger">Exp Return:</strong><br>
-                        <?= !empty($exp_return_date)
-                            ? $exp_return_date
-                            : '' ?>
+                <div class="card h-100 shadow-sm border-0 vehicle-card rounded-4 overflow-hidden" style="transition: transform 0.2s, box-shadow 0.2s; min-height: 180px;">
+                    <div class="row g-0 h-100">
+                        <!-- Left Side Image -->
+                        <div class="col-6 bg-white border-end position-relative vehicle-image p-0" data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>' style="cursor:pointer;">
+                            <img src="uploads/vehicleImages/<?= $lastImage ?>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; padding: 0.5rem;" alt="Vehicle Image">
+                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem;">
+                                <?=$item['vehicle_status']?>
+                            </span>
+                        </div>
+                        <!-- Right Side Details -->
+                        <div class="col-6">
+                            <div class="card-body p-2 d-flex flex-column h-100">
+                                <div class="mb-2">
+                                    <h5 class="mb-0 fw-bold text-danger text-truncate veh_no" title="<?=$item['vehicle_number']?>"><?=$item['vehicle_number']?></h5>
+                                    <small class="text-body fw-semibold text-truncate d-block" title="<?=$item['model_names']?>" style="font-size: 1rem;"><?=$item['model_names']?></small>
+                                </div>
+                                
+                                <div class="row g-1 mb-2 mt-auto" style="font-size: 1rem;">
+                                    <div class="col-12 d-flex align-items-center text-truncate text-secondary fw-semibold" title="Chassis: <?=$item['chassis_number'] ?? 'N/A'?>">
+                                        <i class="ri ri-barcode-line me-1"></i> <?=$item['chassis_number'] ?? 'N/A'?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-calendar-check-line me-1"></i> <?=$item['vehicle_year']?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-palette-line me-1"></i> <?=$item['vehicle_color']?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-gas-station-line me-1"></i> <?=$vehicleFuelType?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-car-line me-1"></i> <?=$vehicleGearType?>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-1 border-top pt-2 mt-auto flex-wrap">
+                                    <button class="btn btn-sm btn-outline-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_view px-1" 
+                                        data-bs-toggle="tooltip" title="View Details" data-id="<?=$item['ids']?>" style="font-size: 1rem;">
+                                        <i class="ri ri-information-2-line me-1"></i> Details
+                                    </button>
+                                    
+                                    <?php if ($item['vehicle_status'] == 'Rentout') { ?>
+                                        <div class="small w-100 mt-2 border-top pt-1">
+                                            <strong>On Rent:</strong> <?= $item['customer_name'] ?? '' ?><br>
+                                            <strong class="text-danger">Agr No:</strong> <?= $item['agreement_no'] ?? '' ?><br>
+                                            <strong class="text-danger">Exp Return:</strong><br>
+                                            <?= !empty($exp_return_date) ? $exp_return_date : '' ?>
+                                        </div>
+                                    <?php } else if($item['vehicle_status'] == 'Staff Use') { ?>
+                                        <div class="small w-100 mt-2 border-top pt-1">
+                                            <strong>Staff:</strong> <?= $item['customer_name'] ?? '' ?><br>
+                                            <strong class="text-danger">Ref No:</strong> <?= $item['agreement_no'] ?? '' ?><br>
+                                            <strong class="text-danger">Exp Return:</strong><br>
+                                            <?= !empty($exp_return_date) ? $exp_return_date : '' ?>
+                                        </div>
+                                    <?php } else if($item['vehicle_status'] == 'Maintenance') { 
+                                        $garageName = !empty($item['garage_name']) ? $item['garage_name'] : 'N/A';
+                                        $reqNo = !empty($item['maintenance_request_no']) ? $item['maintenance_request_no'] : 'N/A';
+                                        $reqStatus = !empty($item['maintenance_request_status']) ? $item['maintenance_request_status'] : 'N/A';
+                                        $reqId = !empty($item['maintenance_request_id']) ? $item['maintenance_request_id'] : '';
+                                        $reqNoHtml = !empty($reqId) ? '<a href="javascript:void(0);" class="view-maintenance-request text-primary fw-bold" data-id="'.$reqId.'">'.htmlspecialchars($reqNo).'</a>' : htmlspecialchars($reqNo);
+                                    ?>
+                                        <div class="small w-100 mt-2 border-top pt-1">
+                                            <strong>Garage:</strong> <?= htmlspecialchars($garageName) ?><br>
+                                            <strong>Req No:</strong> <?= $reqNoHtml ?><br>
+                                            <strong class="text-danger">Status:</strong> <?= htmlspecialchars($reqStatus) ?><br>
+                                            <strong class="text-danger">Next Maintenance:</strong> <?= $nextMaintenance ?>
+                                        </div>
+                                    <?php } else { ?>
+                                        <button class="btn btn-sm btn-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_select px-1" 
+                                            data-bs-toggle="tooltip" title="Select"
+                                            data-insurance="<?=$item['next_insurance_date']?>"
+                                            data-passing="<?=$item['next_passing_date']?>"
+                                            data-maintenance="<?=$item['next_maintenance_date']?>"
+                                            data-modelName="<?=$item['model_names']?>"
+                                            data-model="<?=$item['model_id']?>"
+                                            data-veh_no="<?=$item['vehicle_number']?>"
+                                            data-id="<?=$item['ids']?>"
+                                            data-priceHWD="<?= number_format($item['price_hour_with_driver'] ?? 0, 3) ?>"
+                                            data-priceHWOD="<?= number_format($item['price_hour_without_driver'] ?? 0, 3) ?>"
+                                            data-priceDWD="<?= number_format($item['price_day_with_driver'] ?? 0, 3) ?>"
+                                            data-priceDWOD="<?= number_format($item['price_day_without_driver'] ?? 0, 3) ?>"
+                                            data-priceWWD="<?= number_format($item['price_week_with_driver'] ?? 0, 3) ?>"
+                                            data-priceWWOD="<?= number_format($item['price_week_without_driver'] ?? 0, 3) ?>"
+                                            data-priceMWD="<?= number_format($item['price_month_with_driver'] ?? 0, 3) ?>"
+                                            data-priceMWOD="<?= number_format($item['price_month_without_driver'] ?? 0, 3) ?>" style="font-size: 1rem;">
+                                            <i class="ri ri-check-line me-1"></i> Select
+                                        </button>
+                                    <?php } ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
-            
-                <?php } 
-                
-                else if($item['vehicle_status'] == 'Staff Use')
-                { ?>
-                     <div class="small">
-        <strong>Staff:</strong> <?= $item['customer_name'] ?? '' ?><br>
-                
-                        <strong class="text-danger">Ref No:</strong>
-                        <?= $item['agreement_no'] ?? '' ?><br>
-                
-                        <strong class="text-danger">Exp Return:</strong><br>
-                        <?= !empty($exp_return_date)
-                            ? $exp_return_date
-                            : '' ?>
-                    </div>
-              <?php  }
-                
-                else { ?>
-            
-                    <button class="btn btn-sm btn-primary d-flex align-items-center gap-1 action-btn btn_vehicle_select"
-                        data-bs-toggle="tooltip"
-                        data-bs-trigger="hover"
-                        data-bs-placement="top"
-                        title="Select"
-                        data-insurance="<?=$item['next_insurance_date']?>"
-                        data-passing="<?=$item['next_passing_date']?>"
-                        data-maintenance="<?=$item['next_maintenance_date']?>"
-                        data-modelName="<?=$item['model_names']?>"
-                        data-model="<?=$item['model_id']?>"
-                        data-veh_no="<?=$item['vehicle_number']?>"
-                        data-id="<?=$item['ids']?>"
-                         data-priceHWD="<?= number_format($item['price_hour_with_driver'], 3) ?>"
-                    data-priceHWOD="<?= number_format($item['price_hour_without_driver'], 3) ?>"
-                    data-priceDWD="<?= number_format($item['price_day_with_driver'], 3) ?>"
-                    data-priceDWOD="<?= number_format($item['price_day_without_driver'], 3) ?>"
-                    data-priceWWD="<?= number_format($item['price_week_with_driver'], 3) ?>"
-                    data-priceWWOD="<?= number_format($item['price_week_without_driver'], 3) ?>"
-                    data-priceMWD="<?= number_format($item['price_month_with_driver'], 3) ?>"
-                    data-priceMWOD="<?= number_format($item['price_month_without_driver'], 3) ?>"
-                    >
-                        <i class="ri ri-check-line icon-18px"></i>
-                    </button>
-            
-                <?php } ?>
-            
+                </div>
             </div>
-
-        </div>
-
-        <!-- BOTTOM SECTION -->
-        <div class="mt-3 small text-muted border-top pt-2">
-
-            <div class="d-flex justify-content-between">
-                <span><i class="ri-calendar-check-line text-success me-1"></i>Passing</span>
-                <span><?= $nextPassing ?></span>
-            </div>
-
-            <div class="d-flex justify-content-between">
-                <span><i class="ri-shield-check-line text-info me-1"></i>Insurance</span>
-                <span><?=$nextInsurance?></span>
-            </div>
-
-            <div class="d-flex justify-content-between">
-                <span><i class="ri-tools-line text-danger me-1"></i>Maintenance</span>
-                <span><?=$nextMaintenance?></span>
-            </div>
-
-        </div>
-
-        </div>
-    </div> 
     <?php
         $html .= ob_get_clean();
-    } 
+    }
+                    $html .= '</div>';
+                    $printHtml .= '</tbody></table></div>';
+                    $html .= $printHtml;
+ 
         // ✅ Extract summary from FIRST ROW
     $summary = null;
     if (!empty($resultvehicle['data'][0]['model_summary_json'])) {
@@ -1997,12 +2038,17 @@ $this->params[15] = [
                 ];
             
                 $log_json = json_encode($log_details);
-            $this->selectedVehicles = array_values(array_map('intval', $this->selectedVehicles));
+                $this->selectedVehicles = array_values(array_map('intval', $this->selectedVehicles));
 
                 if (!empty($this->selectedVehicles) && !empty($this->status)) {
                 
                     $placeholders = implode(',', array_fill(0, count($this->selectedVehicles), '?'));
                 
+                    // Fetch existing details for logging
+                    $stmt = $this->varPDOModelObj->varDBPDO->prepare("SELECT ids, vehicle_number, vehicle_status FROM tbl_vehicles WHERE ids IN ($placeholders)");
+                    $stmt->execute($this->selectedVehicles);
+                    $existingVehicles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
                     $updateQuery = "UPDATE tbl_vehicles 
                                     SET vehicle_status = ?, 
                                         vehicle_status_notes = ?, 
@@ -2018,7 +2064,24 @@ $this->params[15] = [
                         $updateQuery,
                         $updateParams
                     );
+                    
                     if ($this->ReturnData) {
+                        // Log vehicle movement
+                        if (!empty($existingVehicles)) {
+                            foreach($existingVehicles as $v) {
+                                $this->varPDOModelObj->logVehicleMovement([
+                                    'vehicle_id' => $v['ids'],
+                                    'action_type' => 'Status Changed',
+                                    'old_status' => $v['vehicle_status'],
+                                    'new_status' => $this->status,
+                                    'reference_type' => 'VehicleInsight',
+                                    'reference_id' => $v['ids'],
+                                    'reference_no' => $v['vehicle_number'],
+                                    'remarks' => $this->notes
+                                ]);
+                            }
+                        }
+
                         echo json_encode([
                             'status' => true,
                             'message' => 'Vehicle status updated successfully'
@@ -2104,115 +2167,103 @@ $this->params[15] = [
                     $exp_return_date = $return_date
                         ? $return_date->format('d M Y, h:i A')
                         : '';
+                    $odo = $item['odo_meter'] ?? ($item['current_km'] ?? ($item['km'] ?? '0'));
+                    $companyName = $companyMap[$item['company_id']] ?? 'Unknown';
+                    $remarksText = '';
+                    if ($item['vehicle_status'] == 'Rentout') {
+                        $remarksText = 'On Rent: ' . ($item['customer_name'] ?? '') . ' | Agr No: ' . ($item['agreement_no'] ?? '') . ' | Exp Return: ' . (!empty($exp_return_date) ? $exp_return_date : '');
+                    } else if ($item['vehicle_status'] == 'Staff Use') {
+                        $remarksText = 'Staff: ' . ($item['customer_name'] ?? '') . ' | Ref No: ' . ($item['agreement_no'] ?? '') . ' | Exp Return: ' . (!empty($exp_return_date) ? $exp_return_date : '');
+                    } else if ($item['vehicle_status'] == 'Maintenance') {
+                        $garageName = !empty($item['garage_name']) ? $item['garage_name'] : 'N/A';
+                        $reqNo = !empty($item['maintenance_request_no']) ? $item['maintenance_request_no'] : 'N/A';
+                        $reqStatus = !empty($item['maintenance_request_status']) ? $item['maintenance_request_status'] : 'N/A';
+                        $remarksText = 'Garage: ' . $garageName . ' | Req No: ' . $reqNo . ' | Status: ' . $reqStatus;
+                    } else {
+                        $remarksText = !empty($item['vehicle_status_notes']) ? $item['vehicle_status_notes'] : '';
+                    }
+
+                    $printHtml .= '<tr>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_number'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['model_names'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_year'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_color'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($odo) . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($item['vehicle_status'] ?? '') . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($companyName) . '</td>';
+                    $printHtml .= '<td>' . htmlspecialchars($remarksText) . '</td>';
+                    $printHtml .= '</tr>';
                     ob_start();
                 ?>
                 
                     <div class="col-12 col-sm-6 col-md-6 col-lg-12 col-xl-4">
-                        <div class="vehicle-card d-flex flex-column p-2 border rounded shadow-sm position-relative">
-          
-        
-                <div class="d-flex align-items-center">
-        
-                   <div class="me-2 vehicle-image"
-                     data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>'>
-                     
-                    <img src="uploads/vehicleImages/<?= $lastImage ?>" 
-                         class="rounded-circle border" 
-                         style="width:60px;height:60px;object-fit:cover;">
-                </div>
-        
-                    <div class="flex-grow-1">
-                        <h5 class="card-title mb-0 veh_no"><?=$item['vehicle_number']?></h5>
-        
-                        <div class="text-muted small fw-bold text-dark"><?=$item['model_names']?></div>
-        
-                        <div class="d-flex align-items-center gap-2 mt-1 small text-muted">
-                            <span><i class="icon-base ri ri-calendar-check-line me-1"></i><?=$item['vehicle_year']?></span>
-                            <span><i class="icon-base ri ri-palette-line me-1"></i><?=$item['vehicle_color']?></span>
-                            <span><i class="icon-base ri ri-gas-station-line me-1"></i><?=$vehicleFuelType?></span>
-                        </div>
-        
-                        <div class="mt-1">
-                            <span><i class="icon-base ri ri-car-line me-1"></i><?=$vehicleGearType?></span>
-                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?>">
+                <div class="card h-100 shadow-sm border-0 vehicle-card rounded-4 overflow-hidden" style="transition: transform 0.2s, box-shadow 0.2s; min-height: 180px;">
+                    <div class="row g-0 h-100">
+                        <!-- Left Side Image -->
+                        <div class="col-6 bg-white border-end position-relative vehicle-image p-0" data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>' style="cursor:pointer;">
+                            <img src="uploads/vehicleImages/<?= $lastImage ?>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; padding: 0.5rem;" alt="Vehicle Image">
+                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem;">
                                 <?=$item['vehicle_status']?>
                             </span>
                         </div>
-        
+                        <!-- Right Side Details -->
+                        <div class="col-6">
+                            <div class="card-body p-2 d-flex flex-column h-100">
+                                <div class="mb-2">
+                                    <h5 class="mb-0 fw-bold text-danger text-truncate veh_no" title="<?=$item['vehicle_number']?>"><?=$item['vehicle_number']?></h5>
+                                    <small class="text-body fw-semibold text-truncate d-block" title="<?=$item['model_names']?>" style="font-size: 1rem;"><?=$item['model_names']?></small>
+                                </div>
+                                
+                                <div class="row g-1 mb-2 mt-auto" style="font-size: 1rem;">
+                                    <div class="col-12 d-flex align-items-center text-truncate text-secondary fw-semibold" title="Chassis: <?=$item['chassis_number'] ?? 'N/A'?>">
+                                        <i class="ri ri-barcode-line me-1"></i> <?=$item['chassis_number'] ?? 'N/A'?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-calendar-check-line me-1"></i> <?=$item['vehicle_year']?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-palette-line me-1"></i> <?=$item['vehicle_color']?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-gas-station-line me-1"></i> <?=$vehicleFuelType?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-car-line me-1"></i> <?=$vehicleGearType?>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-1 border-top pt-2 mt-auto flex-wrap">
+                                    <button class="btn btn-sm btn-outline-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_view px-1" 
+                                        data-bs-toggle="tooltip" title="View Details" data-id="<?=$item['ids']?>" style="font-size: 1rem;">
+                                        <i class="ri ri-information-2-line me-1"></i> Details
+                                    </button>
+                                    
+                                    <?php if ($item['vehicle_status'] == 'Rentout') { ?>
+                                        <div class="small w-100 mt-2 border-top pt-1">
+                                            <strong>On Rent:</strong> <?= $item['customer_name'] ?? '' ?><br>
+                                            <strong class="text-danger">Agr No:</strong> <?= $item['agreement_no'] ?? '' ?><br>
+                                            <strong class="text-danger">Exp Return:</strong><br>
+                                            <?= !empty($exp_return_date) ? $exp_return_date : '' ?>
+                                        </div>
+                                    <?php } else { ?>
+                                        <button class="btn btn-sm btn-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_select px-1" 
+                                            data-bs-toggle="tooltip" title="Select"
+                                            data-insurance="<?=$item['next_insurance_date']?>"
+                                            data-passing="<?=$item['next_passing_date']?>"
+                                            data-maintenance="<?=$item['next_maintenance_date']?>"
+                                            data-modelName="<?=$item['model_names']?>"
+                                            data-model="<?=$item['model_id']?>"
+                                            data-veh_no="<?=$item['vehicle_number']?>"
+                                            data-id="<?=$item['ids']?>" style="font-size: 1rem;">
+                                            <i class="ri ri-check-line me-1"></i> Select
+                                        </button>
+                                    <?php } ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-        
-                    <!-- BUTTONS -->
-                     <div class="d-flex flex-column gap-2 ms-2">
-
-                <button class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center gap-1 action-btn btn_vehicle_view flex-shrink-0" style=" width: fit-content;"
-                    data-bs-toggle="tooltip"
-                    data-bs-trigger="hover"
-                    data-bs-placement="top"
-                    title="View Details"
-                    data-id="<?=$item['ids']?>">
-                    <i class="ri ri-information-2-line icon-18px"></i>
-                </button>
-            
-                <?php if ($item['vehicle_status'] == 'Rentout') { ?>
-                    
-                    <div class="small">
-        <strong>On Rent:</strong> <?= $item['customer_name'] ?? '' ?><br>
-                
-                        <strong class="text-danger">Agr No:</strong>
-                        <?= $item['agreement_no'] ?? '' ?><br>
-                
-                         <strong class="text-danger">Exp Return:</strong><br>
-                        <?= !empty($exp_return_date)
-                            ? $exp_return_date
-                            : '' ?>
-                    </div>
-
-            
-                <?php } else { ?>
-            
-                    <button class="btn btn-sm btn-primary d-flex align-items-center gap-1 action-btn btn_vehicle_select"
-                        data-bs-toggle="tooltip"
-                        data-bs-trigger="hover"
-                        data-bs-placement="top"
-                        title="Select"
-                        data-insurance="<?=$item['next_insurance_date']?>"
-                        data-passing="<?=$item['next_passing_date']?>"
-                        data-maintenance="<?=$item['next_maintenance_date']?>"
-                        data-modelName="<?=$item['model_names']?>"
-                        data-model="<?=$item['model_id']?>"
-                        data-veh_no="<?=$item['vehicle_number']?>"
-                        data-id="<?=$item['ids']?>">
-                        <i class="ri ri-check-line icon-18px"></i>
-                    </button>
-            
-                <?php } ?>
-            
+                </div>
             </div>
-        
-                </div>
-        
-                <!-- BOTTOM SECTION -->
-                <div class="mt-3 small text-muted border-top pt-2">
-        
-                    <div class="d-flex justify-content-between">
-                        <span><i class="ri-calendar-check-line text-success me-1"></i>Passing</span>
-                        <span><?= $nextPassing ?></span>
-                    </div>
-        
-                    <div class="d-flex justify-content-between">
-                        <span><i class="ri-shield-check-line text-info me-1"></i>Insurance</span>
-                        <span><?=$nextInsurance?></span>
-                    </div>
-        
-                    <div class="d-flex justify-content-between">
-                        <span><i class="ri-tools-line text-danger me-1"></i>Maintenance</span>
-                        <span><?=$nextMaintenance?></span>
-                    </div>
-        
-                </div>
-        
-                </div>
-            </div> 
             
              
            

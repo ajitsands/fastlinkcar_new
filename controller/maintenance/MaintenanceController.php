@@ -466,7 +466,7 @@ try {
         }
 
         // Fetch Master
-        $stmt = $pdo->prepare("SELECT r.* FROM tbl_maintenance_requests r WHERE r.ids = ? AND $whereCompany");
+        $stmt = $pdo->prepare("SELECT r.*, v.vehicle_number, g.garage_name FROM tbl_maintenance_requests r LEFT JOIN tbl_vehicles v ON r.vehicle_id = v.ids LEFT JOIN tbl_garages g ON r.garage_id = g.ids WHERE r.ids = ? AND $whereCompany");
         $stmt->execute($params);
         $request = $stmt->fetch(PDO::FETCH_ASSOC);
 

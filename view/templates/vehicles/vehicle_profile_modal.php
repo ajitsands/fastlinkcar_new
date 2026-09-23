@@ -111,6 +111,12 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="col-12" id="vpRemarksDiv" style="display: none;">
+                                        <div class="border border-warning rounded p-2 bg-lighter mt-1">
+                                            <span class="text-muted d-block" style="font-size: 11px;">Status Remarks</span>
+                                            <strong class="text-dark fs-12" id="vpStatusRemarks"></strong>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

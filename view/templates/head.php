@@ -72,6 +72,15 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
     <script src="<?= $_ENV['BASE_URL'] ?>assets/js/config.js"></script>
 	
 	<style>
+        /* Global Table Header Styling (Matches ContractList) */
+        table.dataTable thead th, .table thead th {
+            background-color: #ffeff0 !important;
+            color: #d12222 !important;
+            border-bottom: 2px solid #d12222 !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+        }
+        
 		/* Top Header Navbar with Vibrant Gradient & Glassmorphism */
 		#layout-navbar,
 		.layout-navbar {

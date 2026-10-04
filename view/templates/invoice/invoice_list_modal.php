@@ -1,23 +1,35 @@
 <div class="offcanvas offcanvas-end offcanvas-half" tabindex="-1" id="invoiceCanvas">
-    <div class="offcanvas-header pb-0">
-        <h4 id="canvasTitle">Invoices</h4><input type="hidden" id="txt_qtn_draft">
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    <div class="offcanvas-header bg-danger pb-2">
+        <h5 id="canvasTitle" class="offcanvas-title text-white">Invoices</h5><input type="hidden" id="txt_qtn_draft">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>
 
     <div class="offcanvas-body pt-0 ">
          <div class="row g-3 align-items-end mb-3">
 
     <div class="col-md-2">
+        <label for="company_id_filter" class="form-label">Company</label>
+        <select class="form-select form-select-sm" id="company_id_filter" name="company_id_filter">
+            <option value="all">All</option>
+            <?php foreach ($companies as $c): ?>
+                <option value="<?php echo htmlspecialchars($c['ids']); ?>" data-code="<?php echo htmlspecialchars($c['company_code']); ?>" data-name="<?php echo htmlspecialchars($c['company_name']); ?>">
+                    <?php echo htmlspecialchars($c['company_name']); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+
+    <div class="col-md-2">
         <label for="from_date_filter" class="form-label">From Date</label>
-        <input type="date" id="from_date_filter" class="form-control">
+        <input type="date" id="from_date_filter" class="form-control form-control-sm">
     </div>
 
     <div class="col-md-2">
         <label for="to_date_filter" class="form-label">To Date</label>
-        <input type="date" id="to_date_filter" class="form-control">
+        <input type="date" id="to_date_filter" class="form-control form-control-sm">
     </div>
 
-    <div class="col-md-6">
+    <div class="col-md-4">
         <label for="selectCustomerFromSelect2_filter" class="form-label">Customer</label>
         <select id="selectCustomerFromSelect2_filter"
                 name="customer_name_filter"
@@ -41,7 +53,7 @@
        
         <table class="table table-bordered" id="invoiceList">
             <thead>
-                <tr class="bg-primary">
+                <tr>
                     <th>No</th>
                     <th>Date</th>
                     <th>Customer</th>

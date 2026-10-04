@@ -31,7 +31,7 @@
 
 
                                         <div class="row">
-                                            <div class="col-3 col-xl-3">
+                                            <div class="col-2 col-xl-2">
                                                
                                                 <div class="form-floating form-floating-outline mb-6">
                                                     <input class="form-control form-control-sm" id="cashmemo_date" name ="cashmemo_date" type="date" placeholder="dd-mm-yyyy" >
@@ -39,9 +39,28 @@
                                                   </div>
                                             
                                             </div>
+
+                                            <div class="col-3 col-xl-3">
+                                                <div class="form-floating form-floating-outline mb-6">
+                                                    <select class="form-select form-select-sm" id="company_id" name="company_id" required>
+                                                        <?php if (count($companies) !== 1): ?>
+                                                            <option value="">Select Company</option>
+                                                        <?php endif; ?>
+                                                        <?php foreach ($companies as $c): ?>
+                                                            <option value="<?php echo htmlspecialchars($c['ids']); ?>" data-code="<?php echo htmlspecialchars($c['company_code']); ?>" data-name="<?php echo htmlspecialchars($c['company_name']); ?>"
+                                                                <?php echo count($companies) === 1 ? 'selected' : ''; ?>>
+                                                                <?php echo htmlspecialchars($c['company_name']); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                    <label for="company_id">Company</label>
+                                                </div>
+                                                <input type="hidden" id="company_code" name="company_code" value="<?php echo count($companies) === 1 ? htmlspecialchars($companies[0]['company_code']) : ''; ?>">
+                                                <input type="hidden" id="company_name" name="company_name" value="<?php echo count($companies) === 1 ? htmlspecialchars($companies[0]['company_name']) : ''; ?>">
+                                            </div>
                                             
                                            
-                                            <div class="col-6 col-xl-6">
+                                            <div class="col-4 col-xl-4">
                                                 <div class="d-flex align-items-stretch gap-2">
                                             
                                                     <div class="form-floating form-floating-outline flex-grow-1">

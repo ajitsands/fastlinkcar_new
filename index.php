@@ -531,6 +531,12 @@ class RoutingClass
             
             'MaintenanceController' => 'MaintenanceController',
             'MaintenanceController/' => 'MaintenanceController',
+            
+            'RefundForm' => 'RefundForm',
+            'RefundForm/' => 'RefundForm',
+            
+            'RefundFormController' => 'RefundFormController',
+            'RefundFormController/' => 'RefundFormController',
 
         );
 
@@ -1146,6 +1152,16 @@ class RoutingClass
     private function MaintenanceController(...$params)
     {
         $this->includeWithParams("controller/maintenance/MaintenanceController.php", $_GET);
+    }
+    
+    private function RefundForm(...$params)
+    {
+        $this->includeWithParams("view/refund_form.php", $_GET);
+    }
+
+    private function RefundFormController(...$params)
+    {
+        $this->includeWithParams("controller/accounting/RefundFormController.php", $_GET);
     }
     
     private function SystemSettings(...$params)

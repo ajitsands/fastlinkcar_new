@@ -85,7 +85,7 @@ if ($mysqli->connect_error) {
 $data = null;
 if (!$sample_mode && !empty($memo_no)) {
   
-    $stmt = $mysqli->prepare("SELECT * FROM cashmemo WHERE cashmemo_no  = ? ");
+    $stmt = $mysqli->prepare("SELECT cm.*, c.company_name AS c_company_name, c.company_logo FROM cashmemo cm LEFT JOIN tbl_company c ON cm.company_id = c.ids WHERE cm.cashmemo_no = ?");
     if ($stmt) {
         $stmt->bind_param("s", $memo_no);
         $stmt->execute();
@@ -224,7 +224,7 @@ $pdf->SetFont('dejavusans', '', 8);
 $pdf->setCellPaddings(0, 0, 0, 0);
 
 // Prepare Logo Data
-$logo_path = 'assets/img/logo/logo.png';
+$logo_path = !empty($data['company_logo']) ? $data['company_logo'] : 'assets/img/logo/logo.png';
 $logo_base64 = '';
 if (file_exists($logo_path)) {
     $logo_base64 = base64_encode(file_get_contents($logo_path));
@@ -251,108 +251,31 @@ $html = '
 </style>
 
 <!-- MAIN HEADER -->
-<table cellpadding="0" cellspacing="0" border="0" width="100%">
-  <tr>
-
-    <!-- Company Details -->
-    <td width="33%" valign="top">
-
-        <font size="14" color="#8A1C14">
-            <b>AA CAR RENTAL</b>
-        </font>
-
-        <br><br>
-
-        <table cellpadding="1" cellspacing="0" border="0" width="100%">
-            <tr>
-                <td width="25%"><font size="8"><b>Tel</b></font></td>
-                <td width="75%"><font size="8">: +973 17300322</font></td>
-            </tr>
-
-            <tr>
-                <td><font size="8"><b>Fax</b></font></td>
-                <td><font size="8">: +973 17300311</font></td>
-            </tr>
-
-            <tr>
-                <td><font size="8"><b>Email</b></font></td>
-                <td><font size="8">: info@aarentalbh.com</font></td>
-            </tr>
-
-            <tr>
-                <td><font size="8"><b>Address</b></font></td>
-                <td><font size="8">: Kingdom of Bahrain</font></td>
-            </tr>
-        </table>
-
-    </td>
-
-    <!-- Company Logo -->
-    <td width="34%" align="center" valign="middle">
-
-        '.(!empty($logo_base64)
-            ? '<img src="@'.$logo_base64.'" width="150" style="max-height:80px;">'
-            : '<font size="12"><b>AA CAR RENTAL</b></font>'
-        ).'
-
-    </td>
-
-    <!-- Arabic Details -->
-    <td width="33%" valign="top" align="right">
-
-        <font size="13" color="#8A1C14">
-            <b>اي اي لتأجير السيارات ذ.م.م.</b>
-        </font>
-
-        <br><br>
-
-        <table cellpadding="1" cellspacing="0" border="0" width="100%">
-            <tr>
-                <td width="75%" align="right">
-                    <font size="8">+973 17300322 :</font>
-                </td>
-                <td width="25%" align="right">
-                    <font size="8"><b>هاتف</b></font>
-                </td>
-            </tr>
-
-            <tr>
-                <td align="right">
-                    <font size="8">+973 17300311 :</font>
-                </td>
-                <td align="right">
-                    <font size="8"><b>فاكس</b></font>
-                </td>
-            </tr>
-
-            <tr>
-                <td align="right">
-                    <font size="8">info@aarentalbh.com :</font>
-                </td>
-                <td align="right">
-                    <font size="8"><b>البريد</b></font>
-                </td>
-            </tr>
-
-            <tr>
-                <td align="right">
-                    <font size="8">مملكة البحرين</font>
-                </td>
-                <td align="right">
-                    <font size="8"><b>العنوان</b></font>
-                </td>
-            </tr>
-
-        </table>
-
-    </td>
-
-</tr>
+<table cellpadding="1" border="0" width="100%">
+    <tr>
+        <td width="55%" style="vertical-align: middle;">
+            ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="150">' : '<b style="font-size: 15pt; color:#8A1C14;">' . htmlspecialchars(strtoupper($data['c_company_name'] ?? 'AA CAR RENTAL')) . '</b>') . '
+        </td>
+        <td width="45%" align="right" style="vertical-align: top; font-size: 8pt; line-height: 1.3; color:#444444;">
+            Flat No. 0, Building 168, Road 408<br>
+            Block 704, Salmabad, Bahrain<br>
+            <span class="bold" style="color:#000;">VAT NO: 220000485100002</span>
+        </td>
+    </tr>
 </table>
 
-<hr style="height: 1.5px; color: #000; margin-top: 3px; margin-bottom: 5px;">
+<br>
 
-<div class="text-center bold" style="font-size: 13pt; letter-spacing: 1.5px; margin-bottom: 8px;">CASH MEMO</div>
+<!-- TAX INVOICE BANNER -->
+<table cellpadding="3" cellspacing="0" width="100%">
+    <tr style="background-color: #8A1C14; color: #ffffff;">
+        <td class="text-center bold" style="font-size:9pt; letter-spacing:2px; line-height:1;">
+            CASH MEMO / سند قبض
+        </td>
+    </tr>
+</table>
+
+<br>
 
 <!-- METADATA BOXES (Flat Table for Perfect Left-Right Alignment) -->
 <table cellpadding="4" style="border: 1px solid #000; width: 100%; border-collapse: collapse; margin: 0px;">

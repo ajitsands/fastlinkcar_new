@@ -15,6 +15,31 @@ checkLogin();
 <?php
 include('envinclude.php');
 $decimals = $_ENV['DECIMALS'];
+
+$db = new ClassDatabaseConnection();
+$pdo = $db->pdo;
+
+$userCompanyJson = isset($_SESSION['company_json']) ? json_decode($_SESSION['company_json'], true) : [];
+$userCompanyIds = [];
+if (is_array($userCompanyJson)) {
+    foreach ($userCompanyJson as $c) {
+        if (isset($c['ids'])) {
+            $userCompanyIds[] = $c['ids'];
+        }
+    }
+}
+
+$companies = [];
+try {
+    if (!empty($userCompanyIds)) {
+        $placeholders = implode(',', array_fill(0, count($userCompanyIds), '?'));
+        $stmt = $pdo->prepare("SELECT ids, company_name, company_code FROM tbl_company WHERE ids IN ($placeholders) AND status = 'Active' ORDER BY company_name");
+        $stmt->execute($userCompanyIds);
+    } else {
+        $stmt = $pdo->query("SELECT ids, company_name, company_code FROM tbl_company WHERE status = 'Active' ORDER BY company_name");
+    }
+    $companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {}
 ?>
 <!doctype html>
 
@@ -410,6 +435,19 @@ div.dt-container div.dt-search input {
 <script>
      $(document).ready(function() {
          
+         $('#company_id').on('change', function() {
+            var selected = $(this).find('option:selected');
+            $('#company_code').val(selected.data('code') || '');
+            $('#company_name').val(selected.data('name') || '');
+            $('#itemTable tbody tr').each(function() {
+                initserviceload($(this).find('.service'), $(this).find('.service').val());
+            });
+         });
+
+         if ($('#company_id').val()) {
+             $('#company_id').trigger('change');
+         }
+
           var todayFilter = new Date();
 
     // First day of current month
@@ -526,10 +564,12 @@ $('#selectCustomerFromSelect2_filter').on('select2:clear', function () {
 
 function initserviceload(element,selectedId = null) {
     let customerCode = $.trim($('#customer_code').val()) || 0;
+    let companyId = $('#company_id').val() || '';
     $.ajax({
         url: "/getAgreementOptions",
         data: {
-            customer_code: customerCode
+            customer_code: customerCode,
+            company_id: companyId
         },
         method: "GET",
         dataType: "json", // ensures it parses JSON
@@ -1105,9 +1145,10 @@ $('#selectCustomerFromSelect2').on('select2:select', function (e) {
     $('#customer_cpr_cr').val(data.customer_cr_cpr);
     $('#customer_address').val(data.customer_address);
     $('#quotation_attention').val(data.customer_attn);
-    let row = $('#itemTable tbody tr:last');
-        initserviceload(row.find('.service'));
-   
+    
+    $('#itemTable tbody tr').each(function() {
+        initserviceload($(this).find('.service'), $(this).find('.service').val());
+    });
 });
 
 
@@ -1294,7 +1335,8 @@ $('#btn_filter').click(function () {
    var startDate= $('#from_date_filter').val();
    var endDate= $('#to_date_filter').val();
    var customer_code= $('#customer_code_filter').val();
-    loadInvoiceList(draft,startDate,endDate,customer_code);
+   var company_id= $('#company_id_filter').val();
+    loadInvoiceList(draft,startDate,endDate,customer_code,company_id);
 
 });
 
@@ -1322,16 +1364,17 @@ function openInvoiceCanvas(draft, startDate = '', endDate = '', customer_code=''
     canvas.show();
 
     // Load initial data
-    loadInvoiceList(draft,$('#from_date_filter').val(),$('#to_date_filter').val(),$('#customer_code_filter').val());
+    loadInvoiceList(draft,$('#from_date_filter').val(),$('#to_date_filter').val(),$('#customer_code_filter').val(), $('#company_id_filter').val());
 }
 
-function loadInvoiceList(draft, startDate = '', endDate = '', customer_code='') {
+function loadInvoiceList(draft, startDate = '', endDate = '', customer_code='', company_id = 'all') {
     $.post('/InvoiceController', 
     { 
         draft: draft,
         startDate: startDate,
         endDate: endDate,
         customer_code: customer_code,
+        company_id: company_id,
         action: 'GetInvoices'
     }, 
     function(response) {
@@ -1368,6 +1411,7 @@ function(response) {
     $('#invoice_id').val(q.id);
     $('#original_draft').val(q.draft);
     $('#invoice_number').val(q.invoice_no);
+    $('#company_id').val(q.company_id).trigger('change');
 
     $('#invoiceNumber').text(q.invoice_no);
     $('#invoice_date').val(q.invoice_date);
@@ -1547,6 +1591,9 @@ function saveInvoice(action_type){
         original_draft: $('#original_draft').val(),
         action_type: action_type,
         save_type: saveType,
+        company_id: $('#company_id').val(),
+        company_code: $('#company_code').val(),
+        company_name: $('#company_name').val(),
         customer_name: $('#selectCustomerFromSelect2').find(':selected').text(),
         customer_code: $('input[name=customer_code]').val(),
         customer_phone: $('input[name=customer_phone]').val(),

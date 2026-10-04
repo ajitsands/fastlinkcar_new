@@ -15,6 +15,31 @@ checkLogin();
 <?php
 include('envinclude.php');
 $decimals = $_ENV['DECIMALS'];
+
+$db = new ClassDatabaseConnection();
+$pdo = $db->pdo;
+
+$userCompanyJson = isset($_SESSION['company_json']) ? json_decode($_SESSION['company_json'], true) : [];
+$userCompanyIds = [];
+if (is_array($userCompanyJson)) {
+    foreach ($userCompanyJson as $c) {
+        if (isset($c['ids'])) {
+            $userCompanyIds[] = $c['ids'];
+        }
+    }
+}
+
+$companies = [];
+try {
+    if (!empty($userCompanyIds)) {
+        $placeholders = implode(',', array_fill(0, count($userCompanyIds), '?'));
+        $stmt = $pdo->prepare("SELECT ids, company_name, company_code FROM tbl_company WHERE ids IN ($placeholders) AND status = 'Active' ORDER BY company_name");
+        $stmt->execute($userCompanyIds);
+    } else {
+        $stmt = $pdo->query("SELECT ids, company_name, company_code FROM tbl_company WHERE status = 'Active' ORDER BY company_name");
+    }
+    $companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {}
 ?>
 <!doctype html>
 
@@ -863,11 +888,13 @@ $('#selectCustomerFromSelect2').on('select2:clear', function () {
 }); 
 function initagreementload(element,selectedId = null) {
     let customerCode = $.trim($('#customer_code').val()) || 0;
+    let companyId = $('#company_id').val() || '';
      const $dropdown = $('#' + element);
     $.ajax({
         url: "/getAgreementOptions",
         data: {
-            customer_code: customerCode
+            customer_code: customerCode,
+            company_id: companyId
         },
         method: "GET",
         dataType: "json", // ensures it parses JSON
@@ -916,6 +943,14 @@ function initagreementload(element,selectedId = null) {
     //     $('#cashmemo_hidvehicle_model_id').val(selected.data('vehicle_model_id') || '');
     // });
 }
+
+$(document).on('change', '#company_id', function() {
+    let selected = $(this).find('option:selected');
+    $('#company_code').val(selected.data('code') || '');
+    $('#company_name').val(selected.data('name') || '');
+    initagreementload('cashmemo_selagreement');
+});
+
 $(document).on('change', '#cashmemo_selagreement', function () {
     let selected = $(this).find('option:selected');
 
@@ -1089,13 +1124,14 @@ $('#btn_filter').click(function () {
    var startDate= $('#from_date_filter').val();
    var endDate= $('#to_date_filter').val();
    var customer_code= $('#customer_code_filter').val();
+   var company_id= $('#company_id_filter').val();
    
-    loadcashmemoList(draft,startDate,endDate,customer_code);
+    loadcashmemoList(draft,startDate,endDate,customer_code,company_id);
 
 });
 
 
-function openCashMemoCanvas(draft, startDate = '', endDate = '', customer_code='') {
+function openCashMemoCanvas(draft, startDate = '', endDate = '', customer_code='', company_id='') {
     let title = (draft === "Yes") ? "Draft Receipts" : "Receipts";
     $('#canvasTitle').text(title);
     $('#txt_qtn_draft').val(draft);
@@ -1118,16 +1154,17 @@ function openCashMemoCanvas(draft, startDate = '', endDate = '', customer_code='
     canvas.show();
 
     // Load initial data
-    loadcashmemoList(draft,$('#from_date_filter').val(),$('#to_date_filter').val(),$('#customer_code_filter').val());
+    loadcashmemoList(draft,$('#from_date_filter').val(),$('#to_date_filter').val(),$('#customer_code_filter').val(),$('#company_id_filter').val());
 }
 
-function loadcashmemoList(draft, startDate = '', endDate = '', customer_code='') {
+function loadcashmemoList(draft, startDate = '', endDate = '', customer_code='', company_id='') {
     $.post('/CashMemoController', 
     { 
         draft: draft,
         startDate: startDate,
         endDate: endDate,
         customer_code: customer_code,
+        company_id: company_id,
         action: 'GetCashmemo'
     }, 
     function(response) {
@@ -1332,6 +1369,7 @@ function saveCashMemo(action_type){
     
 
     let data = {
+        company_id: $('#company_id').val(),
         cashmemo_id: $('#cashmemo_id').val(),
         cashmemo_number:$('#cashmemo_number').val(),
         original_draft: $('#original_draft').val(),
@@ -1402,8 +1440,12 @@ function validatecashmemoForm() {
     let valid = true;
     let message = "";
 
+    if (!$('#company_id').val()) {
+        message = "Company selection is required.";
+        valid = false;
+    }
     
-    if (!$('#selectCustomerFromSelect2').val()) {
+    if (valid && !$('#selectCustomerFromSelect2').val()) {
         message = "Customer name is required.";
         valid = false;
     }

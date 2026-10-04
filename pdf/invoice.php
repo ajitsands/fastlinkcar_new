@@ -81,8 +81,13 @@ if ($mysqli->connect_error) {
 
 $data = null;
 if (!$sample_mode && !empty($invoice_no)) {
-    // Attempt to fetch from tbl_tax_invoices. Users will fill this mapping query later.
-    $stmt = $mysqli->prepare("SELECT * FROM invoices WHERE invoice_no = ?");
+    // Attempt to fetch from invoices.
+    $stmt = $mysqli->prepare("
+        SELECT i.*, c.company_logo, c.company_name AS c_company_name 
+        FROM invoices i 
+        LEFT JOIN tbl_company c ON i.company_id = c.ids 
+        WHERE i.invoice_no = ?
+    ");
     if ($stmt) {
         $stmt->bind_param("s", $invoice_no);
         $stmt->execute();
@@ -178,7 +183,7 @@ $pdf->AddPage();
 $pdf->SetFont('dejavusans', '', 8);
 
 // Prepare Logo Data
-$logo_path = 'assets/img/logo/logo.png';
+$logo_path = !empty($data['company_logo']) ? $data['company_logo'] : 'assets/img/logo/logo.png';
 $logo_base64 = '';
 if (file_exists($logo_path)) {
     $logo_base64 = base64_encode(file_get_contents($logo_path));
@@ -193,21 +198,22 @@ $html = '
     .text-left { text-align: left; }
     .bold { font-weight: bold; }
     .bg-dark { background-color: #8A1C14; color: #ffffff; }
-    .bordered td, .bordered th { border: 1px solid #000; }
-    .payment-table { border: 1px solid #0056b3; }
-    .payment-table td { border-bottom: 1px solid #d0d0d0; }
+    .bg-light { background-color: #f9f9f9; color: #8A1C14; }
+    .bordered td, .bordered th { border: 1px solid #555555; }
+    .payment-table { border: 1px solid #8A1C14; }
+    .payment-table td { border-bottom: 1px solid #dddddd; }
 </style>
 
 <!-- MAIN HEADER -->
-<table cellpadding="2" border="0" width="100%">
+<table cellpadding="1" border="0" width="100%">
     <tr>
         <td width="55%" style="vertical-align: middle;">
-            ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="155">' : '<b style="font-size: 16pt;">AA CAR RENTAL</b>') . '
+            ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="150">' : '<b style="font-size: 15pt; color:#8A1C14;">' . htmlspecialchars(strtoupper($data['c_company_name'] ?? 'AA CAR RENTAL')) . '</b>') . '
         </td>
-        <td width="45%" align="right" style="vertical-align: top; font-size: 8.5pt; line-height: 1.4;">
+        <td width="45%" align="right" style="vertical-align: top; font-size: 8pt; line-height: 1.3; color:#444444;">
             Flat No. 0, Building 168, Road 408<br>
             Block 704, Salmabad, Bahrain<br>
-            <span class="bold">VAT NO: 220000485100002</span>
+            <span class="bold" style="color:#000;">VAT NO: 220000485100002</span>
         </td>
     </tr>
 </table>
@@ -215,9 +221,9 @@ $html = '
 <br>
 
 <!-- TAX INVOICE BANNER -->
-<table cellpadding="1" cellspacing="0" width="100%">
+<table cellpadding="3" cellspacing="0" width="100%">
     <tr class="bg-dark">
-        <td class="text-center bold" style="font-size:9pt; letter-spacing:1.5px; line-height:1;">
+        <td class="text-center bold" style="font-size:9pt; letter-spacing:2px; line-height:1;">
             TAX INVOICE
         </td>
     </tr>
@@ -226,29 +232,29 @@ $html = '
 <br>
 
 <!-- CLIENT AND INVOICE METADATA -->
-<table cellpadding="3" border="0" width="100%">
+<table cellpadding="2" border="0" width="100%" style="font-size: 8pt;">
     <tr>
         <!-- Client details -->
-        <td width="60%" style="vertical-align: top; line-height: 1.4;">
-            <span class="bold" style="font-size: 9.5pt;">M/S. ' . htmlspecialchars($data['customer_name']) . '</span><br>
+        <td width="60%" style="vertical-align: top; line-height: 1.3;">
+            <span class="bold" style="font-size: 9pt;">M/S. ' . htmlspecialchars($data['customer_name']) . '</span><br>
             ' . htmlspecialchars($data['customer_address']) . '<br>
             <span class="bold">KINGDOM OF BAHRAIN</span><br>
             <span class="bold">TRN: ' . htmlspecialchars($data['trn_no']) . '</span>
         </td>
         <!-- Invoice metadata -->
-        <td width="40%" style="vertical-align: top; line-height: 1.4; padding-left: 20px;">
+        <td width="40%" style="vertical-align: top; line-height: 1.3;">
             <table cellpadding="1" border="0" width="100%">
                 <tr>
-                    <td width="45%" class="bold">Inv Date:</td>
-                    <td width="55%" class="text-right">' . htmlspecialchars(date('d-m-y', strtotime($data['invoice_date']))) . '</td>
+                    <td width="40%" class="bold">Inv Date:</td>
+                    <td width="60%" class="text-right">' . htmlspecialchars(date('d-M-Y', strtotime($data['invoice_date']))) . '</td>
                 </tr>
                 <tr>
                     <td class="bold">Due Date:</td>
-                    <td class="text-right">' . htmlspecialchars(date('d-m-y', strtotime($data['invoice_due_date']))) . '</td>
+                    <td class="text-right">' . htmlspecialchars(date('d-M-Y', strtotime($data['invoice_due_date']))) . '</td>
                 </tr>
                 <tr>
                     <td class="bold">Inv No.:</td>
-                    <td class="text-right bold" style="color: #8A1C14;">' . htmlspecialchars($data['invoice_no']) . '</td>
+                    <td class="text-right bold" style="color:#8A1C14;">' . htmlspecialchars($data['invoice_no']) . '</td>
                 </tr>
                 <tr>
                     <td class="bold">LPO NO:</td>
@@ -262,24 +268,21 @@ $html = '
 <br>
 
 <!-- MAIN TAX GRID -->
-<table class="bordered" cellpadding="4" style="font-size: 7pt; border-collapse: collapse;">
-
+<table class="bordered" cellpadding="3" style="font-size: 7pt; border-collapse: collapse;">
 <thead>
-<tr style="text-align:center; color:#0033cc; white-space:nowrap;">
-
-    <th rowspan="1" width="4%" style=" border:1px solid #000;">No</th>
-    <th rowspan="1" width="10%" style="border:1px solid #000;">Type of Car</th>
-    <th rowspan="1" width="12%" style=" border:1px solid #000;">Agreement no</th>
-    <th rowspan="1"  width="9%" style="border:1px solid #000;">Vehicle no</th>
-    <th rowspan="1" width="12%" style=" border:1px solid #000;">Service</th>
-    <th colspan="2" width="16%" style=" border:1px solid #000;">Period</th>
-    <th rowspan="1" width="5%" style=" border:1px solid #000;">Qty</th>
-    <th rowspan="1" width="7%" style="border:1px solid #000;">Unit Price (BHD)</th>
-    <th rowspan="1" width="8%"  style="border:1px solid #000;">Excl VAT(BHD)</th>
-    <th rowspan="1" width="5%" style="border:1px solid #000;">VAT %</th>
-    <th rowspan="1" width="7%" style="border:1px solid #000;">VAT Amount</th>
-    <th rowspan="1" width="8%" style="border:1px solid #000;">Incl VAT(BHD)</th>
-
+<tr class="bg-light bold text-center">
+    <th rowspan="1" width="4%">No</th>
+    <th rowspan="1" width="10%">Type of Car</th>
+    <th rowspan="1" width="12%">Agreement<br>No</th>
+    <th rowspan="1" width="9%">Vehicle No</th>
+    <th rowspan="1" width="11%">Service</th>
+    <th colspan="2" width="14%">Period</th>
+    <th rowspan="1" width="4%">Qty</th>
+    <th rowspan="1" width="7%">Unit Price<br>(BHD)</th>
+    <th rowspan="1" width="9%">Excl VAT<br>(BHD)</th>
+    <th rowspan="1" width="5%">VAT<br>%</th>
+    <th rowspan="1" width="6%">VAT<br>Amt</th>
+    <th rowspan="1" width="9%">Incl VAT<br>(BHD)</th>
 </tr>
 </thead>
 <tbody>';
@@ -294,7 +297,6 @@ foreach ($items as $index => $item) {
     $to = $item['period_to'] !== '' ? date('d-m-y', strtotime($item['period_to'])) : '';
      $qty   = is_numeric($item['qty'] ?? null) ? (float)$item['qty'] : 0;
     $u_price = is_numeric($item['price'] ?? null) ? (float)$item['price'] : 0;
-    $amt_excl = '';
     $amt_excl = $qty * $u_price;
     $vat_percent = is_numeric($item['vat'] ?? null) ? (float)$item['vat'] : 0;
      
@@ -305,38 +307,32 @@ foreach ($items as $index => $item) {
         $amount_incl = $amt_excl + $vat_amount;
         $amt_incl = number_format($amount_incl, 3);
     
-
     $html .= '
-        <tr style="white-space:nowrap;">
-
-        <td   width="4%" style="border:1px solid #000; text-align:center;">'.$no.'</td>
-        <td  width="10%" style="border:1px solid #000;">'.htmlspecialchars($car_type).'</td>
-        <td  width="12%" style="border:1px solid #000; text-align:center;">'.$agr_no.'</td>
-        <td  width="9%" style="border:1px solid #000; text-align:center;">'.$veh_no.'</td>
-        <td width="12%" style="border:1px solid #000;">'.$srv.'</td>
-        <td width="8%" style="border:1px solid #000; text-align:center;">'.$from.'</td>
-        <td width="8%" style="border:1px solid #000; text-align:center;">'.$to.'</td>
-        <td width="5%" style="border:1px solid #000; text-align:center;">'.$qty.'</td>
-        <td width="7%" style="border:1px solid #000; text-align:right;">'.number_format($u_price,3).'</td>
-        <td width="8%" style="border:1px solid #000; text-align:right;">'.number_format($amt_excl,3).'</td>
-        <td width="5%" style="border:1px solid #000; text-align:center;">'.$vat_percent.'%</td>
-        <td width="7%" style="border:1px solid #000; text-align:right;">'.number_format($vat_amount,3).'</td>
-        <td width="8%" style="border:1px solid #000; text-align:right;">'.number_format($amt_incl,3).'</td>
-
+        <tr>
+        <td width="4%" class="text-center">'.$no.'</td>
+        <td width="10%">'.$car_type.'</td>
+        <td width="12%" class="text-center">'.$agr_no.'</td>
+        <td width="9%" class="text-center">'.$veh_no.'</td>
+        <td width="11%">'.$srv.'</td>
+        <td width="7%" class="text-center">'.$from.'</td>
+        <td width="7%" class="text-center">'.$to.'</td>
+        <td width="4%" class="text-center">'.$qty.'</td>
+        <td width="7%" class="text-right">'.number_format($u_price,3).'</td>
+        <td width="9%" class="text-right">'.number_format($amt_excl,3).'</td>
+        <td width="5%" class="text-center">'.$vat_percent.'%</td>
+        <td width="6%" class="text-right">'.number_format($vat_amount,3).'</td>
+        <td width="9%" class="text-right bold">'.number_format($amt_incl,3).'</td>
     </tr>';
 }
 
 $html .= '
         <!-- TOTAL ROW -->
-        <tr style="font-weight:bold;" class="bg-dark">
-
-    <td colspan="9" style="border:1px solid #000; text-align:right;">TOTAL</td>
-
-    <td style="border:1px solid #000; text-align:right;">'.number_format((float)$data['subtotal'],3).'</td>
-    <td style="border:1px solid #000; text-align:center;">-</td>
-    <td style="border:1px solid #000; text-align:right;">'.number_format((float)$data['vat_total'],3).'</td>
-    <td style="border:1px solid #000; text-align:right;">'.number_format((float)$data['grand_total'],3).'</td>
-
+        <tr class="bg-light bold">
+    <td colspan="9" class="text-right">TOTAL</td>
+    <td class="text-right">'.number_format((float)$data['subtotal'],3).'</td>
+    <td class="text-center">-</td>
+    <td class="text-right">'.number_format((float)$data['vat_total'],3).'</td>
+    <td class="text-right">'.number_format((float)$data['grand_total'],3).'</td>
 </tr>
 </tbody>
 </table>
@@ -344,37 +340,37 @@ $html .= '
 <br><br>
 
 <!-- PAYMENT INFORMATION CARD -->
-<table cellpadding="3" class="payment-table" style="width: 320px; border: 1px solid #0056b3;">
-    <tr style="background-color: #0056b3; color: #ffffff; font-weight: bold;">
-        <td colspan="2" align="center" style="font-size: 8.5pt;">PAYMENT INFORMATION</td>
+<table cellpadding="3" class="payment-table" style="width: 320px; font-size: 7.5pt;">
+    <tr class="bg-dark bold">
+        <td colspan="2" align="center" style="font-size: 8pt; letter-spacing:1px;">PAYMENT INFORMATION</td>
     </tr>
-    <tr style="background-color: #f2f6fc;">
-        <td width="35%" class="bold" style="font-size: 7.5pt;">ACCOUNT NAME:</td>
-        <td width="65%" style="font-size: 7.5pt;">A. A. CAR RENTAL CO W.L.L</td>
-    </tr>
-    <tr>
-        <td class="bold" style="font-size: 7.5pt;">A/C NUMBER:</td>
-        <td style="font-size: 7.5pt;">0010 578804 001</td>
-    </tr>
-    <tr style="background-color: #f2f6fc;">
-        <td class="bold" style="font-size: 7.5pt;">BANK NAME:</td>
-        <td style="font-size: 7.5pt;">AHLI UNITED BANK</td>
+    <tr style="background-color: #fafafa;">
+        <td width="35%" class="bold">ACCOUNT NAME:</td>
+        <td width="65%">A. A. CAR RENTAL CO W.L.L</td>
     </tr>
     <tr>
-        <td class="bold" style="font-size: 7.5pt;">BRANCH:</td>
-        <td style="font-size: 7.5pt;">SEEF DISTRICT</td>
+        <td class="bold">A/C NUMBER:</td>
+        <td>0010 578804 001</td>
     </tr>
-    <tr style="background-color: #f2f6fc;">
-        <td class="bold" style="font-size: 7.5pt;">IBAN:</td>
-        <td style="font-size: 7.5pt;" class="bold">BH28AUBB00010578804001</td>
+    <tr style="background-color: #fafafa;">
+        <td class="bold">BANK NAME:</td>
+        <td>AHLI UNITED BANK</td>
     </tr>
     <tr>
-        <td class="bold" style="font-size: 7.5pt;">SWIFT CODE:</td>
-        <td style="font-size: 7.5pt;">AUBBB HBM</td>
+        <td class="bold">BRANCH:</td>
+        <td>SEEF DISTRICT</td>
     </tr>
-    <tr style="background-color: #f2f6fc;">
-        <td class="bold" style="font-size: 7.5pt;">EMAIL:</td>
-        <td style="font-size: 7.5pt; color: #0056b3; text-decoration: underline;">accounts@aarentalbh.com</td>
+    <tr style="background-color: #fafafa;">
+        <td class="bold">IBAN:</td>
+        <td class="bold">BH28AUBB00010578804001</td>
+    </tr>
+    <tr>
+        <td class="bold">SWIFT CODE:</td>
+        <td>AUBBB HBM</td>
+    </tr>
+    <tr style="background-color: #fafafa;">
+        <td class="bold">EMAIL:</td>
+        <td>accounts@aarentalbh.com</td>
     </tr>
 </table>
 

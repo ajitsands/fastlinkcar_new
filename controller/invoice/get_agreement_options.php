@@ -3,12 +3,26 @@
 $db = new ClassDatabaseConnection();
 $pdo = $db->pdo;
 
-$customerCode = $_GET['customer_code'];
-$stmt = $pdo->prepare("
-    SELECT ids AS id, agreement_no AS text,vehicle_no,vehicle_id,  DATE_FORMAT(service_start_date_time, '%Y-%m-%d') AS period_from,
-            DATE_FORMAT(service_end_date_time, '%Y-%m-%d') AS period_to,booking_ids,customer_code,vehicle_model_id, JSON_UNQUOTE(JSON_EXTRACT(vechile_details, '$.model_name')) AS model_name,JSON_UNQUOTE(JSON_EXTRACT(vechile_details, '$.vehicle_color')) AS vehicle_color FROM tbl_vehicle_rentout_contracts WHERE customer_code = ? ORDER BY ids DESC");
+$customerCode = $_GET['customer_code'] ?? '';
+$companyId = $_GET['company_id'] ?? null;
 
-$stmt->execute([$customerCode]);
+$sql = "
+    SELECT ids AS id, agreement_no AS text,vehicle_no,vehicle_id,  DATE_FORMAT(service_start_date_time, '%Y-%m-%d') AS period_from,
+            DATE_FORMAT(service_end_date_time, '%Y-%m-%d') AS period_to,booking_ids,customer_code,vehicle_model_id, JSON_UNQUOTE(JSON_EXTRACT(vechile_details, '$.model_name')) AS model_name,JSON_UNQUOTE(JSON_EXTRACT(vechile_details, '$.vehicle_color')) AS vehicle_color 
+    FROM tbl_vehicle_rentout_contracts 
+    WHERE customer_code = ?";
+    
+$params = [$customerCode];
+
+if (!empty($companyId) && $companyId !== 'undefined' && $companyId !== 'null') {
+    $sql .= " AND company_id = ?";
+    $params[] = $companyId;
+}
+
+$sql .= " ORDER BY ids DESC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
 
 $data = [];
 

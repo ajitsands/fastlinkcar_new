@@ -59,12 +59,25 @@ class cashmemoController
         $this->total_discount = $_POST['total_discount'] ?? null;
         $this->total_discount_amount = $_POST['total_discount_amount'] ?? null;
         $this->after_discount_amount = $_POST['after_discount_amount'] ?? null;
-        $this->storage_company_id =$_SESSION['company_id'] ?? 1;
+        $this->storage_company_id = $_SESSION['company_id'] ?? 1;
         $this->storage_company_name = $_SESSION['company_name'] ?? 1;
         $this->storage_username = $_SESSION['user_name'] ?? '';
         $this->storage_userid = $_SESSION['user_id'] ?? 1;
-         $this->company_code = $_SESSION['company_code'] ?? 'AA';
+        $this->company_code = $_SESSION['company_code'] ?? 'AA';
         $this->allItemSubtotal = $_POST['allItemSubtotal'] ?? null;
+        
+        if (isset($_POST['company_id']) && !empty($_POST['company_id'])) {
+            $this->company_id = $_POST['company_id'];
+            $this->storage_company_id = $this->company_id;
+            try {
+                $stmtCompany = $this->varPDOModelObj->varDBPDO->prepare("SELECT company_code, company_name FROM tbl_company WHERE ids = ?");
+                $stmtCompany->execute([$this->company_id]);
+                if ($comp = $stmtCompany->fetch(\PDO::FETCH_ASSOC)) {
+                    $this->company_code = $comp['company_code'];
+                    $this->storage_company_name = $comp['company_name'];
+                }
+            } catch (\Exception $e) { }
+        }
         
         $this->reference_number  = $_POST['reference_number'] ?? null;
       
@@ -366,26 +379,41 @@ class cashmemoController
                     }
                 break;
            case 'GetCashmemo':
-            $sql = "SELECT *
-                    FROM cashmemo
-                    WHERE company_id = :company_ids
-                      AND draft = :draft
-                      AND cashmemo_date BETWEEN :start_date AND :end_date";
+            $sql = "SELECT cm.*, c.company_name AS c_company_name
+                    FROM cashmemo cm
+                    LEFT JOIN tbl_company c ON cm.company_id = c.ids
+                    WHERE cm.draft = :draft
+                      AND cm.cashmemo_date BETWEEN :start_date AND :end_date";
             
             $params = [
-             ':company_ids' => $this->company_id,
              ':draft' => $this->draft,
              ':start_date'  => $this->startDate,
              ':end_date'    => $this->endDate
             ];
             
+            if ($this->company_id !== 'All' && !empty($this->company_id)) {
+                $sql .= " AND cm.company_id = :company_ids";
+                $params[':company_ids'] = $this->company_id;
+            } else {
+                $userCompanyJson = isset($_SESSION['company_json']) ? json_decode($_SESSION['company_json'], true) : [];
+                $userCompanyIds = [];
+                if (is_array($userCompanyJson)) {
+                    foreach ($userCompanyJson as $uc) {
+                        if (isset($uc['ids'])) $userCompanyIds[] = (int)$uc['ids'];
+                    }
+                }
+                if (!empty($userCompanyIds)) {
+                    $placeholders = implode(',', $userCompanyIds);
+                    $sql .= " AND cm.company_id IN ($placeholders)";
+                }
+            }
            
             if (!empty($this->customer_code) && $this->customer_code != 'All') {
-                    $sql .= " AND customer_code = :customer_code";
+                    $sql .= " AND cm.customer_code = :customer_code";
                     $params[':customer_code'] = trim($this->customer_code);
                 }
             
-            $sql .= " ORDER BY id DESC";
+            $sql .= " ORDER BY cm.id DESC";
  
             $this->ReturnData = $this->varPDOModelObj->ListFromTable($sql, $params);
            
@@ -405,6 +433,12 @@ class cashmemoController
         
                     $id = (int)$row['id'];
                     $cashmemo_no = htmlspecialchars($row['cashmemo_no']);
+                    
+                    $cmpName = !empty($row['c_company_name']) ? htmlspecialchars($row['c_company_name']) : htmlspecialchars($row['company_name']);
+                    if (!empty($cmpName)) {
+                        $cashmemo_no .= "<br><span class='badge' style='background-color:#ED1C24; color:#fff;'>{$cmpName}</span>";
+                    }
+                    
                     $customer_name = htmlspecialchars($row['customer_name']);
                     $customer_phone = htmlspecialchars($row['customer_phone']);
                     $customer_cpr_cr = htmlspecialchars($row['customer_cpr_cr']);

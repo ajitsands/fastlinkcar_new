@@ -31,13 +31,30 @@
 
 
                                         <div class="row">
-                                            <div class="col-3 col-xl-3">
+                                            <div class="col-2 col-xl-2">
+                                                <div class="form-floating form-floating-outline mb-6">
+                                                    <select class="form-select form-select-sm" id="company_id" name="company_id">
+                                                        <?php if (count($companies) > 1): ?>
+                                                            <option value="" selected>Select Company</option>
+                                                        <?php endif; ?>
+                                                        <?php foreach ($companies as $c): ?>
+                                                            <option value="<?php echo htmlspecialchars($c['ids']); ?>" data-code="<?php echo htmlspecialchars($c['company_code']); ?>" data-name="<?php echo htmlspecialchars($c['company_name']); ?>">
+                                                                <?php echo htmlspecialchars($c['company_name']); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                    <label for="company_id">Company</label>
+                                                    <input type="hidden" id="company_code" name="company_code">
+                                                    <input type="hidden" id="company_name" name="company_name">
+                                                </div>
+                                            </div>
+                                            <div class="col-2 col-xl-2">
                                                 <div class="form-floating form-floating-outline mb-6">
                                                     <input class="form-control form-control-sm" id="invoice_date" name ="invoice_date" type="date" placeholder="dd-mm-yyyy" >
                                                     <label for="invoice_date">Invoice Date</label>
                                                   </div>
                                             </div>
-                                            <div class="col-3 col-xl-3">
+                                            <div class="col-2 col-xl-2">
                                                
                                                 <div class="form-floating form-floating-outline mb-6">
                                                     <input class="form-control form-control-sm" id="invoice_due_date" name ="invoice_due_date" type="date" placeholder="dd-mm-yyyy" >

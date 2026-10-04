@@ -192,6 +192,12 @@ $decrypt = explode(",", $decrypt);
                <div data-i18n="Fund Flow Report">Fund Flow Report</div>
              </a>
            </li>
+           <li class="menu-item <?php if ($decrypt[0] == '5-8') { echo 'active'; } ?>">
+             <a href="/RefundForm?val=<?php echo $this->encryption->encrypt('5,5-8'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-refund-2-line"></i>
+               <div data-i18n="Refund Form">Refund Form</div>
+             </a>
+           </li>
          </ul>
        </li>
      </ul>

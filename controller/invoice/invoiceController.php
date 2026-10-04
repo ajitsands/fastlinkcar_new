@@ -10,11 +10,12 @@ class InvocieController
     public $json, $actionevents;
     public $params = array();
 
-    public $userId, $name, $role_id, $role_name, $username, $password;
+    public $userId, $name, $role_id, $role_name, $username, $password, $id;
     public $email, $phoneNumber, $companies, $image, $createdDate, $ReturnData, $userStatus, $t_c_name, $terms_condition;
     public $invoice_id, $original_draft, $action_type, $save_type, $draft_flag,$customer_code, $customer_name, $customer_phone, $customer_email, $customer_address, $invoice_date, $invoice_due_date;
     public $items, $subtotal, $vat_total, $grand_total, $total_discount, $total_discount_amount, $after_discount_amount, $storage_company_id, $storage_company_name, $storage_username, $storage_userid;
     public $allItemSubtotal, $reference_number,$attentionValue, $doc_type, $draft, $invoice_number, $startDate, $endDate, $lpo_no, $qtn_ref_no, $transaction_no,$company_code,$customer_cpr_cr;
+    public $company_id, $user_id, $company_name;
     function __construct()
     {
         $this->varPDOModelObj = new CommonPDOModel();
@@ -24,7 +25,7 @@ class InvocieController
     
         $this->id = $_POST['id'] ?? null;
         
-        $this->company_id = $_SESSION['company_id'] ?? 1;
+        $this->company_id = $_POST['company_id'] ?? $_SESSION['company_id'] ?? 1;
         $this->user_id = $_SESSION['user_id'] ?? 1;
         $this->actionevents = $_POST['action'] ?? null;
         date_default_timezone_set('Asia/Bahrain');
@@ -61,11 +62,11 @@ class InvocieController
         $this->total_discount = $_POST['total_discount'] ?? null;
         $this->total_discount_amount = $_POST['total_discount_amount'] ?? null;
         $this->after_discount_amount = $_POST['after_discount_amount'] ?? null;
-        $this->storage_company_id =$_SESSION['company_id'] ?? 1;
-        $this->storage_company_name = $_SESSION['company_name'] ?? 1;
+        $this->storage_company_id = $_POST['company_id'] ?? $_SESSION['company_id'] ?? 1;
+        $this->storage_company_name = $_POST['company_name'] ?? $_SESSION['company_name'] ?? '';
         $this->storage_username = $_SESSION['user_name'] ?? '';
         $this->storage_userid = $_SESSION['user_id'] ?? 1;
-         $this->company_code = $_SESSION['company_code'] ?? 'AA';
+        $this->company_code = $_POST['company_code'] ?? $_SESSION['company_code'] ?? 'AA';
         $this->allItemSubtotal = $_POST['allItemSubtotal'] ?? null;
         
         $this->reference_number  = $_POST['reference_number'] ?? null;
@@ -272,22 +273,38 @@ class InvocieController
                 break;
            case 'GetInvoices':
 
-           $sql = "SELECT * FROM invoices WHERE company_id = :company_ids and draft =:draft AND invoice_date BETWEEN :start_date AND :end_date";
-            
-            $params = [
-              ':company_ids' => $this->company_id,
+           $sql = "SELECT i.*, c.company_name AS c_company_name FROM invoices i LEFT JOIN tbl_company c ON i.company_id = c.ids WHERE i.draft = :draft AND i.invoice_date BETWEEN :start_date AND :end_date";
+           $params = [
              ':draft' => $this->draft,
              ':start_date'  => $this->startDate,
              ':end_date'    => $this->endDate
-            ];
-            
+           ];
+
+           if ($this->company_id !== 'all' && !empty($this->company_id)) {
+               $sql .= " AND i.company_id = :company_ids";
+               $params[':company_ids'] = $this->company_id;
+           } else {
+               $userCompanyJson = isset($_SESSION['company_json']) ? json_decode($_SESSION['company_json'], true) : [];
+               $userCompanyIds = [];
+               if (is_array($userCompanyJson)) {
+                   foreach ($userCompanyJson as $c) {
+                       if (isset($c['ids'])) {
+                           $userCompanyIds[] = (int)$c['ids'];
+                       }
+                   }
+               }
+               if (!empty($userCompanyIds)) {
+                   $placeholders = implode(',', $userCompanyIds);
+                   $sql .= " AND i.company_id IN ($placeholders)";
+               }
+           }
            
             if (!empty($this->customer_code) && $this->customer_code != 'All') {
-                    $sql .= " AND customer_code = :customer_code";
+                    $sql .= " AND i.customer_code = :customer_code";
                     $params[':customer_code'] = trim($this->customer_code);
                 }
             
-            $sql .= " ORDER BY id DESC";
+            $sql .= " ORDER BY i.id DESC";
  
             $this->ReturnData = $this->varPDOModelObj->ListFromTable($sql, $params);
            
@@ -306,7 +323,9 @@ class InvocieController
                     $grand    = number_format((float)$row['grand_total'], $decimals);
         
                     $id = (int)$row['id'];
-                    $invoice_no = htmlspecialchars($row['invoice_no']);
+                    $raw_invoice_no = htmlspecialchars($row['invoice_no']);
+                    $comp_name = !empty($row['c_company_name']) ? htmlspecialchars($row['c_company_name']) : '';
+                    $invoice_no = $raw_invoice_no . "<br><span class='badge' style='background-color:#ED1C24; font-size:10px;'>" . $comp_name . "</span>";
                     $customer_name = htmlspecialchars($row['customer_name']);
                     $customer_phone = htmlspecialchars($row['customer_phone']);
                     $customer_cpr_cr = htmlspecialchars($row['customer_cpr_cr']);
@@ -323,7 +342,7 @@ class InvocieController
                         </button>",
                         "<div class='d-flex gap-1 '>
                             
-                            <button class='btn btn-sm btn-warning invoiceprint' data-bs-toggle='tooltip' title='Print Format 2' data-id={$id} data-ref={$invoice_no} >
+                            <button class='btn btn-sm btn-warning invoiceprint' data-bs-toggle='tooltip' title='Print Format 2' data-id={$id} data-ref=\"{$raw_invoice_no}\" >
                                 <span class='ri ri-printer-line icon-18px'></span>
                             </button>
                         </div>"

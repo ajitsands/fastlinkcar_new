@@ -68,7 +68,7 @@ $isSingleCompany = count($allowedCompanies) <= 1;
        
         <div class="table-responsive">
             <table class="table table-bordered table-sm table-hover align-middle w-100" id="quotationList">
-                <thead class="table-light">
+                <thead>
                     <tr>
                     <th>No</th>
                     <th>Date</th>

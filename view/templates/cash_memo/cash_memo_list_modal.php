@@ -1,11 +1,21 @@
 <div class="offcanvas offcanvas-end offcanvas-half" tabindex="-1" id="cashmemoCanvas">
-    <div class="offcanvas-header pb-0">
-        <h4 id="canvasTitle">Cash Memo</h4><input type="hidden" id="txt_qtn_draft">
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    <div class="offcanvas-header pb-0" style="background-color: #d12222 !important; color: #fff !important; padding: 15px 20px;">
+        <h4 id="canvasTitle" class="mb-0 text-white">Cash Memo</h4><input type="hidden" id="txt_qtn_draft">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>
 
-    <div class="offcanvas-body pt-0 ">
+    <div class="offcanvas-body pt-0 mt-3">
        <div class="row g-3 align-items-end mb-3">
+       
+    <div class="col-md-2">
+        <label for="company_id_filter" class="form-label">Company</label>
+        <select id="company_id_filter" class="form-select">
+            <option value="All">All</option>
+            <?php foreach ($companies as $c): ?>
+                <option value="<?php echo htmlspecialchars($c['ids']); ?>"><?php echo htmlspecialchars($c['company_name']); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
 
     <div class="col-md-2">
         <label for="from_date_filter" class="form-label">From Date</label>
@@ -17,7 +27,7 @@
         <input type="date" id="to_date_filter" class="form-control">
     </div>
 
-    <div class="col-md-6">
+    <div class="col-md-4">
         <label for="selectCustomerFromSelect2_filter" class="form-label">Customer</label>
         <select id="selectCustomerFromSelect2_filter"
                 name="customer_name_filter"
@@ -41,7 +51,7 @@
        
         <table class="table table-bordered" id="cashmemoList">
             <thead>
-                <tr class="bg-primary">
+                <tr>
                     <th>No</th>
                     <th>Date</th>
                     <th>Details</th>

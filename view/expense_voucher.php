@@ -14,7 +14,7 @@ checkLogin();
 
 <?php
 include('envinclude.php');
-$decimals = $_ENV['DECIMALS'];
+$decimals = !empty($_ENV['DECIMALS']) ? (int)$_ENV['DECIMALS'] : 3;
 ?>
 <!doctype html>
 
@@ -409,7 +409,7 @@ div.dt-container div.dt-search input {
             let today = new Date().toISOString().split('T')[0];
             $('#cashmemo_date').val(today);
          
-      let DecimalPositions = <?php echo $decimals;?>;   
+      let DecimalPositions = <?php echo (int)($decimals ?? 3); ?>;   
         let saved = localStorage.getItem('printSettings');
         if (saved) {
             let settings = JSON.parse(saved);
@@ -551,7 +551,7 @@ $(document).on('blur','.to_datetime',function(){
                                style="padding-top:12px;">
                     </div>
                 </td>
-                <td><input type="number" class="vat nav form-control form-control-sm" step="0.1" value="<?php echo $_ENV['TAX_PERCENTAGE']; ?>"></td>
+                <td><input type="number" class="vat nav form-control form-control-sm" step="0.1" value="<?php echo htmlspecialchars($_ENV['TAX_PERCENTAGE'] ?? '10'); ?>"></td>
                 <td class="line_total">0.00</td>
                 <td>
                     <span class="icon-base ri ri-delete-bin-6-line icon-22px remove"></span>

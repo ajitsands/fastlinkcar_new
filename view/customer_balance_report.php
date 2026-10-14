@@ -89,7 +89,7 @@ include ROOT_PATH . '/view/envinclude.php';
     
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>alertmessage/js/sands_alert.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>alertmessage/js/sandsalert.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/notyf/notyf.js"></script>
 
 <script>

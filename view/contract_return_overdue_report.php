@@ -105,22 +105,58 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
             vertical-align: -0.125em;
         }
 
-        /* Select2 height adjustment to align seamlessly with form-select-sm */
-        .select2-container .select2-selection--single {
-            height: 31px !important;
+        /* Unified form element heights and vertical alignment */
+        #form_filter_report .form-select-sm,
+        #form_filter_report .form-control-sm {
+            height: 38px !important;
+            min-height: 38px !important;
+            font-size: 0.8125rem !important;
+        }
+
+        #form_filter_report .select2-container {
+            width: 100% !important;
+        }
+
+        #form_filter_report .select2-container--default .select2-selection--single {
+            height: 38px !important;
+            min-height: 38px !important;
             border: 1px solid #d9dee3 !important;
             border-radius: 0.375rem !important;
             display: flex !important;
             align-items: center !important;
+            background-color: #fff !important;
         }
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 29px !important;
+
+        #form_filter_report .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px !important;
             font-size: 0.8125rem !important;
             color: #566a7f !important;
-            padding-left: 10px !important;
+            padding-left: 0.75rem !important;
+            padding-right: 2rem !important;
+            display: flex !important;
+            align-items: center !important;
         }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 29px !important;
+
+        #form_filter_report .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+            top: 1px !important;
+            right: 8px !important;
+        }
+
+        #form_filter_report .select2-container--default .select2-selection--single .select2-selection__clear {
+            height: 36px !important;
+            line-height: 36px !important;
+            margin-right: 1.25rem !important;
+        }
+
+        #form_filter_report .btn-filter-action {
+            height: 38px !important;
+            min-height: 38px !important;
+            font-size: 0.8125rem !important;
+            font-weight: 500 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
 
         /* KPI Metric Cards */
@@ -484,20 +520,23 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                                     </div>
 
                                     <!-- Customer Autocomplete Filter -->
-                                    <div class="col-12 col-md-5">
+                                    <div class="col-12 col-md-5 col-xl-5">
                                         <label class="form-label small fw-semibold" for="selectCustomerFromSelect2">Customer Name / Mobile / CPR</label>
                                         <select id="selectCustomerFromSelect2" class="form-select select2" style="width:100%"></select>
                                         <input type="hidden" id="filter_customer_code">
                                     </div>
 
                                     <!-- Filter Buttons -->
-                                    <div class="col-12 col-md-3 d-flex align-items-end gap-2">
-                                        <button type="submit" id="btn_apply_filter" class="btn btn-primary btn-sm flex-grow-1">
-                                            <i class="ri ri-search-line me-1"></i> Apply Filters
-                                        </button>
-                                        <button type="button" id="btn_reset_filter" class="btn btn-outline-secondary btn-sm" title="Reset all filters">
-                                            <i class="ri ri-refresh-line me-1"></i> Reset
-                                        </button>
+                                    <div class="col-12 col-md-3 col-xl-3">
+                                        <label class="form-label small fw-semibold d-none d-md-block" style="visibility: hidden;">&nbsp;</label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <button type="submit" id="btn_apply_filter" class="btn btn-primary btn-sm btn-filter-action px-3 text-nowrap">
+                                                <i class="ri ri-search-line me-1"></i> Apply Filters
+                                            </button>
+                                            <button type="button" id="btn_reset_filter" class="btn btn-outline-secondary btn-sm btn-filter-action px-3 text-nowrap" title="Reset all filters">
+                                                <i class="ri ri-refresh-line me-1"></i> Reset
+                                            </button>
+                                        </div>
                                     </div>
                                 </form>
                             </div>

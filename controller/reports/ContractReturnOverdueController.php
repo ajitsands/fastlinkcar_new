@@ -185,14 +185,18 @@ class ContractReturnOverdueController {
                 }
             }
 
-            // Status Filtering
+            // Status Filtering: STRICTLY restricted to Rentout and Extended active vehicles!
             if ($statusFilter !== 'all' && !empty($statusFilter)) {
                 if (strtolower($statusFilter) === 'rentout') {
-                    $whereConds[] = "(LOWER(c.agreement_status) = 'rentout' OR LOWER(c.agreement_status) = 'rented')";
+                    $whereConds[] = "LOWER(c.agreement_status) IN ('rentout', 'rented')";
+                } else if (strtolower($statusFilter) === 'extended') {
+                    $whereConds[] = "LOWER(c.agreement_status) = 'extended'";
                 } else {
-                    $whereConds[] = "LOWER(c.agreement_status) = :agr_status";
-                    $params[':agr_status'] = strtolower($statusFilter);
+                    $whereConds[] = "LOWER(c.agreement_status) IN ('rentout', 'rented', 'extended')";
                 }
+            } else {
+                // Default: ONLY active Rentout and Extended vehicles
+                $whereConds[] = "LOWER(c.agreement_status) IN ('rentout', 'rented', 'extended')";
             }
 
             // Date filtering for contract_date or return_date
@@ -293,28 +297,40 @@ class ContractReturnOverdueController {
             $kpiTotalExtensionAmt    = 0.0;
             $kpiTotalOverdueExtraAmt = 0.0;
 
+            $validDateTs = function($dt) {
+                if (empty($dt) || strpos(strval($dt), '0000-00-00') !== false || strpos(strval($dt), '1970-01-01') !== false) return false;
+                $ts = strtotime(strval($dt));
+                return ($ts !== false && $ts > 946684800) ? $ts : false;
+            };
+
             foreach ($contracts as $contract) {
                 $cId = intval($contract['ids']);
+                $agrStatus = ucfirst(trim($contract['agreement_status'] ?? 'Rentout'));
+                $agrStatusLower = strtolower($agrStatus);
+
+                // Enforce: only active Rentout and Extended vehicles
+                if (!in_array($agrStatusLower, ['rentout', 'rented', 'extended'])) {
+                    continue;
+                }
+
                 $cd = json_decode($contract['contract_details_json'] ?? '', true) ?: [];
 
                 // 1. Initial Contract Period & Duration
                 $initialStart = $cd['period_from'] ?? $contract['service_start_date_time'] ?? '';
                 $initialEnd   = $cd['period_to'] ?? $contract['service_end_date_time'] ?? '';
                 $initialDuration = intval($cd['duration'] ?? 0);
-                if ($initialDuration <= 0 && !empty($initialStart) && !empty($initialEnd)) {
-                    $sTs = strtotime($initialStart);
-                    $eTs = strtotime($initialEnd);
-                    if ($sTs && $eTs && $eTs > $sTs) {
-                        $initialDuration = max(1, round(($eTs - $sTs) / 86400));
-                    }
+                $initialStartTs = $validDateTs($initialStart);
+                $initialEndTs   = $validDateTs($initialEnd);
+
+                if ($initialDuration <= 0 && $initialStartTs && $initialEndTs && $initialEndTs > $initialStartTs) {
+                    $initialDuration = max(1, round(($initialEndTs - $initialStartTs) / 86400));
                 }
 
-                if ((empty($initialEnd) || strpos($initialEnd, '0000-00-00') !== false || strpos($initialEnd, '1970-01-01') !== false) && !empty($initialStart)) {
-                    $initialEnd = date('Y-m-d H:i:s', strtotime($initialStart . ' +' . max(1, $initialDuration) . ' days'));
+                if (!$initialEndTs && $initialStartTs) {
+                    $initialEndTs = strtotime('+' . max(1, $initialDuration) . ' days', $initialStartTs);
+                    $initialEnd = date('Y-m-d H:i:s', $initialEndTs);
                 }
 
-                $initialStartTs = strtotime($initialStart);
-                $initialEndTs   = strtotime($initialEnd);
                 $initialStartFmt = $initialStartTs ? date('d-m-Y H:i', $initialStartTs) : 'N/A';
                 $initialEndFmt   = $initialEndTs ? date('d-m-Y H:i', $initialEndTs) : 'N/A';
 
@@ -340,7 +356,7 @@ class ContractReturnOverdueController {
 
                 // 2. Extensions Analysis
                 $extList = $extensionsByContract[$cId] ?? [];
-                $isExtended = !empty($extList);
+                $isExtended = !empty($extList) || ($agrStatusLower === 'extended');
                 $extensionCount = count($extList);
                 $totalExtensionAmt = 0.0;
                 $totalExtensionDays = 0;
@@ -349,7 +365,7 @@ class ContractReturnOverdueController {
                 $earliestExtStartTs = null;
                 $earliestExtStartDateStr = '';
 
-                if ($isExtended) {
+                if (!empty($extList)) {
                     foreach ($extList as $ext) {
                         $extDetails = json_decode($ext['extend_details'] ?? '', true) ?: [];
                         $totalExtensionAmt += floatval($extDetails['total_amt'] ?? 0);
@@ -358,8 +374,8 @@ class ContractReturnOverdueController {
                         $extEnd = $ext['extend_end_date'] ?? ($extDetails['period_to'] ?? '');
                         $extStart = $ext['extend_start_date'] ?? ($extDetails['period_from'] ?? '');
 
-                        $extEndTs = strtotime($extEnd);
-                        $extStartTs = strtotime($extStart);
+                        $extEndTs = $validDateTs($extEnd);
+                        $extStartTs = $validDateTs($extStart);
 
                         if ($extEndTs && ($latestExtEndTs === null || $extEndTs > $latestExtEndTs)) {
                             $latestExtEndTs = $extEndTs;
@@ -403,52 +419,32 @@ class ContractReturnOverdueController {
                 }
                 $expectedReturnFmt = $expectedReturnTs ? date('d-m-Y H:i', $expectedReturnTs) : 'N/A';
 
-                // 4. Return Status & Actual Return Date
-                $agrStatus = ucfirst(trim($contract['agreement_status'] ?? 'Generated'));
-                $isReturned = (strtolower($agrStatus) === 'returned' || !empty($contract['return_date']));
-                $actualReturnDate = $contract['return_date'] ?? null;
-                $actualReturnTs   = (!empty($actualReturnDate) && strpos($actualReturnDate, '0000-00-00') === false) ? strtotime($actualReturnDate) : null;
-                $actualReturnFmt  = $actualReturnTs ? date('d-m-Y H:i', $actualReturnTs) : ($isReturned ? 'Returned (Date N/A)' : 'Pending / Not Returned');
+                // 4. Return Status & Actual Return Date (All are active On Rent)
+                $isReturned = false;
+                $actualReturnDate = null;
+                $actualReturnFmt  = 'On Rent';
 
-                // 5. Overdue Status & Extra Amount
+                // 5. Overdue Status & Extra Amount (Calculated ONLY for active Rentout and Extended)
                 $isOverdue = false;
                 $overdueDays = 0;
                 $overdueStatusLabel = 'On Schedule';
-                $overdueBadgeClass  = 'bg-success';
+                $overdueBadgeClass  = 'bg-primary';
                 $extraOverdueAmount = 0.0;
 
-                if ($expectedReturnTs) {
-                    if ($isReturned) {
-                        $compareTs = $actualReturnTs ?: $currentTimestamp;
-                        if ($compareTs > ($expectedReturnTs + 3600)) { // 1 hr grace period
-                            $diffSec = $compareTs - $expectedReturnTs;
-                            $overdueDays = max(1, intval(ceil($diffSec / 86400)));
-                            $isOverdue = true;
-                            $overdueStatusLabel = "Returned Overdue ({$overdueDays}d)";
-                            $overdueBadgeClass  = 'bg-danger';
-                            $extraOverdueAmount = round($overdueDays * $dailyRate, 3);
-                        } else {
-                            $isOverdue = false;
-                            $overdueDays = 0;
-                            $overdueStatusLabel = 'Returned On Time';
-                            $overdueBadgeClass  = 'bg-success';
-                            $extraOverdueAmount = 0.0;
-                        }
+                if ($expectedReturnTs && $expectedReturnTs > 946684800) {
+                    if ($currentTimestamp > ($expectedReturnTs + 3600)) { // 1 hr grace period
+                        $diffSec = $currentTimestamp - $expectedReturnTs;
+                        $overdueDays = max(1, intval(ceil($diffSec / 86400)));
+                        $isOverdue = true;
+                        $overdueStatusLabel = "Overdue ({$overdueDays}d)";
+                        $overdueBadgeClass  = 'bg-danger';
+                        $extraOverdueAmount = round($overdueDays * $dailyRate, 3);
                     } else {
-                        if ($currentTimestamp > ($expectedReturnTs + 3600)) { // 1 hr grace period
-                            $diffSec = $currentTimestamp - $expectedReturnTs;
-                            $overdueDays = max(1, intval(ceil($diffSec / 86400)));
-                            $isOverdue = true;
-                            $overdueStatusLabel = "Overdue ({$overdueDays}d)";
-                            $overdueBadgeClass  = 'bg-danger';
-                            $extraOverdueAmount = round($overdueDays * $dailyRate, 3);
-                        } else {
-                            $isOverdue = false;
-                            $overdueDays = 0;
-                            $overdueStatusLabel = 'On Schedule';
-                            $overdueBadgeClass  = 'bg-primary';
-                            $extraOverdueAmount = 0.0;
-                        }
+                        $isOverdue = false;
+                        $overdueDays = 0;
+                        $overdueStatusLabel = 'On Schedule';
+                        $overdueBadgeClass  = 'bg-primary';
+                        $extraOverdueAmount = 0.0;
                     }
                 }
 
@@ -483,16 +479,13 @@ class ContractReturnOverdueController {
                 $grandTotalWithOverdue = round($totalAgreedAmount + $extraOverdueAmount, 3);
 
                 $kpiTotalContracts++;
-                if ($isReturned) {
-                    $kpiTotalReturned++;
+                if ($isExtended) {
+                    $kpiTotalExtended++;
                 } else {
                     $kpiTotalActive++;
                 }
                 if ($isOverdue) {
                     $kpiTotalOverdue++;
-                }
-                if ($isExtended) {
-                    $kpiTotalExtended++;
                 }
                 $kpiTotalContractAmt     += $contractAmount;
                 $kpiTotalExtensionAmt    += $totalExtensionAmt;

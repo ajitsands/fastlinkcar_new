@@ -298,13 +298,13 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                             <div class="col-6 col-md-4 col-xl-2">
                                 <div class="card kpi-card kpi-blue h-100 p-3">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="text-muted small fw-semibold">Total Contracts</span>
+                                        <span class="text-muted small fw-semibold">Total Active Fleet</span>
                                         <div class="kpi-icon-box bg-primary">
                                             <i class="ri ri-file-list-3-line"></i>
                                         </div>
                                     </div>
                                     <h3 class="fw-bold mb-0" id="kpi_total_contracts">0</h3>
-                                    <span class="text-muted small">All matching records</span>
+                                    <span class="text-muted small">Rentout & Extended</span>
                                 </div>
                             </div>
 
@@ -312,13 +312,13 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                             <div class="col-6 col-md-4 col-xl-2">
                                 <div class="card kpi-card kpi-green h-100 p-3">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="text-muted small fw-semibold">Active Rentout</span>
+                                        <span class="text-muted small fw-semibold">Initial Rentout</span>
                                         <div class="kpi-icon-box bg-success">
                                             <i class="ri ri-car-line"></i>
                                         </div>
                                     </div>
                                     <h3 class="fw-bold mb-0 text-success" id="kpi_total_active">0</h3>
-                                    <span class="text-muted small">Currently on the road</span>
+                                    <span class="text-muted small">Without extension</span>
                                 </div>
                             </div>
 
@@ -340,7 +340,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                             <div class="col-6 col-md-4 col-xl-2">
                                 <div class="card kpi-card kpi-purple h-100 p-3">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="text-muted small fw-semibold">Extended</span>
+                                        <span class="text-muted small fw-semibold">Extended Contracts</span>
                                         <div class="kpi-icon-box" style="background-color: #8b5cf6;">
                                             <i class="ri ri-repeat-line"></i>
                                         </div>
@@ -388,7 +388,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                                         <i class="ri ri-alarm-warning-line me-1"></i> Quick: Overdue Only
                                     </button>
                                     <button type="button" class="btn btn-outline-primary btn-xs py-1 px-2" id="btn_quick_active">
-                                        <i class="ri ri-car-line me-1"></i> Quick: Active Rentout
+                                        <i class="ri ri-car-line me-1"></i> Quick: Rentout Only
                                     </button>
                                 </div>
                             </div>
@@ -420,7 +420,6 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                                         <select id="filter_date_by" class="form-select form-select-sm">
                                             <option value="expected_return" selected>Expected Return Date</option>
                                             <option value="contract_date">Contract Date</option>
-                                            <option value="return_date">Actual Return Date</option>
                                         </select>
                                     </div>
 
@@ -440,11 +439,9 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                                     <div class="col-12 col-sm-6 col-md-3">
                                         <label class="form-label small fw-semibold" for="filter_status">Contract Status</label>
                                         <select id="filter_status" class="form-select form-select-sm">
-                                            <option value="all" selected>All Statuses</option>
-                                            <option value="Rentout">Rentout (Active)</option>
-                                            <option value="Returned">Returned</option>
-                                            <option value="Closed">Closed</option>
-                                            <option value="Generated">Generated</option>
+                                            <option value="all" selected>All (Rentout & Extended)</option>
+                                            <option value="Rentout">Rentout Only</option>
+                                            <option value="Extended">Extended Only</option>
                                         </select>
                                     </div>
 
@@ -462,10 +459,9 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                                     <div class="col-12 col-sm-6 col-md-2">
                                         <label class="form-label small fw-semibold" for="filter_overdue">Overdue Status</label>
                                         <select id="filter_overdue" class="form-select form-select-sm">
-                                            <option value="all" selected>All Overdue / On Time</option>
-                                            <option value="overdue_only">All Overdue (Active + Returned)</option>
-                                            <option value="active_overdue">Active Overdue Only</option>
-                                            <option value="on_time_only">On Schedule / On Time</option>
+                                            <option value="all" selected>All (Overdue & On Schedule)</option>
+                                            <option value="overdue_only">Overdue Only</option>
+                                            <option value="on_time_only">On Schedule Only</option>
                                         </select>
                                     </div>
 
@@ -834,13 +830,8 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
             // Expected Return Date
             let expReturnHtml = `<div class="fw-bold ${row.is_overdue ? 'text-danger' : 'text-dark'}">${row.expected_return_date}</div>`;
 
-            // Actual Date of Return
-            let actualReturnHtml = '';
-            if (row.is_returned) {
-                actualReturnHtml = `<div class="fw-semibold text-success"><i class="ri ri-checkbox-circle-line me-1"></i>${row.actual_return_date}</div>`;
-            } else {
-                actualReturnHtml = `<span class="badge bg-light text-primary border"><i class="ri ri-time-line me-1"></i>Not Returned</span>`;
-            }
+            // Date of Return (All vehicles are currently on rent)
+            let actualReturnHtml = `<span class="badge bg-light text-muted border"><i class="ri ri-roadster-line me-1"></i>On Rent</span>`;
 
             // Return Overdue Badge
             let overdueBadge = '';

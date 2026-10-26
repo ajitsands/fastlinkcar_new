@@ -158,6 +158,7 @@ class ContractReturnOverdueController {
             $statusFilter   = trim($this->requestData['contract_status'] ?? 'all');
             $extendedFilter = trim($this->requestData['extended_filter'] ?? 'all');
             $overdueFilter  = trim($this->requestData['overdue_filter'] ?? 'all');
+            $customerCode   = trim($this->requestData['customer_code'] ?? '');
             $searchKeyword  = trim($this->requestData['search_keyword'] ?? '');
 
             // Build SQL query for contracts
@@ -212,19 +213,35 @@ class ContractReturnOverdueController {
                 }
             }
 
-            // Keyword search
+            // Customer Filter (By Customer Code / ID from Select2)
+            if (!empty($customerCode)) {
+                $whereConds[] = "(c.customer_code = :cust_code OR cust.customer_id = :cust_id OR cust.ids = :cust_cid)";
+                $params[':cust_code'] = $customerCode;
+                $params[':cust_id']   = $customerCode;
+                $params[':cust_cid']  = $customerCode;
+            }
+
+            // Keyword search (with unique parameter names to prevent PDO SQLSTATE[HY093])
             if (!empty($searchKeyword)) {
                 $whereConds[] = "(
-                    c.agreement_no LIKE :kw OR 
-                    c.customer_name LIKE :kw OR 
-                    c.customer_code LIKE :kw OR 
-                    cust.customer_mobile LIKE :kw OR 
-                    cust.customer_cr_cpr LIKE :kw OR 
-                    c.vehicle_no LIKE :kw OR 
-                    v.model_names LIKE :kw OR
-                    comp.company_name LIKE :kw
+                    c.agreement_no LIKE :kw1 OR 
+                    c.customer_name LIKE :kw2 OR 
+                    c.customer_code LIKE :kw3 OR 
+                    cust.customer_mobile LIKE :kw4 OR 
+                    cust.customer_cr_cpr LIKE :kw5 OR 
+                    c.vehicle_no LIKE :kw6 OR 
+                    v.model_names LIKE :kw7 OR
+                    comp.company_name LIKE :kw8
                 )";
-                $params[':kw'] = '%' . $searchKeyword . '%';
+                $kwVal = '%' . $searchKeyword . '%';
+                $params[':kw1'] = $kwVal;
+                $params[':kw2'] = $kwVal;
+                $params[':kw3'] = $kwVal;
+                $params[':kw4'] = $kwVal;
+                $params[':kw5'] = $kwVal;
+                $params[':kw6'] = $kwVal;
+                $params[':kw7'] = $kwVal;
+                $params[':kw8'] = $kwVal;
             }
 
             $whereSql = implode(' AND ', $whereConds);

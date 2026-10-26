@@ -105,6 +105,24 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
             vertical-align: -0.125em;
         }
 
+        /* Select2 height adjustment to align seamlessly with form-select-sm */
+        .select2-container .select2-selection--single {
+            height: 31px !important;
+            border: 1px solid #d9dee3 !important;
+            border-radius: 0.375rem !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 29px !important;
+            font-size: 0.8125rem !important;
+            color: #566a7f !important;
+            padding-left: 10px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 29px !important;
+        }
+
         /* KPI Metric Cards */
         .kpi-card {
             border-radius: 12px;
@@ -465,13 +483,11 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                                         </select>
                                     </div>
 
-                                    <!-- Search Keyword -->
+                                    <!-- Customer Autocomplete Filter -->
                                     <div class="col-12 col-md-5">
-                                        <label class="form-label small fw-semibold" for="filter_search">Search Agreement / Customer / Vehicle / Company</label>
-                                        <div class="input-group input-group-sm">
-                                            <span class="input-group-text"><i class="ri ri-search-line"></i></span>
-                                            <input type="text" id="filter_search" class="form-control" placeholder="Search by Agreement No, Customer Name, Mobile, CPR/CR, Vehicle, Model...">
-                                        </div>
+                                        <label class="form-label small fw-semibold" for="selectCustomerFromSelect2">Customer Name / Mobile / CPR</label>
+                                        <select id="selectCustomerFromSelect2" class="form-select select2" style="width:100%"></select>
+                                        <input type="hidden" id="filter_customer_code">
                                     </div>
 
                                     <!-- Filter Buttons -->
@@ -542,6 +558,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/katex.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/quill.js"></script>
 
@@ -590,13 +607,62 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
         $('#btn_reset_filter').on('click', function() {
             $('#filter_company').val(defaultCompanyVal);
             $('#filter_date_by').val('expected_return');
-            $('#filter_from_date').val('');
-            $('#filter_to_date').val('');
+            $('#filter_from_date').val('<?= date('Y-m-01', strtotime('-1 month')) ?>');
+            $('#filter_to_date').val('<?= date('Y-m-d', strtotime('+1 month')) ?>');
             $('#filter_status').val('all');
             $('#filter_extended').val('all');
             $('#filter_overdue').val('all');
-            $('#filter_search').val('');
+            $('#selectCustomerFromSelect2').val(null).trigger('change');
+            $('#filter_customer_code').val('');
             loadReportData();
+        });
+
+        // Initialize Customer Select2 Autocomplete (Matching ContractHistoryReport)
+        $('#selectCustomerFromSelect2').select2({
+            placeholder: 'Search Customer by Name, Mobile, or CPR',
+            allowClear: true,
+            minimumInputLength: 2,
+            ajax: {
+                url: '/SearchCustomerDetails',
+                dataType: 'json',
+                delay: 300,
+                data: function (params) {
+                    return { q: params.term, action: 'SearchCustomer' };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.map(item => ({
+                            id: item.customer_code || item.id,
+                            text: item.customer_name + ' | ' + (item.customer_mobile || '') + ' | ' + (item.customer_cr_cpr || ''),
+                            customer_name: item.customer_name,
+                            customer_mobile: item.customer_mobile,
+                            customer_cr_cpr: item.customer_cr_cpr,
+                            customer_code: item.customer_code || item.id
+                        }))
+                    };
+                }
+            },
+            templateResult: formatCustomer,
+            templateSelection: formatCustomerSelection
+        });
+
+        function formatCustomer(customer) {
+            if (!customer.id) return customer.text;
+            let mobile = customer.customer_mobile ? ` | Mobile: ${customer.customer_mobile}` : '';
+            let cpr = customer.customer_cr_cpr ? ` | CPR/CR: ${customer.customer_cr_cpr}` : '';
+            return $(`<div><strong>${customer.customer_name}</strong>${mobile}${cpr}</div>`);
+        }
+
+        function formatCustomerSelection(customer) {
+            if (!customer.id) return customer.text;
+            let mobile = customer.customer_mobile ? ` (${customer.customer_mobile})` : '';
+            return customer.customer_name ? `${customer.customer_name}${mobile}` : customer.text;
+        }
+
+        $('#selectCustomerFromSelect2').on('select2:select', function (e) {
+            $('#filter_customer_code').val(e.params.data.customer_code);
+        }).on('select2:clear', function () {
+            $('#filter_customer_code').val('');
         });
 
         // Quick Filters
@@ -700,7 +766,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
             contract_status: $('#filter_status').val(),
             extended_filter: $('#filter_extended').val(),
             overdue_filter: $('#filter_overdue').val(),
-            search_keyword: $('#filter_search').val()
+            customer_code: $('#filter_customer_code').val()
         };
 
         // UI Loading Indicator

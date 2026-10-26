@@ -1,5 +1,11 @@
 <?php
 header('Content-Type: application/json');
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (!class_exists('ClassDatabaseConnection')) {
+    require_once ROOT_PATH . '/model/db_connection/pdo_db_connection.php';
+}
 if (!class_exists('CommonPDOModel')) {
     require_once ROOT_PATH . '/model/common/pdoCommonFunctions.php';
 }
@@ -18,6 +24,31 @@ class ContractHistoryController {
             $this->data = $_REQUEST;
         }
         $this->handleRequest();
+    }
+
+    private function getUserAllowedCompanyIds()
+    {
+        $isSuperAdmin = (!empty($_SESSION['is_super_admin'])) || (($_SESSION['user_role_name'] ?? '') === 'Super Admin') || (($_SESSION['user_role_id'] ?? 0) == 3);
+        $userCompanyIds = [];
+        if (!empty($_SESSION['company_id'])) {
+            $userCompanyIds[] = strval($_SESSION['company_id']);
+        }
+        if (!empty($_SESSION['company_json'])) {
+            $cArr = is_string($_SESSION['company_json']) ? json_decode($_SESSION['company_json'], true) : $_SESSION['company_json'];
+            if (is_array($cArr)) {
+                foreach ($cArr as $c) {
+                    if (!empty($c['ids'])) {
+                        $userCompanyIds[] = strval($c['ids']);
+                    }
+                }
+            }
+        }
+        $userCompanyIds = array_values(array_unique($userCompanyIds));
+        return [
+            'isSuperAdmin'  => $isSuperAdmin,
+            'companyIds'    => $userCompanyIds,
+            'companyIdsStr' => !empty($userCompanyIds) ? implode(',', array_map('intval', $userCompanyIds)) : '1'
+        ];
     }
 
     private function handleRequest() {
@@ -40,9 +71,29 @@ class ContractHistoryController {
             $custCode = trim($this->data['customer_code'] ?? '');
             $vehicleId = trim($this->data['vehicle_id'] ?? '');
             $vehNo = trim($this->data['vehicle_no'] ?? '');
+            $companyId = trim($this->data['company_id'] ?? '');
 
             $whereConds = ["1=1"];
             $params = [];
+
+            // Company access filter
+            $accessInfo = $this->getUserAllowedCompanyIds();
+            $isSuperAdmin = $accessInfo['isSuperAdmin'];
+            $companyIdsStr = $accessInfo['companyIdsStr'];
+
+            if (!empty($companyId) && $companyId !== 'all' && $companyId !== 'All') {
+                $cId = intval($companyId);
+                if ($isSuperAdmin || in_array(strval($cId), $accessInfo['companyIds'])) {
+                    $whereConds[] = "c.company_id = :comp_id";
+                    $params[':comp_id'] = $cId;
+                } else {
+                    $whereConds[] = "c.company_id IN ($companyIdsStr)";
+                }
+            } else {
+                if (!$isSuperAdmin) {
+                    $whereConds[] = "c.company_id IN ($companyIdsStr)";
+                }
+            }
 
             if (!empty($custCode)) {
                 $whereConds[] = "c.customer_code = :cust_code";
@@ -63,10 +114,12 @@ class ContractHistoryController {
 
             $whereSql = implode(' AND ', $whereConds);
             $sql = "SELECT c.*, 
+                           comp.company_name,
                            cust.customer_name AS cust_full_name, 
                            cust.customer_mobile AS mobile_number, 
                            cust.customer_cr_cpr AS cpr_no
                     FROM tbl_vehicle_rentout_contracts c
+                    LEFT JOIN tbl_company comp ON comp.ids = c.company_id
                     LEFT JOIN customer_details cust ON cust.customer_id = c.customer_code
                     WHERE {$whereSql}
                     ORDER BY c.ids DESC";
@@ -87,6 +140,7 @@ class ContractHistoryController {
 
                 $result[] = [
                     'ids'               => $row['ids'],
+                    'company_name'      => $row['company_name'] ?? 'AA Car Rental',
                     'agreement_no'      => $row['agreement_no'] ?? '',
                     'agreement_date'    => $row['agreement_date'] ?? '',
                     'customer_code'     => $row['customer_code'] ?? '',

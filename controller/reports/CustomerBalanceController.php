@@ -11,12 +11,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 c.customer_id,
                 c.customer_name,
                 c.customer_mobile,
+                c.customer_cr_cpr,
                 SUM(l.debit) as total_debit,
                 SUM(l.credit) as total_credit,
                 (SUM(l.debit) - SUM(l.credit)) as balance
             FROM tbl_customer_ledger l
-            JOIN customer_details c ON l.customer_code = c.customer_id
-            GROUP BY c.customer_id, c.customer_name, c.customer_mobile
+            JOIN customer_details c ON (l.customer_code = c.customer_id OR l.customer_code = c.ids)
+            GROUP BY c.customer_id, c.customer_name, c.customer_mobile, c.customer_cr_cpr
             HAVING balance != 0 OR total_debit > 0 OR total_credit > 0
             ORDER BY c.customer_name ASC
         ";

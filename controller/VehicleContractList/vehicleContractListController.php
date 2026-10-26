@@ -11,6 +11,7 @@ class VehiclesContractListController
       public $selectedBookingIds= [];
 	  public $user_id,$company_id,$insertedDate,$bookingid,$vehicleid,$customer_code,$model_ids,$km_used;
 	  public $booking_ids,$booking_ref_no,$customer_data,$vehicle_data,$contract_details,$company_driver_details,$vehicle_accessories,$tc_ids,$t_c_name,$terms_condition,$termsContent,$agreement_date,$contract_ids,$data_source_val,$filter_from,$filter_to,$booking_status,$hirer_name,$delivery_name,$hirer_signature,$delivery_signature,$agreementid,$agreement_no,$extend_ids,$vehicle_ids,$km_in,$return_date_in,$ReceiverSign,$receiver_name,$service_name,$close_otp_msg;
+	  public $duration, $unit_price, $vat, $total_amt, $service_id, $rate_type_id, $rate_type, $period_from, $period_to, $trans_date, $is_zero_cost, $early_return_reduction;
 	  public $returnvehicleimages = [];
 	  public $violations = [];
 	  public $page, $limit, $offset, $status, $ReturnData;
@@ -132,9 +133,20 @@ class VehiclesContractListController
         $this->page = isset($data['page']) ? (int)$data['page'] : 1;
         $this->limit = 8;
         $this->offset = ($this->page - 1) * $this->limit;
-        
-        
 
+        // Early return reduction fields
+        $this->duration        = $data['duration'] ?? 0;
+        $this->unit_price      = $data['unit_price'] ?? 0;
+        $this->vat             = $data['vat'] ?? 0;
+        $this->total_amt       = $data['total_amt'] ?? 0;
+        $this->service_id      = $data['service_id'] ?? null;
+        $this->rate_type_id    = $data['rate_type_id'] ?? null;
+        $this->rate_type       = $data['rate_type'] ?? '';
+        $this->period_from     = $data['period_from'] ?? '';
+        $this->period_to       = $data['period_to'] ?? '';
+        $this->trans_date      = $data['trans_date'] ?? '';
+        $this->is_zero_cost    = !empty($data['is_zero_cost']) ? 1 : 0;
+        $this->early_return_reduction = $data['early_return_reduction'] ?? null;
 	}
 	function onOff($val) {
         return ($val === 'on') ? 1 : 0;
@@ -477,8 +489,7 @@ class VehiclesContractListController
                         
                                 FROM tbl_vehicle_rentout_contracts rc
                         
-                                WHERE rc.company_id = :company_id1
-                                AND rc.ids = :agreement_ids1
+                                WHERE rc.ids = :agreement_ids1
                         
                                 UNION ALL
                         
@@ -516,8 +527,7 @@ class VehiclesContractListController
                         
                                 FROM tbl_vehicle_contract_extensions ext
                         
-                                WHERE ext.company_id = :company_id2
-                                AND ext.agreement_ids = :agreement_ids2
+                                WHERE ext.agreement_ids = :agreement_ids2
                         
                             ) AS final_data
                         
@@ -526,10 +536,8 @@ class VehiclesContractListController
                         ";
                         
                         $params = [
-                            ':company_id1'    => $this->company_id,
                             ':agreement_ids1' => $this->agreementid,
                         
-                            ':company_id2'    => $this->company_id,
                             ':agreement_ids2' => $this->agreementid
                         ];
                         
@@ -577,7 +585,9 @@ class VehiclesContractListController
                                 "from_date_format"      => $row['from_date_format'],
                                 "to_date_format"        => $row['to_date_format'],
                         
+                                "rate_type_id"          => $extend_details['rate_type_id'] ?? '',
                                 "rate_type"             => $extend_details['rate_type'] ?? '',
+                                "service_id"            => $extend_details['service_id'] ?? '',
                                 "service_name"          => $extend_details['service_name'] ?? '',
                                 "duration"              => $extend_details['duration'] ?? '',
                                 "unit_price"            => $extend_details['unit_price'] ?? '',
@@ -591,9 +601,76 @@ class VehiclesContractListController
                                 "extend_log_json"       => $extend_log_json
                             ];
                         }
+
+                        $maxCoveredDate = null;
+                        $contractInfo = [];
+                        $vehId = !empty($this->vehicleid) ? $this->vehicleid : null;
+
+                        foreach ($data as $d) {
+                            if (!empty($d['to_date'])) {
+                                if ($maxCoveredDate === null || $d['to_date'] > $maxCoveredDate) {
+                                    $maxCoveredDate = $d['to_date'];
+                                }
+                            }
+                            if (empty($vehId) && !empty($d['vehicle_id'])) {
+                                $vehId = $d['vehicle_id'];
+                            }
+                            if ($d['record_type'] === 'booking' && empty($contractInfo)) {
+                                $contractInfo = [
+                                    'booking_ids'    => $d['booking_ids'],
+                                    'agreement_no'   => $d['agreement_no'],
+                                    'customer_code'  => $d['customer_code'],
+                                    'customer_name'  => $d['customer_name'] ?? '',
+                                    'service_id'     => $d['service_id'] ?? '',
+                                    'service_name'   => $d['service_name'] ?? '',
+                                    'rate_type_id'   => $d['rate_type_id'] ?? '',
+                                    'rate_type'      => $d['rate_type'] ?? '',
+                                    'unit_price'     => $d['unit_price'] ?? '',
+                                    'vat'            => $d['vat'] ?? '',
+                                    'qtn_ref_no'     => $d['qtn_ref_no'] ?? ''
+                                ];
+                            }
+                        }
+
+                        $otherMaxDate = null;
+                        $otherContractCount = 0;
+                        if (!empty($vehId)) {
+                            try {
+                                $otherSql = "
+                                    SELECT 
+                                        COUNT(*) AS total_other,
+                                        MAX(to_date) AS max_other_end 
+                                    FROM (
+                                        SELECT service_end_date_time AS to_date 
+                                        FROM tbl_vehicle_rentout_contracts 
+                                        WHERE vehicle_id = :veh_id1 AND ids != :cur_agreement1 AND agreement_status NOT IN ('Cancelled')
+                                        UNION ALL
+                                        SELECT extend_end_date AS to_date 
+                                        FROM tbl_vehicle_contract_extensions 
+                                        WHERE vehicle_ids = :veh_id2 AND agreement_ids != :cur_agreement2
+                                    ) AS other_cov
+                                ";
+                                $otherStmt = $this->varPDOModelObj->selectexecuteQuery($otherSql, [
+                                    ':veh_id1' => $vehId,
+                                    ':cur_agreement1' => $this->agreementid,
+                                    ':veh_id2' => $vehId,
+                                    ':cur_agreement2' => $this->agreementid
+                                ]);
+                                if ($otherStmt && $otherRow = $otherStmt->fetch(PDO::FETCH_ASSOC)) {
+                                    $otherMaxDate = $otherRow['max_other_end'] ?? null;
+                                    $otherContractCount = intval($otherRow['total_other'] ?? 0);
+                                }
+                            } catch (\Exception $exOther) {}
+                        }
                         
                         echo json_encode([
-                            "data" => $data
+                            "data" => $data,
+                            "max_covered_date" => $maxCoveredDate,
+                            "max_covered_date_format" => $maxCoveredDate ? date('d-m-Y H:i', strtotime($maxCoveredDate)) : '',
+                            "other_max_date" => $otherMaxDate,
+                            "other_max_date_format" => $otherMaxDate ? date('d-m-Y H:i', strtotime($otherMaxDate)) : '',
+                            "other_contract_count" => $otherContractCount,
+                            "contract_info" => $contractInfo
                         ]);
 		  	break;
 		   case 'GetContractDetails':
@@ -803,8 +880,33 @@ class VehiclesContractListController
                                 
                                     $extensionFee = $duration * $unitPrice;
                                     $vatAmount = ($extensionFee * $vatPercent) / 100;
+
+                                    $ledgerCustCode = !empty($this->customer_data['customer_code']) ? $this->customer_data['customer_code'] : ($this->customer_code ?? '');
+                                    $ledgerQtnNo = !empty($this->contract_details['qtn_ref_no']) ? $this->contract_details['qtn_ref_no'] : ($this->agreement_no ?? '');
+                                    $ledgerBookNo = !empty($this->booking_ref_no) ? $this->booking_ref_no : (!empty($this->booking_ids) ? $this->booking_ids : ($this->agreement_no ?? ''));
+                                    $ledgerServiceName = !empty($this->service_name) ? $this->service_name : (!empty($this->contract_details['service_name']) ? $this->contract_details['service_name'] : 'Rental Fee');
+
+                                    $isZeroCost = ($unitPrice <= 0 || $extensionFee <= 0);
+                                    $transType  = $isZeroCost ? 'Extension (Zero Cost)' : (!empty($ledgerServiceName) ? $ledgerServiceName : 'Rental Fee');
+                                    if (empty($transType)) {
+                                        $transType = 'Rental Fee';
+                                    }
+
+                                    $periodFromStr = !empty($this->contract_details['period_from']) ? $this->contract_details['period_from'] : '';
+                                    $periodToStr   = !empty($this->contract_details['period_to']) ? $this->contract_details['period_to'] : '';
+                                    $rateTypeStr   = !empty($this->contract_details['rate_type']) ? $this->contract_details['rate_type'] : 'Day(s)';
+
+                                    $descRental = $isZeroCost 
+                                        ? "Contract Extension without amount (Zero Cost) for {$duration} {$rateTypeStr} ({$periodFromStr} to {$periodToStr}) - {$ledgerServiceName} (Agreement No: " . ($this->agreement_no ?? '') . ")"
+                                        : 'Auto Post Extension Fee (' . ($this->agreement_no ?? '') . ')';
+
+                                    $userId = !empty($this->user_id) ? $this->user_id : ($_SESSION['user_id'] ?? 1);
+                                    $companyId = !empty($this->company_id) ? $this->company_id : ($_SESSION['company_id'] ?? 1);
+                                    $agreeNo = !empty($this->agreement_no) ? $this->agreement_no : '';
+                                    $agreeId = !empty($this->agreementid) ? $this->agreementid : 0;
+                                    $bookId  = !empty($this->booking_ids) ? $this->booking_ids : 0;
                                 
-                                    // Insert Rental Fee row
+                                    // Insert Rental Fee / Zero Cost row
                                     $sqlInsert = "
                                         INSERT INTO  tbl_customer_ledger
                                         (
@@ -840,44 +942,42 @@ class VehiclesContractListController
                                         )
                                     ";
                                
-                                    // Rental Fee
+                                    // Rental Fee or Zero Cost Extension Entry
                                     $params_rental =[
-                                        ':customer_code'          => $this->customer_data['customer_code'],
-                                        ':quotation_number'       => $this->contract_details['qtn_ref_no'],
-                                        ':booking_no' => $this->booking_ref_no,
-                                        ':trans_date'            => date('Y-m-d'),
-                                        ':ledger_name'            => $this->service_name,
-                                        ':amount'            =>  $extensionFee,
-                                        ':description'            => 'Auto Post Extension Fee',
-                                        ':user_ids'            =>  $this->user_id,
-                                        ':company_ids'            =>  $this->company_id,
-                                        ':trans_date_time'            => date('Y-m-d H:i:s'),
-                                        ':booking_ids'            => $this->booking_ids,
-                                        ':agreement_no'           => $this->agreement_no,
-                                        ':contract_ids'           =>  $this->agreementid
-                                        
+                                        ':customer_code'          => $ledgerCustCode,
+                                        ':quotation_number'       => $ledgerQtnNo,
+                                        ':booking_no'             => $ledgerBookNo,
+                                        ':trans_date'             => date('Y-m-d'),
+                                        ':ledger_name'            => $transType,
+                                        ':amount'                 => $extensionFee,
+                                        ':description'            => $descRental,
+                                        ':user_ids'               => $userId,
+                                        ':company_ids'            => $companyId,
+                                        ':trans_date_time'        => date('Y-m-d H:i:s'),
+                                        ':booking_ids'            => $bookId,
+                                        ':agreement_no'           => $agreeNo,
+                                        ':contract_ids'           => $agreeId
                                     ];
-                                $this->varPDOModelObj->executeQuery($sqlInsert, $params_rental);
-                                    // VAT Row
+                                    $this->varPDOModelObj->executeQuery($sqlInsert, $params_rental);
+
+                                    // VAT Row (only when vatAmount > 0)
                                     if ($vatAmount > 0) {
-                                
                                         $params_vat =[
-                                        ':customer_code'          => $this->customer_data['customer_code'],
-                                        ':quotation_number'       => $this->contract_details['qtn_ref_no'],
-                                        ':booking_no' => $this->booking_ref_no,
-                                        ':trans_date'            => date('Y-m-d'),
-                                        ':ledger_name'            => 'VAT',
-                                        ':amount'            =>  $vatAmount,
-                                        ':description'            => 'Auto Post VAT of Extension Fee',
-                                        ':user_ids'            =>  $this->user_id,
-                                        ':company_ids'            =>  $this->company_id,
-                                        ':trans_date_time'            => date('Y-m-d H:i:s'),
-                                        ':booking_ids'            => $this->booking_ids,
-                                        ':agreement_no'           => $this->agreement_no,
-                                        ':contract_ids'           =>  $this->agreementid
-                                        
-                                    ];
-                                     $this->varPDOModelObj->executeQuery($sqlInsert, $params_vat);
+                                            ':customer_code'          => $ledgerCustCode,
+                                            ':quotation_number'       => $ledgerQtnNo,
+                                            ':booking_no'             => $ledgerBookNo,
+                                            ':trans_date'             => date('Y-m-d'),
+                                            ':ledger_name'            => 'VAT',
+                                            ':amount'                 => $vatAmount,
+                                            ':description'            => 'Auto Post VAT of Extension Fee (' . $agreeNo . ')',
+                                            ':user_ids'               => $userId,
+                                            ':company_ids'            => $companyId,
+                                            ':trans_date_time'        => date('Y-m-d H:i:s'),
+                                            ':booking_ids'            => $bookId,
+                                            ':agreement_no'           => $agreeNo,
+                                            ':contract_ids'           => $agreeId
+                                        ];
+                                        $this->varPDOModelObj->executeQuery($sqlInsert, $params_vat);
                                     }
                                 
                                 
@@ -904,6 +1004,197 @@ class VehiclesContractListController
                             
                         
                         break;
+            case 'postEarlyReturnReduction':
+                try {
+                    $agreementId = !empty($this->agreementid) ? $this->agreementid : 0;
+                    $duration    = (float)($this->duration ?? 0);
+                    $unitPrice   = (float)($this->unit_price ?? 0);
+                    $vatPercent  = (float)($this->vat ?? 0);
+                    $totalAmt    = (float)($this->total_amt ?? 0);
+                    $serviceName = !empty($this->service_name) ? $this->service_name : 'Rental Fee';
+                    $rateType    = !empty($this->rate_type) ? $this->rate_type : 'Daily';
+                    $periodFrom  = !empty($this->period_from) ? $this->period_from : '';
+                    $periodTo    = !empty($this->period_to) ? $this->period_to : '';
+                    $transDate   = !empty($this->trans_date) ? date('Y-m-d', strtotime($this->trans_date)) : date('Y-m-d');
+
+                    if ($totalAmt <= 0 && $duration > 0 && $unitPrice > 0) {
+                        $totalAmt = ($duration * $unitPrice) * (1 + $vatPercent / 100);
+                    }
+
+                    $rentalCredit = round($duration * $unitPrice, 3);
+                    $vatCredit    = round(($rentalCredit * $vatPercent) / 100, 3);
+
+                    // Fetch contract info
+                    $stmtContract = $this->varPDOModelObj->selectexecuteQuery(
+                        "SELECT quotation_number, booking_ids, agreement_no, customer_code, company_id 
+                         FROM tbl_vehicle_rentout_contracts 
+                         WHERE ids = :agreementid",
+                        [':agreementid' => $agreementId]
+                    );
+                    $contractRow = $stmtContract ? $stmtContract->fetch(PDO::FETCH_ASSOC) : [];
+
+                    $custCode  = !empty($this->customer_code) ? $this->customer_code : ($contractRow['customer_code'] ?? '');
+                    $agreeNo   = !empty($this->agreement_no) ? $this->agreement_no : ($contractRow['agreement_no'] ?? '');
+                    $qtnNo     = !empty($contractRow['quotation_number']) ? $contractRow['quotation_number'] : $agreeNo;
+                    $bookNo    = !empty($contractRow['booking_ids']) ? $contractRow['booking_ids'] : $agreeNo;
+                    $companyId = !empty($this->company_id) ? $this->company_id : ($contractRow['company_id'] ?? 1);
+
+                    $isZeroCost = (!empty($this->is_zero_cost)) || ($unitPrice <= 0 && $rentalCredit <= 0);
+
+                    // Check if already posted for this agreement to prevent duplicate posts
+                    $stmtCheck = $this->varPDOModelObj->selectexecuteQuery(
+                        "SELECT ids, trans_type, credit FROM tbl_customer_ledger 
+                         WHERE contract_ids = :cid AND trans_type IN ('Early Return (Zero Cost)', 'Early Return Credit')",
+                        [':cid' => $agreementId]
+                    );
+                    if ($stmtCheck && $stmtCheck->rowCount() > 0) {
+                        $existing = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+                        // If an existing zero-cost entry exists (e.g. from previous erroneous post) and user is now posting actual credit, delete the old zero-cost entry and proceed
+                        if (!$isZeroCost && $existing['trans_type'] === 'Early Return (Zero Cost)' && (float)$existing['credit'] == 0) {
+                            $this->varPDOModelObj->executeQuery(
+                                "DELETE FROM tbl_customer_ledger WHERE contract_ids = :cid AND trans_type = 'Early Return (Zero Cost)'",
+                                [':cid' => $agreementId]
+                            );
+                        } else {
+                            echo json_encode([
+                                "status" => true,
+                                "already_posted" => true,
+                                "message" => "Early return transaction has already been recorded in the customer ledger."
+                            ]);
+                            break;
+                        }
+                    }
+
+                    $sqlInsert = "
+                        INSERT INTO tbl_customer_ledger
+                        (
+                            customer_code,
+                            quotation_no,
+                            booking_no,
+                            trans_date,
+                            trans_type,
+                            payment_method,
+                            debit,
+                            credit,
+                            ref_no,
+                            description,
+                            user_id,
+                            company_id,
+                            created_at,
+                            booking_ids,
+                            contract_ids,
+                            agreement_no
+                        )
+                        VALUES
+                        (
+                            :customer_code,
+                            :quotation_no,
+                            :booking_no,
+                            :trans_date,
+                            :trans_type,
+                            'N/A',
+                            0,
+                            :credit,
+                            :ref_no,
+                            :description,
+                            :user_id,
+                            :company_id,
+                            :created_at,
+                            :booking_ids,
+                            :contract_ids,
+                            :agreement_no
+                        )
+                    ";
+
+                    if ($isZeroCost) {
+                        $descZero = "Early Return without deduction (Zero Cost / 0.000 BHD) for {$duration} {$rateType} ({$periodFrom} to {$periodTo}) - {$serviceName} (Agreement No: {$agreeNo})";
+                        $paramsZero = [
+                            ':customer_code' => $custCode,
+                            ':quotation_no'  => $qtnNo,
+                            ':booking_no'    => $bookNo,
+                            ':trans_date'    => $transDate,
+                            ':trans_type'    => 'Early Return (Zero Cost)',
+                            ':credit'        => 0,
+                            ':ref_no'        => $agreeNo,
+                            ':description'   => $descZero,
+                            ':user_id'       => $this->user_id ?? 1,
+                            ':company_id'    => $companyId,
+                            ':created_at'    => date('Y-m-d H:i:s'),
+                            ':booking_ids'   => $bookNo,
+                            ':contract_ids'  => $agreementId,
+                            ':agreement_no'  => $agreeNo
+                        ];
+                        $this->varPDOModelObj->executeQuery($sqlInsert, $paramsZero);
+
+                        echo json_encode([
+                            "status" => true,
+                            "message" => "Early return without deduction (Zero Cost) recorded in customer ledger successfully.",
+                            "rental_credit" => 0,
+                            "vat_credit" => 0,
+                            "total_credit" => 0
+                        ]);
+                        break;
+                    }
+
+                    // 1. Post Rental Credit
+                    if ($rentalCredit > 0) {
+                        $descRental = "Early Return Credit for {$duration} {$rateType} ({$periodFrom} to {$periodTo}) - {$serviceName} (Agreement No: {$agreeNo})";
+                        $paramsRental = [
+                            ':customer_code' => $custCode,
+                            ':quotation_no'  => $qtnNo,
+                            ':booking_no'    => $bookNo,
+                            ':trans_date'    => $transDate,
+                            ':trans_type'    => 'Early Return Credit',
+                            ':credit'        => $rentalCredit,
+                            ':ref_no'        => $agreeNo,
+                            ':description'   => $descRental,
+                            ':user_id'       => $this->user_id ?? 1,
+                            ':company_id'    => $companyId,
+                            ':created_at'    => date('Y-m-d H:i:s'),
+                            ':booking_ids'   => $bookNo,
+                            ':contract_ids'  => $agreementId,
+                            ':agreement_no'  => $agreeNo
+                        ];
+                        $this->varPDOModelObj->executeQuery($sqlInsert, $paramsRental);
+                    }
+
+                    // 2. Post VAT Credit
+                    if ($vatCredit > 0) {
+                        $descVat = "Early Return VAT Credit ({$vatPercent}%) for Agreement No: {$agreeNo}";
+                        $paramsVat = [
+                            ':customer_code' => $custCode,
+                            ':quotation_no'  => $qtnNo,
+                            ':booking_no'    => $bookNo,
+                            ':trans_date'    => $transDate,
+                            ':trans_type'    => 'Early Return VAT Credit',
+                            ':credit'        => $vatCredit,
+                            ':ref_no'        => $agreeNo,
+                            ':description'   => $descVat,
+                            ':user_id'       => $this->user_id ?? 1,
+                            ':company_id'    => $companyId,
+                            ':created_at'    => date('Y-m-d H:i:s'),
+                            ':booking_ids'   => $bookNo,
+                            ':contract_ids'  => $agreementId,
+                            ':agreement_no'  => $agreeNo
+                        ];
+                        $this->varPDOModelObj->executeQuery($sqlInsert, $paramsVat);
+                    }
+
+                    echo json_encode([
+                        "status" => true,
+                        "message" => "Early return reduction of BHD " . number_format($totalAmt, 3, '.', '') . " posted to customer ledger successfully.",
+                        "rental_credit" => $rentalCredit,
+                        "vat_credit" => $vatCredit,
+                        "total_credit" => $totalAmt
+                    ]);
+
+                } catch (\Exception $e) {
+                    echo json_encode([
+                        "status" => false,
+                        "message" => $e->getMessage()
+                    ]);
+                }
+                break;
             case 'delete_extension':
 
                 // 1. Fetch extension details to reverse the ledger charges
@@ -1658,6 +1949,163 @@ class VehiclesContractListController
                                                      }
                                                  }
                                              }
+                                
+                                    // Process Early Return Reduction to Customer Ledger if provided
+                                    $earlyData = is_array($this->early_return_reduction) ? $this->early_return_reduction : json_decode($this->early_return_reduction ?? '[]', true);
+                                    if (!empty($earlyData) && is_array($earlyData)) {
+                                        $eDuration   = (float)($earlyData['duration'] ?? 0);
+                                        $eUnitPrice  = (float)($earlyData['unit_price'] ?? 0);
+                                        $eVatPercent = (float)($earlyData['vat'] ?? 0);
+                                        $eTotalAmt   = (float)($earlyData['total_amt'] ?? 0);
+
+                                        if ($eDuration > 0) {
+                                            $eIsZeroCost   = (!empty($earlyData['is_zero_cost'])) || ($eUnitPrice <= 0 && $eTotalAmt <= 0);
+                                            $eRentalCredit = round($eDuration * $eUnitPrice, 3);
+                                            $eVatCredit    = round(($eRentalCredit * $eVatPercent) / 100, 3);
+
+                                            // Always fetch contract info if not already set
+                                            if (empty($ledgerAgreeNo) || empty($ledgerCustCode)) {
+                                                $stmtCInfo = $this->varPDOModelObj->selectexecuteQuery(
+                                                    "SELECT 
+                                                        c.quotation_number AS contract_qtn, 
+                                                        c.booking_ids, 
+                                                        c.agreement_no, 
+                                                        c.customer_code AS contract_cust_code,
+                                                        c.company_id AS contract_company_id,
+                                                        b.booking_no AS booking_no_str,
+                                                        b.quotation_number AS booking_qtn_str,
+                                                        b.customer_code AS booking_cust_code
+                                                     FROM tbl_vehicle_rentout_contracts c
+                                                     LEFT JOIN tbl_vehicle_bookings b ON b.ids = c.booking_ids
+                                                     WHERE c.ids = :agreementid",
+                                                    [':agreementid' => $this->agreementid]
+                                                );
+                                                $cRow = $stmtCInfo ? $stmtCInfo->fetch(PDO::FETCH_ASSOC) : [];
+                                                $ledgerCustCode = !empty($this->customer_code) ? $this->customer_code : ($cRow['contract_cust_code'] ?? ($cRow['booking_cust_code'] ?? ''));
+                                                $ledgerQtnNo    = !empty($cRow['contract_qtn']) ? $cRow['contract_qtn'] : (!empty($cRow['booking_qtn_str']) ? $cRow['booking_qtn_str'] : ($cRow['agreement_no'] ?? ''));
+                                                $ledgerBookNo   = !empty($cRow['booking_no_str']) ? $cRow['booking_no_str'] : (!empty($this->booking_ref_no) ? $this->booking_ref_no : ($cRow['booking_ids'] ?? ''));
+                                                $ledgerAgreeNo  = !empty($this->agreement_no) ? $this->agreement_no : ($cRow['agreement_no'] ?? '');
+                                                $ledgerCompanyId = !empty($this->company_id) ? $this->company_id : ($cRow['contract_company_id'] ?? 1);
+                                            } else {
+                                                $ledgerCompanyId = $this->company_id ?? 1;
+                                            }
+
+                                            // Check if already posted for this agreement to avoid duplicates
+                                            $stmtCheckEarly = $this->varPDOModelObj->selectexecuteQuery(
+                                                "SELECT ids FROM tbl_customer_ledger 
+                                                 WHERE contract_ids = :cid AND trans_type IN ('Early Return (Zero Cost)', 'Early Return Credit')",
+                                                [':cid' => $this->agreementid]
+                                            );
+                                            if (!$stmtCheckEarly || $stmtCheckEarly->rowCount() == 0) {
+                                                $eTransDate  = !empty($this->return_date_in) ? date('Y-m-d', strtotime($this->return_date_in)) : date('Y-m-d');
+                                                $eRateType   = !empty($earlyData['rate_type']) ? $earlyData['rate_type'] : 'Daily';
+                                                $eService    = !empty($earlyData['service_name']) ? $earlyData['service_name'] : 'Rental Fee';
+                                                $eFrom       = !empty($earlyData['period_from']) ? $earlyData['period_from'] : '';
+                                                $eTo         = !empty($earlyData['period_to']) ? $earlyData['period_to'] : '';
+
+                                                $sqlEarlyLedger = "
+                                                    INSERT INTO tbl_customer_ledger
+                                                    (
+                                                        customer_code,
+                                                        quotation_no,
+                                                        booking_no,
+                                                        trans_date,
+                                                        trans_type,
+                                                        payment_method,
+                                                        debit,
+                                                        credit,
+                                                        ref_no,
+                                                        description,
+                                                        user_id,
+                                                        company_id,
+                                                        created_at,
+                                                        booking_ids,
+                                                        contract_ids,
+                                                        agreement_no
+                                                    )
+                                                    VALUES
+                                                    (
+                                                        :customer_code,
+                                                        :quotation_no,
+                                                        :booking_no,
+                                                        :trans_date,
+                                                        :trans_type,
+                                                        'N/A',
+                                                        0,
+                                                        :credit,
+                                                        :ref_no,
+                                                        :description,
+                                                        :user_id,
+                                                        :company_id,
+                                                        :created_at,
+                                                        :booking_ids,
+                                                        :contract_ids,
+                                                        :agreement_no
+                                                    )
+                                                ";
+
+                                                if ($eIsZeroCost) {
+                                                    $eDescZero = "Early Return without deduction (Zero Cost / 0.000 BHD) for {$eDuration} {$eRateType} ({$eFrom} to {$eTo}) - {$eService} (Agreement No: {$ledgerAgreeNo})";
+                                                    $this->varPDOModelObj->executeQuery($sqlEarlyLedger, [
+                                                        ':customer_code' => $ledgerCustCode,
+                                                        ':quotation_no'  => $ledgerQtnNo,
+                                                        ':booking_no'    => $ledgerBookNo,
+                                                        ':trans_date'    => $eTransDate,
+                                                        ':trans_type'    => 'Early Return (Zero Cost)',
+                                                        ':credit'        => 0,
+                                                        ':ref_no'        => $ledgerAgreeNo,
+                                                        ':description'   => $eDescZero,
+                                                        ':user_id'       => $this->user_id ?? 1,
+                                                        ':company_id'    => $ledgerCompanyId,
+                                                        ':created_at'    => date('Y-m-d H:i:s'),
+                                                        ':booking_ids'   => $ledgerBookNo,
+                                                        ':contract_ids'  => $this->agreementid,
+                                                        ':agreement_no'  => $ledgerAgreeNo
+                                                    ]);
+                                                } else {
+                                                    if ($eRentalCredit > 0) {
+                                                        $eDesc = "Early Return Credit for {$eDuration} {$eRateType} ({$eFrom} to {$eTo}) - {$eService} (Agreement No: {$ledgerAgreeNo})";
+                                                        $this->varPDOModelObj->executeQuery($sqlEarlyLedger, [
+                                                            ':customer_code' => $ledgerCustCode,
+                                                            ':quotation_no'  => $ledgerQtnNo,
+                                                            ':booking_no'    => $ledgerBookNo,
+                                                            ':trans_date'    => $eTransDate,
+                                                            ':trans_type'    => 'Early Return Credit',
+                                                            ':credit'        => $eRentalCredit,
+                                                            ':ref_no'        => $ledgerAgreeNo,
+                                                            ':description'   => $eDesc,
+                                                            ':user_id'       => $this->user_id ?? 1,
+                                                            ':company_id'    => $ledgerCompanyId,
+                                                            ':created_at'    => date('Y-m-d H:i:s'),
+                                                            ':booking_ids'   => $ledgerBookNo,
+                                                            ':contract_ids'  => $this->agreementid,
+                                                            ':agreement_no'  => $ledgerAgreeNo
+                                                        ]);
+                                                    }
+
+                                                    if ($eVatCredit > 0) {
+                                                        $eVatDesc = "Early Return VAT Credit ({$eVatPercent}%) for Agreement No: {$ledgerAgreeNo}";
+                                                        $this->varPDOModelObj->executeQuery($sqlEarlyLedger, [
+                                                            ':customer_code' => $ledgerCustCode,
+                                                            ':quotation_no'  => $ledgerQtnNo,
+                                                            ':booking_no'    => $ledgerBookNo,
+                                                            ':trans_date'    => $eTransDate,
+                                                            ':trans_type'    => 'Early Return VAT Credit',
+                                                            ':credit'        => $eVatCredit,
+                                                            ':ref_no'        => $ledgerAgreeNo,
+                                                            ':description'   => $eVatDesc,
+                                                            ':user_id'       => $this->user_id ?? 1,
+                                                            ':company_id'    => $ledgerCompanyId,
+                                                            ':created_at'    => date('Y-m-d H:i:s'),
+                                                            ':booking_ids'   => $ledgerBookNo,
+                                                            ':contract_ids'  => $this->agreementid,
+                                                            ':agreement_no'  => $ledgerAgreeNo
+                                                        ]);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                      }
                                
                                     $sqlOldStatus = "

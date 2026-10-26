@@ -29,6 +29,7 @@ if (!$contract) {
 }
 
 // 2. Customer
+$custCode = $contract['customer_code'] ?? '';
 $stmtCust = $pdoObj->selectexecuteQuery("SELECT customer_name, customer_mobile AS mobile_number, customer_cr_cpr AS cpr_no, customer_address, customer_email, customer_id AS customer_code FROM customer_details WHERE customer_id = :ccode OR ids = :ccode LIMIT 1", [':ccode' => $custCode]);
 $customer = $stmtCust ? $stmtCust->fetch(PDO::FETCH_ASSOC) : [];
 

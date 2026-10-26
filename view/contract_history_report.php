@@ -9,6 +9,68 @@ function checkLogin() {
 }
 checkLogin();
 include ROOT_PATH . '/view/envinclude.php';
+
+// Company Access Privilege Resolution
+$pdoModelObj = new CommonPDOModel();
+$isSuperAdmin = (!empty($_SESSION['is_super_admin'])) || (($_SESSION['user_role_name'] ?? '') === 'Super Admin') || (($_SESSION['user_role_id'] ?? 0) == 3);
+$userId = $_SESSION['user_id'] ?? 0;
+
+$allCompanies = [];
+try {
+    $stmtComp = $pdoModelObj->selectexecuteQuery("SELECT ids, company_name FROM tbl_company WHERE status = 'Active' ORDER BY ids ASC");
+    if ($stmtComp && $stmtComp instanceof PDOStatement) {
+        $allCompanies = $stmtComp->fetchAll(PDO::FETCH_ASSOC);
+    }
+} catch (\Throwable $e) {}
+
+$allowedCompanies = [];
+if ($isSuperAdmin) {
+    $allowedCompanies = $allCompanies;
+} else {
+    if (!empty($_SESSION['company_json'])) {
+        $decoded = json_decode($_SESSION['company_json'], true);
+        if (is_array($decoded) && !empty($decoded)) {
+            $allowedCompanies = $decoded;
+        }
+    }
+    if (empty($allowedCompanies) && !empty($userId)) {
+        try {
+            $uStmt = $pdoModelObj->selectexecuteQuery("SELECT company_json, company_id FROM tbl_users WHERE id = :uid OR user_id = :uid LIMIT 1", [':uid' => $userId]);
+            if ($uStmt && $uStmt instanceof PDOStatement) {
+                $uRow = $uStmt->fetch(PDO::FETCH_ASSOC);
+                if (!empty($uRow['company_json'])) {
+                    $decoded = json_decode($uRow['company_json'], true);
+                    if (is_array($decoded) && !empty($decoded)) {
+                        $allowedCompanies = $decoded;
+                    }
+                }
+                if (empty($allowedCompanies) && !empty($uRow['company_id'])) {
+                    foreach ($allCompanies as $ac) {
+                        if (strval($ac['ids']) === strval($uRow['company_id'])) {
+                            $allowedCompanies[] = $ac;
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
+    }
+    if (empty($allowedCompanies) && !empty($_SESSION['company_id'])) {
+        foreach ($allCompanies as $ac) {
+            if (strval($ac['ids']) === strval($_SESSION['company_id'])) {
+                $allowedCompanies[] = $ac;
+                break;
+            }
+        }
+    }
+}
+
+if (empty($allowedCompanies)) {
+    $allowedCompanies = !empty($allCompanies) ? $allCompanies : [['ids' => '1', 'company_name' => 'AA Car Rental']];
+}
+
+$hasMultipleCompanies = count($allowedCompanies) > 1;
+$defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies[0]['ids']);
 ?>
 <!doctype html>
 <html lang="en" class="layout-navbar-fixed layout-menu-fixed layout-wide" dir="ltr" data-skin="default" data-bs-theme="light" data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/" data-template="horizontal-menu-template-no-customizer">
@@ -17,11 +79,102 @@ include ROOT_PATH . '/view/envinclude.php';
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/js/helpers.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/js/config.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    
+    <!-- RemixIcon WebFont CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" />
+    
+    <!-- DataTables & Select2 CSS -->
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.css" />
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.css" />
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>alertmessage/css/sands_alert_style.css">
     <style>
+        .ri {
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            line-height: 1;
+            vertical-align: -0.125em;
+        }
+
+        /* KPI Metric Cards matching ContractReturnOverdueReport */
+        .kpi-card {
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            overflow: hidden;
+            background: #ffffff;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .kpi-icon-box {
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .kpi-icon-box i,
+        .kpi-icon-box .ri {
+            font-size: 22px !important;
+            width: 22px !important;
+            height: 22px !important;
+            line-height: 22px !important;
+            color: #ffffff !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .kpi-red {
+            border-left: 4px solid #ef4444;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+        }
+        .kpi-green {
+            border-left: 4px solid #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+        }
+        .kpi-blue {
+            border-left: 4px solid #3b82f6;
+            background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+        }
+        .kpi-purple {
+            border-left: 4px solid #8b5cf6;
+            background: linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%);
+        }
+        .kpi-amber {
+            border-left: 4px solid #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+        }
+
+        /* Standard Report DataTable Look and Feel */
+        #tbl_contract_history {
+            font-size: 12.5px;
+        }
+        #tbl_contract_history > thead > tr > th,
+        table.dataTable thead th,
+        .table thead th {
+            background-color: #ffeff0 !important;
+            color: #d12222 !important;
+            border-bottom: 2px solid #d12222 !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            font-size: 0.78rem !important;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            vertical-align: middle;
+            padding: 8px 10px;
+        }
+        #tbl_contract_history tbody tr:hover {
+            background-color: #fff9f9 !important;
+        }
+
         .custom-modal-header {
             background: linear-gradient(135deg, #f12526, #c81e1f) !important;
             color: #ffffff !important;
@@ -88,30 +241,115 @@ include ROOT_PATH . '/view/envinclude.php';
 
                     <div class="container-fluid flex-grow-1 container-p-y">
                         
-                        <!-- Header & Page Title -->
-                        <div class="d-flex justify-content-between align-items-center mb-4">
+                        <!-- Top Title & Action Bar matching ContractReturnOverdueReport -->
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2 no-print">
                             <div>
-                                <h4 class="fw-bold mb-1"><i class="ri-history-line text-primary me-2"></i>Contract & Vehicle Replacement History Report</h4>
-                                <p class="text-muted mb-0">Search and audit complete contract history, vehicle replacements, images, staff signatures, and financial ledgers at a glance.</p>
+                                <h4 class="fw-bold mb-1">
+                                    <i class="ri ri-history-line text-danger me-2"></i>Contract & Vehicle Replacement History Report
+                                </h4>
+                                <p class="text-muted mb-0">
+                                    Search and audit complete contract history, vehicle replacements, images, staff signatures, and financial ledgers at a glance.
+                                </p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" id="btn_export_excel" class="btn btn-outline-success btn-sm">
+                                    <i class="ri ri-file-excel-2-line me-1"></i> Export to Excel
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Summary KPI Metrics Cards matching ContractReturnOverdueReport -->
+                        <div class="row g-3 mb-4 no-print" id="kpiContainer">
+                            <!-- Total Contracts -->
+                            <div class="col-6 col-md-3">
+                                <div class="card kpi-card kpi-blue h-100 p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-muted small fw-semibold">Total Contracts</span>
+                                        <div class="kpi-icon-box bg-primary">
+                                            <i class="ri ri-file-list-3-line"></i>
+                                        </div>
+                                    </div>
+                                    <h3 class="fw-bold mb-0" id="kpi_total_contracts">0</h3>
+                                    <span class="text-muted small">All matching records</span>
+                                </div>
+                            </div>
+
+                            <!-- Active Rentout -->
+                            <div class="col-6 col-md-3">
+                                <div class="card kpi-card kpi-green h-100 p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-muted small fw-semibold">Active Rentout</span>
+                                        <div class="kpi-icon-box bg-success">
+                                            <i class="ri ri-car-line"></i>
+                                        </div>
+                                    </div>
+                                    <h3 class="fw-bold mb-0 text-success" id="kpi_total_active">0</h3>
+                                    <span class="text-muted small">Currently active</span>
+                                </div>
+                            </div>
+
+                            <!-- Extended Contracts -->
+                            <div class="col-6 col-md-3">
+                                <div class="card kpi-card kpi-purple h-100 p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-muted small fw-semibold">Extended</span>
+                                        <div class="kpi-icon-box" style="background-color: #8b5cf6;">
+                                            <i class="ri ri-repeat-line"></i>
+                                        </div>
+                                    </div>
+                                    <h3 class="fw-bold mb-0" id="kpi_total_extended">0</h3>
+                                    <span class="text-muted small">Extended periods</span>
+                                </div>
+                            </div>
+
+                            <!-- Vehicle Replacements -->
+                            <div class="col-6 col-md-3">
+                                <div class="card kpi-card kpi-amber h-100 p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-muted small fw-semibold">Vehicle Replacements</span>
+                                        <div class="kpi-icon-box bg-warning">
+                                            <i class="ri ri-arrow-left-right-line"></i>
+                                        </div>
+                                    </div>
+                                    <h3 class="fw-bold mb-0 text-warning" id="kpi_total_replacements">0</h3>
+                                    <span class="text-muted small">Audit events recorded</span>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Filter Options Card -->
                         <div class="card mb-4 border shadow-sm">
                             <div class="card-header bg-light border-bottom d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0 fw-bold text-dark"><i class="ri-filter-3-line me-1"></i> Filter Contracts</h6>
+                                <h6 class="mb-0 fw-bold text-dark"><i class="ri ri-filter-3-line text-danger me-1"></i> Filter Contracts</h6>
                             </div>
                             <div class="card-body mt-3">
                                 <div class="row g-3">
+                                    <!-- Company Filter -->
+                                    <div class="col-12 col-md-3">
+                                        <label class="form-label fw-semibold" for="filter_company">
+                                            <i class="ri ri-building-line text-danger me-1"></i>Company
+                                        </label>
+                                        <select id="filter_company" class="form-select select2" style="width:100%">
+                                            <?php if ($hasMultipleCompanies): ?>
+                                                <option value="all" <?= ($defaultCompanyValue === 'all') ? 'selected' : '' ?>>All Companies</option>
+                                            <?php endif; ?>
+                                            <?php foreach ($allowedCompanies as $comp): ?>
+                                                <option value="<?= htmlspecialchars($comp['ids']) ?>" <?= (strval($defaultCompanyValue) === strval($comp['ids'])) ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($comp['company_name']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+
                                     <!-- Customer Autocomplete Filter -->
-                                    <div class="col-12 col-md-5">
+                                    <div class="col-12 col-md-4">
                                         <label class="form-label fw-semibold" for="selectCustomerFromSelect2">Customer Name / Mobile / CPR</label>
                                         <select id="selectCustomerFromSelect2" class="form-select select2" style="width:100%"></select>
                                         <input type="hidden" id="filter_customer_code">
                                     </div>
 
                                     <!-- Vehicle Autocomplete Filter -->
-                                    <div class="col-12 col-md-5">
+                                    <div class="col-12 col-md-3">
                                         <label class="form-label fw-semibold" for="selectVehicleFromSelect2">Vehicle Number / Model</label>
                                         <select id="selectVehicleFromSelect2" class="form-select select2" style="width:100%"></select>
                                         <input type="hidden" id="filter_vehicle_id">
@@ -119,7 +357,7 @@ include ROOT_PATH . '/view/envinclude.php';
 
                                     <!-- Action Buttons -->
                                     <div class="col-12 col-md-2 d-flex align-items-end gap-2">
-                                        <button type="button" id="btn_search_history" class="btn btn-primary btn-sm px-3">
+                                        <button type="button" id="btn_search_history" class="btn btn-primary btn-sm px-3 w-100">
                                             <i class="ri ri-search-line me-1"></i> Search
                                         </button>
                                         <button type="button" id="btn_reset_history" class="btn btn-outline-secondary btn-icon" title="Reset Filters">
@@ -385,6 +623,19 @@ include ROOT_PATH . '/view/envinclude.php';
 
     <script>
     let historyTable = null;
+    let historyDataCache = [];
+    const defaultCompanyVal = "<?= $defaultCompanyValue ?>";
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text
+            .toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 
     function formatDisplayDate(dateStr) {
         if (!dateStr || dateStr === '-' || dateStr === 'N/A' || dateStr === '0000-00-00' || dateStr === '0000-00-00 00:00:00') {
@@ -426,6 +677,13 @@ include ROOT_PATH . '/view/envinclude.php';
     }
 
     $(document).ready(function() {
+        // Initialize Company Dropdown Select2
+        if ($('#filter_company').length) {
+            $('#filter_company').select2({
+                minimumResultsForSearch: 10
+            });
+        }
+
         // Initialize Customer Select2 Autocomplete
         $('#selectCustomerFromSelect2').select2({
             placeholder: 'Search Customer by Name, Mobile, or CPR',
@@ -513,46 +771,87 @@ include ROOT_PATH . '/view/envinclude.php';
             ordering: false,
             columns: [
                 { data: null, className: 'text-center', render: (d, t, r, m) => m.row + 1 },
-                { data: 'agreement_no', render: d => `<strong class="text-primary">${d}</strong>` },
+                { 
+                    data: 'agreement_no', 
+                    render: (d, t, r) => {
+                        let compBadge = (r.company_name && r.company_name !== 'N/A')
+                            ? `<div class="mt-1"><span class="badge bg-label-danger" style="font-size:0.72rem;">${escapeHtml(r.company_name)}</span></div>` 
+                            : '';
+                        return `<div><a href="javascript:void(0)" class="fw-bold text-primary btn-view-full-history" data-id="${r.ids}" title="Click to view full history & audit">${escapeHtml(d)} <i class="ri ri-external-link-line ms-1 small"></i></a></div>${compBadge}`;
+                    } 
+                },
                 { 
                     data: 'customer_name', 
                     render: (d, t, r) => {
                         let name = d || 'N/A';
-                        let code = r.customer_code ? `Code: ${r.customer_code}` : '';
-                        let mobile = r.mobile_number ? `Mob: ${r.mobile_number}` : '';
-                        let cpr = r.cpr_no ? `CPR: ${r.cpr_no}` : '';
-                        let details = [code, mobile, cpr].filter(Boolean).join(' | ');
-                        return `<div><strong class="text-dark">${name}</strong>${details ? `<br><small class="text-muted">${details}</small>` : ''}</div>`;
+                        let code = r.customer_code ? `<span class="badge bg-label-primary ms-1" style="font-size:0.7rem;">#${escapeHtml(r.customer_code)}</span>` : '';
+                        let mobile = r.mobile_number ? `<div><small class="text-muted"><i class="ri ri-phone-line me-1"></i>${escapeHtml(r.mobile_number)}</small></div>` : '';
+                        let cpr = r.cpr_no ? `<div><small class="text-muted"><i class="ri ri-id-card-line me-1"></i>CPR: ${escapeHtml(r.cpr_no)}</small></div>` : '';
+                        return `<div><strong class="text-dark">${escapeHtml(name)}</strong>${code}${mobile}${cpr}</div>`;
                     } 
                 },
-                { data: 'vehicle_summary' },
+                { 
+                    data: 'vehicle_summary',
+                    render: d => `<div><i class="ri ri-car-line text-danger me-1"></i>${escapeHtml(d || 'N/A')}</div>`
+                },
                 { data: 'agreement_date', render: d => formatDisplayDate(d) },
                 { 
                     data: 'replacement_count', 
                     className: 'text-center',
-                    render: d => d > 0 ? `<span class="badge bg-warning text-dark"><i class="ri-repeat-line me-1"></i>${d} Replacement(s)</span>` : '<span class="badge bg-light text-secondary">None</span>'
+                    render: d => {
+                        let count = parseInt(d) || 0;
+                        return count > 0 
+                            ? `<span class="badge bg-warning text-dark"><i class="ri ri-repeat-line me-1"></i>${count} Replacement(s)</span>` 
+                            : '<span class="badge bg-light text-secondary">0 Replacements</span>';
+                    }
                 },
                 { 
                     data: 'agreement_status',
                     className: 'text-center',
-                    render: d => `<span class="badge bg-success">${d || 'Rentout'}</span>`
+                    render: d => {
+                        let badgeClass = 'bg-secondary';
+                        let s = (d || '').trim();
+                        if (s === 'Generated') {
+                            badgeClass = 'bg-warning';
+                        } else if (s === 'Rentout' || s === 'Extended' || s === 'Closed') {
+                            badgeClass = 'bg-success';
+                        } else if (s === 'Returned') {
+                            badgeClass = 'bg-primary';
+                        } else if (s === 'Onhold' || s === 'Cancelled') {
+                            badgeClass = 'bg-danger';
+                        } else {
+                            badgeClass = 'bg-danger';
+                        }
+                        return `<span class="badge ${badgeClass}">${escapeHtml(s || 'Rentout')}</span>`;
+                    }
                 },
                 {
                     data: 'ids',
                     className: 'text-center',
                     render: d => `<button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-view-full-history" data-id="${d}" title="View Audit & History Details"><i class="ri ri-eye-line fs-5"></i></button>`
                 }
-            ]
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Instant filter contracts...",
+                emptyTable: "No contracts matching selected filter criteria."
+            }
         });
 
         // Initial Load
         loadContractHistory();
+
+        // Company Filter Change Event
+        $('#filter_company').on('change', function() {
+            loadContractHistory();
+        });
 
         $('#btn_search_history').click(function() {
             loadContractHistory();
         });
 
         $('#btn_reset_history').click(function() {
+            $('#filter_company').val(defaultCompanyVal).trigger('change.select2');
             $('#selectCustomerFromSelect2').val(null).trigger('change');
             $('#selectVehicleFromSelect2').val(null).trigger('change');
             $('#filter_customer_code').val('');
@@ -560,18 +859,91 @@ include ROOT_PATH . '/view/envinclude.php';
             loadContractHistory();
         });
 
+        $('#btn_export_excel').click(function() {
+            exportHistoryToCSV();
+        });
+
         $(document).on('click', '.btn-view-full-history', function(e) {
             e.preventDefault();
-            let agreementId = $(this).closest('.btn-view-full-history').attr('data-id');
+            let agreementId = $(this).attr('data-id') || $(this).closest('.btn-view-full-history').attr('data-id');
             if (agreementId) {
                 openContractHistoryModal(agreementId);
             }
         });
     });
 
+    function updateKPIs(data) {
+        let totalContracts = data.length;
+        let totalActive = data.filter(r => (r.agreement_status || '').trim() === 'Rentout').length;
+        let totalExtended = data.filter(r => (r.agreement_status || '').trim() === 'Extended').length;
+        let totalReplacements = data.reduce((acc, r) => acc + (parseInt(r.replacement_count) || 0), 0);
+
+        $('#kpi_total_contracts').text(totalContracts);
+        $('#kpi_total_active').text(totalActive);
+        $('#kpi_total_extended').text(totalExtended);
+        $('#kpi_total_replacements').text(totalReplacements);
+    }
+
+    function exportHistoryToCSV() {
+        if (!historyDataCache || historyDataCache.length === 0) {
+            alert('No contract history records to export.');
+            return;
+        }
+
+        let headers = [
+            "#",
+            "Company",
+            "Agreement No",
+            "Agreement Date",
+            "Agreement Status",
+            "Customer Name",
+            "Customer Code",
+            "Mobile",
+            "CPR/CR",
+            "Vehicle Details",
+            "Vehicle Replacements Count"
+        ];
+
+        let csvRows = [];
+        csvRows.push(headers.map(h => `"${h}"`).join(','));
+
+        historyDataCache.forEach((row, i) => {
+            let rowVals = [
+                i + 1,
+                row.company_name || '',
+                row.agreement_no || '',
+                row.agreement_date || '',
+                row.agreement_status || '',
+                row.customer_name || '',
+                row.customer_code || '',
+                row.mobile_number || '',
+                row.cpr_no || '',
+                row.vehicle_summary || '',
+                row.replacement_count || 0
+            ];
+
+            let cleanRow = rowVals.map(v => {
+                let s = (v !== null && v !== undefined) ? String(v).replace(/"/g, '""') : '';
+                return `"${s}"`;
+            });
+            csvRows.push(cleanRow.join(','));
+        });
+
+        let csvString = csvRows.join('\r\n');
+        let blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        let url = URL.createObjectURL(blob);
+        let link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Contract_History_Report_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     function loadContractHistory() {
         let custCode = $('#filter_customer_code').val();
         let vehId = $('#filter_vehicle_id').val();
+        let compId = $('#filter_company').val() || defaultCompanyVal;
 
         $.ajax({
             url: '/ContractHistoryController',
@@ -579,16 +951,26 @@ include ROOT_PATH . '/view/envinclude.php';
             contentType: 'application/json',
             data: JSON.stringify({
                 action: 'searchContracts',
+                company_id: compId,
                 customer_code: custCode,
                 vehicle_id: vehId
             }),
             dataType: 'json',
             success: function(res) {
                 if (res && res.status && Array.isArray(res.data)) {
+                    historyDataCache = res.data;
                     historyTable.clear().rows.add(res.data).draw();
+                    updateKPIs(res.data);
                 } else {
+                    historyDataCache = [];
                     historyTable.clear().draw();
+                    updateKPIs([]);
                 }
+            },
+            error: function() {
+                historyDataCache = [];
+                historyTable.clear().draw();
+                updateKPIs([]);
             }
         });
     }

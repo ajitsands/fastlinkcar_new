@@ -44,6 +44,7 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
       rel="stylesheet" />
 
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.min.css" />
 
     <!-- Core CSS -->
     <!-- build:css assets/vendor/css/theme.css -->

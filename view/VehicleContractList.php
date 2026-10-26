@@ -429,6 +429,13 @@ $('#ReturncontractModal').on('shown.bs.modal', function () {
     window.addEventListener('resize', resizeCanvas);
 });
 
+$(document).on('shown.bs.modal hidden.bs.modal', '#ReturncontractModal', function () {
+    if (typeof laddaReturnContract !== 'undefined' && laddaReturnContract) {
+        laddaReturnContract.stop();
+    }
+    $('#btn_return_contract').prop('disabled', false);
+});
+
 
 // Clear Signature
 $(document).on('click', '#clear_returnsignature', function () {
@@ -1146,7 +1153,8 @@ function load_contract_list(
                                        data-model="${row.model_id}"
                                        data-customer="${row.customer_code}"
                                        data-contract="${row.agreement_no}"
-                                       data-booking_id="${row.booking_ids}">
+                                       data-booking_id="${row.booking_ids}"
+                                       data-booking_no="${row.booking_no}">
             
                                         <i class="ri ri-calendar-event-line me-2"></i>
                                         Contract Extensions
@@ -1161,7 +1169,8 @@ function load_contract_list(
                                        data-model="${row.model_id}"
                                        data-customer="${row.customer_code}"
                                        data-contract="${row.agreement_no}"
-                                       data-booking_id="${row.booking_ids}">
+                                       data-booking_id="${row.booking_ids}"
+                                       data-booking_no="${row.booking_no}">
             
                                         <i class="ri ri-roadster-line me-2"></i>
                                         Return Vehicle
@@ -1175,7 +1184,8 @@ function load_contract_list(
                                        data-model="${row.model_id}"
                                        data-customer="${row.customer_code}"
                                        data-contract="${row.agreement_no}"
-                                       data-booking_id="${row.booking_ids}">
+                                       data-booking_id="${row.booking_ids}"
+                                       data-booking_no="${row.booking_no}">
             
                                         <i class="ri ri-roadster-line me-2"></i>
                                         Replace Vehicle
@@ -1189,7 +1199,8 @@ function load_contract_list(
                                        data-model="${row.model_id}"
                                        data-customer="${row.customer_code}"
                                        data-contract="${row.agreement_no}"
-                                       data-booking_id="${row.booking_ids}">
+                                       data-booking_id="${row.booking_ids}"
+                                       data-booking_no="${row.booking_no}">
             
                                         <i class="ri ri-lock-line me-2"></i>
                                         Close Contract
@@ -1233,7 +1244,8 @@ function load_contract_list(
                                        data-model="${row.model_id}"
                                        data-customer="${row.customer_code}"
                                        data-contract="${row.agreement_no}"
-                                       data-booking_id="${row.booking_ids}">
+                                       data-booking_id="${row.booking_ids}"
+                                       data-booking_no="${row.booking_no}">
                                         <i class="ri ri-send-plane-fill me-2"></i>
                                         Send Agreement
                                     </a>
@@ -1247,7 +1259,8 @@ function load_contract_list(
                                        data-model="${row.model_id}"
                                        data-customer="${row.customer_code}"
                                        data-contract="${row.agreement_no}"
-                                       data-booking_id="${row.booking_ids}">
+                                       data-booking_id="${row.booking_ids}"
+                                       data-booking_no="${row.booking_no}">
             
                                         <i class="ri ri-file-list-line me-2"></i>
                                         View Contract
@@ -1528,7 +1541,9 @@ $(document).on('click', '#contractTable li a.return_contract_btn', function (e) 
          $('#return_agreement_ref').text(agreement_no);
          $('#txt_return_modal_agreement_id').val(id);
          $('#txt_return_modal_agreement_no').val(agreement_no);
-          $('#txt_return_modal_booking_ids').val(booking_ids);
+         $('#txt_return_modal_booking_ids').val(booking_ids);
+         let booking_no = $(this).data('booking_no') || agreement_no;
+         $('#txt_return_modal_booking_ref_no').val(booking_no);
          
         openReturnModal(id,vehicleid,customer_code,model_ids);
         
@@ -1590,6 +1605,29 @@ function populatereturnContractModal(d) {
     let customer = data.customer || {};
     let vehicle = data.vehicle || {};
     let price_list = Array.isArray(data.price_list) ? data.price_list : [];
+    
+    currentReturnContractDetails = data;
+    currentReturnPriceList = price_list;
+    $('#ret_ext_duration').removeData('user-override');
+    $('#ret_ext_unit_price').removeData('user-override');
+    $('#ret_ext_vat').removeData('user-override');
+    $('#ret_ext_service').removeData('user-selected');
+    $('#ret_ext_rate_type').removeData('user-selected');
+
+    window.earlyReturnReductionPosted = false;
+    if (laddaReturnContract) {
+        laddaReturnContract.stop();
+    }
+    $('#btn_return_contract').prop('disabled', false);
+    $('#btn_confirm_early_reduction').prop('disabled', false).html('<span class="ladda-label"><i class="ri-refund-2-line me-1"></i> Post Credit to Ledger</span>');
+    $('#ret_early_posted_status').hide();
+    $('#ret_early_duration').removeData('user-override');
+    $('#ret_early_unit_price').removeData('user-override');
+    $('#ret_early_vat').removeData('user-override');
+    $('#ret_early_service').removeData('user-selected');
+    $('#ret_early_rate_type').removeData('user-selected');
+    $('#chk_ext_zero_amount').prop('checked', false).removeData('prev-price').removeData('prev-vat');
+    $('#chk_early_zero_amount').prop('checked', false).removeData('prev-price').removeData('prev-vat');
     
     let sessionStaffName = '<?php echo htmlspecialchars($_SESSION['profile_name'] ?? $_SESSION['user_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>';
     $('#received_by_name').val(sessionStaffName);
@@ -1743,6 +1781,10 @@ function populatereturnContractModal(d) {
 
         $('#dt_out').val(formatDtLocal(dateOutVal));
         $('#dt_in').val(formatDtLocal(dateInVal));
+        $('#return_vehicle_date_in').val(formatDtLocal(dateInVal));
+        if (contract.agreement_group_ref_no || contract.booking_no) {
+            $('#txt_return_modal_booking_ref_no').val(contract.agreement_group_ref_no || contract.booking_no);
+        }
         
         if (contract.agreement_date) {
             $('#dt_contract_date').val(contract.agreement_date.split(' ')[0]);
@@ -1919,6 +1961,16 @@ let violationHeadsMap = {};
               });
               
               $(returnStepperEl).find('.btn-next').on('click', function() {
+                  if ($('#tab-return-step-1').hasClass('active')) {
+                      if (typeof isReturnPeriodUncovered === 'function' && isReturnPeriodUncovered()) {
+                          setupDropdown('dropdownContent', 'error', svgError + 'Return date exceeds covered period. Please confirm contract extension for the balance period before proceeding.', 'click');
+                          $('#return_balance_extension_area').addClass('border-danger border-2');
+                          setTimeout(function() {
+                              $('#return_balance_extension_area').removeClass('border-danger border-2');
+                          }, 3000);
+                          return;
+                      }
+                  }
                   window.returnStepperInstance.next();
               });
               $(returnStepperEl).find('.btn-prev').on('click', function() {
@@ -2124,10 +2176,16 @@ function listExtendedListReturn(agreement_ids)
 
             return JSON.stringify({
                 action: 'ListContractExtensionsReturn',
-                  agreementid: agreement_ids
+                agreementid: agreement_ids,
+                vehicleid: $('#return_hid_vehicle_id').val()
             });
         },
-        dataSrc: 'data'
+        dataSrc: function (json) {
+            if (typeof handleReturnCoverageResponse === 'function') {
+                handleReturnCoverageResponse(json);
+            }
+            return json.data || [];
+        }
     },
      dom: 't',
     columns: [
@@ -2188,7 +2246,7 @@ function listExtendedListReturn(agreement_ids)
                 return `
                         <div>
                             <strong>Total: ${row.total_amt}</strong><br>
-                            <small>Unit Price: ${row.unit_price}</small><small>, VAT: ${row.duration}</small><br>
+                            <small>Unit Price: ${row.unit_price}</small><small>, VAT: ${row.vat}%</small><br>
                             <small>${row.otp_details}</small>
                             
                         </div>
@@ -2211,6 +2269,1022 @@ function listExtendedListReturn(agreement_ids)
     tooltipTriggerList.forEach(function (el) {
         new bootstrap.Tooltip(el);
     });
+});
+
+let currentReturnCoverageData = null;
+let currentReturnContractDetails = null;
+let currentReturnPriceList = [];
+
+function handleReturnCoverageResponse(json) {
+    currentReturnCoverageData = json;
+    evaluateReturnCoverage();
+}
+
+function parseAnyDateTime(val) {
+    if (!val) return null;
+    if (val instanceof Date) {
+        return isNaN(val.getTime()) ? null : val;
+    }
+    let s = String(val).trim();
+    if (!s) return null;
+    
+    // Check DD-MM-YYYY or DD/MM/YYYY e.g. 31-01-2026 12:20 or 31-01-2026 12:20:00 or 31-01-2026
+    let dmy = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/);
+    if (dmy) {
+        let day = parseInt(dmy[1], 10);
+        let month = parseInt(dmy[2], 10) - 1;
+        let year = parseInt(dmy[3], 10);
+        let hour = parseInt(dmy[4] || 0, 10);
+        let min = parseInt(dmy[5] || 0, 10);
+        let sec = parseInt(dmy[6] || 0, 10);
+        let d = new Date(year, month, day, hour, min, sec);
+        return isNaN(d.getTime()) ? null : d;
+    }
+    
+    // Check YYYY-MM-DD e.g. 2026-01-31 12:20:00 or 2026-01-31T12:20 or 2026-01-31
+    let ymd = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/);
+    if (ymd) {
+        let year = parseInt(ymd[1], 10);
+        let month = parseInt(ymd[2], 10) - 1;
+        let day = parseInt(ymd[3], 10);
+        let hour = parseInt(ymd[4] || 0, 10);
+        let min = parseInt(ymd[5] || 0, 10);
+        let sec = parseInt(ymd[6] || 0, 10);
+        let d = new Date(year, month, day, hour, min, sec);
+        return isNaN(d.getTime()) ? null : d;
+    }
+    
+    let fallback = new Date(s.replace(' ', 'T'));
+    return isNaN(fallback.getTime()) ? null : fallback;
+}
+
+function formatDisplayDateTime(dateObjOrStr) {
+    let d = parseAnyDateTime(dateObjOrStr);
+    if (!d) return '';
+    let day = String(d.getDate()).padStart(2, '0');
+    let month = String(d.getMonth() + 1).padStart(2, '0');
+    let year = d.getFullYear();
+    let hours = String(d.getHours()).padStart(2, '0');
+    let mins = String(d.getMinutes()).padStart(2, '0');
+    return `${day}-${month}-${year} ${hours}:${mins}`;
+}
+
+function formatToDateTimeLocal(dateObjOrStr) {
+    let d = parseAnyDateTime(dateObjOrStr);
+    if (!d) return '';
+    let year = d.getFullYear();
+    let month = String(d.getMonth() + 1).padStart(2, '0');
+    let day = String(d.getDate()).padStart(2, '0');
+    let hours = String(d.getHours()).padStart(2, '0');
+    let mins = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${mins}`;
+}
+
+function formatToDbDateTime(dateObjOrStr) {
+    let d = parseAnyDateTime(dateObjOrStr);
+    if (!d) return '';
+    let year = d.getFullYear();
+    let month = String(d.getMonth() + 1).padStart(2, '0');
+    let day = String(d.getDate()).padStart(2, '0');
+    let hours = String(d.getHours()).padStart(2, '0');
+    let mins = String(d.getMinutes()).padStart(2, '0');
+    let secs = String(d.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+}
+
+function evaluateReturnCoverage() {
+    if (!currentReturnCoverageData) return;
+    
+    let returnVal = $('#return_vehicle_date_in').val() || $('#dt_in').val();
+    if (!returnVal) {
+        $('#return_coverage_status_badge').html('');
+        $('#return_balance_extension_area').hide();
+        return;
+    }
+    
+    let returnDate = parseAnyDateTime(returnVal);
+    if (!returnDate) return;
+    
+    let maxCoveredStr = currentReturnCoverageData.max_covered_date;
+    if (!maxCoveredStr && currentReturnContractDetails && currentReturnContractDetails.contract) {
+        maxCoveredStr = currentReturnContractDetails.contract.service_end_date_time;
+    }
+    
+    let maxCoveredDate = parseAnyDateTime(maxCoveredStr);
+    let otherMaxDate = parseAnyDateTime(currentReturnCoverageData.other_max_date);
+    
+    let isCoveredByThisContract = maxCoveredDate && (returnDate <= maxCoveredDate);
+    let isCoveredByOtherContract = otherMaxDate && (returnDate <= otherMaxDate);
+    
+    // Check if vehicle return date is before covered period (Early Return)
+    let diffMsCovered = maxCoveredDate ? (maxCoveredDate.getTime() - returnDate.getTime()) : 0;
+    let diffHoursEarly = diffMsCovered / (1000 * 60 * 60);
+
+    if (isCoveredByThisContract && diffHoursEarly >= 1) {
+        let formattedCovered = formatDisplayDateTime(maxCoveredDate);
+        let formattedReturn = formatDisplayDateTime(returnDate);
+        $('#return_coverage_status_badge').html(`
+            <div class="alert alert-info py-2 px-3 mb-0 d-flex align-items-center">
+                <i class="ri-time-line fs-5 text-primary me-2"></i>
+                <div class="small">
+                    <strong>Early Return Detected:</strong> Vehicle return date (<strong>${formattedReturn}</strong>) is before covered period (Ends: <strong>${formattedCovered}</strong>). Days left reduction can be calculated and posted below.
+                </div>
+            </div>
+        `);
+        $('#return_balance_extension_area').slideUp();
+
+        // Defaults for Early Return from latest extension or contract
+        let latestSource = null;
+        if (currentReturnCoverageData && Array.isArray(currentReturnCoverageData.data) && currentReturnCoverageData.data.length > 0) {
+            let extRows = currentReturnCoverageData.data.filter(r => r.record_type === 'extension');
+            latestSource = extRows.length > 0 ? extRows[extRows.length - 1] : currentReturnCoverageData.data[0];
+        }
+
+        $('#ret_early_from').val(formatToDateTimeLocal(returnDate));
+        $('#ret_early_to').val(formatToDateTimeLocal(maxCoveredDate));
+
+        if (!$('#ret_early_service').data('user-selected')) {
+            let defService = '1';
+            if (latestSource && latestSource.service_id) {
+                defService = String(latestSource.service_id);
+            } else if (latestSource && latestSource.service_name && latestSource.service_name.toLowerCase().includes('with driver') && !latestSource.service_name.toLowerCase().includes('without')) {
+                defService = '2';
+            } else if (currentReturnContractDetails && currentReturnContractDetails.contract) {
+                let bookDetails = {};
+                try {
+                    bookDetails = JSON.parse(currentReturnContractDetails.contract.book_details_json || '{}');
+                } catch(e) {}
+                if (bookDetails.service_id) {
+                    defService = String(bookDetails.service_id);
+                }
+            }
+            $('#ret_early_service').val(defService);
+        }
+
+        if (!$('#ret_early_rate_type').data('user-selected')) {
+            let defRateType = 'day';
+            if (latestSource && latestSource.rate_type_id) {
+                defRateType = String(latestSource.rate_type_id);
+            } else if (latestSource && latestSource.rate_type) {
+                let rt = latestSource.rate_type.toLowerCase();
+                if (rt.includes('hour')) defRateType = 'hour';
+                else if (rt.includes('week')) defRateType = 'week';
+                else if (rt.includes('month')) defRateType = 'month';
+                else defRateType = 'day';
+            } else if (currentReturnContractDetails && currentReturnContractDetails.contract) {
+                let bookDetails = {};
+                try {
+                    bookDetails = JSON.parse(currentReturnContractDetails.contract.book_details_json || '{}');
+                } catch(e) {}
+                if (bookDetails.rate_type_id) {
+                    defRateType = String(bookDetails.rate_type_id);
+                }
+            }
+            $('#ret_early_rate_type').val(defRateType);
+        }
+
+        calculateEarlyReturnReduction();
+        $('#return_early_reduction_area').slideDown();
+    } else if (isCoveredByThisContract) {
+        let formattedCovered = formatDisplayDateTime(maxCoveredDate);
+        $('#return_coverage_status_badge').html(`
+            <div class="alert alert-success py-2 px-3 mb-0 d-flex align-items-center">
+                <i class="ri-checkbox-circle-fill fs-5 text-success me-2"></i>
+                <div class="small">
+                    <strong>Period Covered:</strong> Return date matches covered contract / extension period (Valid until: <strong>${formattedCovered}</strong>). No extension or credit required.
+                </div>
+            </div>
+        `);
+        $('#return_balance_extension_area').slideUp();
+        $('#return_early_reduction_area').slideUp();
+    } else if (isCoveredByOtherContract) {
+        let formattedOther = formatDisplayDateTime(otherMaxDate);
+        $('#return_coverage_status_badge').html(`
+            <div class="alert alert-info py-2 px-3 mb-0 d-flex align-items-center">
+                <i class="ri-information-fill fs-5 text-info me-2"></i>
+                <div class="small">
+                    <strong>Vehicle Covered:</strong> Another contract or extension for this vehicle covers up to <strong>${formattedOther}</strong>.
+                </div>
+            </div>
+        `);
+        $('#return_balance_extension_area').slideUp();
+        $('#return_early_reduction_area').slideUp();
+    } else {
+        $('#return_early_reduction_area').slideUp();
+        let coveredDateForFrom = maxCoveredDate || (otherMaxDate ? otherMaxDate : new Date());
+        let formattedCovered = formatDisplayDateTime(coveredDateForFrom);
+        let formattedReturn = formatDisplayDateTime(returnDate);
+        
+        $('#return_coverage_status_badge').html(`
+            <div class="alert alert-warning py-2 px-3 mb-0 d-flex align-items-center">
+                <i class="ri-error-warning-fill fs-5 text-warning me-2"></i>
+                <div class="small">
+                    <strong>Uncovered Period:</strong> Vehicle return date (<strong>${formattedReturn}</strong>) exceeds covered period (Ended: <strong>${formattedCovered}</strong>). Extension required for balance period.
+                </div>
+            </div>
+        `);
+        
+        // Find latest source from extensions or base contract for defaults
+        let latestSource = null;
+        if (currentReturnCoverageData && Array.isArray(currentReturnCoverageData.data) && currentReturnCoverageData.data.length > 0) {
+            let extRows = currentReturnCoverageData.data.filter(r => r.record_type === 'extension');
+            latestSource = extRows.length > 0 ? extRows[extRows.length - 1] : currentReturnCoverageData.data[0];
+        }
+        
+        // Populate default balance from and to in datetime-local inputs
+        $('#ret_ext_from').val(formatToDateTimeLocal(coveredDateForFrom));
+        $('#ret_ext_to').val(formatToDateTimeLocal(returnDate));
+        
+        // Service default: from latest extension, or contract, or '1'
+        if (!$('#ret_ext_service').data('user-selected')) {
+            let defService = '1';
+            if (latestSource && latestSource.service_id) {
+                defService = String(latestSource.service_id);
+            } else if (latestSource && latestSource.service_name && latestSource.service_name.toLowerCase().includes('with driver') && !latestSource.service_name.toLowerCase().includes('without')) {
+                defService = '2';
+            } else if (currentReturnContractDetails && currentReturnContractDetails.contract) {
+                let bookDetails = {};
+                try {
+                    bookDetails = JSON.parse(currentReturnContractDetails.contract.book_details_json || '{}');
+                } catch(e) {}
+                if (bookDetails.service_id) {
+                    defService = String(bookDetails.service_id);
+                }
+            }
+            $('#ret_ext_service').val(defService);
+        }
+        
+        // Rate type default: from latest extension, or contract, or 'day'
+        if (!$('#ret_ext_rate_type').data('user-selected')) {
+            let defRateType = 'day';
+            if (latestSource && latestSource.rate_type_id) {
+                defRateType = String(latestSource.rate_type_id);
+            } else if (latestSource && latestSource.rate_type) {
+                let rt = latestSource.rate_type.toLowerCase();
+                if (rt.includes('hour')) defRateType = 'hour';
+                else if (rt.includes('week')) defRateType = 'week';
+                else if (rt.includes('month')) defRateType = 'month';
+                else defRateType = 'day';
+            } else if (currentReturnContractDetails && currentReturnContractDetails.contract) {
+                let bookDetails = {};
+                try {
+                    bookDetails = JSON.parse(currentReturnContractDetails.contract.book_details_json || '{}');
+                } catch(e) {}
+                if (bookDetails.rate_type_id) {
+                    defRateType = String(bookDetails.rate_type_id);
+                }
+            }
+            $('#ret_ext_rate_type').val(defRateType);
+        }
+        
+        // Calculate duration, rate, VAT, and total
+        calculateReturnBalanceExtension();
+        $('#return_balance_extension_area').slideDown();
+    }
+}
+
+function calculateReturnBalanceExtension() {
+    let fromVal = $('#ret_ext_from').val();
+    let toVal = $('#ret_ext_to').val();
+    if (!fromVal || !toVal) return;
+    
+    let fromDate = parseAnyDateTime(fromVal);
+    let toDate = parseAnyDateTime(toVal);
+    if (!fromDate || !toDate) return;
+    
+    let rateType = $('#ret_ext_rate_type').val() || 'day';
+    let service = $('#ret_ext_service').val() || '1';
+    
+    let diffMs = toDate.getTime() - fromDate.getTime();
+    let duration = 1;
+    if (diffMs > 0) {
+        if (rateType === 'hour') {
+            duration = Math.ceil(diffMs / (1000 * 60 * 60));
+        } else if (rateType === 'day') {
+            duration = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        } else if (rateType === 'week') {
+            duration = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 7));
+        } else if (rateType === 'month') {
+            duration = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30));
+        }
+    }
+    duration = Math.max(1, duration);
+    
+    if (!$('#ret_ext_duration').data('user-override')) {
+        $('#ret_ext_duration').val(duration);
+    } else {
+        duration = parseFloat($('#ret_ext_duration').val()) || 1;
+    }
+    
+    let unitLabel = rateType === 'day' ? 'Day(s)' : (rateType === 'hour' ? 'Hour(s)' : (rateType === 'week' ? 'Week(s)' : 'Month(s)'));
+    $('#return_balance_days_badge').text(`${duration} ${unitLabel} Balance`);
+    
+    let unitPrice = 0;
+    if ($('#ret_ext_unit_price').data('user-override')) {
+        unitPrice = parseFloat($('#ret_ext_unit_price').val()) || 0;
+    } else {
+        // Find latest source
+        let latestSource = null;
+        if (currentReturnCoverageData && Array.isArray(currentReturnCoverageData.data) && currentReturnCoverageData.data.length > 0) {
+            let extRows = currentReturnCoverageData.data.filter(r => r.record_type === 'extension');
+            latestSource = extRows.length > 0 ? extRows[extRows.length - 1] : currentReturnCoverageData.data[0];
+        }
+        
+        // 1. From latest extension/contract
+        if (latestSource && latestSource.unit_price && parseFloat(latestSource.unit_price) > 0) {
+            unitPrice = parseFloat(latestSource.unit_price);
+        }
+        
+        // 2. From contract details json
+        if (unitPrice === 0 && currentReturnContractDetails && currentReturnContractDetails.contract) {
+            try {
+                let bJson = JSON.parse(currentReturnContractDetails.contract.book_details_json || '{}');
+                unitPrice = parseFloat(bJson.unit_price) || 0;
+            } catch(e) {}
+        }
+        
+        // 3. From vehicle pricing cards on page
+        if (unitPrice === 0) {
+            let priceKey = '';
+            if (service === '1') {
+                if (rateType === 'hour') priceKey = '#return_wod_hourly';
+                else if (rateType === 'day') priceKey = '#return_wod_daily';
+                else if (rateType === 'week') priceKey = '#return_wod_weekly';
+                else if (rateType === 'month') priceKey = '#return_wod_monthly';
+            } else {
+                if (rateType === 'hour') priceKey = '#return_wd_hourly';
+                else if (rateType === 'day') priceKey = '#return_wd_daily';
+                else if (rateType === 'week') priceKey = '#return_wd_weekly';
+                else if (rateType === 'month') priceKey = '#return_wd_monthly';
+            }
+            if (priceKey && $(priceKey).length) {
+                unitPrice = parseFloat($(priceKey).text()) || 0;
+            }
+        }
+        
+        // 4. From price_list array
+        if (unitPrice === 0 && Array.isArray(currentReturnPriceList)) {
+            let targetText = '';
+            if (service === '1') {
+                if (rateType === 'hour') targetText = 'Price per hour rental without driver';
+                else if (rateType === 'day') targetText = 'Price per day rental without driver';
+                else if (rateType === 'week') targetText = 'Price per week rental without driver';
+                else if (rateType === 'month') targetText = 'Price per month rental without driver';
+            } else {
+                if (rateType === 'hour') targetText = 'Price per hour rental with driver';
+                else if (rateType === 'day') targetText = 'Price per day rental with driver';
+                else if (rateType === 'week') targetText = 'Price per week rental with driver';
+                else if (rateType === 'month') targetText = 'Price per month rental with driver';
+            }
+            let found = currentReturnPriceList.find(p => p.item === targetText);
+            if (found) {
+                unitPrice = parseFloat(found.amount) || 0;
+            }
+        }
+        
+        $('#ret_ext_unit_price').val(unitPrice.toFixed(3));
+    }
+    
+    // VAT %
+    let vatPercent = 10;
+    if ($('#ret_ext_vat').data('user-override')) {
+        vatPercent = parseFloat($('#ret_ext_vat').val()) || 0;
+    } else {
+        let latestSource = null;
+        if (currentReturnCoverageData && Array.isArray(currentReturnCoverageData.data) && currentReturnCoverageData.data.length > 0) {
+            let extRows = currentReturnCoverageData.data.filter(r => r.record_type === 'extension');
+            latestSource = extRows.length > 0 ? extRows[extRows.length - 1] : currentReturnCoverageData.data[0];
+        }
+        if (latestSource && latestSource.vat !== undefined && latestSource.vat !== '') {
+            vatPercent = parseFloat(latestSource.vat);
+        } else {
+            vatPercent = (service === '1') ? 10 : 0;
+        }
+        $('#ret_ext_vat').val(vatPercent);
+    }
+    
+    if ($('#chk_ext_zero_amount').is(':checked')) {
+        unitPrice = 0;
+        vatPercent = 0;
+        $('#ret_ext_unit_price').val('0.000');
+        $('#ret_ext_vat').val('0');
+    }
+
+    let total = (duration * unitPrice) * (1 + vatPercent / 100);
+    $('#ret_ext_total').val(total.toFixed(3));
+}
+
+function calculateEarlyReturnReduction() {
+    let fromVal = $('#ret_early_from').val();
+    let toVal = $('#ret_early_to').val();
+    if (!fromVal || !toVal) return;
+    
+    let fromDate = parseAnyDateTime(fromVal);
+    let toDate = parseAnyDateTime(toVal);
+    if (!fromDate || !toDate) return;
+    
+    let rateType = $('#ret_early_rate_type').val() || 'day';
+    let service = $('#ret_early_service').val() || '1';
+    
+    let diffMs = toDate.getTime() - fromDate.getTime();
+    let duration = 0;
+    if (diffMs > 0) {
+        if (rateType === 'hour') {
+            duration = Math.ceil(diffMs / (1000 * 60 * 60));
+        } else if (rateType === 'day') {
+            duration = Math.round(diffMs / (1000 * 60 * 60 * 24));
+            if (duration === 0 && diffMs >= 1000 * 60 * 60 * 12) {
+                duration = 1;
+            }
+        } else if (rateType === 'week') {
+            duration = Math.round(diffMs / (1000 * 60 * 60 * 24 * 7));
+            if (duration === 0 && diffMs >= 1000 * 60 * 60 * 24 * 4) {
+                duration = 1;
+            }
+        } else if (rateType === 'month') {
+            duration = Math.round(diffMs / (1000 * 60 * 60 * 24 * 30));
+            if (duration === 0 && diffMs >= 1000 * 60 * 60 * 24 * 15) {
+                duration = 1;
+            }
+        }
+    }
+    
+    if (!$('#ret_early_duration').data('user-override')) {
+        $('#ret_early_duration').val(duration);
+    } else {
+        duration = parseFloat($('#ret_early_duration').val()) || 0;
+    }
+    
+    let unitLabel = rateType === 'day' ? 'Day(s)' : (rateType === 'hour' ? 'Hour(s)' : (rateType === 'week' ? 'Week(s)' : 'Month(s)'));
+    $('#return_early_days_badge').text(`${duration} ${unitLabel} Left`);
+    
+    let unitPrice = 0;
+    if ($('#ret_early_unit_price').data('user-override')) {
+        unitPrice = parseFloat($('#ret_early_unit_price').val()) || 0;
+    } else {
+        // Find latest source
+        let latestSource = null;
+        if (currentReturnCoverageData && Array.isArray(currentReturnCoverageData.data) && currentReturnCoverageData.data.length > 0) {
+            let extRows = currentReturnCoverageData.data.filter(r => r.record_type === 'extension');
+            latestSource = extRows.length > 0 ? extRows[extRows.length - 1] : currentReturnCoverageData.data[0];
+        }
+        
+        // 1. From latest extension/contract
+        if (latestSource && latestSource.unit_price && parseFloat(latestSource.unit_price) > 0) {
+            unitPrice = parseFloat(latestSource.unit_price);
+        }
+        
+        // 2. From contract details json
+        if (unitPrice === 0 && currentReturnContractDetails && currentReturnContractDetails.contract) {
+            try {
+                let bJson = JSON.parse(currentReturnContractDetails.contract.book_details_json || '{}');
+                unitPrice = parseFloat(bJson.unit_price) || 0;
+            } catch(e) {}
+        }
+        
+        // 3. From vehicle pricing cards on page
+        if (unitPrice === 0) {
+            let priceKey = '';
+            if (service === '1') {
+                if (rateType === 'hour') priceKey = '#return_wod_hourly';
+                else if (rateType === 'day') priceKey = '#return_wod_daily';
+                else if (rateType === 'week') priceKey = '#return_wod_weekly';
+                else if (rateType === 'month') priceKey = '#return_wod_monthly';
+            } else {
+                if (rateType === 'hour') priceKey = '#return_wd_hourly';
+                else if (rateType === 'day') priceKey = '#return_wd_daily';
+                else if (rateType === 'week') priceKey = '#return_wd_weekly';
+                else if (rateType === 'month') priceKey = '#return_wd_monthly';
+            }
+            if (priceKey && $(priceKey).length) {
+                unitPrice = parseFloat($(priceKey).text()) || 0;
+            }
+        }
+        
+        // 4. From price_list array
+        if (unitPrice === 0 && Array.isArray(currentReturnPriceList)) {
+            let targetText = '';
+            if (service === '1') {
+                if (rateType === 'hour') targetText = 'Price per hour rental without driver';
+                else if (rateType === 'day') targetText = 'Price per day rental without driver';
+                else if (rateType === 'week') targetText = 'Price per week rental without driver';
+                else if (rateType === 'month') targetText = 'Price per month rental without driver';
+            } else {
+                if (rateType === 'hour') targetText = 'Price per hour rental with driver';
+                else if (rateType === 'day') targetText = 'Price per day rental with driver';
+                else if (rateType === 'week') targetText = 'Price per week rental with driver';
+                else if (rateType === 'month') targetText = 'Price per month rental with driver';
+            }
+            let found = currentReturnPriceList.find(p => p.item === targetText);
+            if (found) {
+                unitPrice = parseFloat(found.amount) || 0;
+            }
+        }
+        
+        $('#ret_early_unit_price').val(unitPrice.toFixed(3));
+    }
+    
+    // VAT %
+    let vatPercent = 10;
+    if ($('#ret_early_vat').data('user-override')) {
+        vatPercent = parseFloat($('#ret_early_vat').val()) || 0;
+    } else {
+        let latestSource = null;
+        if (currentReturnCoverageData && Array.isArray(currentReturnCoverageData.data) && currentReturnCoverageData.data.length > 0) {
+            let extRows = currentReturnCoverageData.data.filter(r => r.record_type === 'extension');
+            latestSource = extRows.length > 0 ? extRows[extRows.length - 1] : currentReturnCoverageData.data[0];
+        }
+        if (latestSource && latestSource.vat !== undefined && latestSource.vat !== '') {
+            vatPercent = parseFloat(latestSource.vat);
+        } else {
+            vatPercent = (service === '1') ? 10 : 0;
+        }
+        $('#ret_early_vat').val(vatPercent);
+    }
+    
+    if ($('#chk_early_zero_amount').is(':checked')) {
+        unitPrice = 0;
+        vatPercent = 0;
+        $('#ret_early_unit_price').val('0.000');
+        $('#ret_early_vat').val('0');
+    }
+
+    let total = (duration * unitPrice) * (1 + vatPercent / 100);
+    $('#ret_early_total').val(total.toFixed(3));
+    if (!window.earlyReturnReductionPosted) {
+        if (total <= 0) {
+            $('#btn_confirm_early_reduction').html('<span class="ladda-label"><i class="ri-checkbox-circle-line me-1"></i> Record No-Cost Return</span>');
+        } else {
+            $('#btn_confirm_early_reduction').html('<span class="ladda-label"><i class="ri-refund-2-line me-1"></i> Post Credit to Ledger</span>');
+        }
+    }
+}
+
+function isReturnPeriodUncovered() {
+    return $('#return_balance_extension_area').is(':visible');
+}
+
+function executeReturnBalanceExtension() {
+    let btnEl = document.querySelector('#btn_confirm_return_extension');
+    let laddaReturnExt = btnEl ? Ladda.create(btnEl) : null;
+    if (laddaReturnExt) laddaReturnExt.start();
+
+    let agreement_id = $('#txt_return_modal_agreement_id').val();
+    let agreement_no = $('#txt_return_modal_agreement_no').val();
+    let booking_ids  = $('#txt_return_modal_booking_ids').val();
+    let booking_nos  = $('#txt_return_modal_booking_ref_no').val() || agreement_no;
+
+    let customer_data = {
+        customer_name: $('#return_c_name').text().trim(),
+        customer_code: $('#return_c_code').text().trim(),
+        customer_mobile: $('#return_c_mobile').text().trim(),
+        customer_email: $('#return_c_email').text().trim(),
+        customer_attention: $('#return_c_attn').text().trim(),
+        customer_address: $('#return_c_attr').text().trim()
+    };
+
+    let vehicle_data = {
+        vehicle_id: $('#return_hid_vehicle_id').val(),
+        category_id: $('#return_hid_category_id').val(),
+        model_id: $('#return_hid_model_id').val(),
+        veh_no: $('#return_hid_vehicle_no').val() || $('#return_v_no').text().trim(),
+        category_name: $('#return_v_category').text().trim(),
+        model_name: $('#return_v_model').text().trim(),
+        vehicle_color: $('#return_v_color').text().trim(),
+        vehicle_year: $('#return_v_year').text().trim()
+    };
+
+    let serviceText = $('#ret_ext_service option:selected').text().trim();
+    let rateTypeText = $('#ret_ext_rate_type option:selected').text().trim();
+    let durationVal = $('#ret_ext_duration').val();
+    let unitPriceVal = $('#ret_ext_unit_price').val();
+    let vatVal = $('#ret_ext_vat').val();
+    let totalVal = $('#ret_ext_total').val();
+
+    let periodFromDb = formatToDbDateTime($('#ret_ext_from').val());
+    let periodToDb   = formatToDbDateTime($('#ret_ext_to').val());
+
+    let contract_details = {
+        period_from: periodFromDb,
+        period_to: periodToDb,
+        rate_type_id: $('#ret_ext_rate_type').val(),
+        rate_type: rateTypeText,
+        service_id: $('#ret_ext_service').val(),
+        service_name: serviceText,
+        duration: durationVal,
+        unit_price: unitPriceVal,
+        min_price: unitPriceVal,
+        vat: vatVal,
+        total_amt: totalVal,
+        qtn_ref_no: (currentReturnContractDetails && currentReturnContractDetails.contract) ? (currentReturnContractDetails.contract.quotation_number || agreement_no) : agreement_no,
+        booking_notes: 'Auto extension for return balance period (' + periodFromDb + ' to ' + periodToDb + ')',
+        otp_details: ''
+    };
+
+    $.ajax({
+        url: '/ContractListController',
+        type: 'POST',
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        data: JSON.stringify({
+            action: 'extendContractGeneration',
+            agreementid: agreement_id,
+            agreement_no: agreement_no,
+            booking_ids: booking_ids,
+            booking_ref_no: booking_nos,
+            customer_data: customer_data,
+            vehicle_data: vehicle_data,
+            contract_details: contract_details,
+            service_name: serviceText
+        }),
+        success: function(res) {
+            if (laddaReturnExt) laddaReturnExt.stop();
+            if (res && res.status) {
+                setupDropdown('dropdownContent', 'success', svgSuccess + 'Contract extended successfully and ledger posted.', 'click');
+                $('#ret_ext_duration').removeData('user-override');
+                $('#ret_ext_unit_price').removeData('user-override');
+                $('#ret_ext_vat').removeData('user-override');
+                if (returnextensiontable) {
+                    returnextensiontable.ajax.reload();
+                }
+                if (typeof searchContractList === 'function') {
+                    searchContractList();
+                }
+            } else {
+                setupDropdown('dropdownContent', 'error', svgError + (res.message || 'Error extending contract'), 'click');
+            }
+        },
+        error: function(xhr) {
+            if (laddaReturnExt) laddaReturnExt.stop();
+            setupDropdown('dropdownContent', 'error', svgError + 'Failed to extend contract', 'click');
+        }
+    });
+}
+
+function executeEarlyReturnReduction() {
+    let btnEl = document.querySelector('#btn_confirm_early_reduction');
+    let laddaEarly = btnEl ? Ladda.create(btnEl) : null;
+    if (laddaEarly) laddaEarly.start();
+
+    let agreement_id = $('#txt_return_modal_agreement_id').val();
+    let agreement_no = $('#txt_return_modal_agreement_no').val();
+    let customer_code = $('#return_c_code').text().trim();
+    let serviceText = $('#ret_early_service option:selected').text().trim();
+    let rateTypeText = $('#ret_early_rate_type option:selected').text().trim();
+    let durationVal = $('#ret_early_duration').val();
+    let unitPriceVal = $('#ret_early_unit_price').val();
+    let vatVal = $('#ret_early_vat').val();
+    let totalVal = $('#ret_early_total').val();
+
+    let periodFromDb = formatToDbDateTime($('#ret_early_from').val());
+    let periodToDb   = formatToDbDateTime($('#ret_early_to').val());
+    let returnDateVal = $('#return_vehicle_date_in').val() || $('#dt_in').val();
+
+    $.ajax({
+        url: '/ContractListController',
+        type: 'POST',
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        data: JSON.stringify({
+            action: 'postEarlyReturnReduction',
+            agreementid: agreement_id,
+            agreement_no: agreement_no,
+            customer_code: customer_code,
+            service_id: $('#ret_early_service').val(),
+            service_name: serviceText,
+            rate_type_id: $('#ret_early_rate_type').val(),
+            rate_type: rateTypeText,
+            duration: durationVal,
+            unit_price: unitPriceVal,
+            vat: vatVal,
+            total_amt: totalVal,
+            period_from: periodFromDb,
+            period_to: periodToDb,
+            trans_date: formatToDbDateTime(returnDateVal) || new Date().toISOString(),
+            is_zero_cost: $('#chk_early_zero_amount').is(':checked') ? 1 : 0
+        }),
+        success: function(res) {
+            if (laddaEarly) laddaEarly.stop();
+            if (res && res.status) {
+                window.earlyReturnReductionPosted = true;
+                $('#ret_early_posted_status').show();
+                $('#ret_early_posted_status_text').text(res.message || 'Early return reduction has been posted to customer ledger.');
+                $('#btn_confirm_early_reduction').prop('disabled', true).html('<i class="ri-checkbox-circle-line me-1"></i> Credit Posted to Ledger');
+                setupDropdown('dropdownContent', 'success', svgSuccess + 'Early return reduction posted to customer ledger.', 'click');
+            } else {
+                setupDropdown('dropdownContent', 'error', svgError + (res.message || 'Error posting early return reduction'), 'click');
+            }
+        },
+        error: function(xhr) {
+            if (laddaEarly) laddaEarly.stop();
+            setupDropdown('dropdownContent', 'error', svgError + 'Failed to post early return reduction', 'click');
+        }
+    });
+}
+
+// Event Bindings for Return Balance Extension
+$(document).on('input change', '#return_vehicle_date_in', function() {
+    let val = $(this).val();
+    $('#dt_in').val(val);
+    $('#ret_ext_duration').removeData('user-override');
+    $('#ret_early_duration').removeData('user-override');
+    evaluateReturnCoverage();
+});
+
+$(document).on('input change', '#dt_in', function() {
+    let val = $(this).val();
+    $('#return_vehicle_date_in').val(val);
+    $('#ret_ext_duration').removeData('user-override');
+    $('#ret_early_duration').removeData('user-override');
+    evaluateReturnCoverage();
+});
+
+// Balance From and Balance To change events
+$(document).on('input change', '#ret_ext_from, #ret_ext_to', function() {
+    $('#ret_ext_duration').removeData('user-override');
+    calculateReturnBalanceExtension();
+});
+
+$(document).on('change', '#ret_ext_service', function() {
+    $(this).data('user-selected', true);
+    $('#ret_ext_unit_price').removeData('user-override');
+    $('#ret_ext_vat').removeData('user-override');
+    calculateReturnBalanceExtension();
+});
+
+$(document).on('change', '#ret_ext_rate_type', function() {
+    $(this).data('user-selected', true);
+    $('#ret_ext_duration').removeData('user-override');
+    $('#ret_ext_unit_price').removeData('user-override');
+    calculateReturnBalanceExtension();
+});
+
+$(document).on('input', '#ret_ext_duration', function() {
+    $(this).data('user-override', true);
+    let dur = parseFloat($(this).val()) || 0;
+    let rateType = $('#ret_ext_rate_type').val() || 'day';
+    let unitLabel = rateType === 'day' ? 'Day(s)' : (rateType === 'hour' ? 'Hour(s)' : (rateType === 'week' ? 'Week(s)' : 'Month(s)'));
+    $('#return_balance_days_badge').text(`${dur} ${unitLabel} Balance`);
+    let prc = parseFloat($('#ret_ext_unit_price').val()) || 0;
+    let vat = parseFloat($('#ret_ext_vat').val()) || 0;
+    $('#ret_ext_total').val(((dur * prc) * (1 + vat / 100)).toFixed(3));
+});
+
+$(document).on('input', '#ret_ext_unit_price', function() {
+    $(this).data('user-override', true);
+    let dur = parseFloat($('#ret_ext_duration').val()) || 0;
+    let prc = parseFloat($(this).val()) || 0;
+    if (prc === 0 && $(this).val().trim() !== '') {
+        $('#chk_ext_zero_amount').prop('checked', true);
+    } else {
+        $('#chk_ext_zero_amount').prop('checked', false);
+    }
+    let vat = parseFloat($('#ret_ext_vat').val()) || 0;
+    $('#ret_ext_total').val(((dur * prc) * (1 + vat / 100)).toFixed(3));
+});
+
+$(document).on('input', '#ret_ext_vat', function() {
+    $(this).data('user-override', true);
+    let dur = parseFloat($('#ret_ext_duration').val()) || 0;
+    let prc = parseFloat($('#ret_ext_unit_price').val()) || 0;
+    let vat = parseFloat($(this).val()) || 0;
+    $('#ret_ext_total').val(((dur * prc) * (1 + vat / 100)).toFixed(3));
+});
+
+$(document).on('change', '#chk_ext_zero_amount', function() {
+    if ($(this).is(':checked')) {
+        $(this).data('prev-price', $('#ret_ext_unit_price').val() || '');
+        $(this).data('prev-vat', $('#ret_ext_vat').val() || '10');
+        $('#ret_ext_unit_price').val('0.000').data('user-override', true);
+        $('#ret_ext_vat').val('0').data('user-override', true);
+        $('#ret_ext_total').val('0.000');
+    } else {
+        let prevPrice = $(this).data('prev-price');
+        let prevVat = $(this).data('prev-vat');
+        if (prevPrice !== undefined && parseFloat(prevPrice) > 0) {
+            $('#ret_ext_unit_price').val(prevPrice).data('user-override', true);
+            $('#ret_ext_vat').val(prevVat || '10').data('user-override', true);
+        } else {
+            $('#ret_ext_unit_price').removeData('user-override');
+            $('#ret_ext_vat').removeData('user-override');
+        }
+        calculateReturnBalanceExtension();
+    }
+});
+
+$(document).on('click', '#btn_confirm_return_extension', function(e) {
+    e.preventDefault();
+    let duration = $('#ret_ext_duration').val();
+    let totalVal = parseFloat($('#ret_ext_total').val()) || 0;
+    let unitPrc = parseFloat($('#ret_ext_unit_price').val()) || 0;
+    let from = formatDisplayDateTime($('#ret_ext_from').val());
+    let to = formatDisplayDateTime($('#ret_ext_to').val());
+    let serviceName = $('#ret_ext_service option:selected').text();
+    let rateTypeName = $('#ret_ext_rate_type option:selected').text();
+    
+    let isZero = (totalVal <= 0 || unitPrc <= 0);
+    let totalDisplay = isZero 
+        ? '<b class="text-primary">Zero Additional Amount (0.000 BHD)</b>' 
+        : `<b>BHD ${$('#ret_ext_total').val()}</b>`;
+    let noteText = isZero 
+        ? '<span class="text-info"><i class="ri-information-line me-1"></i>A zero-cost extension entry will be recorded in customer ledger for future tracking.</span>' 
+        : '<span class="text-success"><i class="ri-checkbox-circle-line me-1"></i>Ledger posting will be automatically created.</span>';
+    
+    let msg = `Extend contract for <b>${duration} ${rateTypeName}</b> (${serviceName}) from <b>${from}</b> to <b>${to}</b> for ${totalDisplay}?<br><br>${noteText}`;
+    
+    $('#confirmReturnExtensionMessage').html(msg);
+    let modalEl = document.getElementById('confirmReturnExtensionModal');
+    let modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modalInstance.show();
+});
+
+$(document).on('click', '#btnConfirmReturnExtensionYes', function() {
+    let modalEl = document.getElementById('confirmReturnExtensionModal');
+    let modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+    
+    executeReturnBalanceExtension();
+});
+
+$(document).on('show.bs.modal', '#confirmReturnExtensionModal', function() {
+    let highestZ = 1050;
+    $('.modal.show').each(function() {
+        if (this.id !== 'confirmReturnExtensionModal') {
+            let z = parseInt($(this).css('z-index')) || 1050;
+            if (z > highestZ) highestZ = z;
+        }
+    });
+    $(this).css('z-index', highestZ + 20);
+    setTimeout(function() {
+        $('.modal-backdrop').last().css('z-index', highestZ + 10);
+    }, 10);
+});
+
+$(document).on('hidden.bs.modal', '#confirmReturnExtensionModal', function() {
+    if ($('.modal.show').length > 0) {
+        $('body').addClass('modal-open');
+    }
+});
+
+// Event Bindings for Early Return Reduction
+$(document).on('input change', '#ret_early_from, #ret_early_to', function() {
+    $('#ret_early_duration').removeData('user-override');
+    calculateEarlyReturnReduction();
+});
+
+$(document).on('change', '#ret_early_service', function() {
+    $(this).data('user-selected', true);
+    $('#ret_early_unit_price').removeData('user-override');
+    $('#ret_early_vat').removeData('user-override');
+    calculateEarlyReturnReduction();
+});
+
+$(document).on('change', '#ret_early_rate_type', function() {
+    $(this).data('user-selected', true);
+    $('#ret_early_duration').removeData('user-override');
+    $('#ret_early_unit_price').removeData('user-override');
+    calculateEarlyReturnReduction();
+});
+
+$(document).on('input', '#ret_early_duration', function() {
+    $(this).data('user-override', true);
+    let dur = parseFloat($(this).val()) || 0;
+    let rateType = $('#ret_early_rate_type').val() || 'day';
+    let unitLabel = rateType === 'day' ? 'Day(s)' : (rateType === 'hour' ? 'Hour(s)' : (rateType === 'week' ? 'Week(s)' : 'Month(s)'));
+    $('#return_early_days_badge').text(`${dur} ${unitLabel} Left`);
+    let prc = parseFloat($('#ret_early_unit_price').val()) || 0;
+    let vat = parseFloat($('#ret_early_vat').val()) || 0;
+    let tot = (dur * prc) * (1 + vat / 100);
+    $('#ret_early_total').val(tot.toFixed(3));
+    if (!window.earlyReturnReductionPosted) {
+        if (tot <= 0) {
+            $('#btn_confirm_early_reduction').html('<span class="ladda-label"><i class="ri-checkbox-circle-line me-1"></i> Record No-Cost Return</span>');
+        } else {
+            $('#btn_confirm_early_reduction').html('<span class="ladda-label"><i class="ri-refund-2-line me-1"></i> Post Credit to Ledger</span>');
+        }
+    }
+});
+
+$(document).on('input', '#ret_early_unit_price', function() {
+    $(this).data('user-override', true);
+    let dur = parseFloat($('#ret_early_duration').val()) || 0;
+    let prc = parseFloat($(this).val()) || 0;
+    if (prc === 0 && $(this).val().trim() !== '') {
+        $('#chk_early_zero_amount').prop('checked', true);
+    } else {
+        $('#chk_early_zero_amount').prop('checked', false);
+    }
+    let vat = parseFloat($('#ret_early_vat').val()) || 0;
+    let tot = (dur * prc) * (1 + vat / 100);
+    $('#ret_early_total').val(tot.toFixed(3));
+    if (!window.earlyReturnReductionPosted) {
+        if (tot <= 0) {
+            $('#btn_confirm_early_reduction').html('<span class="ladda-label"><i class="ri-checkbox-circle-line me-1"></i> Record No-Cost Return</span>');
+        } else {
+            $('#btn_confirm_early_reduction').html('<span class="ladda-label"><i class="ri-refund-2-line me-1"></i> Post Credit to Ledger</span>');
+        }
+    }
+});
+
+$(document).on('input', '#ret_early_vat', function() {
+    $(this).data('user-override', true);
+    let dur = parseFloat($('#ret_early_duration').val()) || 0;
+    let prc = parseFloat($('#ret_early_unit_price').val()) || 0;
+    let vat = parseFloat($(this).val()) || 0;
+    let tot = (dur * prc) * (1 + vat / 100);
+    $('#ret_early_total').val(tot.toFixed(3));
+    if (!window.earlyReturnReductionPosted) {
+        if (tot <= 0) {
+            $('#btn_confirm_early_reduction').html('<span class="ladda-label"><i class="ri-checkbox-circle-line me-1"></i> Record No-Cost Return</span>');
+        } else {
+            $('#btn_confirm_early_reduction').html('<span class="ladda-label"><i class="ri-refund-2-line me-1"></i> Post Credit to Ledger</span>');
+        }
+    }
+});
+
+$(document).on('change', '#chk_early_zero_amount', function() {
+    if ($(this).is(':checked')) {
+        $(this).data('prev-price', $('#ret_early_unit_price').val() || '');
+        $(this).data('prev-vat', $('#ret_early_vat').val() || '10');
+        $('#ret_early_unit_price').val('0.000').data('user-override', true);
+        $('#ret_early_vat').val('0').data('user-override', true);
+        $('#ret_early_total').val('0.000');
+        if (!window.earlyReturnReductionPosted) {
+            $('#btn_confirm_early_reduction').html('<span class="ladda-label"><i class="ri-checkbox-circle-line me-1"></i> Record No-Cost Return</span>');
+        }
+    } else {
+        let prevPrice = $(this).data('prev-price');
+        let prevVat = $(this).data('prev-vat');
+        if (prevPrice !== undefined && parseFloat(prevPrice) > 0) {
+            $('#ret_early_unit_price').val(prevPrice).data('user-override', true);
+            $('#ret_early_vat').val(prevVat || '10').data('user-override', true);
+        } else {
+            $('#ret_early_unit_price').removeData('user-override');
+            $('#ret_early_vat').removeData('user-override');
+        }
+        calculateEarlyReturnReduction();
+        if (!window.earlyReturnReductionPosted) {
+            let tot = parseFloat($('#ret_early_total').val()) || 0;
+            if (tot > 0) {
+                $('#btn_confirm_early_reduction').html('<span class="ladda-label"><i class="ri-refund-2-line me-1"></i> Post Credit to Ledger</span>');
+            }
+        }
+    }
+});
+
+$(document).on('click', '#btn_confirm_early_reduction', function(e) {
+    e.preventDefault();
+    let duration = $('#ret_early_duration').val();
+    let totalVal = parseFloat($('#ret_early_total').val()) || 0;
+    let unitPrc = parseFloat($('#ret_early_unit_price').val()) || 0;
+    let from = formatDisplayDateTime($('#ret_early_from').val());
+    let to = formatDisplayDateTime($('#ret_early_to').val());
+    let serviceName = $('#ret_early_service option:selected').text();
+    let rateTypeName = $('#ret_early_rate_type option:selected').text();
+    
+    let isZero = (totalVal <= 0 || unitPrc <= 0);
+    let totalDisplay = isZero 
+        ? '<b class="text-primary">Zero Deductions / No Refund (0.000 BHD)</b>' 
+        : `<b>BHD ${$('#ret_early_total').val()}</b>`;
+    let noteText = isZero 
+        ? '<span class="text-info"><i class="ri-information-line me-1"></i>A zero-cost early return entry will be recorded in customer ledger for future tracking.</span>' 
+        : '<span class="text-success"><i class="ri-checkbox-circle-line me-1"></i>Customer ledger balance will be reduced accordingly.</span>';
+    let actionLabel = isZero ? 'Record early return without deduction' : 'Post credit reduction';
+    
+    let msg = `${actionLabel} for <b>${duration} ${rateTypeName}</b> (${serviceName}) from <b>${from}</b> to <b>${to}</b> for ${totalDisplay} to customer ledger?<br><br>${noteText}`;
+    
+    $('#confirmEarlyReductionMessage').html(msg);
+    let modalEl = document.getElementById('confirmEarlyReductionModal');
+    let modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modalInstance.show();
+});
+
+$(document).on('click', '#btnConfirmEarlyReductionYes', function() {
+    let modalEl = document.getElementById('confirmEarlyReductionModal');
+    let modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+    
+    executeEarlyReturnReduction();
+});
+
+$(document).on('show.bs.modal', '#confirmEarlyReductionModal', function() {
+    let highestZ = 1050;
+    $('.modal.show').each(function() {
+        if (this.id !== 'confirmEarlyReductionModal') {
+            let z = parseInt($(this).css('z-index')) || 1050;
+            if (z > highestZ) highestZ = z;
+        }
+    });
+    $(this).css('z-index', highestZ + 20);
+    setTimeout(function() {
+        $('.modal-backdrop').last().css('z-index', highestZ + 10);
+    }, 10);
+});
+
+$(document).on('hidden.bs.modal', '#confirmEarlyReductionModal', function() {
+    if ($('.modal.show').length > 0) {
+        $('body').addClass('modal-open');
+    }
 });
 let currentVehiclePreviewId = null;
 
@@ -4041,8 +5115,17 @@ function saveReturnContractValidation(e,customer_code)
     if (e) {
         e.preventDefault();
     }
+    if (laddaReturnContract) {
+        laddaReturnContract.stop();
+    }
 
-       if (!$('#km_in').val()) {
+    if (typeof isReturnPeriodUncovered === 'function' && isReturnPeriodUncovered()) {
+        if (window.returnStepperInstance) window.returnStepperInstance.to(1);
+        setupDropdown('dropdownContent', 'error', svgError + "Return date is not covered by any contract or extension. Please extend the contract for the balance period in Step 1.", 'click');
+        return;
+    }
+
+    if (!$('#km_in').val()) {
         if (window.returnStepperInstance) window.returnStepperInstance.to(2);
         setupDropdown('dropdownContent', 'error', svgError + "Please provide km in", 'click');
         return;
@@ -4053,21 +5136,27 @@ function saveReturnContractValidation(e,customer_code)
         setupDropdown('dropdownContent', 'error', svgError + "Please provide date in", 'click');
         return;
     }
-    if (!$('#received_by_name').val()) {
-        if (window.returnStepperInstance) window.returnStepperInstance.to(6);
-        setupDropdown('dropdownContent', 'error', svgError + "Please provide receiver name", 'click');
-        return;
-    }
 
     if (!$('#chk_violations_checked').is(':checked')) {
         if (window.returnStepperInstance) window.returnStepperInstance.to(4);
         setupDropdown('dropdownContent', 'error', svgError + "Please confirm vehicle violations are checked", 'click');
         return;
     }
-    
-  proceedReturnContractValidations(customer_code);
 
-   
+    if (!$.trim($('#received_by_name').val())) {
+        if (window.returnStepperInstance) window.returnStepperInstance.to(6);
+        setupDropdown('dropdownContent', 'error', svgError + "Please provide receiver name", 'click');
+        return;
+    }
+
+    let hasReceiverSign = returnSignaturePad && !returnSignaturePad.isEmpty();
+    if (!hasReceiverSign) {
+        if (window.returnStepperInstance) window.returnStepperInstance.to(6);
+        setupDropdown('dropdownContent', 'error', svgError + "Please provide receiver signature", 'click');
+        return;
+    }
+    
+    proceedReturnContractValidations(customer_code);
 }
 
 function proceedReturnContractValidations(customer_code)
@@ -4163,10 +5252,10 @@ function executeReturnContract(customer_code)
     console.log(allVehicleReturnImages);
      let receiver_name    = $.trim($('#received_by_name').val());
     
-    let hasReceiverSign    = !returnSignaturePad.isEmpty();
+    let hasReceiverSign = returnSignaturePad && !returnSignaturePad.isEmpty();
 
-    
-    if (!hasReceiverSign ) {
+    if (!hasReceiverSign) {
+        if (laddaReturnContract) laddaReturnContract.stop();
         if (window.returnStepperInstance) window.returnStepperInstance.to(6);
         setupDropdown(
             'dropdownContent',
@@ -4176,13 +5265,13 @@ function executeReturnContract(customer_code)
         );
 
         return;
-       
-
     }
 
     // Hirer signature validation
     if (receiver_name == '') {
-         setupDropdown(
+        if (laddaReturnContract) laddaReturnContract.stop();
+        if (window.returnStepperInstance) window.returnStepperInstance.to(6);
+        setupDropdown(
             'dropdownContent',
             'error',
             svgError + 'Please enter receiver name',
@@ -4190,8 +5279,6 @@ function executeReturnContract(customer_code)
         );
 
         return;
-        
-
     }
 
     let cur_veh_id = $('#returncontractvehicle_ids').val() || (typeof vehicle_ids !== 'undefined' ? vehicle_ids : '');
@@ -4232,6 +5319,26 @@ function executeReturnContract(customer_code)
     
     }
 
+    let earlyReturnReductionData = null;
+    if ($('#return_early_reduction_area').is(':visible') && !window.earlyReturnReductionPosted) {
+        let durVal = parseFloat($('#ret_early_duration').val()) || 0;
+        if (durVal > 0) {
+            earlyReturnReductionData = {
+                period_from: formatToDbDateTime($('#ret_early_from').val()),
+                period_to: formatToDbDateTime($('#ret_early_to').val()),
+                service_id: $('#ret_early_service').val(),
+                service_name: $('#ret_early_service option:selected').text().trim(),
+                rate_type_id: $('#ret_early_rate_type').val(),
+                rate_type: $('#ret_early_rate_type option:selected').text().trim(),
+                duration: $('#ret_early_duration').val(),
+                unit_price: $('#ret_early_unit_price').val(),
+                vat: $('#ret_early_vat').val(),
+                total_amt: $('#ret_early_total').val(),
+                is_zero_cost: $('#chk_early_zero_amount').is(':checked') ? 1 : 0
+            };
+        }
+    }
+
                 $.ajax({
                     url: '/ContractListController',
                     type: 'POST',
@@ -4252,7 +5359,8 @@ function executeReturnContract(customer_code)
                         ReceiverSign: receiver_signature,
                         customer_code:customer_code,
                         violations: violations,
-                        violations_checked: $('#chk_violations_checked').is(':checked') ? 1 : 0
+                        violations_checked: $('#chk_violations_checked').is(':checked') ? 1 : 0,
+                        early_return_reduction: earlyReturnReductionData
                     }),
                 
                     success: function (res) {
@@ -4676,10 +5784,16 @@ function listExtendedListviewcontract(agreement_ids)
 
             return JSON.stringify({
                 action: 'ListContractExtensionsReturn',
-                  agreementid: agreement_ids
+                agreementid: agreement_ids,
+                vehicleid: $('#return_hid_vehicle_id').val()
             });
         },
-        dataSrc: 'data'
+        dataSrc: function (json) {
+            if (typeof handleReturnCoverageResponse === 'function') {
+                handleReturnCoverageResponse(json);
+            }
+            return json.data || [];
+        }
     },
      dom: 't',
     columns: [
@@ -6219,10 +7333,16 @@ function listExtendedListReplace(agreement_ids)
 
             return JSON.stringify({
                 action: 'ListContractExtensionsReturn',
-                  agreementid: agreement_ids
+                agreementid: agreement_ids,
+                vehicleid: $('#return_hid_vehicle_id').val()
             });
         },
-        dataSrc: 'data'
+        dataSrc: function (json) {
+            if (typeof handleReturnCoverageResponse === 'function') {
+                handleReturnCoverageResponse(json);
+            }
+            return json.data || [];
+        }
     },
      dom: 't',
     columns: [

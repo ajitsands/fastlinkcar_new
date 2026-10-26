@@ -13,6 +13,68 @@ checkLogin();
 ?>
 <?php
 include ROOT_PATH . '/view/envinclude.php';
+
+// Company Access Privilege Resolution
+$pdoModelObj = new CommonPDOModel();
+$isSuperAdmin = (!empty($_SESSION['is_super_admin'])) || (($_SESSION['user_role_name'] ?? '') === 'Super Admin') || (($_SESSION['user_role_id'] ?? 0) == 3);
+$userId = $_SESSION['user_id'] ?? 0;
+
+$allCompanies = [];
+try {
+    $stmtComp = $pdoModelObj->selectexecuteQuery("SELECT ids, company_name FROM tbl_company WHERE status = 'Active' ORDER BY ids ASC");
+    if ($stmtComp && $stmtComp instanceof PDOStatement) {
+        $allCompanies = $stmtComp->fetchAll(PDO::FETCH_ASSOC);
+    }
+} catch (\Throwable $e) {}
+
+$allowedCompanies = [];
+if ($isSuperAdmin) {
+    $allowedCompanies = $allCompanies;
+} else {
+    if (!empty($_SESSION['company_json'])) {
+        $decoded = json_decode($_SESSION['company_json'], true);
+        if (is_array($decoded) && !empty($decoded)) {
+            $allowedCompanies = $decoded;
+        }
+    }
+    if (empty($allowedCompanies) && !empty($userId)) {
+        try {
+            $uStmt = $pdoModelObj->selectexecuteQuery("SELECT company_json, company_id FROM tbl_users WHERE id = :uid OR user_id = :uid LIMIT 1", [':uid' => $userId]);
+            if ($uStmt && $uStmt instanceof PDOStatement) {
+                $uRow = $uStmt->fetch(PDO::FETCH_ASSOC);
+                if (!empty($uRow['company_json'])) {
+                    $decoded = json_decode($uRow['company_json'], true);
+                    if (is_array($decoded) && !empty($decoded)) {
+                        $allowedCompanies = $decoded;
+                    }
+                }
+                if (empty($allowedCompanies) && !empty($uRow['company_id'])) {
+                    foreach ($allCompanies as $ac) {
+                        if (strval($ac['ids']) === strval($uRow['company_id'])) {
+                            $allowedCompanies[] = $ac;
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
+    }
+    if (empty($allowedCompanies) && !empty($_SESSION['company_id'])) {
+        foreach ($allCompanies as $ac) {
+            if (strval($ac['ids']) === strval($_SESSION['company_id'])) {
+                $allowedCompanies[] = $ac;
+                break;
+            }
+        }
+    }
+}
+
+if (empty($allowedCompanies)) {
+    $allowedCompanies = !empty($allCompanies) ? $allCompanies : [['ids' => '1', 'company_name' => 'AA Car Rental']];
+}
+
+$hasMultipleCompanies = count($allowedCompanies) > 1;
+$defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies[0]['ids']);
 ?>
 <!doctype html>
 
@@ -513,14 +575,19 @@ let toDate = new Date();
 
 $('#filter_from_date').val(fromDate.toISOString().split('T')[0]);
 $('#filter_to_date').val(toDate.toISOString().split('T')[0]);
- loadreportList($('#filter_from_date').val(),$('#filter_to_date').val(),$('#customer_code_filter').val(),$('#vehicleModelAvail').val());
-function loadreportList(startDate = '', endDate = '', customer_code='', vehicle_model='') {
+
+let defaultCompanyVal = '<?= $defaultCompanyValue ?>';
+
+loadreportList($('#filter_from_date').val(), $('#filter_to_date').val(), $('#customer_code_filter').val(), $('#vehicleModelAvail').val(), $('#filter_company').val() || defaultCompanyVal);
+
+function loadreportList(startDate = '', endDate = '', customer_code = '', vehicle_model = '', company_id = '') {
     $.post('/DailyReportController', 
     { 
         startDate: startDate,
         endDate: endDate,
         customer_code: customer_code,
         vehicle_model: vehicle_model,
+        company_id: company_id,
         action: 'GetDailyCashReport'
     }, 
     function(response) {
@@ -534,16 +601,18 @@ function loadreportList(startDate = '', endDate = '', customer_code='', vehicle_
     });
 }
    
-   $('#btnSearch').click(function () {
-                
- 
-   var startDate= $('#filter_from_date').val();
-   var endDate= $('#filter_to_date').val();
-   var customer_code= $('#customer_code_filter').val();
-   var vehicle_model= $('#vehicleModelAvail').val();
+$('#btnSearch').click(function () {
+   var startDate = $('#filter_from_date').val();
+   var endDate = $('#filter_to_date').val();
+   var customer_code = $('#customer_code_filter').val();
+   var vehicle_model = $('#vehicleModelAvail').val();
+   var company_id = $('#filter_company').val() || defaultCompanyVal;
    
-    loadreportList(startDate,endDate,customer_code,vehicle_model);
+   loadreportList(startDate, endDate, customer_code, vehicle_model, company_id);
+});
 
+$(document).on('change', '#filter_company', function() {
+    $('#btnSearch').trigger('click');
 });
     $(document).on('click', '#tbl_report a.view_contract_table', function (e) {
 
@@ -567,14 +636,16 @@ $('#btnExport').click(function () {
  
    var startDate= $('#filter_from_date').val();
    var endDate= $('#filter_to_date').val();
-  var customer_code = $.trim($('#customer_code_filter').val()) || 'All';
+   var customer_code = $.trim($('#customer_code_filter').val()) || 'All';
    var vehicle_model= $('#vehicleModelAvail').val();
+   var company_id = $('#filter_company').val() || defaultCompanyVal;
    
    const params = new URLSearchParams({
     from: startDate,
     to: endDate,
     customer_code: customer_code,
-    vehicle_model: vehicle_model
+    vehicle_model: vehicle_model,
+    company_id: company_id
 });
 
     fetch('/controller/ajax_encrypt_common.php?' + params.toString())

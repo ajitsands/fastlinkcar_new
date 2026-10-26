@@ -33,6 +33,7 @@
     <!-- Main JS -->
 
     <script src="<?= $_ENV['BASE_URL'] ?>assets/js/main.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/js/modal-dialog-enforcer.js"></script>
 
     <?php
     require_once ROOT_PATH . '/model/common/PermissionHelper.php';

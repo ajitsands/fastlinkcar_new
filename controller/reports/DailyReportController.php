@@ -19,7 +19,7 @@ class DailyReportController
         
         $this->id = $_POST['id'] ?? null;
         
-        $this->company_id = $_SESSION['company_id'] ?? 1;
+        $this->company_id = $_POST['company_id'] ?? ($_SESSION['company_id'] ?? 1);
         $this->user_id = $_SESSION['user_id'] ?? 1;
         $this->actionevents = $_POST['action'] ?? null;
         date_default_timezone_set('Asia/Bahrain');
@@ -48,10 +48,29 @@ class DailyReportController
     function SQLArray()
     {
         $array = array();
-
-       
-      
         return $array;
+    }
+
+    private function getUserAllowedCompanyIds()
+    {
+        $isSuperAdmin = (!empty($_SESSION['is_super_admin'])) || (($_SESSION['user_role_name'] ?? '') === 'Super Admin') || (($_SESSION['user_role_id'] ?? 0) == 3);
+        $userCompanyIds = [strval($_SESSION['company_id'] ?? '1')];
+        if (!empty($_SESSION['company_json'])) {
+            $cArr = json_decode($_SESSION['company_json'], true);
+            if (is_array($cArr)) {
+                foreach ($cArr as $c) {
+                    if (!empty($c['ids'])) {
+                        $userCompanyIds[] = strval($c['ids']);
+                    }
+                }
+            }
+        }
+        $userCompanyIds = array_values(array_unique($userCompanyIds));
+        return [
+            'isSuperAdmin'  => $isSuperAdmin,
+            'companyIds'    => $userCompanyIds,
+            'companyIdsStr' => !empty($userCompanyIds) ? implode(',', array_map('intval', $userCompanyIds)) : '1'
+        ];
     }
 
     function DataRequest($action)
@@ -62,6 +81,26 @@ class DailyReportController
 
           
            case 'GetDailyRentalReport':
+            $accessInfo = $this->getUserAllowedCompanyIds();
+            $isSuperAdmin = $accessInfo['isSuperAdmin'];
+            $companyIdsStr = $accessInfo['companyIdsStr'];
+
+            $params = [
+             ':start_date'  => $this->startDate,
+             ':end_date'    => $this->endDate
+            ];
+
+            if (!empty($this->company_id) && $this->company_id !== 'all' && $this->company_id !== 'All') {
+                $rCompCond = "r.company_id = :company_id";
+                $params[':company_id'] = intval($this->company_id);
+            } else {
+                if (!$isSuperAdmin) {
+                    $rCompCond = "r.company_id IN ($companyIdsStr)";
+                } else {
+                    $rCompCond = "1=1";
+                }
+            }
+
             $sql = "SELECT
                 r.ids,
                 r.agreement_date,
@@ -92,26 +131,19 @@ class DailyReportController
             
             FROM tbl_vehicle_rentout_contracts r
             LEFT JOIN customer_details c
-                   ON c.customer_id = r.customer_code WHERE r.company_id = :company_id AND r.agreement_status IN ('Rentout','Extended')
+                   ON c.customer_id = r.customer_code WHERE $rCompCond AND r.agreement_status IN ('Rentout','Extended')
               AND r.agreement_date BETWEEN :start_date AND :end_date
              ";
             
-            $params = [
-             ':company_id' => $this->company_id,
-             ':start_date'  => $this->startDate,
-             ':end_date'    => $this->endDate
-            ];
-            
-           
             if (!empty($this->customer_code) && $this->customer_code != 'All') {
-                    $sql .= " AND customer_code = :customer_code";
+                    $sql .= " AND r.customer_code = :customer_code";
                     $params[':customer_code'] = trim($this->customer_code);
                 }
             if (!empty($this->vehicle_model) && $this->vehicle_model != 'All') {
-                    $sql .= " AND vehicle_model_id = :vehicle_model_id";
+                    $sql .= " AND r.vehicle_model_id = :vehicle_model_id";
                     $params[':vehicle_model_id'] = trim($this->vehicle_model);
                 }
-            $sql .= " ORDER BY ids ASC";
+            $sql .= " ORDER BY r.ids ASC";
  
             $this->ReturnData = $this->varPDOModelObj->ListFromTable($sql, $params);
            
@@ -132,26 +164,45 @@ class DailyReportController
                     $total_amt = number_format((float)$row['total_amt'], $decimals);
         
                     $id = (int)$row['ids'];
-                    $agreement_no = htmlspecialchars($row['agreement_no']);
-                    $customer_name = htmlspecialchars($row['customer_name']);
-                    $customer_phone = htmlspecialchars($row['customer_mobile']);
-                    $customer_cpr_cr = htmlspecialchars($row['customer_cr_cpr']);
-                    $vehicle_no = htmlspecialchars($row['vehicle_no']);
-                    $vehicle_id = htmlspecialchars($row['vehicle_id']);
-                    $model_name = htmlspecialchars($row['model_name']);
-                    $vehicle_color = htmlspecialchars($row['vehicle_color']);
-                    $vehicle_year = htmlspecialchars($row['vehicle_year']);
-                    $model_name = htmlspecialchars($row['model_name']);
-                    $duration = htmlspecialchars($row['duration']);
+                    $agreement_no = htmlspecialchars($row['agreement_no'] ?? '');
+                    $customer_code = htmlspecialchars($row['customer_code'] ?? '');
+                    $customer_name = htmlspecialchars($row['customer_name'] ?? '');
+                    $customer_phone = htmlspecialchars($row['customer_mobile'] ?? '');
+                    $customer_cpr_cr = htmlspecialchars($row['customer_cr_cpr'] ?? '');
+                    $vehicle_no = htmlspecialchars($row['vehicle_no'] ?? '');
+                    $vehicle_id = htmlspecialchars($row['vehicle_id'] ?? '');
+                    $model_name = htmlspecialchars($row['model_name'] ?? '');
+                    $vehicle_color = htmlspecialchars($row['vehicle_color'] ?? '');
+                    $vehicle_year = htmlspecialchars($row['vehicle_year'] ?? '');
+                    $duration = htmlspecialchars($row['duration'] ?? '');
                    
-                    $rate_type = htmlspecialchars($row['rate_type']);
-                    $service_name = htmlspecialchars($row['service_name']);
+                    $rate_type = htmlspecialchars($row['rate_type'] ?? '');
+                    $service_name = htmlspecialchars($row['service_name'] ?? '');
                     
-                    $service_type = htmlspecialchars($row['service_type']);
-                    $customer_type = htmlspecialchars($row['customer_type']);
-                     $delivered_signatory = htmlspecialchars($row['delivered_signatory']);
+                    $service_type = htmlspecialchars($row['service_type'] ?? '');
+                    $customer_type = htmlspecialchars($row['customer_type'] ?? '');
+                    $delivered_signatory = htmlspecialchars($row['delivered_signatory'] ?? '');
                     
-                    $customer_val=$customer_name.' | '.$customer_phone.' | '.$customer_cpr_cr;
+                    if (empty($customer_name) && empty($customer_code)) {
+                        $customer_val = "<span class='text-muted'>-</span>";
+                    } else {
+                        $code_badge = !empty($customer_code) ? "<span class='badge bg-light text-secondary border' style='font-size:0.75rem; font-weight:500;'><i class='ri-hashtag me-1'></i>{$customer_code}</span>" : "";
+                        $phone_text = (!empty($customer_phone) && $customer_phone !== '-') ? "<span class='text-muted small'><i class='ri-phone-line text-primary me-1'></i>{$customer_phone}</span>" : "";
+                        $cpr_text = (!empty($customer_cpr_cr) && $customer_cpr_cr !== '-' && $customer_cpr_cr !== 'N/A') ? "<div class='small text-muted mt-1'><i class='ri-id-card-line text-danger me-1'></i>CPR: <strong>{$customer_cpr_cr}</strong></div>" : "";
+
+                        $customer_val = "
+                            <div class='customer-cell' style='text-align: left; min-width: 170px;'>
+                                <div class='fw-bold text-dark' style='font-size: 0.88rem; line-height: 1.3;'>
+                                    <i class='ri-user-line text-danger me-1'></i>" . ($customer_name ?: 'N/A') . "
+                                </div>
+                                <div class='mt-1 d-flex flex-wrap align-items-center gap-2' style='line-height: 1.2;'>
+                                    {$code_badge}
+                                    {$phone_text}
+                                </div>
+                                {$cpr_text}
+                            </div>
+                        ";
+                    }
                     $agreement_link = "<a href='javascript:void(0);'
                         class='view_contract_table'
                         data-id='{$id}' data-contract='{$agreement_no}'>
@@ -189,7 +240,33 @@ class DailyReportController
         
             break;
               case 'GetDailyCashReport':
-                        $sql = "
+                $accessInfo = $this->getUserAllowedCompanyIds();
+                $isSuperAdmin = $accessInfo['isSuperAdmin'];
+                $companyIdsStr = $accessInfo['companyIdsStr'];
+
+                $params = [
+                    ':start_date1' => $this->startDate,
+                    ':end_date1'   => $this->endDate,
+                    ':start_date2' => $this->startDate,
+                    ':end_date2'   => $this->endDate,
+                ];
+
+                if (!empty($this->company_id) && $this->company_id !== 'all' && $this->company_id !== 'All') {
+                    $cmCompCond = "cm.company_id = :company_id1";
+                    $evCompCond = "ev.company_id = :company_id2";
+                    $params[':company_id1'] = intval($this->company_id);
+                    $params[':company_id2'] = intval($this->company_id);
+                } else {
+                    if (!$isSuperAdmin) {
+                        $cmCompCond = "cm.company_id IN ($companyIdsStr)";
+                        $evCompCond = "ev.company_id IN ($companyIdsStr)";
+                    } else {
+                        $cmCompCond = "1=1";
+                        $evCompCond = "1=1";
+                    }
+                }
+
+                $sql = "
             SELECT
                 cm.id,
                 cm.cashmemo_date AS transaction_date,
@@ -215,15 +292,17 @@ class DailyReportController
             FROM cashmemo cm
             LEFT JOIN customer_details c
                 ON c.customer_id = cm.customer_code
-            WHERE cm.company_id = :company_id1
+            WHERE {$cmCompCond}
               AND cm.cashmemo_date BETWEEN :start_date1 AND :end_date1";
             
             if (!empty($this->customer_code) && $this->customer_code != 'All') {
                 $sql .= " AND cm.customer_code = :customer_code1";
+                $params[':customer_code1'] = trim($this->customer_code);
             }
             
             if (!empty($this->vehicle_model) && $this->vehicle_model != 'All') {
                 $sql .= " AND cm.model_ids = :vehicle_model_id1";
+                $params[':vehicle_model_id1'] = trim($this->vehicle_model);
             }
 
     $sql .= "
@@ -255,38 +334,21 @@ class DailyReportController
     FROM expensevoucher ev
     LEFT JOIN customer_details c
         ON c.customer_id = ev.customer_code
-    WHERE ev.company_id = :company_id2
+    WHERE {$evCompCond}
       AND ev.expensevoucher_date BETWEEN :start_date2 AND :end_date2";
     
     if (!empty($this->customer_code) && $this->customer_code != 'All') {
         $sql .= " AND ev.customer_code = :customer_code2";
+        $params[':customer_code2'] = trim($this->customer_code);
     }
     
     if (!empty($this->vehicle_model) && $this->vehicle_model != 'All') {
         $sql .= " AND ev.model_ids = :vehicle_model_id2";
+        $params[':vehicle_model_id2'] = trim($this->vehicle_model);
     }
     
     $sql = "SELECT * FROM (".$sql.") x
              ORDER BY transaction_date ASC, voucher_no ASC";
-         $params = [
-            ':company_id1' => $this->company_id,
-            ':start_date1' => $this->startDate,
-            ':end_date1'   => $this->endDate,
-        
-            ':company_id2' => $this->company_id,
-            ':start_date2' => $this->startDate,
-            ':end_date2'   => $this->endDate,
-        ];
-        
-        if (!empty($this->customer_code) && $this->customer_code != 'All') {
-            $params[':customer_code1'] = trim($this->customer_code);
-            $params[':customer_code2'] = trim($this->customer_code);
-        }
-        
-        if (!empty($this->vehicle_model) && $this->vehicle_model != 'All') {
-            $params[':vehicle_model_id1'] = trim($this->vehicle_model);
-            $params[':vehicle_model_id2'] = trim($this->vehicle_model);
-        }
  
             $this->ReturnData = $this->varPDOModelObj->ListFromTable($sql, $params);
            
@@ -306,30 +368,53 @@ class DailyReportController
                     $income = number_format((float)$row['income'], $decimals);
         
                     $id = (int)$row['id'];
-                    $voucher_no = htmlspecialchars($row['voucher_no']);
-                    $customer_name = htmlspecialchars($row['customer_name']);
-                    $customer_phone = htmlspecialchars($row['customer_mobile']);
-                    $customer_cpr_cr = htmlspecialchars($row['customer_cr_cpr']);
-                    $vehicle_no = htmlspecialchars($row['vehicle_no']);
-                    $vehicle_id = htmlspecialchars($row['vehicle_ids']);
-                    $model_name = htmlspecialchars($row['model_names']);
+                    $voucher_no = htmlspecialchars($row['voucher_no'] ?? '');
+                    $agreement_no = htmlspecialchars($row['agreement_no'] ?? '');
+                    $customer_code = htmlspecialchars($row['customer_code'] ?? '');
+                    $customer_name = htmlspecialchars($row['customer_name'] ?? '');
+                    $customer_phone = htmlspecialchars($row['customer_mobile'] ?? '');
+                    $customer_cpr_cr = htmlspecialchars($row['customer_cr_cpr'] ?? '');
+                    $vehicle_no = htmlspecialchars($row['vehicle_no'] ?? '');
+                    $vehicle_id = htmlspecialchars($row['vehicle_ids'] ?? '');
+                    $model_name = htmlspecialchars($row['model_names'] ?? '');
                     
-                    $item_name = htmlspecialchars($row['item_name']);
-                    $payment_mode = htmlspecialchars($row['payment_mode']);
-                    $remarks = htmlspecialchars($row['remarks']);
-                    $customer_type = htmlspecialchars($row['customer_type']);
-                    $customer_val=$customer_name.' | '.$customer_phone.' | '.$customer_cpr_cr;
-                    $agreement_link = "<a href='javascript:void(0);'
+                    $item_name = htmlspecialchars($row['item_name'] ?? '');
+                    $payment_mode = htmlspecialchars($row['payment_mode'] ?? '');
+                    $remarks = htmlspecialchars($row['remarks'] ?? '');
+                    $customer_type = htmlspecialchars($row['customer_type'] ?? '');
+
+                    if (empty($customer_name) && empty($customer_code)) {
+                        $customer_val = "<span class='text-muted'>-</span>";
+                    } else {
+                        $code_badge = !empty($customer_code) ? "<span class='badge bg-light text-secondary border' style='font-size:0.75rem; font-weight:500;'><i class='ri-hashtag me-1'></i>{$customer_code}</span>" : "";
+                        $phone_text = (!empty($customer_phone) && $customer_phone !== '-') ? "<span class='text-muted small'><i class='ri-phone-line text-primary me-1'></i>{$customer_phone}</span>" : "";
+                        $cpr_text = (!empty($customer_cpr_cr) && $customer_cpr_cr !== '-' && $customer_cpr_cr !== 'N/A') ? "<div class='small text-muted mt-1'><i class='ri-id-card-line text-danger me-1'></i>CPR: <strong>{$customer_cpr_cr}</strong></div>" : "";
+
+                        $customer_val = "
+                            <div class='customer-cell' style='text-align: left; min-width: 170px;'>
+                                <div class='fw-bold text-dark' style='font-size: 0.88rem; line-height: 1.3;'>
+                                    <i class='ri-user-line text-danger me-1'></i>" . ($customer_name ?: 'N/A') . "
+                                </div>
+                                <div class='mt-1 d-flex flex-wrap align-items-center gap-2' style='line-height: 1.2;'>
+                                    {$code_badge}
+                                    {$phone_text}
+                                </div>
+                                {$cpr_text}
+                            </div>
+                        ";
+                    }
+
+                    $agreement_link = !empty($agreement_no) ? "<a href='javascript:void(0);'
                         class='view_contract_table'
                         data-id='{$id}' data-contract='{$agreement_no}'>
                         {$agreement_no}
-                   </a>";
+                   </a>" : "-";
 
-                    $vehicle_link = "<a href='javascript:void(0);'
+                    $vehicle_link = !empty($vehicle_no) ? "<a href='javascript:void(0);'
                       class='btn_vehicle_view'
                       data-id='{$vehicle_id}'>
                       {$vehicle_no}
-                 </a>";
+                 </a>" : "-";
                
                     $data[] = [
                          $sl++, 
@@ -337,7 +422,7 @@ class DailyReportController
                         $voucher_no,
                         $payment_mode,
                         $agreement_link,
-                        $customer_name,
+                        $customer_val,
                         $item_name,
                         $remarks,
                         "<div style='text-align:right'>{$income}</div>",

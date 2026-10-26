@@ -740,3 +740,79 @@ document.addEventListener('keydown', event => {
 if (document.documentElement.querySelector('#autocomplete')) {
   loadSearchData();
 }
+
+/**
+ * Global Modal Dialog Enforcer
+ * Configures all modals across the application to act as static dialogs:
+ * - Clicking outside does NOT close the modal
+ * - ESC key does NOT close the modal
+ * - Only clicking Close ('X') or Cancel / Dismiss buttons closes the modal
+ */
+(function () {
+  function enforceModalStatic(modalEl) {
+    if (!modalEl || !modalEl.setAttribute) return;
+    try {
+      modalEl.setAttribute('data-bs-backdrop', 'static');
+      modalEl.setAttribute('data-backdrop', 'static');
+      modalEl.setAttribute('data-bs-keyboard', 'false');
+      modalEl.setAttribute('data-keyboard', 'false');
+
+      if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        var instance = bootstrap.Modal.getInstance(modalEl);
+        if (instance && instance._config) {
+          instance._config.backdrop = 'static';
+          instance._config.keyboard = false;
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    if (bootstrap.Modal.Default) {
+      bootstrap.Modal.Default.backdrop = 'static';
+      bootstrap.Modal.Default.keyboard = false;
+    }
+    if (bootstrap.Modal.prototype && bootstrap.Modal.prototype._getConfig) {
+      var origGetConfig = bootstrap.Modal.prototype._getConfig;
+      bootstrap.Modal.prototype._getConfig = function (config) {
+        var cfg = origGetConfig.call(this, config);
+        cfg.backdrop = 'static';
+        cfg.keyboard = false;
+        return cfg;
+      };
+    }
+  }
+
+  if (typeof jQuery !== 'undefined') {
+    if (jQuery.fn && jQuery.fn.modal) {
+      if (jQuery.fn.modal.Constructor && jQuery.fn.modal.Constructor.Default) {
+        jQuery.fn.modal.Constructor.Default.backdrop = 'static';
+        jQuery.fn.modal.Constructor.Default.keyboard = false;
+      }
+    }
+    jQuery(document).on('show.bs.modal', '.modal', function () {
+      enforceModalStatic(this);
+    });
+  }
+
+  document.addEventListener(
+    'show.bs.modal',
+    function (e) {
+      if (e.target && e.target.classList && e.target.classList.contains('modal')) {
+        enforceModalStatic(e.target);
+      }
+    },
+    true
+  );
+
+  function applyToAllExistingModals() {
+    document.querySelectorAll('.modal').forEach(enforceModalStatic);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyToAllExistingModals);
+  } else {
+    applyToAllExistingModals();
+  }
+})();
+

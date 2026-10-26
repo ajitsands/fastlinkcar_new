@@ -797,6 +797,8 @@ class UsersController
                 ['Staff Use Report Manage', 'staff_use_report_manage', 'Reports'],
                 ['Contract & Replacement History Access', 'contract_history_report_access', 'Reports'],
                 ['Contract & Replacement History Manage', 'contract_history_report_manage', 'Reports'],
+                ['Contract Return & Overdue Access', 'contract_return_overdue_access', 'Reports'],
+                ['Contract Return & Overdue Manage', 'contract_return_overdue_manage', 'Reports'],
 
                 // Settings
                 ['System Settings Access', 'system_settings_access', 'Settings'],

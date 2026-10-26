@@ -6,12 +6,14 @@ $startDate     = $_GET['from'] ?? '';
 $endDate       = $_GET['to'] ?? '';
 $customer_code = $_GET['customer_code'] ?? '';
 $vehicle_model = $_GET['vehicle_model'] ?? '';
+$company_id    = $_GET['company_id'] ?? '';
 
 $data = [
     'startDate'     => $startDate,
     'endDate'       => $endDate,
     'customer_code' => $customer_code,
-    'vehicle_model' => $vehicle_model
+    'vehicle_model' => $vehicle_model,
+    'company_id'    => $company_id
 ];
 
 

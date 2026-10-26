@@ -83,15 +83,10 @@ $startDate     = $data['startDate'] ?? '';
 $endDate       = $data['endDate'] ?? '';
 $customer_code = $data['customer_code'] ?? '';
 $vehicle_model = $data['vehicle_model'] ?? '';
-$company_id= $_SESSION['company_id'] ?? 1;
-
-
-// Support for POST or GET parameters
-$params = !empty($_POST) ? $_POST : $_GET;
+$company_id    = $data['company_id'] ?? ($_SESSION['company_id'] ?? 'all');
 
 // Support for POST or GET parameters
 $params = !empty($_POST) ? $_POST : $_GET;
-//$memo_no = $params['memo_no'] ?? '';
 
 // Database Connection
 mysqli_report(MYSQLI_REPORT_OFF);
@@ -101,6 +96,63 @@ $sample_mode = false;
 if ($mysqli->connect_error) {
     $sample_mode = true;
 }
+
+// User Company Access Privileges
+$isSuperAdmin = (!empty($_SESSION['is_super_admin'])) || (($_SESSION['user_role_name'] ?? '') === 'Super Admin') || (($_SESSION['user_role_id'] ?? 0) == 3);
+
+$allowedCompanyIds = [];
+if (!empty($_SESSION['company_id'])) {
+    $allowedCompanyIds[] = intval($_SESSION['company_id']);
+}
+if (!empty($_SESSION['company_json'])) {
+    $cArr = is_string($_SESSION['company_json']) ? json_decode($_SESSION['company_json'], true) : $_SESSION['company_json'];
+    if (is_array($cArr)) {
+        foreach ($cArr as $c) {
+            if (!empty($c['ids'])) {
+                $allowedCompanyIds[] = intval($c['ids']);
+            }
+        }
+    }
+}
+$allowedCompanyIds = array_values(array_unique($allowedCompanyIds));
+$allowedCompanyIdsStr = !empty($allowedCompanyIds) ? implode(',', $allowedCompanyIds) : '1';
+
+$company_display_name = 'All Companies';
+$cm_company_condition = "1=1";
+$ev_company_condition = "1=1";
+$company_param = null;
+
+if (!empty($company_id) && $company_id !== 'all' && $company_id !== 'All') {
+    $reqCompId = intval($company_id);
+    if ($isSuperAdmin || in_array($reqCompId, $allowedCompanyIds)) {
+        $cm_company_condition = "cm.company_id = ?";
+        $ev_company_condition = "ev.company_id = ?";
+        $company_param = $reqCompId;
+
+        $stmtComp = $mysqli->prepare("SELECT company_name FROM tbl_company WHERE ids = ? LIMIT 1");
+        if ($stmtComp) {
+            $stmtComp->bind_param("i", $reqCompId);
+            $stmtComp->execute();
+            $resComp = $stmtComp->get_result();
+            if ($rowComp = $resComp->fetch_assoc()) {
+                $company_display_name = $rowComp['company_name'];
+            }
+            $stmtComp->close();
+        }
+    } else {
+        $cm_company_condition = "cm.company_id IN ($allowedCompanyIdsStr)";
+        $ev_company_condition = "ev.company_id IN ($allowedCompanyIdsStr)";
+    }
+} else {
+    if (!$isSuperAdmin) {
+        $cm_company_condition = "cm.company_id IN ($allowedCompanyIdsStr)";
+        $ev_company_condition = "ev.company_id IN ($allowedCompanyIdsStr)";
+    } else {
+        $cm_company_condition = "1=1";
+        $ev_company_condition = "1=1";
+    }
+}
+
 $customer_name = 'All Customers';
 
 if ($customer_code !== 'All' && $customer_code !== '') {
@@ -151,9 +203,7 @@ if ($vehicle_model !== 'All' && $vehicle_model !== '') {
     }
 }
 
- 
-$sql = "
-SELECT
+$sql1 = "SELECT
     cm.id,
     cm.cashmemo_date AS transaction_date,
     cm.cashmemo_no AS voucher_no,
@@ -178,22 +228,33 @@ SELECT
 FROM cashmemo cm
 LEFT JOIN customer_details c
     ON c.customer_id = cm.customer_code
-WHERE cm.company_id = ?
+WHERE $cm_company_condition
   AND cm.cashmemo_date BETWEEN ? AND ?";
 
+$types1 = "";
+$bind1 = [];
+
+if ($company_param !== null) {
+    $types1 .= "i";
+    $bind1[] = $company_param;
+}
+$types1 .= "ss";
+$bind1[] = $startDate;
+$bind1[] = $endDate;
+
 if (!empty($customer_code) && $customer_code != 'All') {
-    $sql .= " AND cm.customer_code = ?";
+    $sql1 .= " AND cm.customer_code = ?";
+    $types1 .= "s";
+    $bind1[] = $customer_code;
 }
 
 if (!empty($vehicle_model) && $vehicle_model != 'All') {
-    $sql .= " AND cm.model_ids = ?";
+    $sql1 .= " AND cm.model_ids = ?";
+    $types1 .= "s";
+    $bind1[] = $vehicle_model;
 }
 
-$sql .= "
-
-UNION ALL
-
-SELECT
+$sql2 = "SELECT
     ev.id,
     ev.expensevoucher_date AS transaction_date,
     ev.expensevoucher_no AS voucher_no,
@@ -218,86 +279,77 @@ SELECT
 FROM expensevoucher ev
 LEFT JOIN customer_details c
     ON c.customer_id = ev.customer_code
-WHERE ev.company_id = ?
+WHERE $ev_company_condition
   AND ev.expensevoucher_date BETWEEN ? AND ?";
 
+$types2 = "";
+$bind2 = [];
+
+if ($company_param !== null) {
+    $types2 .= "i";
+    $bind2[] = $company_param;
+}
+$types2 .= "ss";
+$bind2[] = $startDate;
+$bind2[] = $endDate;
+
 if (!empty($customer_code) && $customer_code != 'All') {
-    $sql .= " AND ev.customer_code = ?";
+    $sql2 .= " AND ev.customer_code = ?";
+    $types2 .= "s";
+    $bind2[] = $customer_code;
 }
 
 if (!empty($vehicle_model) && $vehicle_model != 'All') {
-    $sql .= " AND ev.model_ids = ?";
+    $sql2 .= " AND ev.model_ids = ?";
+    $types2 .= "s";
+    $bind2[] = $vehicle_model;
 }
 
-$sql .= " ORDER BY transaction_date ASC, voucher_no ASC";
+$sql = "SELECT * FROM (($sql1) UNION ALL ($sql2)) AS combined_transactions ORDER BY transaction_date ASC, voucher_no ASC";
+$types = $types1 . $types2;
+$bind = array_merge($bind1, $bind2);
+
 $stmt = $mysqli->prepare($sql);
-
-if (!$stmt) {
-    die("Prepare Failed : " . $mysqli->error);
-}
-$types = "ississ";
-
-$bind = [
-    $company_id,
-    $startDate,
-    $endDate,
-    $company_id,
-    $startDate,
-    $endDate
-];
-
-if (!empty($customer_code) && $customer_code != 'All') {
-    $types .= "ss";
-    $bind[] = $customer_code;
-    $bind[] = $customer_code;
-}
-
-if (!empty($vehicle_model) && $vehicle_model != 'All') {
-    $types .= "ii";
-    $bind[] = $vehicle_model;
-    $bind[] = $vehicle_model;
-}
-
-$stmt->bind_param($types, ...$bind);
-$stmt->execute();
-
-$result = $stmt->get_result();
-
 $rows = [];
-
-while ($row = $result->fetch_assoc()) {
-    $rows[] = $row;
+if ($stmt) {
+    if (!empty($bind)) {
+        $stmt->bind_param($types, ...$bind);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $rows[] = $row;
+    }
+    $stmt->close();
 }
-
-$stmt->close();
 
 // Initialize TCPDF
-class AA_CashMemo_PDF extends TCPDF {
-    // Overriding Header and Footer to keep the layout pixel perfect and custom
-     public $company_signature = '';
-    public $customer_signature = '';
-    
-    public function Header() {}
-    public function Footer()
-{
-    $this->SetY(-10);
+if (!class_exists('AA_DailyCash_PDF')) {
+    class AA_DailyCash_PDF extends TCPDF {
+        // Overriding Header and Footer to keep the layout pixel perfect and custom
+        public $company_signature = '';
+        public $customer_signature = '';
+        
+        public function Header() {}
+        public function Footer()
+        {
+            $this->SetY(-10);
 
-    $this->SetFont('dejavusans','I',8);
+            $this->SetFont('dejavusans','I',8);
 
-    $this->Cell(
-        0,
-        5,
-        'Daily Cash Report | Page '.$this->getAliasNumPage().' of '.$this->getAliasNbPages(),
-        0,
-        0,
-        'C'
-    );
+            $this->Cell(
+                0,
+                5,
+                'Daily Cash Report | Page '.$this->getAliasNumPage().' of '.$this->getAliasNbPages(),
+                0,
+                0,
+                'C'
+            );
+        }
+    }
 }
 
-  
-}
-
-$pdf = new AA_CashMemo_PDF(
+$pdf = new AA_DailyCash_PDF(
     'L',              // Landscape
     PDF_UNIT,
     'A4',             // A4 size
@@ -307,7 +359,7 @@ $pdf = new AA_CashMemo_PDF(
 );
 
 $pdf->SetCreator(PDF_CREATOR);
-$pdf->SetTitle('Daily Rental Report');
+$pdf->SetTitle('Daily Cash Report');
 
 $pdf->SetMargins(8, 8, 8);
 $pdf->SetAutoPageBreak(TRUE, 15);
@@ -409,27 +461,42 @@ $html .= '
     </td>
 
     <td width="15%" bgcolor="#eeeeee">
-        <b>Customer</b>
+        <b>Company</b>
     </td>
     <td width="35%">
-        '.htmlspecialchars($customer_name ?: 'All Customers').'
+        '.htmlspecialchars($company_display_name).'
     </td>
 </tr>
 
 
 <tr>
     <td bgcolor="#eeeeee">
+        <b>Customer</b>
+    </td>
+    <td>
+        '.htmlspecialchars($customer_name ?: 'All Customers').'
+    </td>
+
+    <td bgcolor="#eeeeee">
         <b>Vehicle Model</b>
     </td>
     <td>
         '.htmlspecialchars($vehicle_model_name ?: 'All Models').'
     </td>
+</tr>
 
+<tr>
     <td bgcolor="#eeeeee">
-        <b>Total Agreements</b>
+        <b>Total Records</b>
     </td>
     <td>
         '.count($rows).'
+    </td>
+    <td bgcolor="#eeeeee">
+        <b>Generated Date</b>
+    </td>
+    <td>
+        '.date('d-m-Y H:i').'
     </td>
 </tr>
 
@@ -493,14 +560,34 @@ foreach ($rows as $row) {
         $refundTotal += $expense;
     }
 
+    $custName = htmlspecialchars($row['customer_name'] ?? '');
+    if (empty($custName) && empty($row['customer_code'])) {
+        $custDetails = '<font color="#888888">-</font>';
+    } else {
+        $custDetails = '<b>' . ($custName ?: 'N/A') . '</b>';
+        $meta = [];
+        if (!empty($row['customer_code'])) {
+            $meta[] = '#' . htmlspecialchars($row['customer_code']);
+        }
+        if (!empty($row['customer_mobile']) && $row['customer_mobile'] !== '-') {
+            $meta[] = htmlspecialchars($row['customer_mobile']);
+        }
+        if (!empty($meta)) {
+            $custDetails .= '<br><font size="7" color="#555555">' . implode(' | ', $meta) . '</font>';
+        }
+        if (!empty($row['customer_cr_cpr']) && $row['customer_cr_cpr'] !== '-' && $row['customer_cr_cpr'] !== 'N/A') {
+            $custDetails .= '<br><font size="7" color="#8A1C14">CPR: ' . htmlspecialchars($row['customer_cr_cpr']) . '</font>';
+        }
+    }
+
     $html .= '
     <tr>
-        <td width="4%" align="center">'.$sl++.'</td>
+        <td width="4%" align="center"><nobr>'.$sl++.'</nobr></td>
         <td width="9%" align="center">'.date('d-m-Y', strtotime($row['transaction_date'])).'</td>
         <td width="10%" align="center">'.htmlspecialchars($row['voucher_no']).'</td>
         <td width="9%" align="center">'.htmlspecialchars($mode).'</td>
         <td width="9%" align="center">'.htmlspecialchars($row['agreement_no']).'</td>
-        <td width="18%">'.htmlspecialchars($row['customer_name']).'</td>
+        <td width="18%">'.$custDetails.'</td>
         <td width="12%">'.htmlspecialchars($row['item_name']).'</td>
         <td width="14%">'.htmlspecialchars($row['remarks']).'</td>
         <td width="7%" align="right">'.number_format($income,3).'</td>

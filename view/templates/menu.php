@@ -347,6 +347,12 @@
                         <div data-i18n="Contract & Replacement History">Contract & Replacement History</div>
                       </a>
                     </li>
+                    <li class="menu-item <?php if (($decrypt[0] ?? '') == '6-10' || ($decrypt[1] ?? '') == '6-10') { echo 'active'; } ?>">
+                      <a href="/ContractReturnOverdueReport?val=<?php echo $this->encryption->encrypt('6,6-10'); ?>" class="menu-link">
+                        <i class="menu-icon icon-base ri ri-time-line"></i>
+                        <div data-i18n="Contract Return & Overdue Report">Contract Return & Overdue Report</div>
+                      </a>
+                    </li>
                  </ul>
         </li>
        

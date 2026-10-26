@@ -391,6 +391,8 @@ class RoutingClass
             
             'ContractList' => 'ContractList',
             'ContractList/' => 'ContractList',
+            'ContratcList' => 'ContractList',
+            'ContratcList/' => 'ContractList',
             
             'ContractListController' => 'ContractListController',
             'ContractListController/' => 'ContractListController',
@@ -506,6 +508,16 @@ class RoutingClass
             'DailyRentalReportExport/' => 'DailyRentalReportExport',
             'DailyCashReportExport' => 'DailyCashReportExport',
             'DailyCashReportExport/' => 'DailyCashReportExport',
+            'ContractHistoryReport' => 'ContractHistoryReport',
+            'ContractHistoryReport/' => 'ContractHistoryReport',
+            'ContractHistoryController' => 'ContractHistoryController',
+            'ContractHistoryController/' => 'ContractHistoryController',
+            'ContractHistoryExport' => 'ContractHistoryExport',
+            'ContractHistoryExport/' => 'ContractHistoryExport',
+            'ContractReturnOverdueReport' => 'ContractReturnOverdueReport',
+            'ContractReturnOverdueReport/' => 'ContractReturnOverdueReport',
+            'ContractReturnOverdueController' => 'ContractReturnOverdueController',
+            'ContractReturnOverdueController/' => 'ContractReturnOverdueController',
             
              'RegisterStaff' => 'RegisterStaff',
             'RegisterStaff/' => 'RegisterStaff',
@@ -537,7 +549,9 @@ class RoutingClass
             
             'RefundFormController' => 'RefundFormController',
             'RefundFormController/' => 'RefundFormController',
-
+            
+            'DashboardController' => 'DashboardController',
+            'DashboardController/' => 'DashboardController',
         );
 
         // Parse the URL
@@ -1111,6 +1125,26 @@ class RoutingClass
     {
         $this->includeWithParams("pdf/daily_cash_report.php", $_GET);
     }
+    private function ContractHistoryReport(...$params)
+    {
+        $this->includeWithParams("view/contract_history_report.php", $_GET);
+    }
+    private function ContractHistoryController(...$params)
+    {
+        $this->includeWithParams("controller/reports/ContractHistoryController.php", $_GET);
+    }
+    private function ContractHistoryExport(...$params)
+    {
+        $this->includeWithParams("pdf/contract_history_export.php", $_GET);
+    }
+    private function ContractReturnOverdueReport(...$params)
+    {
+        $this->includeWithParams("view/contract_return_overdue_report.php", $_GET);
+    }
+    private function ContractReturnOverdueController(...$params)
+    {
+        $this->includeWithParams("controller/reports/ContractReturnOverdueController.php", $_GET);
+    }
     private function RegisterStaff(...$params)
     {
         $this->includeWithParams("view/staff_register.php", $_GET);
@@ -1172,6 +1206,11 @@ class RoutingClass
     private function SystemSettingsController(...$params)
     {
         $this->includeWithParams("controller/settings/SystemSettingsController.php", $_GET);
+    }
+
+    private function DashboardController(...$params)
+    {
+        $this->includeWithParams("controller/dashboard/DashboardController.php", $_GET);
     }
     
     private function includeWithParams($file, $params)

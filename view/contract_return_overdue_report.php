@@ -551,17 +551,16 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                                             <th width="3%" class="text-center">#</th>
                                             <th width="10%">Agreement / Company</th>
                                             <th width="6%" class="text-center">Status</th>
-                                            <th width="14%">Customer Details</th>
-                                            <th width="12%">Vehicle Details</th>
-                                            <th width="10%">Contract Period</th>
+                                            <th width="15%">Customer Details</th>
+                                            <th width="13%">Vehicle Details</th>
+                                            <th width="11%">Contract Period</th>
                                             <th width="5%" class="text-center">Extended</th>
                                             <th width="10%">Extension Period</th>
-                                            <th width="9%">Expected Return</th>
-                                            <th width="9%">Date of Return</th>
-                                            <th width="8%" class="text-center">Return Overdue</th>
+                                            <th width="10%">Expected Return</th>
+                                            <th width="9%" class="text-center">Return Overdue</th>
                                             <th width="5%" class="text-end">Daily Rate</th>
-                                            <th width="7%" class="text-end">Total Agreed</th>
-                                            <th width="7%" class="text-end text-danger">Overdue Extra</th>
+                                            <th width="8%" class="text-end">Total Agreed</th>
+                                            <th width="8%" class="text-end text-danger">Overdue Extra</th>
                                             <th width="4%" class="text-center no-print">Action</th>
                                         </tr>
                                     </thead>
@@ -570,7 +569,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                                     </tbody>
                                     <tfoot>
                                         <tr>
-                                            <td colspan="12" class="text-end">Filtered Totals:</td>
+                                            <td colspan="11" class="text-end">Filtered Totals:</td>
                                             <td class="text-end text-dark" id="foot_total_agreed">0.000 BHD</td>
                                             <td class="text-end text-danger" id="foot_total_overdue_extra">0.000 BHD</td>
                                             <td class="no-print"></td>
@@ -785,7 +784,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
             lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
             order: [[8, 'desc']], // Order by Expected Return by default
             columnDefs: [
-                { orderable: false, targets: [0, 14] }
+                { orderable: false, targets: [0, 13] }
             ],
             language: {
                 search: "_INPUT_",
@@ -810,7 +809,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
 
         // UI Loading Indicator
         reportDataTable.clear().draw();
-        $('#tbl_contract_overdue_report tbody').html('<tr><td colspan="15" class="text-center py-4"><div class="spinner-border text-danger spinner-border-sm me-2" role="status"></div> Loading report data...</td></tr>');
+        $('#tbl_contract_overdue_report tbody').html('<tr><td colspan="14" class="text-center py-4"><div class="spinner-border text-danger spinner-border-sm me-2" role="status"></div> Loading report data...</td></tr>');
 
         $.ajax({
             url: '/ContractReturnOverdueController',
@@ -935,9 +934,6 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
             // Expected Return Date
             let expReturnHtml = `<div class="fw-bold ${row.is_overdue ? 'text-danger' : 'text-dark'}">${row.expected_return_date}</div>`;
 
-            // Date of Return (All vehicles are currently on rent)
-            let actualReturnHtml = `<span class="badge bg-light text-muted border"><i class="ri ri-roadster-line me-1"></i>On Rent</span>`;
-
             // Return Overdue Badge
             let overdueBadge = '';
             if (row.is_overdue) {
@@ -978,7 +974,6 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                 extendedBadge,
                 extPeriodHtml,
                 expReturnHtml,
-                actualReturnHtml,
                 overdueBadge,
                 `${row.daily_rate}`,
                 agreedAmountHtml,
@@ -1325,7 +1320,6 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
             "Extension Period",
             "Extension Days",
             "Expected Return Date",
-            "Date of Return",
             "Overdue Status",
             "Overdue Days",
             "Daily Unit Rate (BHD)",
@@ -1361,7 +1355,6 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                 row.extension_period,
                 row.extension_total_days,
                 row.expected_return_date,
-                row.actual_return_date,
                 row.overdue_status_label,
                 row.overdue_days,
                 row.daily_rate,

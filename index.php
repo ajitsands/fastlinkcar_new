@@ -86,6 +86,27 @@ if (!empty($_SERVER['HTTP_HOST'])) {
         $_SERVER['BASE_URL'] = $resolvedBase;
         putenv("BASE_URL=$resolvedBase");
     }
+
+    // Auto-switch DB credentials between localhost and live server
+    $isLocalHost = ($reqHostLow === 'localhost' || $reqHostLow === '127.0.0.1');
+    if (!$isLocalHost) {
+        $srvDbHost = $_ENV['SERVER_DB_HOST'] ?? 'localhost';
+        $srvDbName = $_ENV['SERVER_DB_NAME'] ?? 'fastlinkpayment_carrental_db_new';
+        $srvDbUser = $_ENV['SERVER_DB_USER'] ?? 'fastlinkpayment_carrental_db_new_user';
+        $srvDbPass = $_ENV['SERVER_DB_PASS'] ?? 'S@nds1@b';
+        foreach ([
+            'DB_HOST' => $srvDbHost,
+            'DB_NAME' => $srvDbName,
+            'DB_USER' => $srvDbUser,
+            'DB_PASS' => $srvDbPass,
+            'APP_ENV' => 'production',
+            'APP_DEBUG' => 'false',
+        ] as $k => $v) {
+            $_ENV[$k] = $v;
+            $_SERVER[$k] = $v;
+            putenv("$k=$v");
+        }
+    }
 }
 
 if (isset($_ENV['APP_TIMEZONE'])) {

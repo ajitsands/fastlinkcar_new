@@ -22,5 +22,15 @@ if (empty($_ENV['MAINSERVER']) || empty($_ENV['DB_NAME'])) {
     if (file_exists($envFile) && function_exists('loadEnvironmentVariables')) {
         loadEnvironmentVariables($envFile);
     }
+
+    if (!empty($_SERVER['HTTP_HOST'])) {
+        $reqHostLow = strtolower(explode(':', $_SERVER['HTTP_HOST'])[0]);
+        if ($reqHostLow !== 'localhost' && $reqHostLow !== '127.0.0.1') {
+            $_ENV['DB_HOST'] = $_ENV['SERVER_DB_HOST'] ?? 'localhost';
+            $_ENV['DB_NAME'] = $_ENV['SERVER_DB_NAME'] ?? 'fastlinkpayment_carrental_db_new';
+            $_ENV['DB_USER'] = $_ENV['SERVER_DB_USER'] ?? 'fastlinkpayment_carrental_db_new_user';
+            $_ENV['DB_PASS'] = $_ENV['SERVER_DB_PASS'] ?? 'S@nds1@b';
+        }
+    }
 }
 ?>

@@ -1,13 +1,13 @@
 <?php
-if (file_exists(__DIR__ . '/envfiles/vendor/autoload.php')) {
+if (empty($_ENV['DB_NAME']) && file_exists(__DIR__ . '/envfiles/vendor/autoload.php')) {
     require_once __DIR__ . '/envfiles/vendor/autoload.php';
-    if (class_exists('Dotenv\Dotenv')) {
+    if (class_exists('Dotenv\Dotenv') && file_exists(__DIR__ . '/envfiles/.env')) {
         $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/envfiles');
         $dotenv->load();
     }
 }
 
-$apiKey = $_ENV['OPENAI_API_KEY'];
+$apiKey = $_ENV['OPENAI_API_KEY'] ?? '';
 
 function getPDO() {
     $host = $_ENV['DB_HOST'] ?: '127.0.0.1';

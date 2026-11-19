@@ -1346,7 +1346,7 @@ function load_contract_list(
 
     if (!window.__embedReturnHandled) {
         const qp = new URLSearchParams(window.location.search);
-        if (qp.get('embed_return') === '1' && qp.get('contract_id')) {
+        if (qp.get('embed_return') === '1') {
             window.__embedReturnHandled = true;
             ['ReturncontractModal', 'imagePreviewModal', 'imagePreviewModalreturn', 'modalAddViolationHead', 'otpVerifyModal', 'otpSubmitModal', 'customConfirmModal', 'dropdownContent'].forEach(mid => {
                 const el = document.getElementById(mid);
@@ -1354,19 +1354,46 @@ function load_contract_list(
                     document.body.appendChild(el);
                 }
             });
-            const cId = qp.get('contract_id');
-            const agrNo = qp.get('agreement_no') || '';
-            const vehId = qp.get('vehicle_id') || '';
-            const custCode = qp.get('customer_code') || '';
-            const modId = qp.get('model_id') || '';
-            const bkgId = qp.get('booking_ids') || '';
-            const bkgNo = qp.get('booking_no') || agrNo;
-            $('#return_agreement_ref').text(agrNo);
-            $('#txt_return_modal_agreement_id').val(cId);
-            $('#txt_return_modal_agreement_no').val(agrNo);
-            $('#txt_return_modal_booking_ids').val(bkgId);
-            $('#txt_return_modal_booking_ref_no').val(bkgNo);
-            setTimeout(() => openReturnModal(cId, vehId, custCode, modId), 150);
+
+            window.__openEmbeddedReturn = function(c) {
+                if (!c || !c.contract_id) return;
+                window.__returnSuccess = false;
+                const cId = c.contract_id;
+                const agrNo = c.agreement_no || '';
+                const vehId = c.vehicle_id || '';
+                const custCode = c.customer_code || '';
+                const modId = c.model_id || '';
+                const bkgId = c.booking_ids || '';
+                const bkgNo = c.booking_no || agrNo;
+                $('#return_agreement_ref').text(agrNo);
+                $('#txt_return_modal_agreement_id').val(cId);
+                $('#txt_return_modal_agreement_no').val(agrNo);
+                $('#txt_return_modal_booking_ids').val(bkgId);
+                $('#txt_return_modal_booking_ref_no').val(bkgNo);
+                openReturnModal(cId, vehId, custCode, modId);
+            };
+
+            window.addEventListener('message', function(ev) {
+                if (ev.data && ev.data.type === 'openReturnModal' && ev.data.contract) {
+                    window.__openEmbeddedReturn(ev.data.contract);
+                }
+            });
+
+            if (qp.get('contract_id')) {
+                window.__openEmbeddedReturn({
+                    contract_id: qp.get('contract_id'),
+                    agreement_no: qp.get('agreement_no') || '',
+                    vehicle_id: qp.get('vehicle_id') || '',
+                    customer_code: qp.get('customer_code') || '',
+                    model_id: qp.get('model_id') || '',
+                    booking_ids: qp.get('booking_ids') || '',
+                    booking_no: qp.get('booking_no') || ''
+                });
+            }
+
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'returnIframeReady' }, '*');
+            }
         }
     }
 

@@ -638,6 +638,15 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             new bootstrap.Modal(document.getElementById('quickViewContractModal')).show();
         });
 
+        let returnIframeReady = false;
+        function preloadReturnIframe() {
+            const iframe = document.getElementById('returnModalIframe');
+            if (!iframe) return;
+            if (!iframe.src || iframe.src === 'about:blank') {
+                iframe.src = `${contractListBaseUrl}&embed_return=1&preload=1`;
+            }
+        }
+
         $(document).on('click', '.btn-return-modal', function() {
             const id = parseInt($(this).attr('data-id') || $(this).data('id'), 10);
             const row = allContracts.find(c => c.id === id);
@@ -646,8 +655,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             const qvModal = bootstrap.Modal.getInstance(document.getElementById('quickViewContractModal'));
             if (qvModal) qvModal.hide();
 
-            const params = new URLSearchParams({
-                embed_return: '1',
+            const payload = {
                 contract_id: row.id,
                 agreement_no: row.agreement_no || '',
                 vehicle_id: row.vehicle_id || '',
@@ -655,19 +663,29 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                 model_id: row.model_id || '',
                 booking_ids: row.booking_ids || '',
                 booking_no: row.booking_no || row.agreement_no || ''
-            });
+            };
 
             const iframe = document.getElementById('returnModalIframe');
+            if (returnIframeReady && iframe && iframe.contentWindow) {
+                iframe.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                iframe.contentWindow.postMessage({ type: 'openReturnModal', contract: payload }, '*');
+                return;
+            }
+
+            const params = new URLSearchParams(Object.assign({ embed_return: '1' }, payload));
             iframe.src = `${contractListBaseUrl}&${params.toString()}`;
             iframe.style.display = 'block';
             document.body.style.overflow = 'hidden';
         });
 
         window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'returnIframeReady') {
+                returnIframeReady = true;
+            }
             if (event.data && event.data.type === 'returnModalClosed') {
                 const iframe = document.getElementById('returnModalIframe');
                 iframe.style.display = 'none';
-                iframe.src = 'about:blank';
                 document.body.style.overflow = '';
                 if (event.data.returned) {
                     loadActiveContracts();
@@ -687,6 +705,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
         });
 
         loadActiveContracts();
+        setTimeout(preloadReturnIframe, 400);
     })();
     </script>
 </body>

@@ -5344,12 +5344,6 @@ function saveReturnContractValidation(e,customer_code)
         laddaReturnContract.stop();
     }
 
-    if (typeof isReturnPeriodUncovered === 'function' && isReturnPeriodUncovered()) {
-        if (window.returnStepperInstance) window.returnStepperInstance.to(1);
-        setupDropdown('dropdownContent', 'error', svgError + "Return date is not covered by any contract or extension. Please extend the contract for the balance period in Step 1.", 'click');
-        return;
-    }
-
     if (!$('#km_in').val()) {
         if (window.returnStepperInstance) window.returnStepperInstance.to(2);
         setupDropdown('dropdownContent', 'error', svgError + "Please provide km in", 'click');

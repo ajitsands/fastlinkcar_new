@@ -196,7 +196,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
         }
         .kpi-red {
             border-left: 4px solid #ef4444;
-            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+            background: linear-gradient(135deg, #f4f7fe 0%, #ffffff 100%);
         }
         .kpi-green {
             border-left: 4px solid #10b981;
@@ -230,9 +230,9 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
         #tbl_contract_overdue_report > thead > tr > th,
         table.dataTable thead th,
         .table thead th {
-            background-color: #ffeff0 !important;
-            color: #d12222 !important;
-            border-bottom: 2px solid #d12222 !important;
+            background-color: #eef3fc !important;
+            color: #1b3d94 !important;
+            border-bottom: 2px solid #1b3d94 !important;
             font-weight: 600 !important;
             text-transform: uppercase !important;
             font-size: 0.78rem !important;
@@ -245,32 +245,32 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
             background-color: #fff9f9 !important;
         }
         #tbl_contract_overdue_report tfoot {
-            background-color: #ffeff0 !important;
-            border-top: 2px solid #d12222 !important;
+            background-color: #eef3fc !important;
+            border-top: 2px solid #1b3d94 !important;
         }
         #tbl_contract_overdue_report tfoot td {
             font-weight: 700;
             font-size: 0.85rem;
-            color: #d12222;
+            color: #1b3d94;
             padding: 8px 10px;
         }
 
         /* Agreement link styling */
         .agr-link {
             font-weight: 600;
-            color: #f12526 !important;
+            color: #1b3d94 !important;
             cursor: pointer;
             text-decoration: none;
             transition: color 0.15s ease-in-out;
         }
         .agr-link:hover {
-            color: #c81e1f !important;
+            color: #153075 !important;
             text-decoration: underline !important;
         }
 
         /* Custom Modal Header matching ContractList */
         .custom-modal-header {
-            background: linear-gradient(135deg, #f12526, #c81e1f) !important;
+            background: linear-gradient(135deg, #1b3d94, #153075) !important;
             color: #ffffff !important;
             border-bottom: none;
         }

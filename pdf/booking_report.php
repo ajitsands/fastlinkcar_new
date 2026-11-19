@@ -52,9 +52,9 @@ if ($settings && !empty($settings['date_format'])) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
     <style>
         body { font-family: 'Inter', sans-serif; background: #f8f9fa; color: #212529; font-size: 13px; }
-        .report-header { border-bottom: 2px solid #dc3545; padding-bottom: 15px; margin-bottom: 20px; }
+        .report-header { border-bottom: 2px solid #1b3d94; padding-bottom: 15px; margin-bottom: 20px; }
         .section-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .section-title { background: #f8d7da; color: #dc3545; padding: 10px 15px; font-weight: bold; border-top-left-radius: 7px; border-top-right-radius: 7px; border-bottom: 1px solid #f5c2c7; font-size: 14px; }
+        .section-title { background: #eef3fc; color: #1b3d94; padding: 10px 15px; font-weight: bold; border-top-left-radius: 7px; border-top-right-radius: 7px; border-bottom: 1px solid #b8c8f5; font-size: 14px; }
         .section-body { padding: 15px; }
         .table-sm td, .table-sm th { padding: 6px 10px; }
         @page { size: A4; margin: 15mm; }
@@ -71,28 +71,19 @@ if ($settings && !empty($settings['date_format'])) {
 <div class="container my-4">
     <!-- Top Action Bar -->
     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-        <h4 class="mb-0 text-danger"><i class="ri-file-chart-line"></i> Reservation / Booking Report</h4>
+        <h4 class="mb-0" style="color: #1b3d94;"><i class="ri-file-chart-line"></i> Reservation / Booking Report</h4>
         <div>
-            <button onclick="window.print()" class="btn btn-danger btn-sm"><i class="ri-printer-line me-1"></i> Print Document</button>
+            <button onclick="window.print()" class="btn btn-sm text-white" style="background-color: #1b3d94; border-color: #1b3d94;"><i class="ri-printer-line me-1"></i> Print Document</button>
             <button onclick="window.close()" class="btn btn-outline-secondary btn-sm me-2"><i class="ri-close-line me-1"></i> Close</button>
         </div>
     </div>
 
     <!-- Report Header -->
-    <div class="report-header d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center gap-3">
-            <?php if (!empty($booking['company_logo'])): ?>
-                <img src="/<?= htmlspecialchars($booking['company_logo']) ?>" alt="Company Logo" style="max-height: 60px;">
-            <?php endif; ?>
-            <div>
-                <h3 class="fw-bold text-dark mb-0"><?= htmlspecialchars(strtoupper($booking['company_name'] ?? 'COMPANY NAME')) ?></h3>
-            </div>
-        </div>
-        <div class="text-end">
-            <span class="badge bg-danger fs-6 mb-1">Ref No: <?= htmlspecialchars($booking['booking_no']) ?></span>
-            <div class="text-muted small">Generated Date: <?= date('d/m/Y H:i A') ?></div>
-        </div>
-    </div>
+    <?php
+        require_once __DIR__ . '/print_settings_helper.php';
+        $printSettings = getPrintSettings($pdo ?? null);
+        echo renderPrintHeaderHtml($printSettings, 'Reservation / Booking Report', 'Ref No: ' . $booking['booking_no'], 'Generated Date: ' . date('d/m/Y H:i A'));
+    ?>
 
     <!-- Customer & Booking Overview -->
     <div class="row">
@@ -164,6 +155,7 @@ if ($settings && !empty($settings['date_format'])) {
             </table>
         </div>
     </div>
+    <?= renderPrintFooterHtml($printSettings) ?>
 </div>
 
 </body>

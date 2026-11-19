@@ -463,7 +463,7 @@ include ROOT_PATH . '/view/envinclude.php';
                 text: msg,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#f12526',
+                confirmButtonColor: '#1b3d94',
                 cancelButtonColor: '#8592a3',
                 confirmButtonText: 'Yes, proceed!'
             }).then((result) => {

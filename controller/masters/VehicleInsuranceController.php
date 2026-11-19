@@ -35,6 +35,7 @@ class VehicleInsuranceController {
 
         $sql = "SELECT v.ids as vehicle_id, v.vehicle_number, v.chassis_number, 
                        v.next_insurance_date, v.next_passing_date, v.vehicle_status,
+                       v.insurance_histroy, v.passing_histroy,
                        v.is_outsourced, 
                        c.company_name as ownership_company,
                        oc.company_name as outsourcing_company,
@@ -127,6 +128,11 @@ class VehicleInsuranceController {
             'date' => $date,
             'amount' => $amount,
             'remarks' => $remarks,
+            'provider' => trim((string)($_POST['provider'] ?? '')),
+            'policy_no' => trim((string)($_POST['policy_no'] ?? '')),
+            'insurance_type' => trim((string)($_POST['insurance_type'] ?? '')),
+            'start_date' => trim((string)($_POST['start_date'] ?? '')),
+            'passed_date' => trim((string)($_POST['passed_date'] ?? '')),
             'attachment' => $attachmentUrl,
             'created_at' => date('Y-m-d H:i:s'),
             'created_by' => $_SESSION['user_id'] ?? 1
@@ -146,7 +152,7 @@ class VehicleInsuranceController {
         $result = $updateStmt->execute([json_encode($history), $nextDate, $vehicleId]);
 
         if ($result) {
-            echo json_encode(['status' => true, 'message' => ucfirst($type) . ' record added successfully', 'entry' => $newEntry]);
+            echo json_encode(['status' => true, 'message' => ucfirst($type) . ' record added successfully', 'entry' => $newEntry, 'history' => $history, 'next_date' => $nextDate]);
         } else {
             echo json_encode(['status' => false, 'message' => 'Failed to add record']);
         }
@@ -235,9 +241,97 @@ class VehicleInsuranceController {
         $result = $updateStmt->execute([json_encode($updatedHistory), $nextDate, $vehicleId]);
 
         if ($result) {
-            echo json_encode(['status' => true, 'message' => 'Entry deleted successfully']);
+            echo json_encode(['status' => true, 'message' => 'Entry deleted successfully', 'history' => $updatedHistory, 'next_date' => $nextDate]);
         } else {
             echo json_encode(['status' => false, 'message' => 'Failed to delete entry']);
+        }
+    }
+
+    public function updateEntry() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['status' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+
+        $vehicleId = $_POST['vehicle_id'] ?? null;
+        $entryId   = $_POST['entry_id'] ?? null;
+        $type      = $_POST['type'] ?? null;
+        $date      = $_POST['date'] ?? null;
+        $amount    = $_POST['amount'] ?? null;
+        $remarks   = $_POST['remarks'] ?? null;
+
+        if (!$vehicleId || !$entryId || !$type || !$date) {
+            echo json_encode(['status' => false, 'message' => 'Vehicle ID, Entry ID, Type, and Date are required']);
+            return;
+        }
+
+        $colName     = ($type === 'insurance') ? 'insurance_histroy' : 'passing_histroy';
+        $nextDateCol = ($type === 'insurance') ? 'next_insurance_date' : 'next_passing_date';
+
+        $stmt = $this->db->prepare("SELECT $colName FROM tbl_vehicles WHERE ids = ?");
+        $stmt->execute([$vehicleId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            echo json_encode(['status' => false, 'message' => 'Vehicle not found']);
+            return;
+        }
+
+        $history = $row[$colName] ? json_decode($row[$colName], true) : [];
+        if (!is_array($history)) {
+            $history = [];
+        }
+
+        $attachmentUrl = null;
+        if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = dirname(__DIR__, 2) . '/uploads/vehicles/documents/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $filename = time() . '_' . basename($_FILES['attachment']['name']);
+            $targetPath = $uploadDir . $filename;
+            if (move_uploaded_file($_FILES['attachment']['tmp_name'], $targetPath)) {
+                $attachmentUrl = $_ENV['BASE_URL'] . 'uploads/vehicles/documents/' . $filename;
+            }
+        }
+
+        $found = false;
+        foreach ($history as &$item) {
+            if (($item['id'] ?? '') === $entryId) {
+                $item['date']           = $date;
+                $item['amount']         = $amount;
+                $item['remarks']        = $remarks;
+                $item['provider']       = trim((string)($_POST['provider'] ?? ''));
+                $item['policy_no']      = trim((string)($_POST['policy_no'] ?? ''));
+                $item['insurance_type'] = trim((string)($_POST['insurance_type'] ?? ''));
+                $item['start_date']     = trim((string)($_POST['start_date'] ?? ''));
+                $item['passed_date']    = trim((string)($_POST['passed_date'] ?? ''));
+                if ($attachmentUrl !== null) {
+                    $item['attachment'] = $attachmentUrl;
+                }
+                $item['updated_at'] = date('Y-m-d H:i:s');
+                $found = true;
+                break;
+            }
+        }
+        unset($item);
+
+        if (!$found) {
+            echo json_encode(['status' => false, 'message' => 'History entry not found']);
+            return;
+        }
+
+        usort($history, function($a, $b) {
+            return strtotime($b['date']) - strtotime($a['date']);
+        });
+
+        $nextDate = $history[0]['date'] ?? $date;
+        $updateStmt = $this->db->prepare("UPDATE tbl_vehicles SET $colName = ?, $nextDateCol = ? WHERE ids = ?");
+        $result = $updateStmt->execute([json_encode($history), $nextDate, $vehicleId]);
+
+        if ($result) {
+            echo json_encode(['status' => true, 'message' => ucfirst($type) . ' record updated successfully', 'history' => $history, 'next_date' => $nextDate]);
+        } else {
+            echo json_encode(['status' => false, 'message' => 'Failed to update entry']);
         }
     }
 }

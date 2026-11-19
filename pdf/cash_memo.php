@@ -1,6 +1,6 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 // Fix for TCPDF missing cURL constants on some local setups without the cURL extension
 if (!extension_loaded('curl')) {
@@ -94,7 +94,11 @@ if (!$sample_mode && !empty($memo_no)) {
     }
 }
 
-$contract_id = $data['contract_ids'];
+if (!$data) {
+    die("Cash Memo not found or invalid token.");
+}
+
+$contract_id = $data['contract_ids'] ?? '';
 
 $stmt_ledger = $mysqli->prepare("
     SELECT l.*
@@ -170,7 +174,7 @@ class AA_CashMemo_PDF extends TCPDF {
     $this->Cell(95, 5, '________________________________________', 0, 2, 'C');
 
     $this->SetX(10);
-    $this->Cell(95, 5, 'For AA CAR RENTAL', 0, 2, 'C');
+    $this->Cell(95, 5, 'For FAST LINK', 0, 2, 'C');
 
 
     // ================= RIGHT SIGNATURE =================
@@ -223,12 +227,12 @@ $pdf->AddPage();
 $pdf->SetFont('dejavusans', '', 8);
 $pdf->setCellPaddings(0, 0, 0, 0);
 
-// Prepare Logo Data
-$logo_path = !empty($data['company_logo']) ? $data['company_logo'] : 'assets/img/logo/logo.png';
-$logo_base64 = '';
-if (file_exists($logo_path)) {
-    $logo_base64 = base64_encode(file_get_contents($logo_path));
-}
+// Prepare Logo & Print Settings Data
+require_once __DIR__ . '/print_settings_helper.php';
+$printSettings = getPrintSettings($mysqli ?? null, $data['company_id'] ?? null);
+$logo_base64 = !empty($printSettings['show_logo']) ? ($printSettings['logo_base64'] ?? '') : '';
+$logo_width = (int)($printSettings['logo_width'] ?? 150);
+$printAccent = $printSettings['accent_color'] ?? '#1b3d94';
 if (!empty($data['company_signature'])) {
 
    $pdf->company_signature = ltrim($data['company_signature'] ?? '', '/');
@@ -244,7 +248,7 @@ $html = '
     .text-center { text-align: center; }
     .text-right { text-align: right; }
     .text-left { text-align: left; }
-    .red-text { color: #d32f2f; }
+    .red-text { color: ' . $printAccent . '; }
     .bold { font-weight: bold; }
     .bg-light { background-color: #f5f5f5; }
     .bordered td, .bordered th { border: 1px solid #000; }
@@ -254,12 +258,14 @@ $html = '
 <table cellpadding="1" border="0" width="100%">
     <tr>
         <td width="55%" style="vertical-align: middle;">
-            ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="150">' : '<b style="font-size: 15pt; color:#8A1C14;">' . htmlspecialchars(strtoupper($data['c_company_name'] ?? 'AA CAR RENTAL')) . '</b>') . '
+            ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="' . $logo_width . '">' : '<b style="font-size: 15pt; color:' . $printAccent . ';">' . htmlspecialchars(strtoupper($printSettings['company_name'] ?? 'FAST LINK')) . '</b>') . '
         </td>
-        <td width="45%" align="right" style="vertical-align: top; font-size: 8pt; line-height: 1.3; color:#444444;">
-            Flat No. 0, Building 168, Road 408<br>
-            Block 704, Salmabad, Bahrain<br>
-            <span class="bold" style="color:#000;">VAT NO: 220000485100002</span>
+        <td width="45%" align="right" style="vertical-align: top; font-size: 8pt; line-height: 1.35; color:#444444;">
+            <b style="font-size: 10pt; color:' . $printAccent . ';">' . htmlspecialchars(strtoupper($printSettings['company_name'] ?? 'FAST LINK')) . '</b><br>
+            ' . (!empty($printSettings['header_address']) ? nl2br(htmlspecialchars($printSettings['header_address'])) . '<br>' : '') . '
+            ' . (!empty($printSettings['header_phone']) ? 'Tel: ' . htmlspecialchars($printSettings['header_phone']) . '<br>' : '') . '
+            ' . (!empty($printSettings['header_email']) ? htmlspecialchars($printSettings['header_email']) . '<br>' : '') . '
+            ' . (!empty($printSettings['header_subtitle']) ? '<span class="bold" style="color:#000;">' . htmlspecialchars($printSettings['header_subtitle']) . '</span>' : '') . '
         </td>
     </tr>
 </table>
@@ -268,7 +274,7 @@ $html = '
 
 <!-- TAX INVOICE BANNER -->
 <table cellpadding="3" cellspacing="0" width="100%">
-    <tr style="background-color: #8A1C14; color: #ffffff;">
+    <tr style="background-color: #1b3d94; color: #ffffff;">
         <td class="text-center bold" style="font-size:9pt; letter-spacing:2px; line-height:1;">
             CASH MEMO / سند قبض
         </td>
@@ -286,7 +292,7 @@ $html = '
         <td width="35%" rowspan="4" style="vertical-align: top; padding: 8px; line-height: 1.4;">
             <span style="font-size: 9.5pt;"><b>Date :</b> ' . htmlspecialchars(date('d-m-y', strtotime($data['cashmemo_date']))) . '</span><br><br><br>
             <span style="font-size: 10pt; font-weight: bold;">No.</span> 
-            <span style="color:#d32f2f; font-size:15pt; font-weight:bold; font-family:courier;">' . htmlspecialchars($data['cashmemo_no']) . '</span>
+            <span style="color:#1b3d94; font-size:15pt; font-weight:bold; font-family:courier;">' . htmlspecialchars($data['cashmemo_no']) . '</span>
         </td>
     </tr>
     <tr>
@@ -327,7 +333,7 @@ $html = '
 <!-- MAIN ITEMS TABLE -->
 <table class="bordered" cellpadding="5" width="100%">
     <thead>
-        <tr style="background-color:#8A1C14; color:#ffffff; font-weight:bold;">
+        <tr style="background-color:#1b3d94; color:#ffffff; font-weight:bold;">
             <th width="5%" class="text-center" style="font-size: 7.5pt; font-family:dejavusans;">No.</th>
             <th width="45%" class="text-center" style="font-size: 7.5pt; font-family:dejavusans;">Description</th>
             <th width="8%" class="text-center" style="font-size: 7.5pt; font-family:dejavusans;">Qty.</th>
@@ -453,7 +459,7 @@ $html .= '
                     <td style="border-right: 1px solid #000; background-color: #f5f5f5; line-height: 1.5;" valign="middle" align="center">
                         <span style="font-family:dejavusans; font-size: 7.5pt;">Balance </span>
                     </td>
-                    <td style="line-height: 1.5; color: #d32f2f;" valign="middle" align="right" class="bold">
+                    <td style="line-height: 1.5; color: #1b3d94;" valign="middle" align="right" class="bold">
                         ' . number_format($final_balance, 3) . '
                     </td>
                 </tr>
@@ -469,13 +475,13 @@ $html .= '
     
     <!-- Warning Box (Directly bordered on top-level outer cell to guarantee exact left alignment) -->
     <tr>
-        <td style="border: 1px solid #cc0000; padding: 0px;" align="center" valign="middle">
+        <td style="border: 1px solid #1b3d94; padding: 0px;" align="center" valign="middle">
             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0px; padding: 0px;">
                 <tr><td height="12" style="font-size: 1px; line-height: 1px;">&nbsp;</td></tr>
                 <tr>
                     <td align="center">
-                        <span style="color:#cc0000; font-family:dejavusans; font-size:9.5pt; font-weight:bold; line-height:1.4;">ملاحظة: المبلغ المدفوع لا يسترجع في حالة الإلغاء</span><br>
-                        <span style="color:#cc0000; font-family:dejavusans; font-size:8.5pt; font-weight:normal; line-height:1.4;">The amount paid not get back in the event of cancellation</span>
+                        <span style="color:#1b3d94; font-family:dejavusans; font-size:9.5pt; font-weight:bold; line-height:1.4;">ملاحظة: المبلغ المدفوع لا يسترجع في حالة الإلغاء</span><br>
+                        <span style="color:#1b3d94; font-family:dejavusans; font-size:8.5pt; font-weight:normal; line-height:1.4;">The amount paid not get back in the event of cancellation</span>
                     </td>
                 </tr>
                 <tr><td height="12" style="font-size: 1px; line-height: 1px;">&nbsp;</td></tr>

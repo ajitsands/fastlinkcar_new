@@ -4,9 +4,9 @@
             <div class="navbar-brand app-brand demo d-none d-xl-flex py-0 me-6">
               <a href="/Dashboard" class="app-brand-link d-flex align-items-center gap-2">
                 <span class="app-brand-logo demo d-flex align-items-center">
-                  <img src="<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo_small.png" id="companyLogo" class="img-fluid app-logo" alt="Logo" style="height: 32px; width: auto; object-fit: contain;">
+                  <img src="<?= $_ENV['BASE_URL'] ?>assets/img/logo_new/fastlinklogo_white%20(1).png" id="companyLogo" class="img-fluid app-logo" alt="Fast Link Logo" style="height: 32px; width: auto; object-fit: contain;">
                 </span>
-                <span class="app-brand-text demo menu-text fw-semibold text-white mb-0" style="font-size: 1.15rem; color: #ffffff !important;">Car Rental Portal</span>
+                <span class="app-brand-text demo menu-text fw-semibold text-white mb-0" style="font-size: 1.15rem; color: #ffffff !important;">Fastlink Car Rental Portal</span>
               </a>
 
               <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-xl-none">

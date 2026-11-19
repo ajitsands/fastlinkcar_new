@@ -1,4 +1,4 @@
-<div class="modal fade" id="imagePreviewModalreturn" tabindex="-1" style="z-index: 10075 !important;">
+<div class="modal fade" id="imagePreviewModalreturn" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-xl">
     <div class="modal-content">
 

@@ -1,7 +1,7 @@
 <?php
 session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 // Fix for TCPDF missing cURL constants on some local setups without the cURL extension
 if (!extension_loaded('curl')) {
@@ -369,12 +369,11 @@ $pdf->AddPage();
 $pdf->SetFont('dejavusans', '', 8);
 $pdf->setCellPaddings(0, 0, 0, 0);
 
-// Prepare Logo Data
-$logo_path = 'assets/img/logo/logo.png';
-$logo_base64 = '';
-if (file_exists($logo_path)) {
-    $logo_base64 = base64_encode(file_get_contents($logo_path));
-}
+// Prepare Logo & Print Settings Data
+require_once __DIR__ . '/print_settings_helper.php';
+$printSettings = getPrintSettings($mysqli ?? null);
+$logo_base64 = !empty($printSettings['show_logo']) ? ($printSettings['logo_base64'] ?? '') : '';
+$printAccent = $printSettings['accent_color'] ?? '#1b3d94';
 
 $html = '';
 
@@ -387,8 +386,8 @@ $html .= '
     <!-- Company Details -->
   <td width="33%" valign="top">
 
-    <font size="14" color="#8A1C14">
-        <b>AA CAR RENTAL</b>
+    <font size="14" color="' . $printAccent . '">
+        <b>' . htmlspecialchars(strtoupper($printSettings['company_name'] ?? 'FAST LINK')) . '</b>
     </font>
 
     <br><br>
@@ -396,19 +395,19 @@ $html .= '
     <table cellpadding="1" cellspacing="0" border="0" width="100%">
         <tr>
             <td width="22%"><font size="8"><b>Tel</b></font></td>
-            <td width="78%"><font size="8">: +973 17300322</font></td>
-        </tr>
-        <tr>
-            <td><font size="8"><b>Fax</b></font></td>
-            <td><font size="8">: +973 17300311</font></td>
+            <td width="78%"><font size="8">: ' . htmlspecialchars($printSettings['header_phone'] ?? '') . '</font></td>
         </tr>
         <tr>
             <td><font size="8"><b>Email</b></font></td>
-            <td><font size="8">: info@aarentalbh.com</font></td>
+            <td><font size="8">: ' . htmlspecialchars($printSettings['header_email'] ?? '') . '</font></td>
         </tr>
         <tr>
             <td><font size="8"><b>Address</b></font></td>
-            <td><font size="8">: Kingdom of Bahrain</font></td>
+            <td><font size="8">: ' . htmlspecialchars($printSettings['header_address'] ?? 'Kingdom of Bahrain') . '</font></td>
+        </tr>
+        <tr>
+            <td><font size="8"><b>Info</b></font></td>
+            <td><font size="8">: ' . htmlspecialchars($printSettings['header_subtitle'] ?? '') . '</font></td>
         </tr>
     </table>
 
@@ -420,7 +419,7 @@ $html .= '
 
     '.(!empty($logo_base64) 
         ? '<img src="@'.$logo_base64.'" width="150" style="max-height:80px;">'
-        : '<font size="12"><b>AA CAR RENTAL</b></font>'
+        : '<font size="12"><b>FAST LINK</b></font>'
     ).'
 
 </td>
@@ -508,7 +507,7 @@ $html .= '
 
 <table border="1" cellpadding="4" cellspacing="0" width="100%">
 <thead style="font-weight:bold; background-color:#f2f2f2;">
-<tr bgcolor="#8A1C14" style="color:#fff;font-weight:bold;">
+<tr bgcolor="#1b3d94" style="color:#fff;font-weight:bold;">
     <th width="4%" align="center">#</th>
     <th width="9%" align="center">Date</th>
     <th width="10%" align="center">Ref No</th>
@@ -576,7 +575,7 @@ foreach ($rows as $row) {
             $custDetails .= '<br><font size="7" color="#555555">' . implode(' | ', $meta) . '</font>';
         }
         if (!empty($row['customer_cr_cpr']) && $row['customer_cr_cpr'] !== '-' && $row['customer_cr_cpr'] !== 'N/A') {
-            $custDetails .= '<br><font size="7" color="#8A1C14">CPR: ' . htmlspecialchars($row['customer_cr_cpr']) . '</font>';
+            $custDetails .= '<br><font size="7" color="#1b3d94">CPR: ' . htmlspecialchars($row['customer_cr_cpr']) . '</font>';
         }
     }
 

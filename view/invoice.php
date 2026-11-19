@@ -141,7 +141,7 @@ try {
         .col-total { width: 110px; }
         .col-action { width: 60px; }
   .custom-modal-header {
-    background: linear-gradient(135deg, #f12526, #c81e1f);
+    background: linear-gradient(135deg, #1b3d94, #153075);
     color: white !important; 
     border-bottom: none;
 }
@@ -216,7 +216,7 @@ tr.active-row {
 
 /* Table header style */
 #helpTable thead th {
-    background-color: #f12526;   /* Blue header (Bootstrap primary) */
+    background-color: #1b3d94;   /* Blue header (Bootstrap primary) */
     color: #fff;                 /* White text */
     padding: 6px 8px;            /* Narrow padding */
     font-size: 13px;             /* Slightly smaller text */

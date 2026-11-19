@@ -84,7 +84,7 @@ if (isset($this) && isset($this->encryption)) {
         }
         .kpi-red {
             border-left: 4px solid #ef4444;
-            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+            background: linear-gradient(135deg, #f4f7fe 0%, #ffffff 100%);
         }
         .kpi-green {
             border-left: 4px solid #10b981;
@@ -114,9 +114,9 @@ if (isset($this) && isset($this->encryption)) {
         #tblBalances > thead > tr > th,
         table.dataTable thead th,
         .table thead th {
-            background-color: #ffeff0 !important;
-            color: #d12222 !important;
-            border-bottom: 2px solid #d12222 !important;
+            background-color: #eef3fc !important;
+            color: #1b3d94 !important;
+            border-bottom: 2px solid #1b3d94 !important;
             font-weight: 600 !important;
             text-transform: uppercase !important;
             font-size: 0.78rem !important;
@@ -129,26 +129,26 @@ if (isset($this) && isset($this->encryption)) {
             background-color: #fff9f9 !important;
         }
         #tblBalances tfoot {
-            background-color: #ffeff0 !important;
-            border-top: 2px solid #d12222 !important;
+            background-color: #eef3fc !important;
+            border-top: 2px solid #1b3d94 !important;
         }
         #tblBalances tfoot td {
             font-weight: 700;
             font-size: 0.85rem;
-            color: #d12222;
+            color: #1b3d94;
             padding: 8px 10px;
         }
 
         .clickable-name {
             cursor: pointer;
-            color: #f12526 !important;
+            color: #1b3d94 !important;
             font-weight: 600;
             text-decoration: none;
             transition: color 0.15s ease-in-out;
         }
         .clickable-name:hover {
             text-decoration: underline !important;
-            color: #c81e1f !important;
+            color: #153075 !important;
         }
 
         @media print {

@@ -55,46 +55,25 @@
               <button type="button" class="step-trigger" role="tab" id="return-step-2-trigger">
                 <span class="bs-stepper-circle">2</span>
                 <span class="bs-stepper-label">
-                  <span class="bs-stepper-title">Checklist &amp; Driver</span>
+                  <span class="bs-stepper-title">Checklist, Driver &amp; Images</span>
                 </span>
               </button>
             </div>
             <div class="line"></div>
-            <!-- Step 3 -->
-            <div class="step" data-target="#tab-return-step-3">
-              <button type="button" class="step-trigger" role="tab" id="return-step-3-trigger">
-                <span class="bs-stepper-circle">3</span>
-                <span class="bs-stepper-label">
-                  <span class="bs-stepper-title">Return Images</span>
-                </span>
-              </button>
-            </div>
-            <div class="line"></div>
-            <!-- Step 4 -->
+            <!-- Step 3 (Violations & Other Fees) -->
             <div class="step" data-target="#tab-return-step-4">
               <button type="button" class="step-trigger" role="tab" id="return-step-4-trigger">
-                <span class="bs-stepper-circle">4</span>
+                <span class="bs-stepper-circle">3</span>
                 <span class="bs-stepper-label">
-                  <span class="bs-stepper-title">Violations</span>
+                  <span class="bs-stepper-title">Violations &amp; Other Fees</span>
                 </span>
               </button>
             </div>
             <div class="line"></div>
-            <!-- Step 5 -->
-            <div class="step" data-target="#tab-return-step-5">
-              <button type="button" class="step-trigger" role="tab" id="return-step-5-trigger">
-                <span class="bs-stepper-circle">5</span>
-                <span class="bs-stepper-label">
-                  <span class="bs-stepper-title">Other Fees</span>
-                </span>
-              </button>
-            </div>
-            <div class="line"></div>
-            <!-- Step 6 -->
-
+            <!-- Step 4 (Signature) -->
             <div class="step" data-target="#tab-return-step-6">
               <button type="button" class="step-trigger" role="tab" id="return-step-6-trigger">
-                <span class="bs-stepper-circle">6</span>
+                <span class="bs-stepper-circle">4</span>
                 <span class="bs-stepper-label">
                   <span class="bs-stepper-title">Signature</span>
                 </span>
@@ -106,11 +85,11 @@
             <!-- Step 1 -->
             <div id="tab-return-step-1" class="content">
               <style>
-                .return-info-card { background: #fff5f5; border: 1px solid #f5c6c6; border-radius: 8px; padding: 14px; }
-                .return-info-card .section-title { color: #c0392b; font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; }
+                .return-info-card { background: #f4f7fe; border: 1px solid #cbd7f6; border-radius: 8px; padding: 14px; }
+                .return-info-card .section-title { color: #1b3d94; font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; }
                 .return-field-label { color: #888; font-size: 0.75rem; margin-bottom: 1px; }
                 .return-field-value { font-weight: 600; font-size: 0.88rem; color: #222; }
-                .pricing-setup-title { color: #c0392b; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
+                .pricing-setup-title { color: #1b3d94; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
                 /* Pricing block columns */
                 .pricing-col { flex: 1; border: 1px solid #eee; border-radius: 4px; overflow: hidden; }
                 .pricing-col-header { background: #f5f5f5; text-align: center; font-weight: 700; font-size: 0.82rem; color: #444; padding: 7px 4px; border-bottom: 1px solid #eee; }
@@ -233,76 +212,115 @@
               </div>
 
               <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0 fw-bold text-danger">Contract &amp; Extensions</h5>
-                <small class="text-muted"><i class="ri-history-line me-1"></i>History of agreement &amp; all extensions</small>
+                <h5 class="mb-0 fw-bold" style="color: #1b3d94;">Original Contract Details</h5>
+                <small class="text-muted"><i class="ri-file-text-line me-1"></i>Agreed contract &amp; coverage summary</small>
               </div>
 
-              <div class="row g-3">
-                <table id="contractReturnTable" class="table table-bordered table-sm">
-                  <thead>
-                    <tr>
-                      <th></th>
-                      <th> Date</th>
-                      <th>Period</th>
-                      <th>Details</th>
-                      <th>Pricing</th>
-                      <th>Notes</th>
-                    </tr>
-                  </thead>
-                </table>
+              <div id="original_contract_details_box" class="card mb-3 shadow-sm" style="border: 1px solid #dbe3f3; background: #ffffff; border-radius: 8px;">
+                <div class="card-body p-3">
+                  <div class="row g-2 small">
+                    <div class="col-md-4">
+                      <span class="text-muted d-block">Full Contract Period</span>
+                      <strong id="orig_full_period">-</strong>
+                    </div>
+                    <div class="col-md-3">
+                      <span class="text-muted d-block">Service Type</span>
+                      <strong id="orig_service_type">-</strong>
+                    </div>
+                    <div class="col-md-2">
+                      <span class="text-muted d-block">Rate Type &amp; Price</span>
+                      <strong id="orig_rate_info">-</strong>
+                    </div>
+                    <div class="col-md-3">
+                      <span class="text-muted d-block">VAT % / Contract Value</span>
+                      <strong style="color: #1b3d94;"><span id="orig_vat_pct">0</span>% | <span id="orig_contract_value">0.000</span> BHD</strong>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <!-- Balance Period Extension Area (Auto-calculated when return date exceeds coverage) -->
-              <div id="return_balance_extension_area" class="card mt-3 border-warning shadow-sm" style="display: none; background: #fffdf2; border-radius: 8px;">
-                <div class="card-header bg-warning bg-opacity-10 py-2 d-flex justify-content-between align-items-center">
+              <!-- Overdue / Extended Period Area (Auto-calculated when return date exceeds coverage) -->
+              <div id="return_balance_extension_area" class="card mb-3 shadow-sm" style="display: none; border: 1px solid #f59e0b; background: #fffdf5; border-radius: 8px;">
+                <div class="card-header py-2 d-flex justify-content-between align-items-center" style="background: #fef3c7; border-bottom: 1px solid #fde68a;">
                   <h6 class="mb-0 fw-bold text-dark">
-                    <i class="ri-calendar-event-line text-warning me-1"></i> Extend Contract to Balance Period
+                    <i class="ri-calendar-event-line text-warning me-1"></i> Overdue Period Details
                   </h6>
-                  <span class="badge bg-danger fs-7" id="return_balance_days_badge">0 Days Balance</span>
+                  <span class="badge bg-danger fs-7" id="return_balance_days_badge">0 Days Overdue</span>
                 </div>
                 <div class="card-body p-3">
-                  <div class="alert alert-warning py-2 px-3 mb-3 small d-flex align-items-center" id="return_balance_info_msg">
-                    <i class="ri-alert-line fs-5 me-2 text-warning flex-shrink-0"></i>
-                    <div>
-                      <strong>Uncovered Period Detected:</strong> The return date is beyond the covered contract period. Please review and confirm the extension for the balance period below. Ledger posting will be automatically created.
+                  <!-- Clean Summary Row (matches Original Contract Details) -->
+                  <div class="row g-2 small mb-3">
+                    <div class="col-md-4">
+                      <span class="text-muted d-block">Overdue Period</span>
+                      <strong id="ov_sum_period">-</strong>
+                    </div>
+                    <div class="col-md-3">
+                      <span class="text-muted d-block">Overdue Days / Duration</span>
+                      <strong id="ov_sum_duration">-</strong>
+                    </div>
+                    <div class="col-md-2">
+                      <span class="text-muted d-block">Rate Type &amp; Price</span>
+                      <strong id="ov_sum_rate">-</strong>
+                    </div>
+                    <div class="col-md-3">
+                      <span class="text-muted d-block">VAT % / Overdue Value</span>
+                      <strong class="text-danger"><span id="ov_sum_vat_pct">0</span>% (<span id="ov_sum_vat_amt">0.000</span>) | <span id="ov_sum_total">0.000</span> BHD</strong>
                     </div>
                   </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-3 p-2 rounded" style="background: rgba(255, 193, 7, 0.15); border: 1px dashed #ffc107;">
-                    <div class="form-check form-switch mb-0">
-                      <input class="form-check-input" type="checkbox" id="chk_ext_zero_amount">
-                      <label class="form-check-label small fw-bold text-dark" for="chk_ext_zero_amount">
-                        <i class="ri-gift-line me-1 text-primary"></i> Extend without additional amount (Zero Rate / Free Extension)
-                      </label>
+
+                  <!-- Controls Row: Waive Off (with Remarks) & Change Overdue Value (No / Yes) -->
+                  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-2 rounded" style="background: rgba(255, 193, 7, 0.14); border: 1px dashed #f59e0b;">
+                    <div class="d-flex align-items-center gap-3">
+                      <span class="small fw-bold text-dark">Waive Off Overdue Value?</span>
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input" type="radio" name="ret_overdue_waive_mode" id="ret_overdue_waive_no" value="no" checked>
+                        <label class="form-check-label small fw-semibold" for="ret_overdue_waive_no">No</label>
+                      </div>
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input" type="radio" name="ret_overdue_waive_mode" id="ret_overdue_waive_yes" value="yes">
+                        <label class="form-check-label small fw-semibold text-danger" for="ret_overdue_waive_yes">Yes</label>
+                      </div>
+                      <input type="checkbox" id="chk_ext_zero_amount" class="d-none">
                     </div>
-                    <small class="text-muted">Unit rate &amp; total become 0.000 BHD</small>
+
+                    <div class="d-flex align-items-center gap-3" id="ret_change_overdue_wrap">
+                      <span class="small fw-bold text-dark">Change Overdue Value?</span>
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input" type="radio" name="ret_overdue_edit_mode" id="ret_overdue_edit_no" value="no" checked>
+                        <label class="form-check-label small fw-semibold" for="ret_overdue_edit_no">No</label>
+                      </div>
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input" type="radio" name="ret_overdue_edit_mode" id="ret_overdue_edit_yes" value="yes">
+                        <label class="form-check-label small fw-semibold" style="color: #1b3d94;" for="ret_overdue_edit_yes">Yes</label>
+                      </div>
+                    </div>
                   </div>
 
-                  <div class="row g-3">
-                    <!-- Balance From -->
-                    <div class="col-12 col-sm-6 col-md-3">
-                      <label class="form-label small mb-1 fw-semibold">Balance From <span class="text-danger">*</span></label>
-                      <input type="datetime-local" id="ret_ext_from" class="form-control form-control-sm">
-                    </div>
+                  <!-- Waive Off Remarks (shown only when Waive Off = Yes) -->
+                  <div id="ret_waive_remarks_area" class="mt-3" style="display: none;">
+                    <label class="form-label small mb-1 fw-semibold text-danger">Waive Off Remarks <span class="text-danger">*</span></label>
+                    <input type="text" id="ret_waive_remarks" class="form-control form-control-sm" placeholder="Enter reason for waiving off overdue value...">
+                  </div>
 
-                    <!-- Balance To -->
+                  <!-- Editable Overdue Fields (shown only when Change Overdue Value = Yes) -->
+                  <div id="ret_overdue_edit_fields" class="row g-3 mt-1" style="display: none;">
                     <div class="col-12 col-sm-6 col-md-3">
-                      <label class="form-label small mb-1 fw-semibold">Balance To (Return Date) <span class="text-danger">*</span></label>
-                      <input type="datetime-local" id="ret_ext_to" class="form-control form-control-sm">
+                      <label class="form-label small mb-1 fw-semibold">Overdue From</label>
+                      <input type="datetime-local" id="ret_ext_from" class="form-control form-control-sm" readonly>
                     </div>
-
-                    <!-- Service Selection -->
                     <div class="col-12 col-sm-6 col-md-3">
-                      <label class="form-label small mb-1 fw-semibold">Service <span class="text-danger">*</span></label>
+                      <label class="form-label small mb-1 fw-semibold">Overdue To (Return Date)</label>
+                      <input type="datetime-local" id="ret_ext_to" class="form-control form-control-sm" readonly>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <label class="form-label small mb-1 fw-semibold">Service</label>
                       <select class="form-select form-select-sm" id="ret_ext_service">
                         <option value="1" data-vat="10">Rental Without Driver</option>
                         <option value="2" data-vat="0">Rental With Driver</option>
                       </select>
                     </div>
-
-                    <!-- Rate Type Selection -->
                     <div class="col-12 col-sm-6 col-md-3">
-                      <label class="form-label small mb-1 fw-semibold">Rate Type <span class="text-danger">*</span></label>
+                      <label class="form-label small mb-1 fw-semibold">Rate Type</label>
                       <select class="form-select form-select-sm" id="ret_ext_rate_type">
                         <option value="day" selected>Daily</option>
                         <option value="hour">Hourly</option>
@@ -310,68 +328,63 @@
                         <option value="month">Monthly</option>
                       </select>
                     </div>
-
-                    <!-- Duration (Days) -->
                     <div class="col-6 col-sm-4 col-md-2">
-                      <label class="form-label small mb-1 fw-semibold">Duration <span class="text-danger">*</span></label>
+                      <label class="form-label small mb-1 fw-semibold">Overdue Days</label>
                       <input type="number" id="ret_ext_duration" class="form-control form-control-sm" min="1" step="1">
                     </div>
-
-                    <!-- Unit Rate -->
                     <div class="col-6 col-sm-4 col-md-2">
-                      <label class="form-label small mb-1 fw-semibold">Rate / Price (BHD) <span class="text-danger">*</span></label>
+                      <label class="form-label small mb-1 fw-semibold">Rate / Price (BHD)</label>
                       <input type="text" id="ret_ext_unit_price" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')">
                     </div>
-
-                    <!-- VAT % -->
                     <div class="col-6 col-sm-4 col-md-2">
                       <label class="form-label small mb-1 fw-semibold">VAT %</label>
                       <input type="text" id="ret_ext_vat" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" value="10">
                     </div>
-
-                    <!-- Total Amount -->
                     <div class="col-6 col-sm-6 col-md-3">
-                      <label class="form-label small mb-1 fw-semibold">Total Amount (BHD)</label>
-                      <input type="text" id="ret_ext_total" class="form-control form-control-sm bg-light fw-bold text-success" readonly value="0.000">
+                      <label class="form-label small mb-1 fw-semibold">VAT Amount (BHD)</label>
+                      <input type="text" id="ret_ext_vat_amount" class="form-control form-control-sm bg-light fw-semibold" readonly value="0.000">
                     </div>
-
-                    <!-- Confirm Extension Button -->
-                    <div class="col-12 col-sm-6 col-md-3 d-flex align-items-end">
-                      <button type="button" class="btn btn-sm btn-success w-100 ladda-button" id="btn_confirm_return_extension">
-                        <span class="ladda-label"><i class="ri-check-double-line me-1"></i> Confirm &amp; Extend</span>
-                      </button>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <label class="form-label small mb-1 fw-semibold">Overdue Value (BHD)</label>
+                      <input type="text" id="ret_ext_total" class="form-control form-control-sm bg-light fw-bold text-danger" readonly value="0.000">
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Early Return Reduction Area (Auto-calculated when vehicle returns before contract/extension end date) -->
-              <div id="return_early_reduction_area" class="card mt-3 border-info shadow-sm" style="display: none; background: #f0f7ff; border-radius: 8px;">
-                <div class="card-header bg-info bg-opacity-10 py-2 d-flex justify-content-between align-items-center">
-                  <h6 class="mb-0 fw-bold text-dark">
-                    <i class="ri-refund-2-line text-info me-1"></i> Early Return Reduction / Credit (Days Left)
+              <!-- Early Return Area (Shown when vehicle returns before covered end date) -->
+              <div id="return_early_reduction_area" class="card mt-3 shadow-sm" style="display: none; border: 1px solid #93c5fd; background: #f4f7fe; border-radius: 8px;">
+                <div class="card-header py-2 d-flex justify-content-between align-items-center" style="background: #e8eefc; border-bottom: 1px solid #cbd7f6;">
+                  <h6 class="mb-0 fw-bold" style="color: #1b3d94;">
+                    <i class="ri-information-line me-1"></i> Early Return Notice
                   </h6>
                   <span class="badge bg-primary fs-7" id="return_early_days_badge">0 Days Left</span>
                 </div>
                 <div class="card-body p-3">
-                  <div class="alert alert-info py-2 px-3 mb-3 small d-flex align-items-center" id="return_early_info_msg">
-                    <i class="ri-information-line fs-5 me-2 text-info flex-shrink-0"></i>
+                  <div class="alert alert-primary py-2 px-3 mb-3 small d-flex align-items-center" id="return_early_info_msg" style="background: #eef3fc; border-color: #b8c8f5; color: #1b3d94;">
+                    <i class="ri-information-line fs-5 me-2 flex-shrink-0"></i>
                     <div>
-                      <strong>Early Return Detected:</strong> Vehicle is returned before the covered contract/extension period. The unused days left and reduction amount have been calculated below. You can adjust the dates or figures if required and confirm to post credit to the customer ledger.
+                      <strong>Early Return Detected:</strong> This vehicle is being returned before the covered contract/extension end date. No deduction is applied by default.
                     </div>
                   </div>
                   
-                  <div class="d-flex align-items-center justify-content-between mb-3 p-2 rounded" style="background: rgba(13, 202, 240, 0.12); border: 1px dashed #0dcaf0;">
-                    <div class="form-check form-switch mb-0">
-                      <input class="form-check-input" type="checkbox" id="chk_early_zero_amount">
-                      <label class="form-check-label small fw-bold text-dark" for="chk_early_zero_amount">
-                        <i class="ri-close-circle-line me-1 text-info"></i> Return without deductions / refund (Zero Rate)
-                      </label>
+                  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-2 rounded" style="background: rgba(27, 61, 148, 0.06); border: 1px dashed #1b3d94;">
+                    <div class="d-flex align-items-center gap-3">
+                      <span class="small fw-bold text-dark">Include Early Return Deduction?</span>
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input" type="radio" name="ret_early_deduct_mode" id="ret_early_deduct_no" value="no" checked>
+                        <label class="form-check-label small fw-semibold" for="ret_early_deduct_no">No</label>
+                      </div>
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input" type="radio" name="ret_early_deduct_mode" id="ret_early_deduct_yes" value="yes">
+                        <label class="form-check-label small fw-semibold text-danger" for="ret_early_deduct_yes">Yes</label>
+                      </div>
+                      <input type="checkbox" id="chk_early_zero_amount" class="d-none" checked>
                     </div>
-                    <small class="text-muted">Unit rate &amp; deduction become 0.000 BHD</small>
+                    <small class="text-muted">Select Yes to calculate and deduct unused days</small>
                   </div>
 
-                  <div class="row g-3">
+                  <div id="ret_early_edit_fields" class="row g-3 mt-1" style="display: none;">
                     <!-- Return Date (From) -->
                     <div class="col-12 col-sm-6 col-md-3">
                       <label class="form-label small mb-1 fw-semibold">Return Date (From) <span class="text-danger">*</span></label>
@@ -405,42 +418,56 @@
                     </div>
 
                     <!-- Days / Duration Left -->
-                    <div class="col-6 col-sm-4 col-md-2">
+                    <div class="col-6 col-sm-4 col-md-3">
                       <label class="form-label small mb-1 fw-semibold">Days Left <span class="text-danger">*</span></label>
                       <input type="number" id="ret_early_duration" class="form-control form-control-sm" min="0" step="1">
                     </div>
 
                     <!-- Unit Rate -->
-                    <div class="col-6 col-sm-4 col-md-2">
+                    <div class="col-6 col-sm-4 col-md-3">
                       <label class="form-label small mb-1 fw-semibold">Rate / Price (BHD) <span class="text-danger">*</span></label>
                       <input type="text" id="ret_early_unit_price" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')">
                     </div>
 
                     <!-- VAT % -->
-                    <div class="col-6 col-sm-4 col-md-2">
+                    <div class="col-6 col-sm-4 col-md-3">
                       <label class="form-label small mb-1 fw-semibold">VAT %</label>
                       <input type="text" id="ret_early_vat" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" value="10">
                     </div>
 
                     <!-- Total Reduced Amount -->
                     <div class="col-6 col-sm-6 col-md-3">
-                      <label class="form-label small mb-1 fw-semibold">Total Reduction (BHD)</label>
+                      <label class="form-label small mb-1 fw-semibold">Deducted Amount (BHD)</label>
                       <input type="text" id="ret_early_total" class="form-control form-control-sm bg-light fw-bold text-danger" readonly value="0.000">
                     </div>
-
-                    <!-- Post Credit Button -->
-                    <div class="col-12 col-sm-6 col-md-3 d-flex align-items-end">
-                      <button type="button" class="btn btn-sm btn-outline-danger w-100 ladda-button" id="btn_confirm_early_reduction">
-                        <span class="ladda-label"><i class="ri-refund-2-line me-1"></i> Post Credit to Ledger</span>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div id="ret_early_posted_status" class="alert alert-success py-2 px-3 mt-3 mb-0 small" style="display: none;">
-                    <i class="ri-checkbox-circle-fill me-1 text-success"></i> <span id="ret_early_posted_status_text">Early return reduction has been posted to the customer ledger.</span>
                   </div>
                 </div>
               </div>
+
+              <!-- Prominent Total Summary Bar -->
+              <div id="return_financial_summary_box" class="card mt-3 shadow" style="border: 2px solid #1b3d94; background: linear-gradient(135deg, #f4f7fe, #ffffff); border-radius: 10px;">
+                <div class="card-body py-3 px-3">
+                  <div class="row text-center g-2 align-items-center">
+                    <div class="col-md-3 border-end">
+                      <div class="small text-muted text-uppercase fw-semibold" style="font-size: 11px;">Total Contract Period</div>
+                      <div class="fw-bold small mt-1" id="ret_sum_full_period">-</div>
+                    </div>
+                    <div class="col-md-3 border-end">
+                      <div class="small text-muted text-uppercase fw-semibold" style="font-size: 11px;">Total Contract Value</div>
+                      <div class="fw-bold fs-5 mt-1" style="color: #1b3d94;"><span id="ret_sum_agreed_total">0.000</span> <small>BHD</small></div>
+                    </div>
+                    <div class="col-md-3 border-end">
+                      <div class="small text-muted text-uppercase fw-semibold" style="font-size: 11px;" id="ret_sum_third_label">Total Overdue</div>
+                      <div class="fw-bold fs-5 text-danger mt-1"><span id="ret_sum_overdue_total">0.000</span> <small>BHD</small></div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="small text-muted text-uppercase fw-semibold" style="font-size: 11px;">Total</div>
+                      <div class="fw-bolder fs-4 text-success mt-1"><span id="ret_sum_grand_total">0.000</span> <small>BHD</small></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="d-flex justify-content-between mt-4">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary btn-next">Next <i class="ri-arrow-right-line ms-1"></i></button>
@@ -458,92 +485,78 @@
                
          
               <hr>
-                            <h5 class="mb-3 fw-bold text-danger">Vehicle Checklist & Rentout Details</h5>
-              <div class="return-info-card mb-4">
-                <div class="row mb-2">
-                  <div class="col-md-6">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="chk_tools" disabled>
-                      <label>Jack & Tools</label>
-                    </div>
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="chk_spare" disabled>
-                      <label>Spare Tyre</label>
-                    </div>
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="chk_radio" disabled>
-                      <label>Radio</label>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                     <div class="form-floating form-floating-outline mb-3">
-                      <input type="date" id="dt_contract_date" class="form-control" value="<?php echo date('Y-m-d') ?>" readonly>
-                      <label>Contract Date</label>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                     <div class="col-md-4">
-                        <div class="form-floating form-floating-outline mb-3">
-                          <input type="text" id="fuel_level" class="form-control" readonly>
-                          <label>Fuel Level</label>
-                        </div>
-                    </div>
-                     <div class="col-md-4">
-                        <div class="form-floating form-floating-outline mb-3">
-                          <input type="text" id="km_out" class="form-control" readonly>
-                          <label>Rentout Odometer Reading</label>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-floating form-floating-outline mb-3">
-                          <input type="datetime-local" id="dt_out" class="form-control" readonly>
-                          <label>Date Time Out</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                   <div class="col-md-6">
-                    <div class="form-floating form-floating-outline mb-3">
-                      <input type="text" id="cust_driver" class="form-control" readonly>
-                      <label>Customer Driver</label>
+              <h6 class="mb-2 fw-bold text-uppercase" style="color: #1b3d94; font-size: 12px; letter-spacing: 0.4px;">Vehicle Checklist &amp; Rentout Details</h6>
+              <div class="mb-3 px-3 py-2 rounded border" style="background: #f8faff; border-color: #dbe3f3 !important;">
+                <input type="hidden" id="dt_contract_date" value="<?php echo date('Y-m-d') ?>">
+                <input type="hidden" id="fuel_level" value="">
+                <input type="hidden" id="km_out" value="">
+                <input type="hidden" id="dt_out" value="">
+                <input type="hidden" id="cust_driver" value="">
+                <input type="hidden" id="cust_driver_contact_no" value="">
+
+                <div class="row g-2 align-items-center" style="font-size: 12.5px;">
+                  <div class="col-md-4">
+                    <span class="d-block text-uppercase fw-semibold" style="font-size: 10.5px; color: #64748b;">Rentout Checklist</span>
+                    <div class="d-flex flex-wrap gap-3 mt-1">
+                      <div class="form-check form-check-inline mb-0 me-1">
+                        <input class="form-check-input" type="checkbox" id="chk_tools" disabled style="opacity: 1;">
+                        <label class="form-check-label fw-semibold" style="color: #1e293b; opacity: 1;">Jack &amp; Tools</label>
+                      </div>
+                      <div class="form-check form-check-inline mb-0 me-1">
+                        <input class="form-check-input" type="checkbox" id="chk_spare" disabled style="opacity: 1;">
+                        <label class="form-check-label fw-semibold" style="color: #1e293b; opacity: 1;">Spare Tyre</label>
+                      </div>
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input" type="checkbox" id="chk_radio" disabled style="opacity: 1;">
+                        <label class="form-check-label fw-semibold" style="color: #1e293b; opacity: 1;">Radio</label>
+                      </div>
                     </div>
                   </div>
-                  <div class="col-md-6">
-                     <div class="form-floating form-floating-outline mb-3">
-                      <input type="text" id="cust_driver_contact_no" class="form-control" readonly>
-                      <label>Contact Number</label>
-                     </div>
-                   </div>
-                   <div class="col-md-12">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-2">
-                        <ul id="contractcustdriverdocpreview" class="list-unstyled d-flex align-items-center avatar-group mb-0"></ul>
-                    </div>
-                   </div>
+                  <div class="col-6 col-md-3">
+                    <span class="d-block text-uppercase fw-semibold" style="font-size: 10.5px; color: #64748b;">Rentout Date</span>
+                    <strong style="color: #1e293b;" id="disp_dt_out">-</strong>
+                  </div>
+                  <div class="col-6 col-md-1">
+                    <span class="d-block text-uppercase fw-semibold" style="font-size: 10.5px; color: #64748b;">Fuel</span>
+                    <strong style="color: #1e293b;" id="disp_fuel_level">-</strong>
+                  </div>
+                  <div class="col-6 col-md-1">
+                    <span class="d-block text-uppercase fw-semibold" style="font-size: 10.5px; color: #64748b;">KM Out</span>
+                    <strong style="color: #1e293b;" id="disp_km_out">-</strong>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <span class="d-block text-uppercase fw-semibold" style="font-size: 10.5px; color: #64748b;">Driver / Contact</span>
+                    <strong style="color: #1e293b;"><span id="disp_cust_driver">-</span> <span class="text-muted fw-normal">|</span> <span id="disp_cust_driver_contact_no">-</span></strong>
+                  </div>
                 </div>
+                <ul id="contractcustdriverdocpreview" class="list-unstyled d-flex align-items-center avatar-group mb-0 mt-1"></ul>
               </div>
 
-              <h5 class="mb-3 fw-bold text-primary">Return Details (To Fill)</h5>
-              <div class="row mb-4">
+              <h6 class="mb-2 fw-bold text-uppercase" style="color: #1b3d94; font-size: 12px; letter-spacing: 0.4px;">Return Details (To Fill)</h6>
+              <div class="row g-3 mb-3">
                   <div class="col-md-4">
-                      <div class="form-floating form-floating-outline mb-3">
+                      <div class="form-floating form-floating-outline">
                         <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,''); calcOdoDiff();" id="km_in" class="form-control border-primary" required>
                         <label>Return Odometer Reading <span class="text-danger">*</span></label>
                       </div>
                   </div>
                   <div class="col-md-4">
-                      <div class="form-floating form-floating-outline mb-3">
-                        <input type="text" id="odo_diff" class="form-control bg-light" readonly>
+                      <div class="form-floating form-floating-outline">
+                        <input type="text" id="odo_diff" class="form-control fw-bold" style="background-color: #f8faff; border: 1px solid #cbd5e1; color: #1b3d94;" readonly>
                         <label>Odometer Difference</label>
                       </div>
                   </div>
                   <div class="col-md-4">
-                      <div class="form-floating form-floating-outline mb-3">
+                      <div class="form-floating form-floating-outline">
                         <input type="datetime-local" id="dt_in" class="form-control border-primary" required>
                         <label>Date Time In <span class="text-danger">*</span></label>
                       </div>
                   </div>
               </div>
+
+              <h6 class="mb-2 fw-bold text-uppercase" style="color: #1b3d94; font-size: 12px; letter-spacing: 0.4px;">Vehicle Return Images</h6>
+              <input type="file" id="returncarImages" class="form-control mb-3" multiple accept="image/*" capture="environment">
+              <div id="returnpreview" class="d-flex flex-wrap gap-2 mb-3"></div>
 
               <div id="company_driver_section">
                 <hr>
@@ -595,20 +608,6 @@
               </div>
             </div>
 
-            <!-- Step 3 -->
-            <div id="tab-return-step-3" class="content">
-              <h5 class="mb-3 fw-bold text-danger">Vehicle Return Images</h5>
-
-            
-                            <input type="file" id="returncarImages" class="form-control mb-3" multiple accept="image/*" capture="environment">
-            
-                            <div id="returnpreview" class="d-flex flex-wrap gap-2"></div>
-              <div class="d-flex justify-content-between mt-4">
-                <button type="button" class="btn btn-outline-secondary btn-prev"><i class="ri-arrow-left-line me-1"></i> Previous</button>
-                <button type="button" class="btn btn-primary btn-next">Next <i class="ri-arrow-right-line ms-1"></i></button>
-              </div>
-            </div>
-
             <!-- Step 4 -->
             <div id="tab-return-step-4" class="content">
               <h5 class="mb-3 fw-bold text-danger">Vehicle Violations</h5>
@@ -648,57 +647,38 @@
                                    </table>
                                </div>
 
-                               <div class="form-check mt-3">
+                               <div class="form-check mt-3 mb-4">
                                    <input class="form-check-input" type="checkbox" id="chk_violations_checked">
                                    <label class="form-check-label fw-bold text-danger" for="chk_violations_checked">
                                        I confirm that vehicle violations have been checked on services.bahrain.bh
                                    </label>
                                </div>
-                      
-                            <div class="d-flex justify-content-between mt-4">
-                <button type="button" class="btn btn-outline-secondary btn-prev"><i class="ri-arrow-left-line me-1"></i> Previous</button>
-                <button type="button" class="btn btn-primary btn-next">Next <i class="ri-arrow-right-line ms-1"></i></button>
+
+              <hr class="my-3">
+
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0 fw-bold" style="color: #1b3d94;">Other Fees Entries</h5>
+                <button type="button" class="btn btn-sm btn-primary" id="add_other_fee_row">
+                  <i class="ri-add-line me-1"></i> Add New
+                </button>
               </div>
-            </div>
-            <!-- Step 5 -->
-            <div id="tab-return-step-5" class="content">
-              <h5 class="mb-3 fw-bold text-danger">Other Fees Entries</h5>
 
+              <div class="table-responsive">
+                <table class="table table-bordered align-middle table-sm">
+                  <thead class="table-light">
+                    <tr>
+                      <th width="5%">#</th>
+                      <th width="30%">Fee Item</th>
+                      <th width="15%">Price</th>
+                      <th width="15%">Actual Amount</th>
+                      <th width="25%">Remarks</th>
+                      <th width="10%">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="other_fee_tbody"></tbody>
+                </table>
+              </div>
 
-                    <div class="mb-3 text-end">
-
-                        <button type="button"
-                                class="btn btn-sm btn-primary"
-                                id="add_other_fee_row">
-
-                            Add New
-
-                        </button>
-
-                    </div>
-
-                    <div class="table-responsive">
-
-                        <table class="table table-bordered align-middle">
-
-                            <thead>
-                                <tr>
-                                    <th width="5%">#</th>
-                                    <th width="30%">Fee Item</th>
-                                    <th width="15%">Price</th>
-                                    <th width="15%">Actual Amount</th>
-                                    <th width="25%">Remarks</th>
-                                    <th width="10%">Action</th>
-                                </tr>
-                            </thead>
-
-                            <tbody id="other_fee_tbody">
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
               <div class="d-flex justify-content-between mt-4">
                 <button type="button" class="btn btn-outline-secondary btn-prev"><i class="ri-arrow-left-line me-1"></i> Previous</button>
                 <button type="button" class="btn btn-primary btn-next">Next <i class="ri-arrow-right-line ms-1"></i></button>

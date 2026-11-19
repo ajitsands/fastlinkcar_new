@@ -71,7 +71,7 @@ include('envinclude.php');
 }
 
 .custom-modal-header {
-    background: linear-gradient(135deg, #f12526, #c81e1f);
+    background: linear-gradient(135deg, #1b3d94, #153075);
     color: white !important; 
     border-bottom: none;
 }
@@ -88,13 +88,13 @@ include('envinclude.php');
     background: #f8f9fa;
     border: 2px solid #ced4da; 
     box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    border-left: 5px solid #e35d6a; /* blue highlight */
+    border-left: 5px solid #1b3d94; /* blue highlight */
 }
 .modern-check {
     width: 18px;
     height: 18px;
     cursor: pointer;
-    accent-color: #f12526;
+    accent-color: #1b3d94;
 }
 
 tr.shown {

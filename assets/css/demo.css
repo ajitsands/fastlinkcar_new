@@ -115,91 +115,91 @@
 [data-bs-theme="dark"],
 .light-style,
 .dark-style {
-  --bs-primary: #f12526 !important;
-  --bs-primary-rgb: 241, 37, 38 !important;
-  --bs-primary-hover: #c81e1f !important;
-  --bs-primary-active: #b51a1b !important;
-  --bs-primary-text-emphasis: #7a0c0d !important;
-  --bs-primary-bg-subtle: #fee2e2 !important;
-  --bs-primary-border-subtle: #fca5a5 !important;
+  --bs-primary: #1b3d94 !important;
+  --bs-primary-rgb: 27, 61, 148 !important;
+  --bs-primary-hover: #153075 !important;
+  --bs-primary-active: #10255c !important;
+  --bs-primary-text-emphasis: #0c1d4a !important;
+  --bs-primary-bg-subtle: #e8eefc !important;
+  --bs-primary-border-subtle: #b8c8f5 !important;
   --bs-primary-contrast: #ffffff !important;
-  --bs-link-color: #f12526 !important;
-  --bs-link-hover-color: #c81e1f !important;
-  --bs-pagination-active-bg: #f12526 !important;
-  --bs-pagination-active-border-color: #f12526 !important;
+  --bs-link-color: #1b3d94 !important;
+  --bs-link-hover-color: #153075 !important;
+  --bs-pagination-active-bg: #1b3d94 !important;
+  --bs-pagination-active-border-color: #1b3d94 !important;
   --bs-pagination-active-color: #ffffff !important;
-  --bs-form-check-input-checked-bg-color: #f12526 !important;
-  --bs-form-check-input-checked-border-color: #f12526 !important;
+  --bs-form-check-input-checked-bg-color: #1b3d94 !important;
+  --bs-form-check-input-checked-border-color: #1b3d94 !important;
 }
 
 /* Primary Buttons */
 .btn-primary {
-  background-color: #f12526 !important;
-  border-color: #f12526 !important;
+  background-color: #1b3d94 !important;
+  border-color: #1b3d94 !important;
   color: #ffffff !important;
-  box-shadow: 0 2px 6px 0 rgba(241, 37, 38, 0.4) !important;
+  box-shadow: 0 2px 6px 0 rgba(27, 61, 148, 0.4) !important;
 }
 
 .btn-primary:hover,
 .btn-primary:focus,
 .btn-primary:focus-visible {
-  background-color: #c81e1f !important;
-  border-color: #c81e1f !important;
+  background-color: #153075 !important;
+  border-color: #153075 !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 12px 0 rgba(241, 37, 38, 0.5) !important;
+  box-shadow: 0 4px 12px 0 rgba(27, 61, 148, 0.5) !important;
 }
 
 .btn-primary:active,
 .btn-primary.active,
 .btn-primary:focus:active,
 .show > .btn-primary.dropdown-toggle {
-  background-color: #b51a1b !important;
-  border-color: #b51a1b !important;
+  background-color: #10255c !important;
+  border-color: #10255c !important;
   color: #ffffff !important;
-  box-shadow: 0 2px 4px 0 rgba(241, 37, 38, 0.4) !important;
+  box-shadow: 0 2px 4px 0 rgba(27, 61, 148, 0.4) !important;
 }
 
 .btn-primary:disabled,
 .btn-primary.disabled {
-  background-color: #f12526 !important;
-  border-color: #f12526 !important;
+  background-color: #1b3d94 !important;
+  border-color: #1b3d94 !important;
   color: #ffffff !important;
   opacity: 0.65 !important;
 }
 
 /* Outline Primary Buttons */
 .btn-outline-primary {
-  color: #f12526 !important;
-  border-color: #f12526 !important;
+  color: #1b3d94 !important;
+  border-color: #1b3d94 !important;
   background-color: transparent !important;
 }
 
 .btn-outline-primary:hover,
 .btn-outline-primary:focus {
-  background-color: #f12526 !important;
-  border-color: #f12526 !important;
+  background-color: #1b3d94 !important;
+  border-color: #1b3d94 !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 12px 0 rgba(241, 37, 38, 0.4) !important;
+  box-shadow: 0 4px 12px 0 rgba(27, 61, 148, 0.4) !important;
 }
 
 .btn-outline-primary:active,
 .btn-outline-primary.active,
 .show > .btn-outline-primary.dropdown-toggle {
-  background-color: #c81e1f !important;
-  border-color: #c81e1f !important;
+  background-color: #153075 !important;
+  border-color: #153075 !important;
   color: #ffffff !important;
 }
 
 /* Label Primary Buttons */
 .btn-label-primary {
-  background-color: rgba(241, 37, 38, 0.12) !important;
-  color: #f12526 !important;
+  background-color: rgba(27, 61, 148, 0.12) !important;
+  color: #1b3d94 !important;
   border-color: transparent !important;
 }
 
 .btn-label-primary:hover,
 .btn-label-primary:focus {
-  background-color: #f12526 !important;
+  background-color: #1b3d94 !important;
   color: #ffffff !important;
 }
 
@@ -211,24 +211,24 @@ div.dt-container div.dt-paging ul.pagination .page-item.active .page-link,
 .page-item.active .page-link,
 .paginate_button.current,
 .dataTables_paginate .paginate_button.current {
-  background-color: #f12526 !important;
-  border-color: #f12526 !important;
+  background-color: #1b3d94 !important;
+  border-color: #1b3d94 !important;
   color: #ffffff !important;
-  box-shadow: 0 2px 6px 0 rgba(241, 37, 38, 0.4) !important;
+  box-shadow: 0 2px 6px 0 rgba(27, 61, 148, 0.4) !important;
 }
 
 .dataTables_wrapper .pagination .page-item .page-link:hover,
 .dataTables_paginate .pagination .page-item .page-link:hover,
 div.dt-container div.dt-paging ul.pagination .page-item:not(.active) .page-link:hover,
 .pagination .page-item:not(.active) .page-link:hover {
-  color: #f12526 !important;
-  background-color: rgba(241, 37, 38, 0.08) !important;
-  border-color: rgba(241, 37, 38, 0.2) !important;
+  color: #1b3d94 !important;
+  background-color: rgba(27, 61, 148, 0.08) !important;
+  border-color: rgba(27, 61, 148, 0.2) !important;
 }
 
 div.dt-container table.dataTable.table tbody > tr.selected,
 table.dataTable tbody tr.selected {
-  background-color: rgba(241, 37, 38, 0.08) !important;
+  background-color: rgba(27, 61, 148, 0.08) !important;
 }
 
 /* Step Wizard / bs-stepper */
@@ -237,126 +237,135 @@ table.dataTable tbody tr.selected {
 .bs-stepper .step-trigger:focus .bs-stepper-circle,
 .bs-stepper-header .step.active .bs-stepper-circle,
 .active .bs-stepper-circle {
-  border: 3px solid #f12526 !important;
-  background-color: #f12526 !important;
+  border: 3px solid #1b3d94 !important;
+  background-color: #1b3d94 !important;
   color: #ffffff !important;
-  box-shadow: 0 3px 9px 0 rgba(241, 37, 38, 0.4) !important;
+  box-shadow: 0 3px 9px 0 rgba(27, 61, 148, 0.4) !important;
 }
 
 .bs-stepper .step.crossed .bs-stepper-circle,
 .bs-stepper .step.crossed .step-trigger .bs-stepper-circle,
 .bs-stepper-header .step.crossed .bs-stepper-circle {
-  border-color: #f12526 !important;
-  background-color: #f12526 !important;
+  border-color: #1b3d94 !important;
+  background-color: #1b3d94 !important;
   color: #ffffff !important;
 }
 
 .bs-stepper .step.active .bs-stepper-icon svg,
 .bs-stepper .step.crossed .step-trigger .bs-stepper-icon svg {
-  fill: #f12526 !important;
+  fill: #1b3d94 !important;
 }
 
 .bs-stepper .step.active .bs-stepper-icon .icon-base,
 .bs-stepper .step.crossed .step-trigger .bs-stepper-icon .icon-base {
-  color: #f12526 !important;
+  color: #1b3d94 !important;
 }
 
 .bs-stepper .step.active .bs-stepper-label .bs-stepper-title,
 .bs-stepper .step.active .bs-stepper-label .bs-stepper-number,
 .bs-stepper .bs-stepper-header .step.active .bs-stepper-label .bs-stepper-title,
 .bs-stepper .bs-stepper-header .step.active .bs-stepper-label .bs-stepper-number {
-  color: #f12526 !important;
+  color: #1b3d94 !important;
 }
 
 .bs-stepper .step.crossed + .line,
 .bs-stepper-header .step.crossed + .line,
 .bs-stepper-header .line.active,
 .bs-stepper .line.active {
-  border-color: #f12526 !important;
-  background-color: #f12526 !important;
+  border-color: #1b3d94 !important;
+  background-color: #1b3d94 !important;
 }
 
 .bs-stepper .step-trigger:focus {
-  color: #f12526 !important;
+  color: #1b3d94 !important;
 }
 
 /* Form Elements, Checks, Radios, Switches */
 .form-check-input:checked {
-  background-color: #f12526 !important;
-  border-color: #f12526 !important;
-  box-shadow: 0 2px 4px 0 rgba(241, 37, 38, 0.4) !important;
+  background-color: #1b3d94 !important;
+  border-color: #1b3d94 !important;
+  box-shadow: 0 2px 4px 0 rgba(27, 61, 148, 0.4) !important;
 }
 
 .form-check-input:focus {
-  border-color: #f12526 !important;
-  box-shadow: 0 0 0 0.25rem rgba(241, 37, 38, 0.25) !important;
+  border-color: #1b3d94 !important;
+  box-shadow: 0 0 0 0.25rem rgba(27, 61, 148, 0.25) !important;
 }
 
 .switch-input:checked ~ .switch-toggle-slider {
-  background-color: #f12526 !important;
+  background-color: #1b3d94 !important;
 }
 
 .form-control:focus,
 .form-select:focus {
-  border-color: #f12526 !important;
-  box-shadow: 0 0 0 0.25rem rgba(241, 37, 38, 0.2) !important;
+  border-color: #1b3d94 !important;
+  box-shadow: 0 0 0 0.25rem rgba(27, 61, 148, 0.2) !important;
 }
 
 .form-floating > .form-control:focus ~ label,
 .form-floating > .form-select:focus ~ label {
-  color: #f12526 !important;
+  color: #1b3d94 !important;
 }
 
 /* Nav-pills & Tabs */
 .nav-pills .nav-link.active,
 .nav-pills .show > .nav-link {
-  background: linear-gradient(135deg, #f12526, #c81e1f) !important;
+  background: linear-gradient(135deg, #1b3d94, #153075) !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 12px rgba(241, 37, 38, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(27, 61, 148, 0.3) !important;
 }
 
 /* General Badges & Text Utilities */
 .badge.bg-primary {
-  background-color: #f12526 !important;
+  background-color: #1b3d94 !important;
   color: #ffffff !important;
 }
 
 .badge.bg-label-primary {
-  background-color: rgba(241, 37, 38, 0.12) !important;
-  color: #f12526 !important;
+  background-color: rgba(27, 61, 148, 0.12) !important;
+  color: #1b3d94 !important;
 }
 
 .text-primary {
-  color: #f12526 !important;
+  color: #1b3d94 !important;
 }
 
 .bg-primary {
-  background-color: #f12526 !important;
+  background-color: #1b3d94 !important;
 }
 
 .border-primary {
-  border-color: #f12526 !important;
+  border-color: #1b3d94 !important;
 }
 
 .dropdown-item.active,
 .dropdown-item:active {
-  background-color: #f12526 !important;
+  background-color: #1b3d94 !important;
   color: #ffffff !important;
 }
 
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
-  background-color: #f12526 !important;
+  background-color: #1b3d94 !important;
   color: #ffffff !important;
 }
 
 .flatpickr-day.selected,
 .flatpickr-day.startRange,
 .flatpickr-day.endRange {
-  background: #f12526 !important;
-  border-color: #f12526 !important;
+  background: #1b3d94 !important;
+  border-color: #1b3d94 !important;
 }
 
 .flatpickr-day.today {
-  border-color: #f12526 !important;
+  border-color: #1b3d94 !important;
+}
+
+/* Search Modal Scrollability */
+.aa-DetachedContainer {
+  max-height: 82vh !important;
+}
+.aa-Panel {
+  max-height: 70vh !important;
+  overflow-y: auto !important;
 }
 

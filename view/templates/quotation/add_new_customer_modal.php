@@ -55,6 +55,7 @@
                                     <textarea class="form-control form-control-sm" id="bookingCustomerAddress_onmodal" name="bookingCustomerAddress_onmodal" ></textarea>
                             </div>
                         </div>
+                        <?php include ROOT_PATH . '/view/templates/customer/customer_modal_extra_fields.php'; ?>
                             
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4 mb-2">
                                  <!-- Left: Image Preview -->

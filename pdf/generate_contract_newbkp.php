@@ -116,11 +116,11 @@ $driver = json_decode($data['driver_details'] ?? '{}', true);
 
 class AA_Contract_PDF extends TCPDF {
     public function Header() {
-        $logo_jpg = 'assets/img/logo/logo.jpg';
-        $logo_png = 'assets/img/logo/logo.png';
+        $logo_jpg = 'assets/img/logo_new/fastlinklogoblue.png';
+        $logo_png = 'assets/img/logo_new/fastlinklogoblue.png';
         
         if (file_exists($logo_jpg)) {
-            $this->Image($logo_jpg, 15, 10, 45, 0, 'JPG', '', 'T', false, 300, '', false, false, 0, false, false, false);
+            $this->Image($logo_jpg, 15, 10, 45, 0, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
         } elseif (file_exists($logo_png)) {
             if (extension_loaded('gd') || extension_loaded('imagick')) {
                 $this->Image($logo_png, 15, 10, 45, 0, 'PNG', '', 'T', false, 300, '', false, false, 0, false, false, false);
@@ -128,9 +128,9 @@ class AA_Contract_PDF extends TCPDF {
         }
         $this->SetFont('dejavusans', 'B', 16);
         $this->SetXY(15, 12);
-        $this->Cell(0, 10, 'AA CAR RENTAL', 0, 1, 'C');
+        $this->Cell(0, 10, 'FAST LINK', 0, 1, 'C');
         $this->SetFont('dejavusans', '', 12);
-        $this->SetTextColor(255, 0, 0); // Red text
+        $this->SetTextColor(27, 61, 148); // Red text
         $this->Cell(0, 8, 'CAR HIRE AGREEMENT | اتفاقية استئجار سيارة', 0, 1, 'C');
         $this->SetTextColor(0, 0, 0);
         
@@ -165,14 +165,14 @@ $html = '
     table { width: 100%; border-collapse: collapse; font-family: dejavusans; font-size: 8pt; }
     .bordered-table td { border: 1px solid #000; padding: 3px; }
     .no-border { border: none; }
-    .label { color: #d32f2f; font-weight: bold; }
+    .label { color: #1b3d94; font-weight: bold; }
     .bg-gray { background-color: #e0e0e0; font-weight: bold; text-align: center; }
 </style>
 
 <table class="no-border" cellpadding="2">
     <tr>
         <td class="no-border" width="30%">
-            <b style="font-size:12pt; color:#d32f2f;">AA CAR RENTAL</b><br>
+            <b style="font-size:12pt; color:#1b3d94;">FAST LINK</b><br>
             Tel +973 17300322<br>
             Fax +973 17300311<br>
             info@aarentalbh.com<br>
@@ -181,8 +181,8 @@ $html = '
         </td>
         <td class="no-border" width="40%" align="center">
             <br>
-            <b style="font-size:14pt; color:#d32f2f;">اتفاقية استئجار سيارة</b><br>
-            <b style="font-size:11pt; color:#d32f2f;">CAR HIRE AGREEMENT</b>
+            <b style="font-size:14pt; color:#1b3d94;">اتفاقية استئجار سيارة</b><br>
+            <b style="font-size:11pt; color:#1b3d94;">CAR HIRE AGREEMENT</b>
         </td>
         <td class="no-border" width="30%" align="right">
             <table class="no-border">
@@ -337,7 +337,7 @@ $html = '
 
 <table class="bordered-table" cellpadding="4">
     <tr>
-        <td style="background-color: #d32f2f; color: #fff; text-align:right; font-weight:bold; font-size: 9pt;">
+        <td style="background-color: #1b3d94; color: #fff; text-align:right; font-weight:bold; font-size: 9pt;">
             * يحسب مبلغ دينارين للسيارة الصغيرة وأربعة دنانير للسيارة الكبيرة في حالة رجوع السيارة غير نظيفة.<br>
             * يحق للمكتب سحب السيارة فوراً وإنهاء عقد الإيجار ومطالبة المستأجر قانونياً بسداد الإيجار والغرامات والتلفيات إن وجدت في الحالات الآتية:<br>
             1. عدم سداد المبلغ المستحق خلال يومين من الاستئجار.<br>
@@ -426,9 +426,9 @@ $delivered_info = ($delivered_name || $delivered_date) ? '<br><span style="font-
 $html .= '
 <table class="no-border" cellpadding="4">
     <tr>
-        <td width="33%" align="center" class="no-border">' . $received_sig_img . '_________________________<br><b style="color:#d32f2f;">Received By</b>' . $received_info . '</td>
-        <td width="33%" align="center" class="no-border">' . $hirer_sig_img . '_________________________<br><b style="color:#d32f2f;">Hirer Signature</b>' . $hirer_info . '<br><span style="font-size:7pt; color:#d32f2f;">I Agree on the terms & conditions over leaf</span></td>
-        <td width="33%" align="center" class="no-border">' . $delivered_sig_img . '_________________________<br><b style="color:#d32f2f;">Delivered By</b>' . $delivered_info . '</td>
+        <td width="33%" align="center" class="no-border">' . $received_sig_img . '_________________________<br><b style="color:#1b3d94;">Received By</b>' . $received_info . '</td>
+        <td width="33%" align="center" class="no-border">' . $hirer_sig_img . '_________________________<br><b style="color:#1b3d94;">Hirer Signature</b>' . $hirer_info . '<br><span style="font-size:7pt; color:#1b3d94;">I Agree on the terms & conditions over leaf</span></td>
+        <td width="33%" align="center" class="no-border">' . $delivered_sig_img . '_________________________<br><b style="color:#1b3d94;">Delivered By</b>' . $delivered_info . '</td>
     </tr>
 </table>
 ';

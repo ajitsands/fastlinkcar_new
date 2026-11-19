@@ -102,53 +102,72 @@ $introduction = !empty($data['introduction']) ? $data['introduction'] : "With re
 $custom_notes = !empty($data['terms']) ? $data['terms'] : ($params['notes'] ?? "");
 $items = json_decode($data['items'], true);
 
+require_once __DIR__ . '/print_settings_helper.php';
+$printSettings = getPrintSettings($mysqli ?? null);
+
 class AA_PDF extends TCPDF
 {
     public $footer_logo_x;
     public $footer_logo_y;
     public $footer_logo_pg;
     public $seal_pg;
+    public $printSettings = [];
 
     public function Header()
     {
-        $logo_file = '../assets/img/logo/logo.png';
-        if (file_exists($logo_file)) {
-            $this->Image($logo_file, 20, 5, 45, 0, 'PNG', '', 'T', false, 300, '', false, false, 0, false, false, false);
+        $ps = $this->printSettings;
+        $accentRgb = $ps['accent_rgb'] ?? [27, 61, 148];
+        $logo_file = !empty($ps['show_logo']) ? ($ps['logo_abs_path'] ?? '../assets/img/logo_new/fastlinklogoblue.png') : '';
+        if ($logo_file !== '' && file_exists($logo_file)) {
+            $this->Image($logo_file, 20, 5, 0, 20, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
         }
-        $this->SetFont('helvetica', 'B', 18);
+        $this->SetTextColor($accentRgb[0], $accentRgb[1], $accentRgb[2]);
+        $this->SetFont('helvetica', 'B', 16);
         $this->SetXY(20, 7);
-        $this->Cell(0, 10, 'AA CAR RENTAL CO. W.L.L', 0, 1, 'R');
-        $this->SetFont('helvetica', '', 10);
-        $this->Cell(0, 5, 'SALMABAD- KINGDOM OF BAHRAIN', 0, 1, 'R');
+        $this->Cell(0, 8, strtoupper($ps['company_name'] ?? 'FAST LINK'), 0, 1, 'R');
+        $this->SetTextColor(70, 70, 70);
+        $this->SetFont('helvetica', '', 9);
+        $subLine = !empty($ps['header_address']) ? $ps['header_address'] : ($ps['header_subtitle'] ?? 'Kingdom of Bahrain');
+        $this->Cell(0, 5, $subLine, 0, 1, 'R');
+        $this->SetDrawColor($accentRgb[0], $accentRgb[1], $accentRgb[2]);
+        $this->SetLineWidth(0.5);
+        $this->Line(20, 28, $this->getPageWidth() - 15, 28);
     }
 
     public function Footer()
     {
+        $ps = $this->printSettings;
+        $accentRgb = $ps['accent_rgb'] ?? [27, 61, 148];
         $this->SetY(-30);
+        $this->SetDrawColor($accentRgb[0], $accentRgb[1], $accentRgb[2]);
         $this->Line(20, $this->GetY(), $this->getPageWidth() - 15, $this->GetY());
         $this->Ln(2);
-        $this->SetFont('helvetica', 'B', 11);
-        $this->Cell(0, 6, 'AA CAR RENTAL', 0, 1, 'L');
+        $this->SetTextColor($accentRgb[0], $accentRgb[1], $accentRgb[2]);
+        $this->SetFont('helvetica', 'B', 10);
+        $this->Cell(0, 5, strtoupper($ps['company_name'] ?? 'FAST LINK'), 0, 1, 'L');
+        $this->SetTextColor(60, 60, 60);
         $this->SetFont('dejavusans', '', 8);
+        $phone = htmlspecialchars($ps['header_phone'] ?? '');
+        $email = htmlspecialchars($ps['header_email'] ?? '');
+        $addr  = htmlspecialchars($ps['header_address'] ?? 'Kingdom of Bahrain');
+        $footerTxt = (!empty($ps['show_footer']) && !empty($ps['footer_text'])) ? htmlspecialchars($ps['footer_text']) : '';
         $html = '<table width="100%" border="0" cellpadding="1">
             <tr>
-                <td width="35%"><b>+ 973 17300311 | + 973 17300322</b></td>
-                <td width="25%" align="center"><b>info@aarental.com</b></td>
-                <td width="40%" align="right"><b>Salmabad - Kingdom of Bahrain</b></td>
-            </tr>
-            <tr>
-                <td colspan="3" align="right" style="font-family:dejavusans;">سلماباد - مملكة البحرين</td>
-            </tr>
+                <td width="35%"><b>' . $phone . '</b></td>
+                <td width="30%" align="center"><b>' . $email . '</b></td>
+                <td width="35%" align="right"><b>' . $addr . '</b></td>
+            </tr>' .
+            ($footerTxt !== '' ? '<tr><td colspan="3" align="center" style="color:' . htmlspecialchars($ps['accent_color'] ?? '#1b3d94') . ';">' . $footerTxt . '</td></tr>' : '') . '
         </table>';
         $this->writeHTML($html, true, false, true, false, '');
 
         // Bottom Logo Logic
         $is_last_page = ($this->getPage() == $this->getNumPages());
+        $logo_file = !empty($ps['show_logo']) ? ($ps['logo_abs_path'] ?? '') : '';
         if ($this->footer_logo_pg == 'all' || ($this->footer_logo_pg == 'last' && $is_last_page)) {
-            $logo_file = '../assets/img/logo/logo.png';
-            if (file_exists($logo_file)) {
+            if ($logo_file !== '' && file_exists($logo_file)) {
                 $y_pos = ($this->footer_logo_y < 0) ? $this->getPageHeight() + $this->footer_logo_y : $this->footer_logo_y;
-                $this->Image($logo_file, $this->footer_logo_x, $y_pos, 40, 0, 'PNG', '', 'T', false, 300, '', false, false, 0, false, false, false);
+                $this->Image($logo_file, $this->footer_logo_x, $y_pos, 0, 16, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
             }
         }
 
@@ -183,6 +202,7 @@ class AA_PDF extends TCPDF
 }
 
 $pdf = new AA_PDF($orientation, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+$pdf->printSettings = $printSettings;
 $pdf->footer_logo_x = $footer_logo_x;
 $pdf->footer_logo_y = $footer_logo_y;
 $pdf->footer_logo_pg = $footer_logo_pg;
@@ -190,17 +210,18 @@ $pdf->seal_pg = $seal_last_pg;
 
 $pdf->SetCreator(PDF_CREATOR);
 $pdf->SetTitle('Quotation V2 ' . $quotation_no);
-$pdf->SetMargins(20, 28, 15);
+$pdf->SetMargins(20, 34, 15);
 $pdf->SetHeaderMargin(5);
 $pdf->SetFooterMargin(25);
 $pdf->SetAutoPageBreak(TRUE, $page_break_threshold);
 $pdf->SetFont('dejavusans', '', 10);
 $pdf->AddPage();
 
-// Red Bar "QUOTATION"
+// Brand Bar "QUOTATION"
+$accentRgb = $printSettings['accent_rgb'] ?? [27, 61, 148];
 $pdf->setCellPaddings(1, 1, 1, 1);
-$pdf->Ln(5);
-$pdf->SetFillColor(237, 28, 36);
+$pdf->Ln(3);
+$pdf->SetFillColor($accentRgb[0], $accentRgb[1], $accentRgb[2]);
 $pdf->SetTextColor(255, 255, 255);
 $pdf->SetFont('helvetica', 'B', 14);
 $pdf->Cell(0, 12, 'QUOTATION', 0, 1, 'C', 1);
@@ -218,7 +239,7 @@ $pdf->SetFont('helvetica', 'B', 11);
 $pdf->Cell($colWidth - 15, 6, strtoupper($customer_name), 0, 1);
 $pdf->SetX(35);
 $pdf->SetFont('helvetica', 'B', 9);
-$pdf->SetTextColor(255, 0, 0);
+$pdf->SetTextColor(27, 61, 148);
 $pdf->Cell($colWidth - 15, 5, $customer_address, 0, 1);
 $pdf->SetTextColor(0, 0, 0);
 $pdf->SetX(20);
@@ -348,7 +369,7 @@ $pdf->writeHTML($table_html, true, false, true, false, '');
 
 // Notes section
 $pdf->Ln(4);
-$pdf->SetTextColor(255, 0, 0);
+$pdf->SetTextColor(27, 61, 148);
 $pdf->SetFont('helvetica', 'B', 10);
 $pdf->Cell(0, 5, 'Note :', 0, 1);
 $pdf->SetTextColor(0, 0, 0);
@@ -369,11 +390,11 @@ $pdf->Ln(5);
 $pdf->SetFont('helvetica', 'B', 10);
 $pdf->Cell(0, 5, 'Best Regards,', 0, 1);
 $pdf->Ln(2);
-$pdf->Cell(0, 5, 'AA CAR RENTAL CO. W.L.L.', 0, 1);
+$pdf->Cell(0, 5, 'FAST LINK CO. W.L.L.', 0, 1);
 $pdf->Ln(10);
 $pdf->SetFont('helvetica', 'B', 10);
 $pdf->Cell(0, 5, 'Thank you for your interest in,', 0, 1);
-$pdf->SetTextColor(255, 0, 0);
+$pdf->SetTextColor(27, 61, 148);
 $pdf->Cell(0, 5, 'A.A.CAR RENTAL CO. W.L.L', 0, 1);
 
 // Custom Seal (Standard Seal is in Footer)

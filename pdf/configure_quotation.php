@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AA Car Rental - Custom Quotation Generator</title>
+    <title>Fast Link - Custom Quotation Generator</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #ed1c24;
+            --primary: #1b3d94;
             --secondary: #2c3e50;
             --bg: #f4f7f6;
             --card-bg: #ffffff;
@@ -125,7 +125,7 @@
         }
 
         .btn-generate:hover {
-            background-color: #c0181e;
+            background-color: #153075;
             transform: translateY(-2px);
         }
 
@@ -173,7 +173,7 @@
     <div class="container">
         <div class="card">
             <div class="header">
-                <img src="../assets/img/logo/logo.png" width="80%" alt="AA CAR RENTAL">
+                <img src="../assets/img/logo_new/fastlinklogoblue.png" width="80%" alt="FAST LINK">
                 <h1>Quotation Configurator</h1>
                 <p>Adjust parameters to generate a professional PDF in a new tab.</p>
             </div>
@@ -266,7 +266,7 @@
             </form>
 
             <div class="footer-note">
-                &copy; 2026 AA CAR RENTAL CO. W.L.L | All settings (except ID) are saved locally for convenience.
+                &copy; 2026 FAST LINK CO. W.L.L | All settings (except ID) are saved locally for convenience.
             </div>
         </div>
     </div>

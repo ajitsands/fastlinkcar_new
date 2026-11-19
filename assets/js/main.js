@@ -441,7 +441,7 @@ const SearchConfig = {
     form: 'd-flex align-items-center',
     input: 'search-control border-none',
     detachedCancelButton: 'btn-search-close',
-    panel: 'flex-grow content-wrapper overflow-hidden position-relative',
+    panel: 'flex-grow content-wrapper overflow-auto position-relative',
     panelLayout: 'h-100',
     clearButton: 'd-none',
     item: 'd-block'
@@ -457,64 +457,58 @@ function isMacOS() {
   return /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
 }
 
-// Load search data Ajit
-function loadSearchData() {
-  const searchJson = $('#layout-menu').hasClass('menu-horizontal') ? 'search-horizontal.json' : 'search-vertical.json';
+// Build search data from actual application menu items
+function buildMenuSearchData() {
+  const grouped = {};
+  const seenUrls = new Set();
 
-  fetch(assetsPath + 'json/' + searchJson)
-    .then(response => {
-      if (!response.ok) throw new Error('Failed to fetch data');
-      return response.json();
-    })
-    .then(json => {
-      data = json;
-      // Add Menu Items from DOM to data.navigation
-      if (!data.navigation) data.navigation = {};
-      
-      const menuItems = [];
-      document.querySelectorAll('.menu-inner .menu-item').forEach(item => {
-        const link = item.querySelector('.menu-link:not(.menu-toggle)');
-        if (link && link.getAttribute('href') !== 'javascript:void(0)') {
-          const name = link.querySelector('[data-i18n]')?.textContent || link.textContent.trim();
-          const iconClass = link.querySelector('.menu-icon')?.classList.value || '';
-          const icon = iconClass.split(' ').find(c => c.startsWith('ri-')) || 'ri-file-line';
-          
-          menuItems.push({
-            name: name,
-            url: link.getAttribute('href'),
-            icon: icon
-          });
-        }
-      });
-      
-      if (menuItems.length > 0) {
-        data.navigation['Menu'] = menuItems;
+  document.querySelectorAll('.menu-inner > .menu-item').forEach(topItem => {
+    if (topItem.style && topItem.style.display === 'none') return;
+
+    const topLink = topItem.querySelector(':scope > .menu-link');
+    if (!topLink) return;
+
+    const sectionTitle = (topLink.querySelector('[data-i18n]')?.textContent || topLink.textContent || 'Menu').trim();
+    const subMenu = topItem.querySelector(':scope > .menu-sub');
+
+    if (!subMenu) {
+      const href = topLink.getAttribute('href');
+      if (href && href !== 'javascript:void(0)' && !seenUrls.has(href)) {
+        seenUrls.add(href);
+        const iconClass = topLink.querySelector('.menu-icon')?.classList.value || '';
+        const icon = iconClass.split(' ').find(c => c.startsWith('ri-')) || 'ri-home-smile-line';
+        if (!grouped[sectionTitle]) grouped[sectionTitle] = [];
+        grouped[sectionTitle].push({ name: sectionTitle, url: href, icon: icon, section: sectionTitle });
       }
+      return;
+    }
 
-      initializeAutocomplete();
-    })
-    .catch(error => {
-        console.error('Error loading JSON:', error);
-        // Fallback: initialize with just Menu if JSON fails
-        data.navigation = {};
-        const menuItems = [];
-        document.querySelectorAll('.menu-inner .menu-item').forEach(item => {
-            const link = item.querySelector('.menu-link:not(.menu-toggle)');
-            if (link && link.getAttribute('href') !== 'javascript:void(0)') {
-                const name = link.querySelector('[data-i18n]')?.textContent || link.textContent.trim();
-                const iconClass = link.querySelector('.menu-icon')?.classList.value || '';
-                const icon = iconClass.split(' ').find(c => c.startsWith('ri-')) || 'ri-file-line';
-                
-                menuItems.push({
-                    name: name,
-                    url: link.getAttribute('href'),
-                    icon: icon
-                });
-            }
-        });
-        data.navigation['Menu'] = menuItems;
-        initializeAutocomplete();
+    subMenu.querySelectorAll('.menu-item').forEach(subItem => {
+      if (subItem.style && subItem.style.display === 'none') return;
+      const link = subItem.querySelector(':scope > .menu-link');
+      if (!link) return;
+      const href = link.getAttribute('href');
+      if (!href || href === 'javascript:void(0)' || seenUrls.has(href)) return;
+
+      seenUrls.add(href);
+      const name = (link.querySelector('[data-i18n]')?.textContent || link.textContent || '').trim();
+      const iconClass = link.querySelector('.menu-icon')?.classList.value || '';
+      const icon = iconClass.split(' ').find(c => c.startsWith('ri-')) || 'ri-file-line';
+
+      if (!grouped[sectionTitle]) grouped[sectionTitle] = [];
+      grouped[sectionTitle].push({ name: name, url: href, icon: icon, section: sectionTitle });
     });
+  });
+
+  data = {
+    suggestions: grouped,
+    navigation: grouped
+  };
+}
+
+function loadSearchData() {
+  buildMenuSearchData();
+  initializeAutocomplete();
 }
 
 // Initialize autocomplete
@@ -525,9 +519,15 @@ function initializeAutocomplete() {
   return autocomplete({
     ...SearchConfig,
     openOnFocus: true,
+    navigator: {
+      navigate({ itemUrl }) {
+        window.location.assign(itemUrl);
+      }
+    },
     onStateChange({ state, setQuery }) {
       // When autocomplete is opened
       if (state.isOpen) {
+        buildMenuSearchData();
         // Hide body scroll and add padding to prevent layout shift
         document.body.style.overflow = 'hidden';
         document.body.style.paddingRight = 'var(--bs-scrollbar-width)';
@@ -562,16 +562,16 @@ function initializeAutocomplete() {
       // Initial Suggestions
       if (!state.query) {
         const initialSuggestions = html`
-          <div class="p-5 p-lg-12">
-            <div class="row g-4">
+          <div class="p-4 p-lg-5">
+            <div class="row g-3">
               ${Object.entries(data.suggestions || {}).map(
                 ([section, items]) => html`
-                  <div class="col-md-6 suggestion-section">
+                  <div class="col-md-4 col-sm-6 suggestion-section">
                     <p class="search-headings mb-2">${section}</p>
                     <div class="suggestion-items">
                       ${items.map(
                         item => html`
-                          <a href="${item.url}" class="suggestion-item d-flex align-items-center">
+                          <a href="${item.url}" class="suggestion-item d-flex align-items-center py-1">
                             <i class="icon-base ri ${item.icon} me-2"></i>
                             <span>${item.name}</span>
                           </a>
@@ -586,6 +586,7 @@ function initializeAutocomplete() {
         `;
 
         render(initialSuggestions, root);
+        window.autoCompletePS?.update();
         return;
       }
 
@@ -623,7 +624,11 @@ function initializeAutocomplete() {
             getItems({ query }) {
               const items = data.navigation[section];
               if (!query) return items;
-              return items.filter(item => item.name.toLowerCase().includes(query.toLowerCase()));
+              const q = query.toLowerCase();
+              return items.filter(item =>
+                item.name.toLowerCase().includes(q) ||
+                (item.section && item.section.toLowerCase().includes(q))
+              );
             },
             getItemUrl({ item }) {
               return item.url;
@@ -738,7 +743,11 @@ document.addEventListener('keydown', event => {
 
 // Load search data on page load
 if (document.documentElement.querySelector('#autocomplete')) {
-  loadSearchData();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadSearchData);
+  } else {
+    loadSearchData();
+  }
 }
 
 /**

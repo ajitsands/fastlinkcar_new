@@ -75,7 +75,7 @@ include ROOT_PATH . '/view/envinclude.php';
         #serviceTable.dataTable.table-striped tbody tr.selected, #serviceTable.dataTable.table-striped tbody tr.selected > *,
         #serviceTable.dataTable.table-striped tbody tr.selected:hover, #serviceTable.dataTable.table-striped tbody tr.selected:hover > *,
         #serviceTable.dataTable.table-striped > tbody > tr:nth-of-type(odd).selected, #serviceTable.dataTable.table-striped > tbody > tr:nth-of-type(odd).selected > * {
-            background-color: #F87C63 !important;
+            background-color: #2b54b8 !important;
             color: #ffffff !important;
             box-shadow: none !important;
             outline: none !important;
@@ -86,7 +86,7 @@ include ROOT_PATH . '/view/envinclude.php';
         #garageTable.dataTable tbody tr:not(.selected):hover > *, #garageTable.dataTable.table-hover tbody tr:not(.selected):hover > *,
         #serviceTable tbody tr:not(.selected):hover, #serviceTable tbody tr:not(.selected):hover > td, #serviceTable tbody tr:not(.selected):hover > th,
         #serviceTable.dataTable tbody tr:not(.selected):hover > *, #serviceTable.dataTable.table-hover tbody tr:not(.selected):hover > * {
-            background-color: rgba(248, 124, 99, 0.15) !important;
+            background-color: rgba(43, 84, 184, 0.15) !important;
             color: inherit !important;
         }
 

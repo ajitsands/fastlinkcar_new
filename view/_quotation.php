@@ -152,7 +152,7 @@ tr.active-row {
 
 /* Table header style */
 #helpTable thead th {
-    background-color: #f12526;   /* Blue header (Bootstrap primary) */
+    background-color: #1b3d94;   /* Blue header (Bootstrap primary) */
     color: #fff;                 /* White text */
     padding: 6px 8px;            /* Narrow padding */
     font-size: 13px;             /* Slightly smaller text */

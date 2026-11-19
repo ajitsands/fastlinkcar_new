@@ -11,7 +11,7 @@ class VehiclesContractListController
       public $selectedBookingIds= [];
 	  public $user_id,$company_id,$insertedDate,$bookingid,$vehicleid,$customer_code,$model_ids,$km_used;
 	  public $booking_ids,$booking_ref_no,$customer_data,$vehicle_data,$contract_details,$company_driver_details,$vehicle_accessories,$tc_ids,$t_c_name,$terms_condition,$termsContent,$agreement_date,$contract_ids,$data_source_val,$filter_from,$filter_to,$booking_status,$hirer_name,$delivery_name,$hirer_signature,$delivery_signature,$agreementid,$agreement_no,$extend_ids,$vehicle_ids,$km_in,$return_date_in,$ReceiverSign,$receiver_name,$service_name,$close_otp_msg;
-	  public $duration, $unit_price, $vat, $total_amt, $service_id, $rate_type_id, $rate_type, $period_from, $period_to, $trans_date, $is_zero_cost, $early_return_reduction;
+	  public $duration, $unit_price, $vat, $total_amt, $service_id, $rate_type_id, $rate_type, $period_from, $period_to, $trans_date, $is_zero_cost, $early_return_reduction, $overdue_extension, $other_fees;
 	  public $returnvehicleimages = [];
 	  public $violations = [];
 	  public $page, $limit, $offset, $status, $ReturnData;
@@ -147,6 +147,8 @@ class VehiclesContractListController
         $this->trans_date      = $data['trans_date'] ?? '';
         $this->is_zero_cost    = !empty($data['is_zero_cost']) ? 1 : 0;
         $this->early_return_reduction = $data['early_return_reduction'] ?? null;
+        $this->overdue_extension = $data['overdue_extension'] ?? null;
+        $this->other_fees = $data['other_fees'] ?? [];
 	}
 	function onOff($val) {
         return ($val === 'on') ? 1 : 0;
@@ -1763,9 +1765,11 @@ class VehiclesContractListController
                                     // Ignore if column check fails or column already exists
                                 }
 
+                                $returnEndDateTime = !empty($this->return_date_in) ? date('Y-m-d H:i:s', strtotime($this->return_date_in)) : null;
+
                                 $updateContractQuery = "
                                         UPDATE  tbl_vehicle_rentout_contracts
-                                        SET agreement_status = 'Returned',return_log_json=:return_log,km_in=:km_in,km_used=:km_used,return_date=:return_date,received_by=:received_by,receiver_name=:receiver_name,receiver_signature=:receiver_signature,receiver_signature_datetime=:receiver_signature_datetime,receiver_signed_device=:receiver_signed_device,receiver_signed_ip=:receiver_signed_ip,vehicle_return_images=:vehicle_return_images,violations_json=:violations_json
+                                        SET agreement_status = 'Closed',return_log_json=:return_log,km_in=:km_in,km_used=:km_used,return_date=:return_date,service_end_date_time=COALESCE(:service_end_date_time, service_end_date_time),received_by=:received_by,receiver_name=:receiver_name,receiver_signature=:receiver_signature,receiver_signature_datetime=:receiver_signature_datetime,receiver_signed_device=:receiver_signed_device,receiver_signed_ip=:receiver_signed_ip,vehicle_return_images=:vehicle_return_images,violations_json=:violations_json
                                         WHERE ids = :agreement_id
                                     ";
                                      $updateContractParams = [
@@ -1774,6 +1778,7 @@ class VehiclesContractListController
                                         ':km_in' => $this->km_in,
                                         ':km_used' => $this->km_used,
                                         ':return_date' => $this->return_date_in,
+                                        ':service_end_date_time' => $returnEndDateTime,
                                         ':received_by' => $this->user_id,
                                         ':receiver_name' => $receiver_name,
                                         ':receiver_signature' => $receiver_signature,
@@ -1790,6 +1795,26 @@ class VehiclesContractListController
                                         $updateContractQuery,
                                         $updateContractParams
                                     );
+
+                                    if ($this->ReturnData && $returnEndDateTime !== null) {
+                                        try {
+                                            $stmtCdj = $this->varPDOModelObj->selectexecuteQuery(
+                                                "SELECT contract_details_json FROM tbl_vehicle_rentout_contracts WHERE ids = :agreement_id",
+                                                [':agreement_id' => $this->agreementid]
+                                            );
+                                            $cdjRow = $stmtCdj ? $stmtCdj->fetch(PDO::FETCH_ASSOC) : null;
+                                            if (!empty($cdjRow['contract_details_json'])) {
+                                                $cdjArr = json_decode($cdjRow['contract_details_json'], true);
+                                                if (is_array($cdjArr)) {
+                                                    $cdjArr['period_to'] = $returnEndDateTime;
+                                                    $this->varPDOModelObj->executeQuery(
+                                                        "UPDATE tbl_vehicle_rentout_contracts SET contract_details_json = :cdj WHERE ids = :agreement_id",
+                                                        [':cdj' => json_encode($cdjArr), ':agreement_id' => $this->agreementid]
+                                                    );
+                                                }
+                                            }
+                                        } catch (\Exception $cdjEx) {}
+                                    }
                                
                              if ($this->ReturnData) {
                                  
@@ -1950,6 +1975,118 @@ class VehiclesContractListController
                                                  }
                                              }
                                 
+                                    // Process Overdue / Balance Extension to Customer Ledger if provided
+                                    $ovExtData = is_array($this->overdue_extension) ? $this->overdue_extension : json_decode($this->overdue_extension ?? '[]', true);
+                                    if (!empty($ovExtData) && is_array($ovExtData)) {
+                                        $ovTotalAmt = floatval($ovExtData['total_amt'] ?? 0);
+                                        $ovZeroCost = !empty($ovExtData['is_zero_cost']);
+                                        if ($ovTotalAmt > 0 && !$ovZeroCost) {
+                                            $stmtCheckOv = $this->varPDOModelObj->selectexecuteQuery(
+                                                "SELECT ids FROM tbl_customer_ledger WHERE contract_ids = :cid AND trans_type = 'Overdue Extension'",
+                                                [':cid' => $this->agreementid]
+                                            );
+                                            if (!$stmtCheckOv || $stmtCheckOv->rowCount() == 0) {
+                                                $stmtOvInfo = $this->varPDOModelObj->selectexecuteQuery(
+                                                    "SELECT c.quotation_number AS contract_qtn, c.booking_ids, c.agreement_no, c.customer_code AS contract_cust_code,
+                                                            c.company_id AS contract_company_id,
+                                                            b.booking_no AS booking_no_str, b.quotation_number AS booking_qtn_str, b.customer_code AS booking_cust_code
+                                                     FROM tbl_vehicle_rentout_contracts c
+                                                     LEFT JOIN tbl_vehicle_bookings b ON b.ids = c.booking_ids
+                                                     WHERE c.ids = :agreementid",
+                                                    [':agreementid' => $this->agreementid]
+                                                );
+                                                $ovRow = $stmtOvInfo ? $stmtOvInfo->fetch(PDO::FETCH_ASSOC) : [];
+                                                $ovCustCode = !empty($this->customer_code) ? $this->customer_code : ($ovRow['contract_cust_code'] ?? ($ovRow['booking_cust_code'] ?? ''));
+                                                $ovQtnNo    = !empty($ovRow['contract_qtn']) ? $ovRow['contract_qtn'] : (!empty($ovRow['booking_qtn_str']) ? $ovRow['booking_qtn_str'] : ($ovRow['agreement_no'] ?? ''));
+                                                $ovBookNo   = !empty($ovRow['booking_no_str']) ? $ovRow['booking_no_str'] : (!empty($this->booking_ref_no) ? $this->booking_ref_no : ($ovRow['booking_ids'] ?? ''));
+                                                $ovAgreeNo  = !empty($this->agreement_no) ? $this->agreement_no : ($ovRow['agreement_no'] ?? '');
+                                                $ovCompId   = !empty($this->company_id) ? $this->company_id : ($ovRow['contract_company_id'] ?? 1);
+                                                $ovDateStr  = !empty($this->return_date_in) ? date('Y-m-d', strtotime($this->return_date_in)) : date('Y-m-d');
+                                                $ovDesc     = 'Overdue Extension (' . ($ovExtData['duration'] ?? 0) . ' ' . ($ovExtData['rate_type'] ?? 'Days') . ', VAT ' . ($ovExtData['vat'] ?? 0) . '%) (Agreement No: ' . $ovAgreeNo . ')';
+
+                                                $ovLedgerSql = "
+                                                    INSERT INTO tbl_customer_ledger
+                                                    (customer_code, quotation_no, booking_no, trans_date, trans_type, payment_method, debit, credit, ref_no, description, user_id, company_id, created_at, booking_ids, contract_ids, agreement_no)
+                                                    VALUES
+                                                    (:customer_code, :quotation_no, :booking_no, :trans_date, :trans_type, 'N/A', :debit, 0, :ref_no, :description, :user_id, :company_id, :created_at, :booking_ids, :contract_ids, :agreement_no)
+                                                ";
+                                                $this->varPDOModelObj->executeQuery($ovLedgerSql, [
+                                                    ':customer_code' => $ovCustCode,
+                                                    ':quotation_no'  => $ovQtnNo,
+                                                    ':booking_no'    => $ovBookNo,
+                                                    ':trans_date'    => $ovDateStr,
+                                                    ':trans_type'    => 'Overdue Extension',
+                                                    ':debit'         => $ovTotalAmt,
+                                                    ':ref_no'        => $ovAgreeNo,
+                                                    ':description'   => $ovDesc,
+                                                    ':user_id'       => $this->user_id ?? 1,
+                                                    ':company_id'    => $ovCompId,
+                                                    ':created_at'    => date('Y-m-d H:i:s'),
+                                                    ':booking_ids'   => $ovRow['booking_ids'] ?? 0,
+                                                    ':contract_ids'  => $this->agreementid ?? 0,
+                                                    ':agreement_no'  => $ovAgreeNo
+                                                ]);
+                                            }
+                                        }
+                                    }
+
+                                    // Process Other Fees to Customer Ledger if provided
+                                    $otherFeesList = is_array($this->other_fees) ? $this->other_fees : json_decode($this->other_fees ?? '[]', true);
+                                    if (!empty($otherFeesList) && is_array($otherFeesList)) {
+                                        $stmtContractInfoFee = $this->varPDOModelObj->selectexecuteQuery(
+                                            "SELECT c.quotation_number AS contract_qtn, c.booking_ids, c.agreement_no, c.customer_code AS contract_cust_code,
+                                                    c.company_id AS contract_company_id,
+                                                    b.booking_no AS booking_no_str, b.quotation_number AS booking_qtn_str, b.customer_code AS booking_cust_code
+                                             FROM tbl_vehicle_rentout_contracts c
+                                             LEFT JOIN tbl_vehicle_bookings b ON b.ids = c.booking_ids
+                                             WHERE c.ids = :agreementid",
+                                            [':agreementid' => $this->agreementid]
+                                        );
+                                        $feeContractRow = $stmtContractInfoFee ? $stmtContractInfoFee->fetch(PDO::FETCH_ASSOC) : [];
+                                        $feeCustCode = !empty($this->customer_code) ? $this->customer_code : ($feeContractRow['contract_cust_code'] ?? ($feeContractRow['booking_cust_code'] ?? ''));
+                                        $feeQtnNo    = !empty($feeContractRow['contract_qtn']) ? $feeContractRow['contract_qtn'] : (!empty($feeContractRow['booking_qtn_str']) ? $feeContractRow['booking_qtn_str'] : ($feeContractRow['agreement_no'] ?? ''));
+                                        $feeBookNo   = !empty($feeContractRow['booking_no_str']) ? $feeContractRow['booking_no_str'] : (!empty($this->booking_ref_no) ? $this->booking_ref_no : ($feeContractRow['booking_ids'] ?? ''));
+                                        $feeAgreeNo  = !empty($this->agreement_no) ? $this->agreement_no : ($feeContractRow['agreement_no'] ?? '');
+                                        $feeCompId   = !empty($this->company_id) ? $this->company_id : ($feeContractRow['contract_company_id'] ?? 1);
+                                        $feeDateStr  = !empty($this->return_date_in) ? date('Y-m-d', strtotime($this->return_date_in)) : date('Y-m-d');
+
+                                        foreach ($otherFeesList as $feeRow) {
+                                            $fItem = trim($feeRow['item'] ?? '');
+                                            $fAmt  = floatval($feeRow['actual_amount'] ?? ($feeRow['price'] ?? 0));
+                                            $fRem  = trim($feeRow['remarks'] ?? '');
+                                            if ($fAmt > 0 || $fItem !== '') {
+                                                $fDesc = 'Other Fee: ' . ($fItem !== '' ? $fItem : 'Return Charge');
+                                                if ($fRem !== '') {
+                                                    $fDesc .= ' (Remarks: ' . $fRem . ')';
+                                                }
+                                                $fDesc .= ' (Agreement No: ' . $feeAgreeNo . ')';
+
+                                                $feeLedgerSql = "
+                                                    INSERT INTO tbl_customer_ledger
+                                                    (customer_code, quotation_no, booking_no, trans_date, trans_type, payment_method, debit, credit, ref_no, description, user_id, company_id, created_at, booking_ids, contract_ids, agreement_no)
+                                                    VALUES
+                                                    (:customer_code, :quotation_no, :booking_no, :trans_date, :trans_type, 'N/A', :debit, 0, :ref_no, :description, :user_id, :company_id, :created_at, :booking_ids, :contract_ids, :agreement_no)
+                                                ";
+                                                $this->varPDOModelObj->executeQuery($feeLedgerSql, [
+                                                    ':customer_code' => $feeCustCode,
+                                                    ':quotation_no'  => $feeQtnNo,
+                                                    ':booking_no'    => $feeBookNo,
+                                                    ':trans_date'    => $feeDateStr,
+                                                    ':trans_type'    => $fItem !== '' ? ('Other Fee: ' . $fItem) : 'Other Fee',
+                                                    ':debit'         => $fAmt,
+                                                    ':ref_no'        => $feeAgreeNo,
+                                                    ':description'   => $fDesc,
+                                                    ':user_id'       => $this->user_id ?? 1,
+                                                    ':company_id'    => $feeCompId,
+                                                    ':created_at'    => date('Y-m-d H:i:s'),
+                                                    ':booking_ids'   => $feeContractRow['booking_ids'] ?? 0,
+                                                    ':contract_ids'  => $this->agreementid ?? 0,
+                                                    ':agreement_no'  => $feeAgreeNo
+                                                ]);
+                                            }
+                                        }
+                                    }
+
                                     // Process Early Return Reduction to Customer Ledger if provided
                                     $earlyData = is_array($this->early_return_reduction) ? $this->early_return_reduction : json_decode($this->early_return_reduction ?? '[]', true);
                                     if (!empty($earlyData) && is_array($earlyData)) {
@@ -2108,6 +2245,20 @@ class VehiclesContractListController
                                     }
                                      }
                                
+                                    if (empty($this->vehicle_ids) || empty($this->booking_ids)) {
+                                        $stmtFallbackIds = $this->varPDOModelObj->selectexecuteQuery(
+                                            "SELECT vehicle_id, booking_ids FROM tbl_vehicle_rentout_contracts WHERE ids = :agreementid",
+                                            [':agreementid' => $this->agreementid]
+                                        );
+                                        $fbRow = $stmtFallbackIds ? $stmtFallbackIds->fetch(PDO::FETCH_ASSOC) : [];
+                                        if (empty($this->vehicle_ids) && !empty($fbRow['vehicle_id'])) {
+                                            $this->vehicle_ids = $fbRow['vehicle_id'];
+                                        }
+                                        if (empty($this->booking_ids) && !empty($fbRow['booking_ids'])) {
+                                            $this->booking_ids = $fbRow['booking_ids'];
+                                        }
+                                    }
+
                                     $sqlOldStatus = "
                                         SELECT vehicle_status
                                         FROM tbl_vehicles
@@ -2124,7 +2275,7 @@ class VehiclesContractListController
                                     
                                     $updateBookingQuery = "
                                         UPDATE tbl_vehicle_bookings
-                                        SET book_status = 'Returned'
+                                        SET book_status = 'Closed'
                                         WHERE ids = :booking_id
                                     ";
                                 
@@ -2141,7 +2292,7 @@ class VehiclesContractListController
                                     
                                  $updateVehicleQuery = "
                                         UPDATE  tbl_vehicles
-                                        SET vehicle_status = 'Parking'
+                                        SET vehicle_status = 'Available'
                                         WHERE ids = :vehicle_id
                                     ";
                                 
@@ -2160,12 +2311,12 @@ class VehiclesContractListController
                                 'vehicle_id'     => $this->vehicle_ids,
                                 'action_type'    => 'Return',
                                 'old_status'     => $oldStatus,
-                                'new_status'     => 'Parking',
+                                'new_status'     => 'Available',
                                 'reference_type' => 'Agreement',
                                 'reference_id'   => $this->agreementid,
                                 'reference_no'   => $this->agreement_no ?? null,
                                 'location_from'  => 'Customer',
-                                'location_to'    => 'Main Parking',
+                                'location_to'    => 'Available Fleet',
                                 'staff_id'       => null,
                                 'customer_id'    => $this->customer_code ?? null,
                                 'garage_id'      => null,

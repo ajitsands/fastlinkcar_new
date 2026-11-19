@@ -11,6 +11,7 @@ class VehiclesController
       public $vehicleName, $vehicleRegNumber, $vehicleModal, $vehiclePurchaseDate, $vehiclePassingDate, $vehicleInsuranceExpDate, $vehicleStatus, $category, $vehicleDetails, $modelName;
 	  public $belongsToCompanyID,$belongsToCompanyName,$category_id,$brand_id,$vehiclesDocObj,$vehicleimages,$vehicle_ids,$filter_date,$vehicle_model,$vehicleYear,$vehicleColor,$user_id,$company_id;
 	  public $page, $limit, $offset, $status,$filter_start_date,$filter_end_date,$filter_start_date_time,$filter_end_date_time,$contract_status;
+	  public $is_active, $daily_rent, $weekly_rent, $monthly_rent, $mileage_km, $body_type, $engine_type, $capacity_cc, $transmission;
 	function __construct()
 	{
 	    $this->varPDOModelObj = new CommonPDOModel();
@@ -63,9 +64,18 @@ class VehiclesController
         
         $this->vehicle_ids = $data['ids'] ?? null;
         
-        $this->vehiclePassingDate = $data['vehiclePassingDate'] ?? null;
-        $this->vehicleInsuranceExpDate = $data['vehicleInsuranceExpDate'] ?? null;
-        $this->vehicleStatus = $data['vehicleStatus'] ?? null;
+        $this->vehiclePassingDate = !empty($data['vehiclePassingDate']) ? $data['vehiclePassingDate'] : null;
+        $this->vehicleInsuranceExpDate = !empty($data['vehicleInsuranceExpDate']) ? $data['vehicleInsuranceExpDate'] : null;
+        $this->vehicleStatus = !empty($data['vehicleStatus']) ? $data['vehicleStatus'] : 'Available';
+        $this->is_active = isset($data['is_active']) ? (!empty($data['is_active']) ? 1 : 0) : 1;
+        $this->daily_rent = isset($data['daily_rent']) && $data['daily_rent'] !== '' ? floatval($data['daily_rent']) : 0.000;
+        $this->weekly_rent = isset($data['weekly_rent']) && $data['weekly_rent'] !== '' ? floatval($data['weekly_rent']) : 0.000;
+        $this->monthly_rent = isset($data['monthly_rent']) && $data['monthly_rent'] !== '' ? floatval($data['monthly_rent']) : 0.000;
+        $this->mileage_km = isset($data['mileage_km']) && $data['mileage_km'] !== '' ? intval($data['mileage_km']) : null;
+        $this->body_type = $data['body_type'] ?? null;
+        $this->engine_type = $data['engine_type'] ?? null;
+        $this->capacity_cc = $data['capacity_cc'] ?? null;
+        $this->transmission = $data['transmission'] ?? null;
         $this->category = $data['category'] ?? null;
         $this->belongsToCompanyID = !empty($data['belongsToCompanyID']) ? intval($data['belongsToCompanyID']) : ($_SESSION['company_id'] ?? 1);
         $this->belongsToCompanyName = $data['belongsToCompanyName'] ?? null;
@@ -117,8 +127,8 @@ class VehiclesController
 		$array =  array();
         
         $array[0] = "INSERT INTO tbl_vehicles
-                        (category_id,model_id,model_names,brand_id,company_id,vehicle_number,chassis_number,vehicle_year,vehicle_color,image_json,other_details_json,vehicle_attachments,vehicle_status,created_on,created_by,vehicle_purchase_date,is_outsourced,outsourcing_company_id) VALUES
-                        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        (category_id,model_id,model_names,brand_id,company_id,vehicle_number,chassis_number,vehicle_year,vehicle_color,daily_rent,weekly_rent,monthly_rent,mileage_km,body_type,engine_type,capacity_cc,transmission,next_passing_date,next_insurance_date,image_json,other_details_json,vehicle_attachments,vehicle_status,is_active,created_on,created_by,vehicle_purchase_date,is_outsourced,outsourcing_company_id) VALUES
+                        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $this->params[0] = [
                 $this->category_id,
@@ -130,10 +140,21 @@ class VehiclesController
                 $this->chassisNumber,
                 $this->vehicleYear,
                 $this->vehicleColor,
+                $this->daily_rent,
+                $this->weekly_rent,
+                $this->monthly_rent,
+                $this->mileage_km,
+                $this->body_type,
+                $this->engine_type,
+                $this->capacity_cc,
+                $this->transmission,
+                $this->vehiclePassingDate,
+                $this->vehicleInsuranceExpDate,
                 $this->vehicleimages,
                 $this->vehicleDetails,
                 $this->vehiclesDocObj,
-                'Available',
+                $this->vehicleStatus,
+                $this->is_active,
                 $this->insertedDate,
                 $this->user_id,
                 $this->vehiclePurchaseDate,
@@ -141,7 +162,7 @@ class VehiclesController
                 $this->outsourcingCompanyId
         ];
         
-        $array[4] = "SELECT v.*, o.company_name AS outsourcing_company_name FROM tbl_vehicles v LEFT JOIN tbl_outsourcing_companies o ON o.ids = v.outsourcing_company_id ORDER BY v.ids DESC";
+        $array[4] = "SELECT v.*, o.company_name AS outsourcing_company_name, c.company_name AS reg_company_name, cat.category_name, b.brand_name, m.price_json AS model_price_json FROM tbl_vehicles v LEFT JOIN tbl_outsourcing_companies o ON o.ids = v.outsourcing_company_id LEFT JOIN tbl_company c ON c.ids = v.company_id LEFT JOIN tbl_vehicle_category cat ON cat.ids = v.category_id LEFT JOIN tbl_vehicle_brand b ON b.ids = v.brand_id LEFT JOIN tbl_vehicle_model m ON m.ids = v.model_id ORDER BY v.ids DESC";
         $array[5] = "UPDATE tbl_vehicles SET
                         category_id = ?,
                         model_id = ?,
@@ -152,6 +173,18 @@ class VehiclesController
                         chassis_number = ?,
                         vehicle_year = ?,
                         vehicle_color = ?,
+                        daily_rent = ?,
+                        weekly_rent = ?,
+                        monthly_rent = ?,
+                        mileage_km = ?,
+                        body_type = ?,
+                        engine_type = ?,
+                        capacity_cc = ?,
+                        transmission = ?,
+                        next_passing_date = ?,
+                        next_insurance_date = ?,
+                        vehicle_status = ?,
+                        is_active = ?,
                         image_json = ?,
                         other_details_json = ?,
                         vehicle_attachments = ?,
@@ -169,6 +202,18 @@ class VehiclesController
             $this->chassisNumber,
             $this->vehicleYear,
             $this->vehicleColor,
+            $this->daily_rent,
+            $this->weekly_rent,
+            $this->monthly_rent,
+            $this->mileage_km,
+            $this->body_type,
+            $this->engine_type,
+            $this->capacity_cc,
+            $this->transmission,
+            $this->vehiclePassingDate,
+            $this->vehicleInsuranceExpDate,
+            $this->vehicleStatus,
+            $this->is_active,
             $this->vehicleimages,
             $this->vehicleDetails,
             $this->vehiclesDocObj,

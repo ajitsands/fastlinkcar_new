@@ -9,7 +9,7 @@ class MyPDF extends TCPDF {
     // Page header
     public function Header() {
         // Logo path
-        $image_file = __DIR__ . '/../assets/img/logo/logo.png';
+        $image_file = __DIR__ . '/../assets/img/logo_new/fastlinklogoblue.png';
 
         // Set logo
         $this->Image($image_file, 10, 10, 50); 
@@ -22,7 +22,7 @@ class MyPDF extends TCPDF {
         $this->SetXY(50, 12);
 
         $this->SetFont('helvetica', 'B', 14);
-        $this->Cell(0, 6, 'AA CAR RENTAL CO. W.L.L', 0, 1, 'R');
+        $this->Cell(0, 6, 'FAST LINK CO. W.L.L', 0, 1, 'R');
         
         $this->Ln(-0.5); // slight adjustment
         

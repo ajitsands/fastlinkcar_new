@@ -82,6 +82,7 @@
                             
                     </div>
                    
+                    <?php include ROOT_PATH . '/view/templates/customer/customer_modal_extra_fields.php'; ?>
         
                     
                     <div class="d-flex align-items-center justify-content-between mb-2">

@@ -134,7 +134,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
         }
         .kpi-red {
             border-left: 4px solid #ef4444;
-            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+            background: linear-gradient(135deg, #f4f7fe 0%, #ffffff 100%);
         }
         .kpi-green {
             border-left: 4px solid #10b981;
@@ -160,9 +160,9 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
         #tbl_contract_history > thead > tr > th,
         table.dataTable thead th,
         .table thead th {
-            background-color: #ffeff0 !important;
-            color: #d12222 !important;
-            border-bottom: 2px solid #d12222 !important;
+            background-color: #eef3fc !important;
+            color: #1b3d94 !important;
+            border-bottom: 2px solid #1b3d94 !important;
             font-weight: 600 !important;
             text-transform: uppercase !important;
             font-size: 0.78rem !important;
@@ -176,7 +176,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
         }
 
         .custom-modal-header {
-            background: linear-gradient(135deg, #f12526, #c81e1f) !important;
+            background: linear-gradient(135deg, #1b3d94, #153075) !important;
             color: #ffffff !important;
             border-bottom: none;
         }
@@ -188,9 +188,9 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
             opacity: 1;
         }
         .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
-            background: linear-gradient(135deg, #f12526, #c81e1f) !important;
+            background: linear-gradient(135deg, #1b3d94, #153075) !important;
             color: #ffffff !important;
-            box-shadow: 0 4px 12px rgba(241, 37, 38, 0.3);
+            box-shadow: 0 4px 12px rgba(27, 61, 148, 0.3);
         }
         .nav-pills .nav-link {
             color: #475569;
@@ -198,29 +198,29 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
         }
         .nav-pills .nav-link:hover:not(.active) {
             background-color: #f8fafc;
-            color: #f12526;
+            color: #1b3d94;
         }
         .btn-primary {
-            background-color: #f12526 !important;
-            border-color: #f12526 !important;
+            background-color: #1b3d94 !important;
+            border-color: #1b3d94 !important;
         }
         .btn-primary:hover, .btn-primary:focus {
-            background-color: #c81e1f !important;
-            border-color: #c81e1f !important;
+            background-color: #153075 !important;
+            border-color: #153075 !important;
         }
         .btn-outline-primary {
-            color: #f12526 !important;
-            border-color: #f12526 !important;
+            color: #1b3d94 !important;
+            border-color: #1b3d94 !important;
         }
         .btn-outline-primary:hover {
-            background-color: #f12526 !important;
+            background-color: #1b3d94 !important;
             color: #ffffff !important;
         }
         .text-primary {
-            color: #f12526 !important;
+            color: #1b3d94 !important;
         }
         .bg-primary {
-            background-color: #f12526 !important;
+            background-color: #1b3d94 !important;
         }
         .vehicle-history-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .vehicle-history-card.active-vehicle { background: #f0fdf4; border-color: #86efac; }

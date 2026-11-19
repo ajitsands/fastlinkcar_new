@@ -54,12 +54,13 @@ function loadEnvironmentVariables($envFilePath) {
     return true;
 }
 
-$envFile = ROOT_PATH . '/envfiles/.env';
+$envDir  = file_exists(ROOT_PATH . '/envfiles/.env') ? (ROOT_PATH . '/envfiles') : ROOT_PATH;
+$envFile = $envDir . '/.env';
 if (file_exists(ROOT_PATH . '/envfiles/vendor/autoload.php')) {
     require_once ROOT_PATH . '/envfiles/vendor/autoload.php';
     if (file_exists($envFile)) {
         try {
-            $dotenv = Dotenv\Dotenv::createImmutable(ROOT_PATH . '/envfiles');
+            $dotenv = Dotenv\Dotenv::createImmutable($envDir);
             $dotenv->load();
         } catch (Throwable $e) {
             loadEnvironmentVariables($envFile);
@@ -67,6 +68,24 @@ if (file_exists(ROOT_PATH . '/envfiles/vendor/autoload.php')) {
     }
 } else {
     loadEnvironmentVariables($envFile);
+}
+
+// Auto-resolve BASE_URL for both localhost and live server hosts
+if (!empty($_SERVER['HTTP_HOST'])) {
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+        || ((int)($_SERVER['SERVER_PORT'] ?? 80) === 443);
+    $reqScheme  = $isHttps ? 'https' : 'http';
+    $reqHost    = $_SERVER['HTTP_HOST'];
+    $envBase    = $_ENV['BASE_URL'] ?? '';
+    $envHost    = $envBase !== '' ? strtolower((string)parse_url($envBase, PHP_URL_HOST)) : '';
+    $reqHostLow = strtolower(explode(':', $reqHost)[0]);
+    if ($envBase === '' || $envBase === '/' || $envHost !== $reqHostLow) {
+        $resolvedBase = $reqScheme . '://' . $reqHost . '/';
+        $_ENV['BASE_URL'] = $resolvedBase;
+        $_SERVER['BASE_URL'] = $resolvedBase;
+        putenv("BASE_URL=$resolvedBase");
+    }
 }
 
 if (isset($_ENV['APP_TIMEZONE'])) {
@@ -211,6 +230,21 @@ class RoutingClass
             
             'GarageController' => 'GarageController',
             'GarageController/' => 'GarageController',
+
+            'PrintFormatMaster' => 'PrintFormatMaster',
+            'PrintFormatMaster/' => 'PrintFormatMaster',
+
+            'PrintFormatMasterController' => 'PrintFormatMasterController',
+            'PrintFormatMasterController/' => 'PrintFormatMasterController',
+
+            'CustomerAccounts' => 'CustomerAccounts',
+            'CustomerAccounts/' => 'CustomerAccounts',
+
+            'CustomerAccountController' => 'CustomerAccountController',
+            'CustomerAccountController/' => 'CustomerAccountController',
+
+            'VehicleLookupController' => 'VehicleLookupController',
+            'VehicleLookupController/' => 'VehicleLookupController',
 
             'UploadVehicleImages' => 'UploadVehicleImages',
             'UploadVehicleImages/' => 'UploadVehicleImages',
@@ -391,6 +425,10 @@ class RoutingClass
             
             'ContractList' => 'ContractList',
             'ContractList/' => 'ContractList',
+            'ActiveContractsDashboard' => 'ActiveContractsDashboard',
+            'ActiveContractsDashboard/' => 'ActiveContractsDashboard',
+            'ActiveContractsDashboardController' => 'ActiveContractsDashboardController',
+            'ActiveContractsDashboardController/' => 'ActiveContractsDashboardController',
             'ContratcList' => 'ContractList',
             'ContratcList/' => 'ContractList',
             
@@ -759,6 +797,31 @@ class RoutingClass
     {
         $this->includeWithParams("controller/garages/GarageController.php", $_GET);
     }
+
+    private function PrintFormatMaster(...$params)
+    {
+        $this->includeWithParams("view/print_format_master.php", $_GET);
+    }
+
+    private function PrintFormatMasterController(...$params)
+    {
+        $this->includeWithParams("controller/masters/PrintFormatMasterController.php", $_GET);
+    }
+
+    private function CustomerAccounts(...$params)
+    {
+        $this->includeWithParams("view/customer_accounts.php", $_GET);
+    }
+
+    private function CustomerAccountController(...$params)
+    {
+        $this->includeWithParams("controller/masters/CustomerAccountController.php", $_GET);
+    }
+
+    private function VehicleLookupController(...$params)
+    {
+        $this->includeWithParams("controller/vehicles/VehicleLookupController.php", $_GET);
+    }
     private function UploadVehicleImages(...$params)
     {
         $this->includeWithParams("controller/vehicles/UploadImages.php", $_GET);
@@ -956,6 +1019,14 @@ class RoutingClass
     private function ContractList(...$params)
     {
         $this->includeWithParams("view/VehicleContractList.php", $_GET);
+    }
+    private function ActiveContractsDashboard(...$params)
+    {
+        $this->includeWithParams("view/active_contracts_dashboard.php", $_GET);
+    }
+    private function ActiveContractsDashboardController(...$params)
+    {
+        $this->includeWithParams("controller/operations/ActiveContractsDashboardController.php", $_GET);
     }
       private function ContractListController(...$params)
     {

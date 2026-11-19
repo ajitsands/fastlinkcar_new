@@ -68,7 +68,7 @@ include ROOT_PATH . '/view/envinclude.php';
     100% { transform: rotate(360deg); }
 }
 .custom-modal-header {
-    background: linear-gradient(135deg, #f12526, #c81e1f);
+    background: linear-gradient(135deg, #1b3d94, #153075);
     color: white !important; 
     border-bottom: none;
 }

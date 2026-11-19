@@ -148,14 +148,14 @@ include ROOT_PATH . '/view/envinclude.php';
         #userTable tbody tr:not(.selected):hover > th,
         #userTable.dataTable tbody tr:not(.selected):hover > *,
         #userTable.dataTable.table-hover tbody tr:not(.selected):hover > * {
-            --bs-table-bg-state: rgba(248, 124, 99, 0.15) !important;
-            --bs-table-hover-bg: rgba(248, 124, 99, 0.15) !important;
-            --bs-table-bg-type: rgba(248, 124, 99, 0.15) !important;
-            --bs-table-accent-bg: rgba(248, 124, 99, 0.15) !important;
-            --bs-table-bg: rgba(248, 124, 99, 0.15) !important;
-            background-color: rgba(248, 124, 99, 0.15) !important;
+            --bs-table-bg-state: rgba(43, 84, 184, 0.15) !important;
+            --bs-table-hover-bg: rgba(43, 84, 184, 0.15) !important;
+            --bs-table-bg-type: rgba(43, 84, 184, 0.15) !important;
+            --bs-table-accent-bg: rgba(43, 84, 184, 0.15) !important;
+            --bs-table-bg: rgba(43, 84, 184, 0.15) !important;
+            background-color: rgba(43, 84, 184, 0.15) !important;
             color: inherit !important;
-            box-shadow: inset 0 0 0 9999px rgba(248, 124, 99, 0.15) !important;
+            box-shadow: inset 0 0 0 9999px rgba(43, 84, 184, 0.15) !important;
         }
     </style>
 
@@ -268,7 +268,7 @@ include ROOT_PATH . '/view/envinclude.php';
     <div class="modal fade" id="rolePermissionsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content shadow-lg">
-                <div class="modal-header text-white p-3" style="background: linear-gradient(135deg, #f12526, #c81e1f); border-bottom: none;">
+                <div class="modal-header text-white p-3" style="background: linear-gradient(135deg, #1b3d94, #153075); border-bottom: none;">
                     <h5 class="modal-title text-white mb-0">
                         <i class="ri-shield-user-line me-2"></i>Manage Roles & Role Permissions Matrix
                     </h5>

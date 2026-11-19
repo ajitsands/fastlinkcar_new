@@ -93,7 +93,7 @@ include ROOT_PATH . '/view/envinclude.php';
         #driverTable.dataTable.table-striped tbody tr.selected:hover > *,
         #driverTable.dataTable.table-striped > tbody > tr:nth-of-type(odd).selected,
         #driverTable.dataTable.table-striped > tbody > tr:nth-of-type(odd).selected > * {
-            background-color: #F87C63 !important;
+            background-color: #2b54b8 !important;
             color: #ffffff !important;
             box-shadow: none !important;
             outline: none !important;
@@ -105,7 +105,7 @@ include ROOT_PATH . '/view/envinclude.php';
         #driverTable tbody tr:not(.selected):hover > th,
         #driverTable.dataTable tbody tr:not(.selected):hover > *,
         #driverTable.dataTable.table-hover tbody tr:not(.selected):hover > * {
-            background-color: rgba(248, 124, 99, 0.15) !important;
+            background-color: rgba(43, 84, 184, 0.15) !important;
             color: inherit !important;
         }
 

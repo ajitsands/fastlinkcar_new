@@ -15,7 +15,7 @@
         },
         "local": {
             "host": "localhost",
-            "name": "aacar_local",
+            "name": "db_fastlink_carrental",
             "user": "root",
             "pass": "S@nds1@b"
         }

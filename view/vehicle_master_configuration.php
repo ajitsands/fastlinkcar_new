@@ -264,7 +264,7 @@ include ROOT_PATH . '/view/envinclude.php';
         #pricingTable tbody tr.selected:hover,
         #pricingTable tbody tr.selected:hover > td,
         #pricingTable tbody tr.selected:hover > th {
-            background-color: #F87C63 !important;
+            background-color: #2b54b8 !important;
             color: #ffffff !important;
             box-shadow: none !important;
             outline: none !important;
@@ -281,7 +281,7 @@ include ROOT_PATH . '/view/envinclude.php';
         #pricingTable tbody tr:not(.selected):hover,
         #pricingTable tbody tr:not(.selected):hover > td,
         #pricingTable tbody tr:not(.selected):hover > th {
-            background-color: rgba(248, 124, 99, 0.15) !important;
+            background-color: rgba(43, 84, 184, 0.15) !important;
             color: inherit !important;
         }
 
@@ -310,7 +310,7 @@ include ROOT_PATH . '/view/envinclude.php';
             }
         }
        .custom-modal-header {
-    background: linear-gradient(135deg, #f12526, #c81e1f);
+    background: linear-gradient(135deg, #1b3d94, #153075);
     color: white !important; 
     border-bottom: none;
 }
@@ -334,15 +334,15 @@ include ROOT_PATH . '/view/envinclude.php';
 #vehicleModelTable tbody tr.selected, #vehicleModelTable tbody tr.selected > *,
 #vehicleModelPricingTable tbody tr.selected, #vehicleModelPricingTable tbody tr.selected > *,
 #pricingTable tbody tr.selected, #pricingTable tbody tr.selected > * {
-    --bs-table-bg-state: #F87C63 !important;
-    --bs-table-bg-type: #F87C63 !important;
-    --bs-table-accent-bg: #F87C63 !important;
-    --bs-table-bg: #F87C63 !important;
+    --bs-table-bg-state: #2b54b8 !important;
+    --bs-table-bg-type: #2b54b8 !important;
+    --bs-table-accent-bg: #2b54b8 !important;
+    --bs-table-bg: #2b54b8 !important;
     --bs-table-color-state: #ffffff !important;
     --bs-table-color: #ffffff !important;
-    background-color: #F87C63 !important;
+    background-color: #2b54b8 !important;
     color: #ffffff !important;
-    box-shadow: inset 0 0 0 9999px #F87C63 !important;
+    box-shadow: inset 0 0 0 9999px #2b54b8 !important;
     outline: none !important;
 }
 
@@ -351,13 +351,13 @@ include ROOT_PATH . '/view/envinclude.php';
 #vehicleModelTable tbody tr:not(.selected):hover, #vehicleModelTable tbody tr:not(.selected):hover > *,
 #vehicleModelPricingTable tbody tr:not(.selected):hover, #vehicleModelPricingTable tbody tr:not(.selected):hover > *,
 #pricingTable tbody tr:not(.selected):hover, #pricingTable tbody tr:not(.selected):hover > * {
-    --bs-table-bg-state: rgba(248, 124, 99, 0.15) !important;
-    --bs-table-bg-type: rgba(248, 124, 99, 0.15) !important;
-    --bs-table-accent-bg: rgba(248, 124, 99, 0.15) !important;
-    --bs-table-bg: rgba(248, 124, 99, 0.15) !important;
-    background-color: rgba(248, 124, 99, 0.15) !important;
+    --bs-table-bg-state: rgba(43, 84, 184, 0.15) !important;
+    --bs-table-bg-type: rgba(43, 84, 184, 0.15) !important;
+    --bs-table-accent-bg: rgba(43, 84, 184, 0.15) !important;
+    --bs-table-bg: rgba(43, 84, 184, 0.15) !important;
+    background-color: rgba(43, 84, 184, 0.15) !important;
     color: inherit !important;
-    box-shadow: inset 0 0 0 9999px rgba(248, 124, 99, 0.15) !important;
+    box-shadow: inset 0 0 0 9999px rgba(43, 84, 184, 0.15) !important;
 }
 
 </style>
@@ -702,8 +702,8 @@ $('#vehicleCategoryTable tbody').on('click', 'tr', function () {
     $(this).addClass('selected');
     $(this).siblings().css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
     $(this).siblings().find('*').css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
-    $(this).css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
-    $(this).find('*').css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
+    $(this).css({'background-color': '#2b54b8', 'color': '#ffffff', '--bs-table-bg': '#2b54b8', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#2b54b8', 'box-shadow': 'inset 0 0 0 9999px #2b54b8'});
+    $(this).find('*').css({'background-color': '#2b54b8', 'color': '#ffffff', '--bs-table-bg': '#2b54b8', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#2b54b8', 'box-shadow': 'inset 0 0 0 9999px #2b54b8'});
 
     this.blur();
     resetCategoryForm();
@@ -903,8 +903,8 @@ $('#vehicleBrandTable tbody').on('click', 'tr', function () {
     $(this).addClass('selected');
     $(this).siblings().css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
     $(this).siblings().find('*').css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
-    $(this).css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
-    $(this).find('*').css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
+    $(this).css({'background-color': '#2b54b8', 'color': '#ffffff', '--bs-table-bg': '#2b54b8', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#2b54b8', 'box-shadow': 'inset 0 0 0 9999px #2b54b8'});
+    $(this).find('*').css({'background-color': '#2b54b8', 'color': '#ffffff', '--bs-table-bg': '#2b54b8', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#2b54b8', 'box-shadow': 'inset 0 0 0 9999px #2b54b8'});
 
     this.blur();
     resetBrandForm();
@@ -1192,8 +1192,8 @@ $('#vehicleModelTable tbody').on('click', 'tr', function () {
     $(this).addClass('selected');
     $(this).siblings().css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
     $(this).siblings().find('*').css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
-    $(this).css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
-    $(this).find('*').css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
+    $(this).css({'background-color': '#2b54b8', 'color': '#ffffff', '--bs-table-bg': '#2b54b8', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#2b54b8', 'box-shadow': 'inset 0 0 0 9999px #2b54b8'});
+    $(this).find('*').css({'background-color': '#2b54b8', 'color': '#ffffff', '--bs-table-bg': '#2b54b8', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#2b54b8', 'box-shadow': 'inset 0 0 0 9999px #2b54b8'});
 
     this.blur();
     resetModelForm();
@@ -1473,8 +1473,8 @@ $('#vehicleModelPricingTable tbody').on('click', 'tr', function () {
     $(this).addClass('selected');
     $(this).siblings().css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
     $(this).siblings().find('*').css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
-    $(this).css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
-    $(this).find('*').css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
+    $(this).css({'background-color': '#2b54b8', 'color': '#ffffff', '--bs-table-bg': '#2b54b8', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#2b54b8', 'box-shadow': 'inset 0 0 0 9999px #2b54b8'});
+    $(this).find('*').css({'background-color': '#2b54b8', 'color': '#ffffff', '--bs-table-bg': '#2b54b8', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#2b54b8', 'box-shadow': 'inset 0 0 0 9999px #2b54b8'});
 
     this.blur();
    
@@ -1502,23 +1502,68 @@ function loadPricing(modelId) {
     $.post('/LoadPriceModelTable', { modelId: modelId }, function (res) {
 
         let data = JSON.parse(res);
-        let html = '';
         let stepVal = (priceDecimals === 3) ? '0.001' : '0.01';
 
-        data.forEach(row => {
-            let formattedVal = formatPriceAmount(row.amount);
-            html += `
-                <tr>
-                    <td style="width:75%; vertical-align: middle;">
-                        ${row.item}
-                        <input type="hidden" class="item_id" value="${row.id}">
-                    </td>
+        const findRate = (keywords) => {
+            for (const kw of keywords) {
+                const match = data.find(r => (r.item || '').toLowerCase().includes(kw) && !(r.item || '').toLowerCase().includes('with driver'));
+                if (match && match.amount !== '' && match.amount !== null) return match.amount;
+            }
+            for (const kw of keywords) {
+                const match = data.find(r => (r.item || '').toLowerCase().includes(kw));
+                if (match && match.amount !== '' && match.amount !== null) return match.amount;
+            }
+            return '';
+        };
 
-                    <td style="width:25%; text-align: right; vertical-align: middle;">
-                        <input type="number" 
-                               step="${stepVal}" 
-                               class="form-control form-control-sm priceamount text-end" 
-                               style="width:100%; height:34px; text-align: right !important; padding-left: 6px !important; padding-right: 6px !important; font-size: 13px;" 
+        const rateGroups = [
+            {
+                key: 'hourly',
+                label: 'Hourly',
+                icon: 'ri-time-line',
+                amount: findRate(['hour']),
+                items: data.filter(r => (r.item || '').toLowerCase().includes('hour'))
+            },
+            {
+                key: 'daily',
+                label: 'Daily',
+                icon: 'ri-calendar-event-line',
+                amount: findRate(['day']),
+                items: data.filter(r => (r.item || '').toLowerCase().includes('day'))
+            },
+            {
+                key: 'weekly',
+                label: 'Weekly',
+                icon: 'ri-calendar-2-line',
+                amount: findRate(['week']),
+                items: data.filter(r => (r.item || '').toLowerCase().includes('week'))
+            },
+            {
+                key: 'monthly',
+                label: 'Monthly',
+                icon: 'ri-calendar-check-line',
+                amount: findRate(['month']),
+                items: data.filter(r => (r.item || '').toLowerCase().includes('month'))
+            }
+        ];
+
+        window.__pricingMasterRows = data;
+        let html = '';
+
+        rateGroups.forEach(grp => {
+            let formattedVal = formatPriceAmount(grp.amount);
+            html += `
+                <tr data-rate-key="${grp.key}">
+                    <td style="width:65%; vertical-align: middle;">
+                        <span class="fw-semibold"><i class="${grp.icon} me-1 text-primary"></i> ${grp.label}</span>
+                    </td>
+                    <td style="width:35%; text-align: right; vertical-align: middle;">
+                        <input type="number"
+                               step="${stepVal}"
+                               min="0"
+                               class="form-control form-control-sm priceamount text-end"
+                               data-rate-key="${grp.key}"
+                               style="width:100%; height:36px; text-align: right !important; padding-left: 8px !important; padding-right: 8px !important; font-size: 13px; font-weight: 600;"
                                value="${formattedVal}">
                     </td>
                 </tr>
@@ -1535,26 +1580,49 @@ $(document).on('blur', '.priceamount', function() {
 });
 
 $('#saveBtnPricing').click(function () {
+    const modelId = $('#pricingmodelId').val();
+    if (!modelId) {
+        setupDropdown('dropdownContent', 'warning', svgError + "Please select a vehicle model first", 'click');
+        return;
+    }
 
-    let data = [];
+    const rateValues = {
+        hour:  formatPriceAmount($('#pricingTable .priceamount[data-rate-key="hourly"]').val()),
+        day:   formatPriceAmount($('#pricingTable .priceamount[data-rate-key="daily"]').val()),
+        week:  formatPriceAmount($('#pricingTable .priceamount[data-rate-key="weekly"]').val()),
+        month: formatPriceAmount($('#pricingTable .priceamount[data-rate-key="monthly"]').val())
+    };
 
-    $('#pricingTable tbody tr').each(function () {
+    const masterRows = Array.isArray(window.__pricingMasterRows) && window.__pricingMasterRows.length
+        ? window.__pricingMasterRows
+        : [
+            { id: 1, item: 'Price per hour rental without driver' },
+            { id: 2, item: 'Price per hour rental with driver' },
+            { id: 3, item: 'Price per day rental without driver' },
+            { id: 4, item: 'Price per day rental with driver' },
+            { id: 5, item: 'Price per week rental without driver' },
+            { id: 6, item: 'Price per week rental with driver' },
+            { id: 7, item: 'Price per month rental without driver' },
+            { id: 8, item: 'Price per month rental with driver' }
+        ];
 
-        let id = $(this).find('.item_id').val();
-        let item = $(this).find('td:eq(0)').text().trim();
-        let rawVal = $(this).find('.priceamount').val();
-        let amount = formatPriceAmount(rawVal);
-
-        data.push({
-            id: id,
-            item: item,
-            amount: amount 
-        });
+    let data = masterRows.map(r => {
+        const lower = (r.item || '').toLowerCase();
+        let amount = defaultPriceVal;
+        if (lower.includes('hour')) amount = rateValues.hour;
+        else if (lower.includes('day')) amount = rateValues.day;
+        else if (lower.includes('week')) amount = rateValues.week;
+        else if (lower.includes('month')) amount = rateValues.month;
+        return {
+            id: r.id,
+            item: r.item,
+            amount: amount
+        };
     });
 
     $.post('/MasterConfigurationController', {
         action:'UpdateModelPricing',
-        model_id: $('#pricingmodelId').val(),
+        model_id: modelId,
         items: JSON.stringify(data)
     }, function () {
         setupDropdown(

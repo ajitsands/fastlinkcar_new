@@ -1,7 +1,7 @@
 <?php
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+error_reporting(0);
 
 // Fix for TCPDF missing cURL constants on some local setups without the cURL extension
 if (!extension_loaded('curl')) {
@@ -144,12 +144,12 @@ $pdf->AddPage();
 $pdf->SetFont('dejavusans', '', 8);
 $pdf->setCellPaddings(0, 0, 0, 0);
 
-// Prepare Logo Data
-$logo_path = '../assets/img/logo/logo.png';
-$logo_base64 = '';
-if (file_exists($logo_path)) {
-    $logo_base64 = base64_encode(file_get_contents($logo_path));
-}
+// Prepare Logo & Print Settings Data
+require_once __DIR__ . '/print_settings_helper.php';
+$printSettings = getPrintSettings($mysqli ?? null, $data['company_id'] ?? null);
+$logo_base64 = !empty($printSettings['show_logo']) ? ($printSettings['logo_base64'] ?? '') : '';
+$logo_width = min(130, (int)($printSettings['logo_width'] ?? 115));
+$printAccent = $printSettings['accent_color'] ?? '#1b3d94';
 
 $html = '
 <style>
@@ -158,7 +158,7 @@ $html = '
     .text-center { text-align: center; }
     .text-right { text-align: right; }
     .text-left { text-align: left; }
-    .red-text { color: #d32f2f; }
+    .red-text { color: ' . $printAccent . '; }
     .bold { font-weight: bold; }
     .bg-light { background-color: #f5f5f5; }
     .bordered td, .bordered th { border: 1px solid #000; }
@@ -168,24 +168,21 @@ $html = '
 <table cellpadding="2" border="0" width="100%">
     <tr>
         <td width="33%" style="vertical-align: top;">
-            <b style="font-size:13pt; color:#cc0000; font-family:dejavusans;">AA CAR RENTAL</b><br>
+            <b style="font-size:13pt; color:' . $printAccent . '; font-family:dejavusans;">' . htmlspecialchars($printSettings['company_name'] ?? 'FAST LINK') . '</b><br>
             <span style="font-size:8pt; line-height: 1.3;">
-                Tel + 973 17300322<br>
-                Fax + 973 17300311<br>
-                Email : Info@aarentalbh.com<br>
-                Kingdom of Bahrain
+                ' . (!empty($printSettings['header_phone']) ? 'Tel: ' . htmlspecialchars($printSettings['header_phone']) . '<br>' : '') . '
+                ' . (!empty($printSettings['header_email']) ? 'Email: ' . htmlspecialchars($printSettings['header_email']) . '<br>' : '') . '
+                ' . (!empty($printSettings['header_address']) ? htmlspecialchars($printSettings['header_address']) : '') . '
             </span>
         </td>
         <td width="34%" align="center" style="vertical-align: middle;">
-            ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="115">' : '<b>AA CAR RENTAL</b>') . '
+            ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="' . $logo_width . '">' : '<b>' . htmlspecialchars($printSettings['company_name'] ?? 'FAST LINK') . '</b>') . '
         </td>
         <td width="33%" align="right" style="vertical-align: top; font-family:dejavusans;">
-            <b style="font-size:12.5pt; color:#cc0000;">اي اي لتأجير السيارات ذ.م.م.</b><br>
+            <b style="font-size:12.5pt; color:' . $printAccent . ';">' . htmlspecialchars($printSettings['company_name_ar'] ?: ($printSettings['company_name'] ?? 'FAST LINK')) . '</b><br>
             <span style="font-size:8pt; line-height: 1.3;">
-                هاتف: ١٧٣٠٠٣٢٢ ٩٧٣+<br>
-                فاكس: ١٧٣٠٠٣١١ ٩٧٣+<br>
-                البريد الإلكتروني: info@aarentalbh.com<br>
-                مملكة البحرين
+                ' . (!empty($printSettings['header_subtitle']) ? htmlspecialchars($printSettings['header_subtitle']) . '<br>' : '') . '
+                ' . (!empty($printSettings['header_website']) ? htmlspecialchars($printSettings['header_website']) : '') . '
             </span>
         </td>
     </tr>
@@ -204,7 +201,7 @@ $html = '
         <td width="35%" rowspan="4" style="vertical-align: top; padding: 8px; line-height: 1.4;">
             <span style="font-size: 9.5pt;"><b>Date :</b> ' . htmlspecialchars($data['date']) . '</span><br><br><br>
             <span style="font-size: 10pt; font-weight: bold;">No.</span> 
-            <span style="color:#d32f2f; font-size:15pt; font-weight:bold; font-family:courier;">' . htmlspecialchars($data['receipt_no']) . '</span>
+            <span style="color:#1b3d94; font-size:15pt; font-weight:bold; font-family:courier;">' . htmlspecialchars($data['receipt_no']) . '</span>
         </td>
     </tr>
     <tr>
@@ -334,7 +331,7 @@ $html .= '
                     <td style="border-right: 1px solid #000; background-color: #f5f5f5; line-height: 1.5;" valign="middle" align="center">
                         <span style="font-family:dejavusans; font-size: 7.5pt;">Balance / المتبقي</span>
                     </td>
-                    <td style="line-height: 1.5; color: #d32f2f;" valign="middle" align="right" class="bold">
+                    <td style="line-height: 1.5; color: #1b3d94;" valign="middle" align="right" class="bold">
                         ' . number_format($data['balance'], 3) . '
                     </td>
                 </tr>
@@ -350,13 +347,13 @@ $html .= '
     
     <!-- Warning Box (Directly bordered on top-level outer cell to guarantee exact left alignment) -->
     <tr>
-        <td style="border: 1px solid #cc0000; padding: 0px;" align="center" valign="middle">
+        <td style="border: 1px solid #1b3d94; padding: 0px;" align="center" valign="middle">
             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0px; padding: 0px;">
                 <tr><td height="12" style="font-size: 1px; line-height: 1px;">&nbsp;</td></tr>
                 <tr>
                     <td align="center">
-                        <span style="color:#cc0000; font-family:dejavusans; font-size:9.5pt; font-weight:bold; line-height:1.4;">ملاحظة: المبلغ المدفوع لا يسترجع في حالة الإلغاء</span><br>
-                        <span style="color:#cc0000; font-family:dejavusans; font-size:8.5pt; font-weight:normal; line-height:1.4;">The amount paid not get back in the event of cancellation</span>
+                        <span style="color:#1b3d94; font-family:dejavusans; font-size:9.5pt; font-weight:bold; line-height:1.4;">ملاحظة: المبلغ المدفوع لا يسترجع في حالة الإلغاء</span><br>
+                        <span style="color:#1b3d94; font-family:dejavusans; font-size:8.5pt; font-weight:normal; line-height:1.4;">The amount paid not get back in the event of cancellation</span>
                     </td>
                 </tr>
                 <tr><td height="12" style="font-size: 1px; line-height: 1px;">&nbsp;</td></tr>
@@ -375,7 +372,7 @@ $html .= '
             <br><br><br>
             ________________________________________<br>
             <span style="font-family:dejavusans; font-size: 8pt; font-weight: bold;">عن اي اي لتأجير السيارات ذ.م.م.</span><br>
-            <span style="font-size: 8.5pt; font-weight: bold; color: #cc0000;">For AA CAR RENTAL</span>
+            <span style="font-size: 8.5pt; font-weight: bold; color: #1b3d94;">For FAST LINK</span>
         </td>
         <td width="50%" align="center" style="vertical-align: bottom;">
             <br><br><br>

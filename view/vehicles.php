@@ -265,14 +265,14 @@ try {
         #vehicleTable tbody tr:not(.selected):hover > th,
         #vehicleTable.dataTable tbody tr:not(.selected):hover > *,
         #vehicleTable.dataTable.table-hover tbody tr:not(.selected):hover > * {
-            --bs-table-bg-state: rgba(248, 124, 99, 0.15) !important;
-            --bs-table-hover-bg: rgba(248, 124, 99, 0.15) !important;
-            --bs-table-bg-type: rgba(248, 124, 99, 0.15) !important;
-            --bs-table-accent-bg: rgba(248, 124, 99, 0.15) !important;
-            --bs-table-bg: rgba(248, 124, 99, 0.15) !important;
-            background-color: rgba(248, 124, 99, 0.15) !important;
+            --bs-table-bg-state: rgba(43, 84, 184, 0.15) !important;
+            --bs-table-hover-bg: rgba(43, 84, 184, 0.15) !important;
+            --bs-table-bg-type: rgba(43, 84, 184, 0.15) !important;
+            --bs-table-accent-bg: rgba(43, 84, 184, 0.15) !important;
+            --bs-table-bg: rgba(43, 84, 184, 0.15) !important;
+            background-color: rgba(43, 84, 184, 0.15) !important;
             color: inherit !important;
-            box-shadow: inset 0 0 0 9999px rgba(248, 124, 99, 0.15) !important;
+            box-shadow: inset 0 0 0 9999px rgba(43, 84, 184, 0.15) !important;
         }
         
     </style>
@@ -343,6 +343,7 @@ try {
 
 
 
+    <?php include ROOT_PATH . '/view/templates/vehicles/vehicle_profile_modal.php'; ?>
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
@@ -1044,8 +1045,8 @@ function resetVehicleForm() {
             let category_id = selectedOption.data('id');
             let brand_id = selectedOption.data('brand');
             let vehicleDetails = {
-                vehicleFuelType: $('#vehicleFuelType').val(),
-                vehicleGearType: $('#vehicleGearType').val(),
+                vehicleFuelType: $('#vehicleEngineType').val(),
+                vehicleGearType: $('#vehicleTransmission').val(),
                 vehicleDescription: $('#vehicleDescription').val(),
                 vehiclePricePerHour: parseFloat($('#pricePerHour').val()) || 0,
                 vehiclePricePerDay: parseFloat($('#pricePerDay').val()) || 0,
@@ -1070,7 +1071,16 @@ function resetVehicleForm() {
                 chassisNumber: $('#chassisNumber').val(),
                 vehicleYear: $('#vehicleYear').val(),
                 vehicleColor: $('#vehicleColor').val(),
+                vehicleStatus: $('#vehicleStatus').val() || 'Available',
+                is_active: $('#vehicleIsActive').is(':checked') ? 1 : 0,
+                mileage_km: $('#vehicleMileageKm').val(),
+                body_type: $('#vehicleBodyType').val(),
+                engine_type: $('#vehicleEngineType').val(),
+                capacity_cc: $('#vehicleCapacityCc').val(),
+                transmission: $('#vehicleTransmission').val(),
                 vehiclePurchaseDate : $('#vehiclePurchaseDate').val(),
+                vehiclePassingDate : $('#vehiclePassingDate').val(),
+                vehicleInsuranceExpDate : $('#vehicleInsuranceExpDate').val(),
                 vehicleDetails: vehicleDetails,
                 vehiclesDocObj:JSON.stringify(bookingMaster),
                 vehicleimages: JSON.stringify(uploadedImages),
@@ -1191,6 +1201,15 @@ function resetVehicleForm() {
                      if (row.is_outsourced === 'Yes') {
                          html += `<small class="d-block text-warning mt-1 lh-1"><i class="ri ri-share-forward-line align-middle"></i> Outsource: ${row.outsourcing_company_name || row.outsourcing_company || 'N/A'}</small>`;
                      }
+                     const badgeFor = (dtStr, lbl) => {
+                         if (!dtStr || dtStr === '0000-00-00') return '';
+                         const diff = Math.ceil((new Date(dtStr + 'T00:00:00') - new Date(new Date().toDateString())) / 86400000);
+                         if (diff < 0) return `<span class="badge bg-danger me-1 mt-1" style="font-size:10px;">${lbl} Expired</span>`;
+                         if (diff <= 30) return `<span class="badge bg-warning text-dark me-1 mt-1" style="font-size:10px;">${lbl} ${diff}d</span>`;
+                         return '';
+                     };
+                     const badges = badgeFor(row.next_insurance_date, 'Ins') + badgeFor(row.next_passing_date, 'Pass');
+                     if (badges) html += `<div>${badges}</div>`;
                      return html;
                  }
              },
@@ -1224,8 +1243,8 @@ $('#vehicleTable tbody').on('click', 'tr', function () {
     $(this).addClass('selected');
     $(this).siblings().css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
     $(this).siblings().find('*').css({'background-color': '', 'color': '', '--bs-table-bg': '', '--bs-table-color': '', '--bs-table-accent-bg': '', 'box-shadow': ''});
-    $(this).css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
-    $(this).find('*').css({'background-color': '#F87C63', 'color': '#ffffff', '--bs-table-bg': '#F87C63', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#F87C63', 'box-shadow': 'inset 0 0 0 9999px #F87C63'});
+    $(this).css({'background-color': '#2b54b8', 'color': '#ffffff', '--bs-table-bg': '#2b54b8', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#2b54b8', 'box-shadow': 'inset 0 0 0 9999px #2b54b8'});
+    $(this).find('*').css({'background-color': '#2b54b8', 'color': '#ffffff', '--bs-table-bg': '#2b54b8', '--bs-table-color': '#ffffff', '--bs-table-accent-bg': '#2b54b8', 'box-shadow': 'inset 0 0 0 9999px #2b54b8'});
 
 
     this.blur();
@@ -1272,15 +1291,26 @@ function loadVehicleForEdit(data) {
     $('#vehicleNumber').val(data.vehicle_number);
     $('#chassisNumber').val(data.chassis_number);
     $('#vehicleYear').val(data.vehicle_year);
-    $('#vehicleColor').val(data.vehicle_color);
+    $('#vehicleColor').val(data.vehicle_color || '');
+    $('#vehicleStatus').val(data.vehicle_status || 'Available');
+    $('#vehicleIsActive').prop('checked', data.is_active === undefined || data.is_active == 1 || data.is_active === '1');
+    $('#vehicleMileageKm').val(data.mileage_km ?? '');
+    $('#vehicleBodyType').val(data.body_type || 'NA');
+    $('#vehicleEngineType').val(data.engine_type || 'NA');
+    $('#vehicleCapacityCc').val(data.capacity_cc || 'NA');
+    $('#vehicleTransmission').val(data.transmission || 'NA');
     $('#vehiclePurchaseDate').val(data.vehicle_purchase_date);
+    $('#vehiclePassingDate').val(data.next_passing_date || '');
+    $('#vehicleInsuranceExpDate').val(data.next_insurance_date || '');
+    $('#btnViewVehicleProfile, #btnOpenInsPassModal').removeClass('d-none');
 
    
-    let details = JSON.parse(data.other_details_json);
+    let details = {};
+    try { details = JSON.parse(data.other_details_json || '{}') || {}; } catch (e) { details = {}; }
 
-    $('#vehicleFuelType').val(details.vehicleFuelType);
-    $('#vehicleGearType').val(details.vehicleGearType);
-    $('#vehicleDescription').val(details.vehicleDescription);
+    $('#vehicleEngineType').val(data.engine_type || details.vehicleFuelType || 'NA');
+    $('#vehicleTransmission').val(data.transmission || details.vehicleGearType || 'NA');
+    $('#vehicleDescription').val(details.vehicleDescription || '');
     $('#pricePerHour').val(details.vehiclePricePerHour);
     $('#pricePerDay').val(details.vehiclePricePerDay);
     $('#pricePerMonth').val(details.vehiclePricePerMonth);
@@ -1479,7 +1509,492 @@ console.log("Loaded bookingMaster:", bookingMaster);
                 $('#popupContainer').hide();
             });
 
-});// Jquery Close
+    const lookupSelectMap = {
+        color: '#vehicleColor',
+        body_type: '#vehicleBodyType',
+        engine_type: '#vehicleEngineType',
+        capacity_cc: '#vehicleCapacityCc',
+        transmission: '#vehicleTransmission'
+    };
+
+    function loadVehicleLookupDropdowns(selectedOverrides = {}) {
+        fetch('/VehicleLookupController?action=list')
+            .then(r => r.json())
+            .then(res => {
+                if (res.status !== 'success' || !res.data) return;
+                Object.keys(lookupSelectMap).forEach(type => {
+                    const $sel = $(lookupSelectMap[type]);
+                    if (!$sel.length) return;
+                    const prevVal = selectedOverrides[type] !== undefined ? selectedOverrides[type] : $sel.val();
+                    const firstOpt = type === 'color' ? '<option value="">Select a Color</option>' : '';
+                    $sel.html(firstOpt);
+                    (res.data[type] || []).forEach(val => {
+                        $sel.append($('<option>', { value: val, text: val }));
+                    });
+                    if (prevVal) $sel.val(prevVal);
+                });
+            });
+    }
+
+    loadVehicleLookupDropdowns();
+
+    function loadSelectedModelPricingPreview(modelId) {
+        const $wrap = $('#modelPricingPreviewWrapper');
+        const $box  = $('#modelPricingPreview');
+        if (!modelId) {
+            $wrap.hide();
+            $box.empty();
+            return;
+        }
+        $.post('/LoadPriceModelTable', { modelId: modelId }, function(res) {
+            let rows = [];
+            try { rows = JSON.parse(res); } catch (e) { rows = []; }
+            const getRate = (kw) => {
+                const m = rows.find(r => (r.item || '').toLowerCase().includes(kw) && !(r.item || '').toLowerCase().includes('with driver'))
+                       || rows.find(r => (r.item || '').toLowerCase().includes(kw));
+                return m ? (parseFloat(m.amount) || 0) : 0;
+            };
+            const hourly  = getRate('hour');
+            const daily   = getRate('day');
+            const weekly  = getRate('week');
+            const monthly = getRate('month');
+
+            if (hourly <= 0 && daily <= 0 && weekly <= 0 && monthly <= 0) {
+                $box.html(`
+                    <div class="alert alert-warning mb-0 d-flex align-items-center gap-2 py-2">
+                        <i class="ri-alert-line fs-5"></i>
+                        <div>
+                            <strong>Pricing is not configured</strong> for the selected model. Please configure Hourly, Daily, Weekly &amp; Monthly rates in <strong>Vehicle Master Configuration &rarr; Pricing</strong>.
+                        </div>
+                    </div>
+                `);
+            } else {
+                $box.html(`
+                    <div class="small fw-semibold mb-2" style="color: #1b3d94;"><i class="ri-price-tag-3-line me-1"></i> Model Pricing (from Vehicle Master Configuration)</div>
+                    <div class="row g-2 text-center">
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded bg-white border"><div class="text-muted small">Hourly</div><div class="fw-bold">${hourly.toFixed(3)} BHD</div></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded bg-white border"><div class="text-muted small">Daily</div><div class="fw-bold">${daily.toFixed(3)} BHD</div></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded bg-white border"><div class="text-muted small">Weekly</div><div class="fw-bold">${weekly.toFixed(3)} BHD</div></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded bg-white border"><div class="text-muted small">Monthly</div><div class="fw-bold">${monthly.toFixed(3)} BHD</div></div>
+                        </div>
+                    </div>
+                `);
+            }
+            $wrap.show();
+        });
+    }
+
+    $(document).on('change', '#vehicleModel', function() {
+        loadSelectedModelPricingPreview($(this).val());
+    });
+
+    $(document).on('click', '#btnViewVehicleProfile', function() {
+        if (!selectedVehicleData) return;
+        const v = selectedVehicleData;
+        let det = {};
+        try { det = JSON.parse(v.other_details_json || '{}') || {}; } catch (e) {}
+
+        $('#vpVehicleNumber, #vpVehicleNumBody').text(v.vehicle_number || '-');
+        $('#vpCategory').text(v.category_name || '-');
+        $('#vpBrand').text(v.brand_name || '-');
+        $('#vpModel').text(v.model_names || '-');
+        $('#vpChassis').text(v.chassis_number || '-');
+        $('#vpYear').text(v.vehicle_year || '-');
+        $('#vpColor').text(v.vehicle_color || '-');
+        $('#vpFuelType').text(v.engine_type || det.vehicleFuelType || '-');
+        $('#vpGearType').text(v.transmission || det.vehicleGearType || '-');
+        $('#vpMileageKm').text(v.mileage_km ? (v.mileage_km + ' km') : '-');
+        $('#vpBodyType').text(v.body_type || '-');
+        $('#vpCapacityCc').text(v.capacity_cc || '-');
+        $('#vpStatusBadge').text(v.vehicle_status || 'Available');
+        $('#vpRegCompany').text(v.reg_company_name || '-');
+        $('#vpOutsourceCompany').text(v.is_outsourced === 'Yes' ? (v.outsourcing_company_name || 'Yes') : 'Own Fleet');
+        $('#vpPurchaseDate').text(v.vehicle_purchase_date || 'Not Set');
+        $('#vpNextInsurance').text(v.next_insurance_date || 'Not Set');
+        $('#vpNextPassing').text(v.next_passing_date || 'Not Set');
+
+        // Images
+        let imgs = [];
+        try {
+            let p = JSON.parse(v.image_json || '[]');
+            if (typeof p === 'string') p = JSON.parse(p);
+            imgs = Array.isArray(p) ? p : [];
+        } catch (e) {}
+        if (imgs.length > 0) {
+            let carHtml = '';
+            imgs.forEach((f, idx) => {
+                carHtml += `<div class="carousel-item ${idx === 0 ? 'active' : ''}"><img src="uploads/vehicleImages/${f}" class="d-block w-100" style="max-height:280px;object-fit:contain;"></div>`;
+            });
+            $('#vpCarouselInner').html(carHtml);
+            $('#vpImageCarousel').show();
+            $('#vpNoImagesMessage').hide();
+        } else {
+            $('#vpImageCarousel').hide();
+            $('#vpNoImagesMessage').show();
+        }
+
+        // Pricing
+        let priceHtml = '';
+        try {
+            const pArr = JSON.parse(v.model_price_json || '[]');
+            if (Array.isArray(pArr) && pArr.length) {
+                const seen = {};
+                pArr.forEach(p => {
+                    const low = (p.item || '').toLowerCase();
+                    let lbl = '';
+                    if (low.includes('hour')) lbl = 'Hourly';
+                    else if (low.includes('day')) lbl = 'Daily';
+                    else if (low.includes('week')) lbl = 'Weekly';
+                    else if (low.includes('month')) lbl = 'Monthly';
+                    if (lbl && !seen[lbl]) {
+                        seen[lbl] = true;
+                        priceHtml += `<span class="badge bg-label-primary me-2 mb-1 p-2">${lbl}: <strong>${parseFloat(p.amount || 0).toFixed(3)} BHD</strong></span>`;
+                    }
+                });
+            }
+        } catch (e) {}
+        $('#vpPricingList').html(priceHtml || '<span class="text-muted fst-italic">No pricing setup</span>');
+
+        $('#vehicleProfileModal').appendTo('body');
+        new bootstrap.Modal(document.getElementById('vehicleProfileModal')).show();
+    });
+
+    function getExpiryAlerts(rows) {
+        const today = new Date(new Date().toDateString());
+        const alerts = [];
+        (rows || []).forEach(v => {
+            [['next_insurance_date', 'Insurance'], ['next_passing_date', 'Passing']].forEach(([col, label]) => {
+                const d = v[col];
+                if (!d || d === '0000-00-00') return;
+                const diff = Math.ceil((new Date(d + 'T00:00:00') - today) / 86400000);
+                if (diff <= 30) {
+                    alerts.push({
+                        vehicle_number: v.vehicle_number,
+                        type: label,
+                        date: d,
+                        days: diff,
+                        expired: diff < 0
+                    });
+                }
+            });
+        });
+        const $banner = $('#vehicleExpiryAlertBanner');
+        if (!alerts.length) {
+            $banner.hide().empty();
+            return;
+        }
+        const expiredCnt = alerts.filter(a => a.expired).length;
+        const soonCnt = alerts.length - expiredCnt;
+        const tags = alerts.slice(0, 8).map(a =>
+            `<span class="badge ${a.expired ? 'bg-danger' : 'bg-warning text-dark'} me-1 mb-1">${a.vehicle_number} (${a.type}: ${a.expired ? 'Expired ' + Math.abs(a.days) + 'd ago' : 'Due in ' + a.days + 'd'})</span>`
+        ).join('');
+        $banner.html(`
+            <div class="alert ${expiredCnt > 0 ? 'alert-danger' : 'alert-warning'} d-flex align-items-start gap-2 mb-0">
+                <i class="ri-alarm-warning-line fs-4 mt-1"></i>
+                <div>
+                    <div class="fw-bold">Vehicle Insurance &amp; Passing Expiry Alerts (${expiredCnt} Expired, ${soonCnt} Expiring within 30 Days)</div>
+                    <div class="mt-1">${tags}${alerts.length > 8 ? ` <span class="small text-muted">+${alerts.length - 8} more</span>` : ''}</div>
+                </div>
+            </div>
+        `).show();
+    }
+
+    $(document).on('xhr.dt', '#vehicleTable', function(e, settings, json) {
+        if (json && Array.isArray(json.data)) {
+            getExpiryAlerts(json.data);
+        }
+    });
+
+    function formatVipDate(dtStr) {
+        if (!dtStr || dtStr === '0000-00-00') return '-';
+        const d = new Date(dtStr + 'T00:00:00');
+        if (isNaN(d.getTime())) return dtStr;
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return String(d.getDate()).padStart(2, '0') + '-' + months[d.getMonth()] + '-' + d.getFullYear();
+    }
+
+    function getVipHistoryArray(type) {
+        if (!selectedVehicleData) return [];
+        const raw = type === 'passing' ? selectedVehicleData.passing_histroy : selectedVehicleData.insurance_histroy;
+        let list = [];
+        try { list = JSON.parse(raw || '[]'); } catch (e) { list = []; }
+        return Array.isArray(list) ? list : [];
+    }
+
+    function resetVipEditMode() {
+        $('#vip_entry_id').val('');
+        $('#vip_save_btn').text('Save Record');
+        $('#vip_cancel_edit_btn').addClass('d-none');
+    }
+
+    function prefillVipFromEntry(type, entry) {
+        $('#vip_date').val((entry && entry.date) ? entry.date : '');
+        $('#vip_amount').val(entry && entry.amount ? entry.amount : '');
+        $('#vip_remarks').val(entry && entry.remarks ? entry.remarks : '');
+        $('#vip_attachment').val('');
+        if (type === 'insurance') {
+            $('#vip_provider').val(entry && entry.provider ? entry.provider : '');
+            $('#vip_policy_no').val(entry && entry.policy_no ? entry.policy_no : '');
+            $('#vip_ins_type').val(entry && entry.insurance_type ? entry.insurance_type : 'Comprehensive');
+            $('#vip_start_date').val(entry && entry.start_date ? entry.start_date : '');
+        } else {
+            $('#vip_passed_date').val(entry && entry.passed_date ? entry.passed_date : '');
+        }
+    }
+
+    function prefillVipFromLatest(type) {
+        if (!selectedVehicleData) return;
+        resetVipEditMode();
+        $('#vip_entry_detail_box').hide().empty();
+        const list = getVipHistoryArray(type);
+        const latest = list.length ? list[0] : null;
+        prefillVipFromEntry(type, latest || {
+            date: type === 'passing' ? (selectedVehicleData.next_passing_date || '') : (selectedVehicleData.next_insurance_date || '')
+        });
+    }
+
+    function toggleVipFields(type) {
+        if (type === 'passing') {
+            $('.vip-ins-only').hide();
+            $('.vip-pass-only').show();
+            $('#vip_date_label').text('Next Passing Expiry Date *');
+        } else {
+            $('.vip-ins-only').show();
+            $('.vip-pass-only').hide();
+            $('#vip_date_label').text('Next Insurance Expiry Date *');
+        }
+        prefillVipFromLatest(type);
+        renderVipHistory(type);
+    }
+
+    function renderVipHistory(type) {
+        if (!selectedVehicleData) return;
+        const list = getVipHistoryArray(type);
+        if (!list.length) {
+            $('#vip_history_list').html('<span class="text-muted fst-italic">No previous records found.</span>');
+            return;
+        }
+        let html = `<table class="table table-sm table-bordered mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Next Expiry</th>
+                    <th>${type === 'insurance' ? 'Provider / Policy / Type / Start' : 'Passed Date'}</th>
+                    <th>Remarks</th>
+                    <th class="text-end">Amount</th>
+                    <th class="text-center">Doc</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead><tbody>`;
+        list.forEach((item, idx) => {
+            const details = type === 'insurance'
+                ? [
+                    item.provider || '',
+                    item.policy_no ? `Policy: ${item.policy_no}` : '',
+                    item.insurance_type || '',
+                    item.start_date ? `Start: ${formatVipDate(item.start_date)}` : ''
+                  ].filter(Boolean).join(' | ') || '-'
+                : (item.passed_date ? formatVipDate(item.passed_date) : '-');
+            const docCell = item.attachment
+                ? `<a href="${item.attachment}" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-2" title="View Document"><i class="ri-file-text-line"></i> View</a>`
+                : '<span class="text-muted">-</span>';
+            let actionBtns = `<button type="button" class="btn btn-xs btn-outline-info py-0 px-2 btn-vip-view me-1" data-idx="${idx}" title="View Details"><i class="ri-eye-line"></i></button>`;
+            if (idx === 0) {
+                actionBtns += `<button type="button" class="btn btn-xs btn-outline-warning py-0 px-2 btn-vip-edit me-1" data-idx="${idx}" title="Edit Last Entry"><i class="ri-edit-line"></i></button>`;
+                actionBtns += `<button type="button" class="btn btn-xs btn-outline-danger py-0 px-2 btn-vip-delete" data-idx="${idx}" title="Delete Last Entry"><i class="ri-delete-bin-line"></i></button>`;
+            }
+            html += `<tr>
+                <td class="fw-semibold text-nowrap">${formatVipDate(item.date)}</td>
+                <td>${details}</td>
+                <td>${item.remarks || '-'}</td>
+                <td class="text-end text-nowrap fw-semibold">${parseFloat(item.amount || 0).toFixed(3)} BHD</td>
+                <td class="text-center">${docCell}</td>
+                <td class="text-center text-nowrap">${actionBtns}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        $('#vip_history_list').html(html);
+    }
+
+    $(document).on('click', '.btn-vip-view', function() {
+        const type = $('#vip_type').val();
+        const idx = parseInt($(this).data('idx'), 10);
+        const item = getVipHistoryArray(type)[idx];
+        if (!item) return;
+        const extra = type === 'insurance'
+            ? `<div><strong>Provider:</strong> ${item.provider || '-'} &nbsp;|&nbsp; <strong>Policy No:</strong> ${item.policy_no || '-'} &nbsp;|&nbsp; <strong>Type:</strong> ${item.insurance_type || '-'} &nbsp;|&nbsp; <strong>Start Date:</strong> ${formatVipDate(item.start_date)}</div>`
+            : `<div><strong>Passed Date:</strong> ${formatVipDate(item.passed_date)}</div>`;
+        $('#vip_entry_detail_box').html(`
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong style="color:#1b3d94;">Entry Details (${type.toUpperCase()})</strong>
+                <button type="button" class="btn-close btn-sm" onclick="$('#vip_entry_detail_box').hide();"></button>
+            </div>
+            <div><strong>Next Expiry:</strong> ${formatVipDate(item.date)} &nbsp;|&nbsp; <strong>Amount:</strong> ${parseFloat(item.amount || 0).toFixed(3)} BHD</div>
+            ${extra}
+            <div><strong>Remarks:</strong> ${item.remarks || '-'}</div>
+            ${item.attachment ? `<div><strong>Document:</strong> <a href="${item.attachment}" target="_blank">Open Attachment</a></div>` : ''}
+        `).show();
+    });
+
+    $(document).on('click', '.btn-vip-edit', function() {
+        const type = $('#vip_type').val();
+        const idx = parseInt($(this).data('idx'), 10);
+        const item = getVipHistoryArray(type)[idx];
+        if (!item) return;
+        $('#vip_entry_id').val(item.id || '');
+        prefillVipFromEntry(type, item);
+        $('#vip_save_btn').text('Update Record');
+        $('#vip_cancel_edit_btn').removeClass('d-none');
+    });
+
+    $('#vip_cancel_edit_btn').on('click', function() {
+        prefillVipFromLatest($('#vip_type').val());
+    });
+
+    $(document).on('click', '.btn-vip-delete', function() {
+        if (!selectedVehicleData) return;
+        const type = $('#vip_type').val();
+        const idx = parseInt($(this).data('idx'), 10);
+        const item = getVipHistoryArray(type)[idx];
+        if (!item || !item.id) return;
+        if (!confirm('Delete this last renewal entry?')) return;
+
+        const fd = new FormData();
+        fd.append('vehicle_id', selectedVehicleData.ids);
+        fd.append('entry_id', item.id);
+        fd.append('type', type);
+
+        fetch('/VehicleInsuranceController?action=deleteEntry', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status) {
+                    if (type === 'passing') {
+                        selectedVehicleData.passing_histroy = JSON.stringify(res.history || []);
+                        selectedVehicleData.next_passing_date = res.next_date || '';
+                        $('#vehiclePassingDate').val(res.next_date || '');
+                    } else {
+                        selectedVehicleData.insurance_histroy = JSON.stringify(res.history || []);
+                        selectedVehicleData.next_insurance_date = res.next_date || '';
+                        $('#vehicleInsuranceExpDate').val(res.next_date || '');
+                    }
+                    prefillVipFromLatest(type);
+                    renderVipHistory(type);
+                    load_master_vehicle_list();
+                    setupDropdown('dropdownContent', 'success', svgSuccess + (res.message || 'Deleted successfully'), 'click');
+                } else {
+                    setupDropdown('dropdownContent', 'danger', svgError + (res.message || 'Failed to delete'), 'click');
+                }
+            });
+    });
+
+    $(document).on('click', '#btnOpenInsPassModal', function() {
+        if (!selectedVehicleData) return;
+        $('#vip_vehicle_no').text(selectedVehicleData.vehicle_number || '');
+        $('#vip_type').val('insurance');
+        toggleVipFields('insurance');
+        $('#vehicleInsPassModal').appendTo('body');
+        new bootstrap.Modal(document.getElementById('vehicleInsPassModal')).show();
+    });
+
+    $('#vip_type').on('change', function() {
+        toggleVipFields($(this).val());
+    });
+
+    $('#vip_save_btn').on('click', function() {
+        if (!selectedVehicleData) return;
+        const type = $('#vip_type').val();
+        const dateVal = $('#vip_date').val();
+        if (!dateVal) {
+            setupDropdown('dropdownContent', 'warning', svgError + 'Please select a date.', 'click');
+            return;
+        }
+        const entryId = $('#vip_entry_id').val();
+        const actionName = entryId ? 'updateEntry' : (type === 'passing' ? 'addPassing' : 'addInsurance');
+        const fd = new FormData();
+        fd.append('vehicle_id', selectedVehicleData.ids);
+        if (entryId) {
+            fd.append('entry_id', entryId);
+            fd.append('type', type);
+        }
+        fd.append('date', dateVal);
+        fd.append('amount', $('#vip_amount').val() || '0');
+        fd.append('remarks', $('#vip_remarks').val() || '');
+        fd.append('provider', $('#vip_provider').val() || '');
+        fd.append('policy_no', $('#vip_policy_no').val() || '');
+        fd.append('insurance_type', $('#vip_ins_type').val() || '');
+        fd.append('start_date', $('#vip_start_date').val() || '');
+        fd.append('passed_date', $('#vip_passed_date').val() || '');
+        const fileEl = $('#vip_attachment')[0];
+        if (fileEl && fileEl.files && fileEl.files[0]) {
+            fd.append('attachment', fileEl.files[0]);
+        }
+
+        fetch('/VehicleInsuranceController?action=' + actionName, { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status) {
+                    if (type === 'passing') {
+                        selectedVehicleData.next_passing_date = dateVal;
+                        if (res.history) selectedVehicleData.passing_histroy = JSON.stringify(res.history);
+                        $('#vehiclePassingDate').val(dateVal);
+                    } else {
+                        selectedVehicleData.next_insurance_date = dateVal;
+                        if (res.history) selectedVehicleData.insurance_histroy = JSON.stringify(res.history);
+                        $('#vehicleInsuranceExpDate').val(dateVal);
+                    }
+                    renderVipHistory(type);
+                    load_master_vehicle_list();
+                    setupDropdown('dropdownContent', 'success', svgSuccess + (res.message || 'Saved successfully'), 'click');
+                    bootstrap.Modal.getInstance(document.getElementById('vehicleInsPassModal')).hide();
+                } else {
+                    setupDropdown('dropdownContent', 'danger', svgError + (res.message || 'Failed to save'), 'click');
+                }
+            });
+    });
+
+    $(document).on('click', '.btn-add-lookup', function() {
+        const type = $(this).data('lookup-type');
+        const label = $(this).data('lookup-label') || 'Value';
+        $('#vl_lookup_type').val(type);
+        $('#vl_lookup_value').val('');
+        $('#vlModalTitle').text('Add ' + label);
+        $('#vl_lookup_label').text(label + ' *');
+        new bootstrap.Modal(document.getElementById('vehicleLookupMasterModal')).show();
+        setTimeout(() => $('#vl_lookup_value').focus(), 200);
+    });
+
+    $('#vl_save_btn').on('click', function() {
+        const type = $('#vl_lookup_type').val();
+        const val = $.trim($('#vl_lookup_value').val());
+        if (!val) {
+            setupDropdown('dropdownContent', 'warning', svgError + 'Please enter a value.', 'click');
+            return;
+        }
+        fetch('/VehicleLookupController', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'save', lookup_type: type, lookup_value: val })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.status) {
+                bootstrap.Modal.getInstance(document.getElementById('vehicleLookupMasterModal')).hide();
+                const overrides = {};
+                overrides[type] = val;
+                loadVehicleLookupDropdowns(overrides);
+                setupDropdown('dropdownContent', 'success', svgSuccess + res.message, 'click');
+            } else {
+                setupDropdown('dropdownContent', 'danger', svgError + (res.message || 'Failed to add value'), 'click');
+            }
+        });
+    });
+});
 
         
         

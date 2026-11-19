@@ -1,6 +1,6 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 session_start();
 if (file_exists('vendor/autoload.php')) {
     require_once 'vendor/autoload.php';
@@ -82,31 +82,45 @@ $pdf->SetAutoPageBreak(TRUE, 15);
 $pdf->AddPage();
 $pdf->SetFont('dejavusans', '', 10);
 
-// Add logo if exists
-$logo_path = '../assets/img/logo/logo.png';
-if (!empty($refund['company_logo'])) {
-    $company_logo_clean = ltrim($refund['company_logo'], '/');
-    if (file_exists('../' . $company_logo_clean)) {
-        $logo_path = '../' . $company_logo_clean;
-    }
-}
-
-if (file_exists($logo_path)) {
-    $pdf->Image($logo_path, 15, 15, 30);
-}
+require_once __DIR__ . '/print_settings_helper.php';
+$printSettings = getPrintSettings(null, $refund['company_id'] ?? null);
+$logo_base64 = !empty($printSettings['show_logo']) ? ($printSettings['logo_base64'] ?? '') : '';
+$logo_width = (int)($printSettings['logo_width'] ?? 150);
+$printAccent = $printSettings['accent_color'] ?? '#1b3d94';
 
 $html = '
 <style>
     table { width: 100%; border-collapse: collapse; }
-    td, th { padding: 8px; }
+    td, th { padding: 6px; }
     .bold { font-weight: bold; }
     .text-center { text-align: center; }
-    .header-bg { background-color: #d12222; color: #ffffff; }
+    .text-right { text-align: right; }
+    .header-bg { background-color: ' . $printAccent . '; color: #ffffff; }
     .bordered td, .bordered th { border: 1px solid #dddddd; }
 </style>
+
+<!-- MAIN HEADER -->
+<table cellpadding="1" border="0" width="100%">
+    <tr>
+        <td width="55%" style="vertical-align: middle;">
+            ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="' . $logo_width . '">' : '<b style="font-size: 15pt; color:' . $printAccent . ';">' . htmlspecialchars(strtoupper($printSettings['company_name'] ?? 'FAST LINK')) . '</b>') . '
+        </td>
+        <td width="45%" align="right" style="vertical-align: top; font-size: 8pt; line-height: 1.35; color:#444444;">
+            <b style="font-size: 10pt; color:' . $printAccent . ';">' . htmlspecialchars(strtoupper($printSettings['company_name'] ?? 'FAST LINK')) . '</b><br>
+            ' . (!empty($printSettings['header_address']) ? nl2br(htmlspecialchars($printSettings['header_address'])) . '<br>' : '') . '
+            ' . (!empty($printSettings['header_phone']) ? 'Tel: ' . htmlspecialchars($printSettings['header_phone']) . '<br>' : '') . '
+            ' . (!empty($printSettings['header_email']) ? htmlspecialchars($printSettings['header_email']) . '<br>' : '') . '
+            ' . (!empty($printSettings['header_subtitle']) ? '<span class="bold" style="color:#000;">' . htmlspecialchars($printSettings['header_subtitle']) . '</span>' : '') . '
+        </td>
+    </tr>
+</table>
 <br>
-<h2 class="text-center" style="color: #d12222;">REFUND REQUEST / RECEIPT</h2>
-<br><br>
+<table cellpadding="4" cellspacing="0" width="100%">
+    <tr class="header-bg">
+        <td class="text-center bold" style="font-size: 11pt; letter-spacing: 1px;">REFUND REQUEST / RECEIPT</td>
+    </tr>
+</table>
+<br>
 <table class="bordered" cellpadding="5">
     <tr class="header-bg">
         <th colspan="2" class="bold">REFUND INFORMATION</th>

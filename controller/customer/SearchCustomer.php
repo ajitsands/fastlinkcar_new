@@ -23,7 +23,7 @@ class CustomerController
 		$array =  array();
         
         
-            $array[0] = "SELECT customer_id AS id,customer_id AS customer_code, customer_name, customer_mobile, customer_type,customer_address,customer_email,customer_addr,customer_attn,customer_cr_cpr
+            $array[0] = "SELECT customer_id AS id,customer_id AS customer_code, customer_name, customer_mobile, customer_type,customer_address,customer_email,customer_addr,customer_attn,customer_cr_cpr,status,is_blacklisted,blacklist_description
                         FROM customer_details
                         WHERE
                             customer_name LIKE ?

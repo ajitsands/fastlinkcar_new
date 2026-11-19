@@ -44,11 +44,11 @@
             <!-- ── STEP 1: Customer & Vehicle ──────────────────────── -->
             <div id="tab-elist-customer-vehicle" class="content">
               <style>
-                .elist-info-card { background: #fff5f5; border: 1px solid #f5c6c6; border-radius: 8px; padding: 14px; }
-                .elist-info-card .section-title { color: #c0392b; font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; }
+                .elist-info-card { background: #f4f7fe; border: 1px solid #cbd7f6; border-radius: 8px; padding: 14px; }
+                .elist-info-card .section-title { color: #1b3d94; font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; }
                 .elist-field-label { color: #888; font-size: 0.75rem; margin-bottom: 1px; }
                 .elist-field-value { font-weight: 600; font-size: 0.88rem; color: #222; }
-                .elist-pricing-title { color: #c0392b; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
+                .elist-pricing-title { color: #1b3d94; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
                 .elist-pricing-col { flex: 1; border: 1px solid #eee; border-radius: 4px; overflow: hidden; }
                 .elist-pricing-col-header { background: #f5f5f5; text-align: center; font-weight: 700; font-size: 0.82rem; color: #444; padding: 7px 4px; border-bottom: 1px solid #eee; }
                 .elist-pricing-col-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; font-size: 0.82rem; border-bottom: 1px solid #f5f5f5; }

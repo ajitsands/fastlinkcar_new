@@ -1,6 +1,6 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 // Fix for TCPDF missing cURL constants on some local setups without the cURL extension
 if (!extension_loaded('curl')) {
@@ -114,7 +114,7 @@ class AA_TaxInvoice_PDF extends TCPDF {
         $this->SetFont('dejavusans', '', 8);
 
         // Top line (instead of <hr>)
-        $this->SetDrawColor(138, 28, 20); // red
+        $this->SetDrawColor(27, 61, 148); // red
 
         $this->Cell(0, 0, '', 'T', 1, 'C', false);
         
@@ -127,7 +127,7 @@ class AA_TaxInvoice_PDF extends TCPDF {
         $this->Cell(
             0,
             5,
-            'AA CAR RENTAL - اي اي لتأجير السيارات ذ.م.م - CR. 92201-1',
+            'FAST LINK - اي اي لتأجير السيارات ذ.م.م - CR. 92201-1',
             0,
             1,
             'C'
@@ -182,12 +182,12 @@ $pdf->AddPage();
 // Set font to DejaVuSans for dual English/Arabic support
 $pdf->SetFont('dejavusans', '', 8);
 
-// Prepare Logo Data
-$logo_path = !empty($data['company_logo']) ? $data['company_logo'] : 'assets/img/logo/logo.png';
-$logo_base64 = '';
-if (file_exists($logo_path)) {
-    $logo_base64 = base64_encode(file_get_contents($logo_path));
-}
+// Prepare Logo & Print Settings Data
+require_once __DIR__ . '/print_settings_helper.php';
+$printSettings = getPrintSettings($mysqli ?? null, $data['company_id'] ?? null);
+$logo_base64 = !empty($printSettings['show_logo']) ? ($printSettings['logo_base64'] ?? '') : '';
+$logo_width = (int)($printSettings['logo_width'] ?? 150);
+$printAccent = $printSettings['accent_color'] ?? '#1b3d94';
 
 $html = '
 <style>
@@ -197,10 +197,10 @@ $html = '
     .text-right { text-align: right; }
     .text-left { text-align: left; }
     .bold { font-weight: bold; }
-    .bg-dark { background-color: #8A1C14; color: #ffffff; }
-    .bg-light { background-color: #f9f9f9; color: #8A1C14; }
+    .bg-dark { background-color: ' . $printAccent . '; color: #ffffff; }
+    .bg-light { background-color: #f9f9f9; color: ' . $printAccent . '; }
     .bordered td, .bordered th { border: 1px solid #555555; }
-    .payment-table { border: 1px solid #8A1C14; }
+    .payment-table { border: 1px solid ' . $printAccent . '; }
     .payment-table td { border-bottom: 1px solid #dddddd; }
 </style>
 
@@ -208,12 +208,14 @@ $html = '
 <table cellpadding="1" border="0" width="100%">
     <tr>
         <td width="55%" style="vertical-align: middle;">
-            ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="150">' : '<b style="font-size: 15pt; color:#8A1C14;">' . htmlspecialchars(strtoupper($data['c_company_name'] ?? 'AA CAR RENTAL')) . '</b>') . '
+            ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="' . $logo_width . '">' : '<b style="font-size: 15pt; color:' . $printAccent . ';">' . htmlspecialchars(strtoupper($printSettings['company_name'] ?? 'FAST LINK')) . '</b>') . '
         </td>
-        <td width="45%" align="right" style="vertical-align: top; font-size: 8pt; line-height: 1.3; color:#444444;">
-            Flat No. 0, Building 168, Road 408<br>
-            Block 704, Salmabad, Bahrain<br>
-            <span class="bold" style="color:#000;">VAT NO: 220000485100002</span>
+        <td width="45%" align="right" style="vertical-align: top; font-size: 8pt; line-height: 1.35; color:#444444;">
+            <b style="font-size: 10pt; color:' . $printAccent . ';">' . htmlspecialchars(strtoupper($printSettings['company_name'] ?? 'FAST LINK')) . '</b><br>
+            ' . (!empty($printSettings['header_address']) ? nl2br(htmlspecialchars($printSettings['header_address'])) . '<br>' : '') . '
+            ' . (!empty($printSettings['header_phone']) ? 'Tel: ' . htmlspecialchars($printSettings['header_phone']) . '<br>' : '') . '
+            ' . (!empty($printSettings['header_email']) ? htmlspecialchars($printSettings['header_email']) . '<br>' : '') . '
+            ' . (!empty($printSettings['header_subtitle']) ? '<span class="bold" style="color:#000;">' . htmlspecialchars($printSettings['header_subtitle']) . '</span>' : '') . '
         </td>
     </tr>
 </table>
@@ -254,7 +256,7 @@ $html = '
                 </tr>
                 <tr>
                     <td class="bold">Inv No.:</td>
-                    <td class="text-right bold" style="color:#8A1C14;">' . htmlspecialchars($data['invoice_no']) . '</td>
+                    <td class="text-right bold" style="color:#1b3d94;">' . htmlspecialchars($data['invoice_no']) . '</td>
                 </tr>
                 <tr>
                     <td class="bold">LPO NO:</td>

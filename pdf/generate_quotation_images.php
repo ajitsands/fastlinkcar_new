@@ -115,31 +115,40 @@ $custom_notes = !empty($data['terms']) ? $data['terms'] : ($params['notes'] ?? "
 $items = json_decode($data['items'], true);
 $customer_address = $data['customer_address'];
 
+require_once __DIR__ . '/print_settings_helper.php';
+$printSettings = getPrintSettings($mysqli ?? null);
+
 class AA_PDF extends TCPDF
 {
     public $footer_logo_x;
     public $footer_logo_y;
     public $footer_logo_pg;
     public $seal_pg;
+    public $printSettings = [];
 
     public function Header()
     {
-        $logo_jpg = 'assets/img/logo/logo.jpg';
-        $logo_png = 'assets/img/logo/logo.png';
-       
-          if (file_exists($logo_jpg)) {
-            $this->Image($logo_jpg, 15, 10, 45, 0, 'JPG', '', 'T', false, 300, '', false, false, 0, false, false, false);
-        } elseif (file_exists($logo_png)) {
-            if (extension_loaded('gd') || extension_loaded('imagick')) {
-                $this->Image($logo_png, 15, 10, 45, 0, 'PNG', '', 'T', false, 300, '', false, false, 0, false, false, false);
-            }
+        $ps = $this->printSettings;
+        $accentRgb = $ps['accent_rgb'] ?? [27, 61, 148];
+        $logo_file = !empty($ps['show_logo']) ? ($ps['logo_abs_path'] ?? '') : '';
+        if ($logo_file === '' && !empty($ps['show_logo'])) {
+            $logo_file = file_exists('assets/img/logo_new/fastlinklogoblue.png') ? 'assets/img/logo_new/fastlinklogoblue.png' : dirname(__DIR__) . '/assets/img/logo_new/fastlinklogoblue.png';
         }
-        
-        $this->SetFont('helvetica', 'B', 18);
+        if ($logo_file !== '' && file_exists($logo_file)) {
+            $this->Image($logo_file, 20, 5, 0, 20, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+        }
+
+        $this->SetTextColor($accentRgb[0], $accentRgb[1], $accentRgb[2]);
+        $this->SetFont('helvetica', 'B', 16);
         $this->SetXY(20, 7);
-        $this->Cell(0, 10, 'AA CAR RENTAL CO. W.L.L', 0, 1, 'R');
-        $this->SetFont('helvetica', '', 10);
-        $this->Cell(0, 5, 'SALMABAD- KINGDOM OF BAHRAIN', 0, 1, 'R');
+        $this->Cell(0, 8, strtoupper($ps['company_name'] ?? 'FAST LINK'), 0, 1, 'R');
+        $this->SetTextColor(70, 70, 70);
+        $this->SetFont('helvetica', '', 9);
+        $subLine = !empty($ps['header_address']) ? $ps['header_address'] : ($ps['header_subtitle'] ?? 'Kingdom of Bahrain');
+        $this->Cell(0, 5, $subLine, 0, 1, 'R');
+        $this->SetDrawColor($accentRgb[0], $accentRgb[1], $accentRgb[2]);
+        $this->SetLineWidth(0.5);
+        $this->Line(20, 28, $this->getPageWidth() - 15, 28);
     }
 
    public function Footer()
@@ -270,6 +279,7 @@ if (
 }
 
 $pdf = new AA_PDF($orientation, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+$pdf->printSettings = $printSettings;
 $pdf->footer_logo_x = $footer_logo_x;
 $pdf->footer_logo_y = $footer_logo_y;
 $pdf->footer_logo_pg = $footer_logo_pg;
@@ -277,17 +287,18 @@ $pdf->seal_pg = $seal_last_pg;
 
 $pdf->SetCreator(PDF_CREATOR);
 $pdf->SetTitle('Quotation ' . $quotation_no);
-$pdf->SetMargins(20, 28, 15);
+$pdf->SetMargins(20, 34, 15);
 $pdf->SetHeaderMargin(5);
 $pdf->SetFooterMargin(25);
 $pdf->SetAutoPageBreak(TRUE, $page_break_threshold);
 $pdf->SetFont('dejavusans', '', 10);
 $pdf->AddPage();
 
-// Red Bar "QUOTATION"
+// Brand Bar "QUOTATION"
+$accentRgb = $printSettings['accent_rgb'] ?? [27, 61, 148];
 $pdf->setCellPaddings(1, 1, 1, 1);
-$pdf->Ln(5);
-$pdf->SetFillColor(237, 28, 36);
+$pdf->Ln(3);
+$pdf->SetFillColor($accentRgb[0], $accentRgb[1], $accentRgb[2]);
 $pdf->SetTextColor(255, 255, 255);
 $pdf->SetFont('helvetica', 'B', 14);
 $pdf->Cell(0, 12, 'QUOTATION', 0, 1, 'C', 1);
@@ -485,7 +496,7 @@ foreach ($items as $item) {
     $pdf->MultiCell($w['incl'], $h_r, number_format($amount_incl, 3), 1, 'R', 0, 1, '', '', true, 0, false, true, $h_r, 'M');
 }
 
-$pdf->SetFillColor(237, 28, 36);
+$pdf->SetFillColor(27, 61, 148);
 $pdf->SetTextColor(255, 255, 255);
 $pdf->SetFont('helvetica', 'B', 10);
 $total_w_label = array_sum(array_slice(array_values($w), 0, 10));
@@ -494,7 +505,7 @@ $pdf->Cell($w['incl'], 10, number_format($grand_total, 3), 1, 1, 'R', 1);
 
 // Notes section
 $pdf->Ln(4);
-$pdf->SetTextColor(255, 0, 0);
+$pdf->SetTextColor(27, 61, 148);
 $pdf->SetFont('helvetica', 'B', 10);
 $pdf->Cell(0, 5, 'Note :', 0, 1);
 $pdf->SetTextColor(0, 0, 0);
@@ -530,7 +541,7 @@ $pdf->MultiCell(
 $pdf->Ln(4);
 
 $pdf->SetFont('helvetica', 'B', 11);
-$pdf->SetTextColor(220, 0, 0);
+$pdf->SetTextColor(27, 61, 148);
 
 $pdf->Cell(
     0,

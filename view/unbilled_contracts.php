@@ -74,7 +74,7 @@ include ROOT_PATH . '/view/envinclude.php';
     100% { transform: rotate(360deg); }
 }
 .custom-modal-header {
-    background: linear-gradient(135deg, #f12526, #c81e1f);
+    background: linear-gradient(135deg, #1b3d94, #153075);
     color: white !important; 
     border-bottom: none;
 }
@@ -404,7 +404,7 @@ $(document).ready(function() {
             },
              { data: 'agreement_no' ,
                  render: function (data, type, row, meta) {
-                     return  `<div class="view_contract " style=" cursor: pointer;text-decoration: underline;color: #f12526;opacity: 0.8;" data-contract="${data}">
+                     return  `<div class="view_contract " style=" cursor: pointer;text-decoration: underline;color: #1b3d94;opacity: 0.8;" data-contract="${data}">
                             <div class="fw-bold small">${data}</div>
                             <div class="text-muted" style="font-size:11px;"><span class="status-cell">${row.source_type}</span>
                                 

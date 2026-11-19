@@ -44,7 +44,7 @@ $isSingleCompany = count($allowedCompanies) <= 1;
 
         <div class="table-responsive">
             <table class="table table-bordered table-hover" id="insuranceTable" style="width:100%">
-                <thead style="background: linear-gradient(135deg, #f12526, #c81e1f); color: white;">
+                <thead style="background: linear-gradient(135deg, #1b3d94, #153075); color: white;">
                     <tr>
                         <th style="color: white;">Vehicle Number</th>
                         <th style="color: white;">Model</th>
@@ -62,9 +62,9 @@ $isSingleCompany = count($allowedCompanies) <= 1;
     </div>
 </div>
 
-<!-- Add Entry Modal -->
+<!-- Add / Edit Insurance & Passing Modal -->
 <div class="modal fade" id="addEntryModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header custom-modal-header">
                 <h5 class="modal-title" id="addEntryModalTitle">Add Record</h5>
@@ -74,27 +74,67 @@ $isSingleCompany = count($allowedCompanies) <= 1;
                 <div class="modal-body">
                     <input type="hidden" id="entryVehicleId" name="vehicle_id">
                     <input type="hidden" id="entryType" name="type">
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Date (Expiry / Next Due)</label>
-                        <input type="date" class="form-control" id="entryDate" name="date" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Amount (Optional)</label>
-                        <input type="number" step="0.01" class="form-control" id="entryAmount" name="amount">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Attachment (Optional)</label>
-                        <input type="file" class="form-control" id="entryAttachment" name="attachment">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Remarks</label>
-                        <textarea class="form-control" id="entryRemarks" name="remarks" rows="2"></textarea>
+                    <input type="hidden" id="entryId" name="entry_id">
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold" id="entryDateLabel">Next Expiry Date *</label>
+                            <input type="date" class="form-control" id="entryDate" name="date" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Amount (BHD)</label>
+                            <input type="number" step="0.001" min="0" class="form-control" id="entryAmount" name="amount" placeholder="0.000">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Attach Document (Optional)</label>
+                            <input type="file" class="form-control" id="entryAttachment" name="attachment" accept=".pdf,.png,.jpg,.jpeg,.webp">
+                        </div>
+
+                        <!-- Insurance-specific fields -->
+                        <div class="col-md-4 vi-ins-only">
+                            <label class="form-label fw-semibold">Insurance Provider</label>
+                            <input type="text" class="form-control" id="entryProvider" name="provider" placeholder="e.g. Solidarity, BNI, GIG">
+                        </div>
+                        <div class="col-md-4 vi-ins-only">
+                            <label class="form-label fw-semibold">Policy Number</label>
+                            <input type="text" class="form-control" id="entryPolicyNo" name="policy_no" placeholder="Policy No.">
+                        </div>
+                        <div class="col-md-4 vi-ins-only">
+                            <label class="form-label fw-semibold">Insurance Type</label>
+                            <select class="form-select" id="entryInsType" name="insurance_type">
+                                <option value="Comprehensive">Comprehensive</option>
+                                <option value="Third Party">Third Party</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 vi-ins-only">
+                            <label class="form-label fw-semibold">Policy Start Date</label>
+                            <input type="date" class="form-control" id="entryStartDate" name="start_date">
+                        </div>
+
+                        <!-- Passing-specific fields -->
+                        <div class="col-md-4 vi-pass-only" style="display: none;">
+                            <label class="form-label fw-semibold">Passed Date</label>
+                            <input type="date" class="form-control" id="entryPassedDate" name="passed_date">
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Remarks</label>
+                            <input type="text" class="form-control" id="entryRemarks" name="remarks" placeholder="Optional remarks...">
+                        </div>
+
+                        <div class="col-12 mt-3">
+                            <div class="border-top pt-2">
+                                <div class="fw-semibold small mb-2" style="color: #1b3d94;"><i class="ri-history-line me-1"></i> Renewal History</div>
+                                <div id="viHistoryList" class="small text-muted" style="max-height: 220px; overflow-y: auto;"></div>
+                                <div id="viEntryDetailBox" class="alert alert-light border mt-2 mb-0 small" style="display: none;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary d-none" id="viCancelEditBtn">Cancel Edit</button>
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Record</button>
+                    <button type="submit" class="btn btn-primary" id="viSaveBtn">Save Record</button>
                 </div>
             </form>
         </div>

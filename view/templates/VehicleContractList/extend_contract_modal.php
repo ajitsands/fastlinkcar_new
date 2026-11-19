@@ -53,11 +53,11 @@
             <!-- Customer & Vehicle Tab -->
             <div id="tab-extend-customer-vehicle" class="content">
               <style>
-                .extend-info-card { background: #fff5f5; border: 1px solid #f5c6c6; border-radius: 8px; padding: 14px; }
-                .extend-info-card .section-title { color: #c0392b; font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; }
+                .extend-info-card { background: #f4f7fe; border: 1px solid #cbd7f6; border-radius: 8px; padding: 14px; }
+                .extend-info-card .section-title { color: #1b3d94; font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; }
                 .extend-field-label { color: #888; font-size: 0.75rem; margin-bottom: 1px; }
                 .extend-field-value { font-weight: 600; font-size: 0.88rem; color: #222; }
-                .pricing-setup-title { color: #c0392b; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
+                .pricing-setup-title { color: #1b3d94; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
                 /* Pricing block columns */
                 .pricing-col { flex: 1; border: 1px solid #eee; border-radius: 4px; overflow: hidden; }
                 .pricing-col-header { background: #f5f5f5; text-align: center; font-weight: 700; font-size: 0.82rem; color: #444; padding: 7px 4px; border-bottom: 1px solid #eee; }

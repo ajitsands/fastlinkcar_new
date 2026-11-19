@@ -125,11 +125,11 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
             margin-right: 0;
         }
         .list-group-item.active-click {
-          background-color: #f12526; /* Bootstrap primary */
+          background-color: #1b3d94; /* Bootstrap primary */
           color: white;
         }
         .table-active {
-            background-color: #f12526 !important; /* Red background */
+            background-color: #1b3d94 !important; /* Red background */
             color: white !important;              /* White text */
         }
         
@@ -208,9 +208,9 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
 }
 
 .vehicle-card.selected {
-    border: 2px solid #f12526;       /* red border for selection */
-    background-color: #fff0f0;       /* light highlight */
-    box-shadow: 0 0 10px rgba(241, 37, 38, 0.4); /* optional glow */
+    border: 2px solid #1b3d94;       /* red border for selection */
+    background-color: #eef3fc;       /* light highlight */
+    box-shadow: 0 0 10px rgba(27, 61, 148, 0.4); /* optional glow */
     transition: all 0.2s ease-in-out;
 }
 
@@ -224,7 +224,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
 }
 
 .custom-modal-header {
-    background: linear-gradient(135deg, #f12526, #c81e1f);
+    background: linear-gradient(135deg, #1b3d94, #153075);
     color: white !important; 
     border-bottom: none;
 }
@@ -251,7 +251,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
 }
 
 .nav-pills .nav-link.active {
-    background-color: #f12526;
+    background-color: #1b3d94;
 }
 
 //SaNDS Alert

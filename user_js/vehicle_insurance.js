@@ -137,11 +137,10 @@ function initDataTable() {
                 "orderable": false,
                 "render": function (data, type, row) {
                     let btnProfile = `<button type="button" class="btn btn-sm btn-outline-info me-1 text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="View Profile" onclick="openVehicleProfile(${row.vehicle_id})"><i class="ri ri-eye-line me-1"></i> Profile</button>`;
-                    let btnTimeline = `<button type="button" class="btn btn-sm btn-outline-primary me-1 text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="View Timeline History" onclick="openTimeline(${row.vehicle_id})"><i class="ri ri-history-line me-1"></i> Timeline</button>`;
-                    let btnIns = `<button type="button" class="btn btn-sm btn-outline-success me-1 text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="Add New Insurance Record" data-permission="vehicle_insurance_manage" onclick="openAddEntryModal(${row.vehicle_id}, 'insurance')"><i class="ri ri-shield-check-line me-1"></i> Insurance</button>`;
-                    let btnPass = `<button type="button" class="btn btn-sm btn-outline-warning text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="Add New Passing Record" data-permission="vehicle_insurance_manage" onclick="openAddEntryModal(${row.vehicle_id}, 'passing')"><i class="ri ri-car-washing-line me-1"></i> Passing</button>`;
+                    let btnIns = `<button type="button" class="btn btn-sm btn-outline-success me-1 text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="Insurance Details & Renewal" data-permission="vehicle_insurance_manage" onclick="openAddEntryModal(${row.vehicle_id}, 'insurance')"><i class="ri ri-shield-check-line me-1"></i> Insurance</button>`;
+                    let btnPass = `<button type="button" class="btn btn-sm btn-outline-warning text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="Passing Details & Renewal" data-permission="vehicle_insurance_manage" onclick="openAddEntryModal(${row.vehicle_id}, 'passing')"><i class="ri ri-car-washing-line me-1"></i> Passing</button>`;
                     
-                    return `<div class="d-flex align-items-center">${btnProfile}${btnTimeline}${btnIns}${btnPass}</div>`;
+                    return `<div class="d-flex align-items-center">${btnProfile}${btnIns}${btnPass}</div>`;
                 }
             }
         ],
@@ -190,12 +189,188 @@ function getStatusBadge(insuranceDate, passingDate) {
     }
 }
 
+function formatViDate(dtStr) {
+    if (!dtStr || dtStr === '0000-00-00') return '-';
+    const d = dayjs(dtStr);
+    return d.isValid() ? d.format('DD-MMM-YYYY') : dtStr;
+}
+
+function getVehicleRowById(vehicleId) {
+    if (!dataTable) return null;
+    const rows = dataTable.rows().data().toArray();
+    return rows.find(r => String(r.vehicle_id) === String(vehicleId)) || null;
+}
+
+function getViHistoryArray(row, type) {
+    if (!row) return [];
+    const raw = type === 'passing' ? row.passing_histroy : row.insurance_histroy;
+    let list = [];
+    try { list = JSON.parse(raw || '[]'); } catch (e) { list = []; }
+    return Array.isArray(list) ? list : [];
+}
+
+function resetViEditMode() {
+    $('#entryId').val('');
+    $('#viSaveBtn').text('Save Record');
+    $('#viCancelEditBtn').addClass('d-none');
+}
+
+function prefillViEntry(type, entry) {
+    $('#entryDate').val((entry && entry.date) ? entry.date : '');
+    $('#entryAmount').val(entry && entry.amount ? entry.amount : '');
+    $('#entryRemarks').val(entry && entry.remarks ? entry.remarks : '');
+    $('#entryAttachment').val('');
+    if (type === 'insurance') {
+        $('#entryProvider').val(entry && entry.provider ? entry.provider : '');
+        $('#entryPolicyNo').val(entry && entry.policy_no ? entry.policy_no : '');
+        $('#entryInsType').val(entry && entry.insurance_type ? entry.insurance_type : 'Comprehensive');
+        $('#entryStartDate').val(entry && entry.start_date ? entry.start_date : '');
+    } else {
+        $('#entryPassedDate').val(entry && entry.passed_date ? entry.passed_date : '');
+    }
+}
+
+function renderViHistory(vehicleId, type) {
+    const row = getVehicleRowById(vehicleId);
+    const list = getViHistoryArray(row, type);
+    if (!list.length) {
+        $('#viHistoryList').html('<span class="text-muted fst-italic">No previous records found.</span>');
+        return;
+    }
+    let html = `<table class="table table-sm table-bordered mb-0 align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Next Expiry</th>
+                <th>${type === 'insurance' ? 'Provider / Policy / Type / Start' : 'Passed Date'}</th>
+                <th>Remarks</th>
+                <th class="text-end">Amount</th>
+                <th class="text-center">Doc</th>
+                <th class="text-center">Action</th>
+            </tr>
+        </thead><tbody>`;
+    list.forEach((item, idx) => {
+        const details = type === 'insurance'
+            ? [
+                item.provider || '',
+                item.policy_no ? `Policy: ${item.policy_no}` : '',
+                item.insurance_type || '',
+                item.start_date ? `Start: ${formatViDate(item.start_date)}` : ''
+              ].filter(Boolean).join(' | ') || '-'
+            : (item.passed_date ? formatViDate(item.passed_date) : '-');
+        const docCell = item.attachment
+            ? `<a href="${item.attachment}" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-2"><i class="ri-file-text-line"></i> View</a>`
+            : '<span class="text-muted">-</span>';
+        let actionBtns = `<button type="button" class="btn btn-xs btn-outline-info py-0 px-2 me-1" onclick="viewViHistoryDetail(${vehicleId}, '${type}', ${idx})" title="View Details"><i class="ri-eye-line"></i></button>`;
+        if (idx === 0) {
+            actionBtns += `<button type="button" class="btn btn-xs btn-outline-warning py-0 px-2 me-1" onclick="editViLastEntry(${vehicleId}, '${type}', ${idx})" title="Edit Last Entry"><i class="ri-edit-line"></i></button>`;
+            actionBtns += `<button type="button" class="btn btn-xs btn-outline-danger py-0 px-2" onclick="deleteViLastEntry(${vehicleId}, '${type}', '${item.id}')" title="Delete Last Entry"><i class="ri-delete-bin-line"></i></button>`;
+        }
+        html += `<tr>
+            <td class="fw-semibold text-nowrap">${formatViDate(item.date)}</td>
+            <td>${details}</td>
+            <td>${item.remarks || '-'}</td>
+            <td class="text-end text-nowrap fw-semibold">${parseFloat(item.amount || 0).toFixed(3)} BHD</td>
+            <td class="text-center">${docCell}</td>
+            <td class="text-center text-nowrap">${actionBtns}</td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    $('#viHistoryList').html(html);
+}
+
+function viewViHistoryDetail(vehicleId, type, idx) {
+    const list = getViHistoryArray(getVehicleRowById(vehicleId), type);
+    const item = list[idx];
+    if (!item) return;
+    const extra = type === 'insurance'
+        ? `<div><strong>Provider:</strong> ${item.provider || '-'} &nbsp;|&nbsp; <strong>Policy No:</strong> ${item.policy_no || '-'} &nbsp;|&nbsp; <strong>Type:</strong> ${item.insurance_type || '-'} &nbsp;|&nbsp; <strong>Start Date:</strong> ${formatViDate(item.start_date)}</div>`
+        : `<div><strong>Passed Date:</strong> ${formatViDate(item.passed_date)}</div>`;
+    $('#viEntryDetailBox').html(`
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <strong style="color:#1b3d94;">Entry Details (${type.toUpperCase()})</strong>
+            <button type="button" class="btn-close btn-sm" onclick="$('#viEntryDetailBox').hide();"></button>
+        </div>
+        <div><strong>Next Expiry:</strong> ${formatViDate(item.date)} &nbsp;|&nbsp; <strong>Amount:</strong> ${parseFloat(item.amount || 0).toFixed(3)} BHD</div>
+        ${extra}
+        <div><strong>Remarks:</strong> ${item.remarks || '-'}</div>
+        ${item.attachment ? `<div><strong>Document:</strong> <a href="${item.attachment}" target="_blank">Open Attachment</a></div>` : ''}
+    `).show();
+}
+
+function editViLastEntry(vehicleId, type, idx) {
+    const list = getViHistoryArray(getVehicleRowById(vehicleId), type);
+    const item = list[idx];
+    if (!item) return;
+    $('#entryId').val(item.id || '');
+    prefillViEntry(type, item);
+    $('#viSaveBtn').text('Update Record');
+    $('#viCancelEditBtn').removeClass('d-none');
+}
+
+function deleteViLastEntry(vehicleId, type, entryId) {
+    if (!confirm('Delete this last renewal entry?')) return;
+    const fd = new FormData();
+    fd.append('vehicle_id', vehicleId);
+    fd.append('entry_id', entryId);
+    fd.append('type', type);
+    fetch('/VehicleInsuranceController?action=deleteEntry', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(res => {
+            if (res.status) {
+                const row = getVehicleRowById(vehicleId);
+                if (row) {
+                    if (type === 'passing') {
+                        row.passing_histroy = JSON.stringify(res.history || []);
+                        row.next_passing_date = res.next_date || '';
+                    } else {
+                        row.insurance_histroy = JSON.stringify(res.history || []);
+                        row.next_insurance_date = res.next_date || '';
+                    }
+                }
+                openAddEntryModal(vehicleId, type);
+                dataTable.ajax.reload(null, false);
+                Swal.fire('Success', res.message || 'Deleted successfully', 'success');
+            } else {
+                Swal.fire('Error', res.message || 'Failed to delete', 'error');
+            }
+        });
+}
+
+$(document).on('click', '#viCancelEditBtn', function() {
+    const vId = $('#entryVehicleId').val();
+    const type = $('#entryType').val();
+    const row = getVehicleRowById(vId);
+    const list = getViHistoryArray(row, type);
+    resetViEditMode();
+    prefillViEntry(type, list[0] || { date: type === 'passing' ? (row?.next_passing_date || '') : (row?.next_insurance_date || '') });
+});
+
 function openAddEntryModal(vehicleId, type) {
+    const row = getVehicleRowById(vehicleId);
     $('#entryVehicleId').val(vehicleId);
     $('#entryType').val(type);
     $('#addEntryForm')[0].reset();
-    
-    let title = type === 'insurance' ? 'Add Insurance Record' : 'Add Passing Record';
+    resetViEditMode();
+    $('#viEntryDetailBox').hide().empty();
+
+    if (type === 'passing') {
+        $('.vi-ins-only').hide();
+        $('.vi-pass-only').show();
+        $('#entryDateLabel').text('Next Passing Expiry Date *');
+    } else {
+        $('.vi-ins-only').show();
+        $('.vi-pass-only').hide();
+        $('#entryDateLabel').text('Next Insurance Expiry Date *');
+    }
+
+    const list = getViHistoryArray(row, type);
+    const latest = list.length ? list[0] : null;
+    prefillViEntry(type, latest || {
+        date: type === 'passing' ? (row?.next_passing_date || '') : (row?.next_insurance_date || '')
+    });
+    renderViHistory(vehicleId, type);
+
+    let title = (type === 'insurance' ? 'Insurance Details - ' : 'Passing Details - ') + (row?.vehicle_number || '');
     $('#addEntryModalTitle').text(title);
     
     $('#addEntryModal').modal('show');
@@ -204,7 +379,8 @@ function openAddEntryModal(vehicleId, type) {
 function submitAddEntry() {
     let formData = new FormData($('#addEntryForm')[0]);
     let type = $('#entryType').val();
-    let action = type === 'insurance' ? 'addInsurance' : 'addPassing';
+    let entryId = $('#entryId').val();
+    let action = entryId ? 'updateEntry' : (type === 'insurance' ? 'addInsurance' : 'addPassing');
 
     $.ajax({
         url: `/VehicleInsuranceController?action=${action}`,

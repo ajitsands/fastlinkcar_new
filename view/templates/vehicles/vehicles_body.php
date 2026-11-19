@@ -4,18 +4,31 @@
 	
 	<div class="container-fluid flex-grow-1 container-p-y">
 
+                <!-- Insurance & Passing Expiry Notification Banner -->
+                <div id="vehicleExpiryAlertBanner" class="mb-3" style="display: none;"></div>
                
                 <div class="row">
                   <!-- First column-->
                   <div class="col-12 col-lg-8">
                     <!-- Product Information -->
                     <div class="card mb-6">
-                      <div class="card-header d-flex align-items-center justify-content-between">
+                      <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                           <h5 class="card-title mb-0">
                               <i class="ri-car-line me-2 text-primary"></i>Vehicle Registration Details
                           </h5>
-                          <div id="statusBadgeContainer">
-                              <span class="badge bg-label-success" id="vehicleStatusBadge">New Entry</span>
+                          <div class="d-flex align-items-center gap-2">
+                              <button type="button" id="btnViewVehicleProfile" class="btn btn-sm btn-outline-info d-none">
+                                  <i class="ri-eye-line me-1"></i> View Profile
+                              </button>
+                              <button type="button" id="btnOpenInsPassModal" class="btn btn-sm btn-outline-success d-none">
+                                  <i class="ri-add-circle-line me-1"></i> Insurance / Passing
+                              </button>
+                              <a href="/VehicleInsurance?val=<?= urlencode($this->encryption->encrypt('2,2-10')) ?>" class="btn btn-sm btn-outline-primary">
+                                  <i class="ri-shield-check-line me-1"></i> Vehicle Insurance
+                              </a>
+                              <div id="statusBadgeContainer">
+                                  <span class="badge bg-label-success" id="vehicleStatusBadge">New Entry</span>
+                              </div>
                           </div>
                       </div>
                       <div class="card-body">
@@ -88,63 +101,87 @@
                         
                           <!-- Vehicle Color -->
                           <div class="col-12 col-md-6 col-lg-3">
-                            <div class="form-floating form-floating-outline mb-5">
-                              <input type="text" class="form-control" id="vehicleColor" name="vehicleColor" placeholder="Vehicle Color">
-                              <label for="vehicleColor">Color</label>
+                            <div class="input-group mb-3">
+                              <div class="form-floating form-floating-outline">
+                                <select id="vehicleColor" name="vehicleColor" class="form-select">
+                                  <option value="">Select a Color</option>
+                                </select>
+                                <label for="vehicleColor">Car Color *</label>
+                              </div>
+                              <button type="button" class="btn btn-outline-primary btn-add-lookup" data-lookup-type="color" data-lookup-label="Car Color" title="Add New Color">+</button>
                             </div>
                           </div>
-                        
-                          <!-- Fuel Type -->
+
+                          <!-- Purchase date -->
                           <div class="col-12 col-md-6 col-lg-3">
-                            <div class="form-floating form-floating-outline mb-5">
-                              <select id="vehicleFuelType" name="vehicleFuelType" class="form-select">
-                                <option value="" disabled selected>Select Fuel</option>
-                                <option value="Petrol">Petrol</option>
-                                <option value="Diesel">Diesel</option>
-                                <option value="EV">EV</option>
+                            <div class="form-floating form-floating-outline mb-3">
+                              <input type="date" class="form-control" id="vehiclePurchaseDate" placeholder="dd-mm-yyyy" name="vehiclePurchaseDate" aria-label="Purchase Date">
+                              <label for="vehiclePurchaseDate">Purchase Date</label>
+                            </div>
+                          </div>
+
+                          <!-- Purchase Cost -->
+                          <div class="col-12 col-md-6 col-lg-3">
+                            <div class="input-group mb-3">
+                              <span class="input-group-text">BHD</span>
+                              <div class="form-floating form-floating-outline">
+                                <input 
+                                  type="number" 
+                                  step="0.01" 
+                                  class="form-control" 
+                                  id="purchasePrice" name="purchasePrice" 
+                                  placeholder="Purchase Cost">
+                                <label for="purchasePrice">Purchase Cost</label>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Next Passing Date -->
+                          <div class="col-12 col-md-6 col-lg-3">
+                            <div class="form-floating form-floating-outline mb-3">
+                              <input type="date" class="form-control" id="vehiclePassingDate" name="vehiclePassingDate">
+                              <label for="vehiclePassingDate">Next Passing Date</label>
+                            </div>
+                          </div>
+
+                          <!-- Next Insurance Date -->
+                          <div class="col-12 col-md-6 col-lg-3">
+                            <div class="form-floating form-floating-outline mb-3">
+                              <input type="date" class="form-control" id="vehicleInsuranceExpDate" name="vehicleInsuranceExpDate">
+                              <label for="vehicleInsuranceExpDate">Next Insurance Date</label>
+                            </div>
+                          </div>
+
+                          <!-- Status -->
+                          <div class="col-12 col-md-6 col-lg-3">
+                            <div class="form-floating form-floating-outline mb-3">
+                              <select id="vehicleStatus" name="vehicleStatus" class="form-select">
+                                <option value="Available" selected>Available</option>
+                                <option value="Rented">Rented</option>
+                                <option value="Maintenance">Maintenance</option>
+                                <option value="For Sale">For Sale</option>
+                                <option value="Staff">Staff</option>
+                                <option value="Sold">Sold</option>
                               </select>
-                              <label for="vehicleFuelType">Fuel Type</label>
+                              <label for="vehicleStatus">Status</label>
                             </div>
                           </div>
-                      
-                          <!-- Gear Type -->
-                          <div class="col-12 col-md-6 col-lg-3">
-                            <div class="form-floating form-floating-outline mb-5">
-                              <select id="vehicleGearType" name="vehicleGearType" class="form-select">
-                                <option value="" disabled selected>Select Gear</option>
-                                <option value="Automatic">Automatic</option>
-                                <option value="Manual">Manual</option>
-                              </select>
-                              <label for="vehicleGearType">Gear Type</label>
-                            </div>
-                          </div>
-                           <!-- Purchase date -->
-                          <div class="col-12 col-md-6 col-lg-3">
-                            <div class="form-floating form-floating-outline mb-5">
-                              <input type="date" class="form-control" id="vehiclePurchaseDate" placeholder="dd-mm-yyyy" name="vehiclePurchaseDate" aria-label="Product barcode">
-                                            <label for="vehiclePurchaseDate">Purchase Date</label>
-                            </div>
-                          </div>
-                           <!-- Purchase Cost -->
-                          <div class="col-12 col-md-6 col-lg-3">
-                            <div class="form-floating form-floating-outline mb-5">
-                              <div class="input-group">
-                                    <span class="input-group-text">BHD</span>
-                                    <div class="form-floating form-floating-outline">
-                                      <input 
-                                        type="number" 
-                                        step="0.01" 
-                                        class="form-control" 
-                                        id="purchasePrice" name="purchasePrice" 
-                                        placeholder="Purchase Cost">
-                                      <label for="purchasePrice">Purchase Cost</label>
-                                    </div>
-                                  </div>
+
+                          <!-- Active -->
+                          <div class="col-12 col-md-6 col-lg-3 d-flex align-items-center">
+                            <div class="form-check form-switch mb-3">
+                              <input class="form-check-input" type="checkbox" id="vehicleIsActive" name="vehicleIsActive" value="1" checked>
+                              <label class="form-check-label fw-semibold" for="vehicleIsActive">Active</label>
                             </div>
                           </div>
                           
+                          <!-- Model Pricing Preview (Read-Only from Vehicle Master Configuration) -->
+                          <div class="col-12" id="modelPricingPreviewWrapper" style="display: none;">
+                            <div id="modelPricingPreview" class="p-3 rounded border bg-light mb-2"></div>
+                          </div>
+
                          <div class="col-12">
-                              <div class="form-floating form-floating-outline mb-5">
+                              <div class="form-floating form-floating-outline mb-3">
                                   <textarea 
                                       class="form-control" 
                                       id="vehicleDescription" 
@@ -152,9 +189,71 @@
                                       placeholder="Vehicle Description"
                                       style="height: 100px;"></textarea>
                                 
-                                <label for="vehicleDescription">Vehicle Description</label>
+                                <label for="vehicleDescription">More Descriptions</label>
                               </div>
                             </div>
+
+                          <!-- Other Details Section -->
+                          <div class="col-12">
+                            <h6 class="fw-semibold border-bottom pb-2 mb-3" style="color: #1b3d94;">
+                              <i class="ri-settings-4-line me-1"></i> Other Details
+                            </h6>
+                          </div>
+
+                          <div class="col-12 col-md-6 col-lg-4">
+                            <div class="form-floating form-floating-outline mb-3">
+                              <input type="number" min="0" class="form-control" id="vehicleMileageKm" name="vehicleMileageKm" placeholder="Mileage (km)">
+                              <label for="vehicleMileageKm">Mileage (km)</label>
+                            </div>
+                          </div>
+
+                          <div class="col-12 col-md-6 col-lg-4">
+                            <div class="input-group mb-3">
+                              <div class="form-floating form-floating-outline">
+                                <select id="vehicleBodyType" name="vehicleBodyType" class="form-select">
+                                  <option value="NA">NA</option>
+                                </select>
+                                <label for="vehicleBodyType">Body Type</label>
+                              </div>
+                              <button type="button" class="btn btn-outline-primary btn-add-lookup" data-lookup-type="body_type" data-lookup-label="Body Type" title="Add Body Type">+</button>
+                            </div>
+                          </div>
+
+                          <div class="col-12 col-md-6 col-lg-4">
+                            <div class="input-group mb-3">
+                              <div class="form-floating form-floating-outline">
+                                <select id="vehicleEngineType" name="vehicleEngineType" class="form-select">
+                                  <option value="NA">NA</option>
+                                </select>
+                                <label for="vehicleEngineType">Engine Type</label>
+                              </div>
+                              <button type="button" class="btn btn-outline-primary btn-add-lookup" data-lookup-type="engine_type" data-lookup-label="Engine Type" title="Add Engine Type">+</button>
+                            </div>
+                          </div>
+
+                          <div class="col-12 col-md-6 col-lg-4">
+                            <div class="input-group mb-3">
+                              <div class="form-floating form-floating-outline">
+                                <select id="vehicleCapacityCc" name="vehicleCapacityCc" class="form-select">
+                                  <option value="NA">NA</option>
+                                </select>
+                                <label for="vehicleCapacityCc">Capacity (cc)</label>
+                              </div>
+                              <button type="button" class="btn btn-outline-primary btn-add-lookup" data-lookup-type="capacity_cc" data-lookup-label="Capacity (cc)" title="Add Capacity (cc)">+</button>
+                            </div>
+                          </div>
+
+                          <div class="col-12 col-md-6 col-lg-4">
+                            <div class="input-group mb-3">
+                              <div class="form-floating form-floating-outline">
+                                <select id="vehicleTransmission" name="vehicleTransmission" class="form-select">
+                                  <option value="NA">NA</option>
+                                </select>
+                                <label for="vehicleTransmission">Transmission</label>
+                              </div>
+                              <button type="button" class="btn btn-outline-primary btn-add-lookup" data-lookup-type="transmission" data-lookup-label="Transmission" title="Add Transmission">+</button>
+                            </div>
+                          </div>
                         
                         </div>
                         <!-- Comment -->
@@ -317,3 +416,108 @@
         
 </div>
 </form>
+
+<!-- Quick Add Vehicle Lookup Master Modal -->
+<div class="modal fade" id="vehicleLookupMasterModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color: #1b3d94;">
+        <h6 class="modal-title text-white mb-0" id="vlModalTitle">Add New Value</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="vl_lookup_type">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="vl_lookup_value" placeholder="Enter value">
+          <label for="vl_lookup_value" id="vl_lookup_label">Value *</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" id="vl_save_btn">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Insurance / Passing Modal -->
+<div class="modal fade" id="vehicleInsPassModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color: #1b3d94;">
+        <h6 class="modal-title text-white mb-0"><i class="ri-shield-check-line me-1"></i> Insurance &amp; Passing - <span id="vip_vehicle_no"></span></h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="vip_entry_id" value="">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Record Type *</label>
+            <select id="vip_type" class="form-select">
+              <option value="insurance">Insurance</option>
+              <option value="passing">Passing</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold" id="vip_date_label">Next Expiry Date *</label>
+            <input type="date" id="vip_date" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Amount (BHD)</label>
+            <input type="number" step="0.001" min="0" id="vip_amount" class="form-control" placeholder="0.000">
+          </div>
+
+          <!-- Insurance-specific fields -->
+          <div class="col-md-4 vip-ins-only">
+            <label class="form-label fw-semibold">Insurance Provider</label>
+            <input type="text" id="vip_provider" class="form-control" placeholder="e.g. Solidarity, BNI, GIG">
+          </div>
+          <div class="col-md-4 vip-ins-only">
+            <label class="form-label fw-semibold">Policy Number</label>
+            <input type="text" id="vip_policy_no" class="form-control" placeholder="Policy No.">
+          </div>
+          <div class="col-md-4 vip-ins-only">
+            <label class="form-label fw-semibold">Insurance Type</label>
+            <select id="vip_ins_type" class="form-select">
+              <option value="Comprehensive">Comprehensive</option>
+              <option value="Third Party">Third Party</option>
+            </select>
+          </div>
+          <div class="col-md-4 vip-ins-only">
+            <label class="form-label fw-semibold">Policy Start Date</label>
+            <input type="date" id="vip_start_date" class="form-control">
+          </div>
+
+          <!-- Passing-specific fields -->
+          <div class="col-md-4 vip-pass-only" style="display: none;">
+            <label class="form-label fw-semibold">Passed Date</label>
+            <input type="date" id="vip_passed_date" class="form-control">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Attach Document (Optional)</label>
+            <input type="file" id="vip_attachment" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.webp">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Remarks</label>
+            <input type="text" id="vip_remarks" class="form-control" placeholder="Optional remarks...">
+          </div>
+
+          <div class="col-12 mt-3">
+            <div class="border-top pt-2">
+              <div class="fw-semibold small mb-2" style="color: #1b3d94;"><i class="ri-history-line me-1"></i> Renewal History</div>
+              <div id="vip_history_list" class="small text-muted" style="max-height: 220px; overflow-y: auto;"></div>
+              <div id="vip_entry_detail_box" class="alert alert-light border mt-2 mb-0 small" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="vip_cancel_edit_btn">Cancel Edit</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" id="vip_save_btn">Save Record</button>
+      </div>
+    </div>
+  </div>
+</div>

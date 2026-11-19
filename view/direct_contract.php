@@ -119,11 +119,11 @@ header("Pragma: no-cache");
             margin-right: 0;
         }
         .list-group-item.active-click {
-          background-color: #f12526; /* Bootstrap primary */
+          background-color: #1b3d94; /* Bootstrap primary */
           color: white;
         }
         .table-active {
-            background-color: #f12526 !important; /* Red background */
+            background-color: #1b3d94 !important; /* Red background */
             color: white !important;              /* White text */
         }
         
@@ -212,9 +212,9 @@ input[type="number"] {
 }
 
 .vehicle-card.selected {
-    border: 2px solid #f12526;       /* red border for selection */
-    background-color: #fff0f0;       /* light highlight */
-    box-shadow: 0 0 10px rgba(241, 37, 38, 0.4); /* optional glow */
+    border: 2px solid #1b3d94;       /* red border for selection */
+    background-color: #eef3fc;       /* light highlight */
+    box-shadow: 0 0 10px rgba(27, 61, 148, 0.4); /* optional glow */
     transition: all 0.2s ease-in-out;
 }
 
@@ -228,7 +228,7 @@ input[type="number"] {
 }
 
 .custom-modal-header {
-    background: linear-gradient(135deg, #f12526, #c81e1f);
+    background: linear-gradient(135deg, #1b3d94, #153075);
     color: white !important; 
     border-bottom: none;
 }
@@ -258,7 +258,7 @@ input[type="number"] {
 }
 
 .nav-pills .nav-link.active {
-    background-color: #f12526;
+    background-color: #1b3d94;
 }
 
 //SaNDS Alert
@@ -633,7 +633,10 @@ setTimeout(function() {
                         customer_email: item.customer_email,
                         customer_code: item.customer_code,
                         customer_attn: item.customer_attn,
-                        customer_cr_cpr:item.customer_cr_cpr
+                        customer_cr_cpr: item.customer_cr_cpr,
+                        status: item.status,
+                        is_blacklisted: item.is_blacklisted,
+                        blacklist_description: item.blacklist_description
                     }))
                 };
             }
@@ -645,6 +648,17 @@ setTimeout(function() {
 
 function formatCustomer(customer) {
     if (!customer.id) return customer.text;
+    const isBl = (customer.is_blacklisted == 1 || customer.is_blacklisted === '1' || customer.status === 'Blacklisted');
+    if (isBl) {
+        const reason = customer.blacklist_description ? ` — ${$('<div>').text(customer.blacklist_description).html()}` : '';
+        return $(`
+            <div class="text-danger">
+                <strong>${customer.customer_name} | ${customer.customer_mobile} | ${customer.customer_cr_cpr}</strong>
+                <span class="badge bg-danger ms-1">BLACKLISTED</span>
+                <div class="small">${reason ? 'Remarks: ' + $('<div>').text(customer.blacklist_description).html() : 'Blacklisted customer'}</div>
+            </div>
+        `);
+    }
 
     return $(`
         <div>
@@ -662,6 +676,31 @@ function formatCustomerSelection(customer) {
 
 $('#selectCustomerFromSelect2').on('select2:select', function (e) {
     let data = e.params.data;
+    const isBl = (data.is_blacklisted == 1 || data.is_blacklisted === '1' || data.status === 'Blacklisted');
+    $('#blacklistedCustomerAlert').remove();
+
+    if (isBl) {
+        window.__selectedCustomerBlacklisted = true;
+        const remarksText = data.blacklist_description ? data.blacklist_description : 'No remarks specified.';
+        const alertHtml = `
+            <div id="blacklistedCustomerAlert" class="alert alert-danger mt-2 mb-2 d-flex align-items-start gap-2" role="alert">
+                <i class="ri-spam-2-fill fs-5 mt-1"></i>
+                <div>
+                    <div class="fw-bold">Customer Blacklisted: ${$('<div>').text(data.customer_name || '').html()}</div>
+                    <div class="small"><strong>Remarks:</strong> ${$('<div>').text(remarksText).html()}</div>
+                    <div class="small mt-1">You cannot proceed with contract creation for a blacklisted customer.</div>
+                </div>
+            </div>
+        `;
+        $('#selectCustomerFromSelect2').closest('.col, .col-12, .mb-3, .form-floating, div').parent().append(alertHtml);
+
+        $('#selectCustomerFromSelect2').val(null).trigger('change');
+        $('#customer_code, #customerName, #customerPhone, #customerEmail, #customerAddress, #customerAttention, #customercprcr').val('');
+        setupDropdown('dropdownContent', 'error', svgError + 'Cannot select blacklisted customer. Remarks: ' + remarksText, 'click');
+        return;
+    }
+
+    window.__selectedCustomerBlacklisted = false;
     $('#customer_code').val(data.customer_code);
     $('#customerName').val(data.customer_name);
     $('#customerPhone').val(data.customer_mobile);
@@ -673,6 +712,8 @@ $('#selectCustomerFromSelect2').on('select2:select', function (e) {
 
 
 $('#selectCustomerFromSelect2').on('select2:clear', function () {
+    window.__selectedCustomerBlacklisted = false;
+    $('#blacklistedCustomerAlert').remove();
     $('#customerName').val('');
     $('#customer_code').val('');
     $('#customerPhone').val('');
@@ -1306,6 +1347,11 @@ $(document).on('click', '.btn_vehicle_select', function () {
     const bookingDetails = getBookingDetails();
 
     // ✅ VALIDATION
+    if (window.__selectedCustomerBlacklisted) {
+        setupDropdown('dropdownContent', 'error', svgError + "Cannot create contract for a blacklisted customer", 'click');
+        return;
+    }
+
     if (!bookingDetails.customerCode?.trim()) {
         setupDropdown('dropdownContent', 'error', svgError + "Please select customer to proceed", 'click');
         return;

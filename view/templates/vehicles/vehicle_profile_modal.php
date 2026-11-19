@@ -1,7 +1,7 @@
 <div class="modal fade" id="vehicleProfileModal" tabindex="-1" aria-hidden="true" style="z-index: 99999 !important;">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header" style="background-color: #d12222;">
+            <div class="modal-header" style="background-color: #1b3d94;">
                 <h5 class="modal-title d-flex align-items-center gap-2 text-white">
                     <i class="ri-car-line"></i> 
                     Vehicle Profile - <span id="vpVehicleNumber" class="fw-bold"></span>
@@ -72,8 +72,20 @@
                                         <strong class="text-dark" id="vpColor"></strong>
                                     </div>
                                     <div class="col-sm-6">
-                                        <span class="text-muted d-block" style="font-size: 11px;">Fuel / Gear</span>
+                                        <span class="text-muted d-block" style="font-size: 11px;">Engine Type / Transmission</span>
                                         <strong class="text-dark"><span id="vpFuelType"></span> / <span id="vpGearType"></span></strong>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block" style="font-size: 11px;">Mileage (km)</span>
+                                        <strong class="text-dark" id="vpMileageKm">-</strong>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block" style="font-size: 11px;">Body Type</span>
+                                        <strong class="text-dark" id="vpBodyType">-</strong>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block" style="font-size: 11px;">Capacity (cc)</span>
+                                        <strong class="text-dark" id="vpCapacityCc">-</strong>
                                     </div>
                                     <div class="col-12" id="vpRentoutDiv" style="display: none;">
                                         <div class="border border-danger rounded p-2 bg-lighter mt-1">

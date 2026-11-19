@@ -19,7 +19,8 @@
     <meta name="description" content="" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="<?= $_ENV['BASE_URL'] ?>assets/img/favicon/favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="<?= $_ENV['BASE_URL'] ?>assets/img/favicon/favicon.ico?v=2" />
+    <link rel="icon" type="image/png" href="<?= $_ENV['BASE_URL'] ?>assets/img/favicon/favicon.png?v=2" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -73,24 +74,24 @@
 		  transition: opacity 0.3s ease;
 		}
 		.btn-primary {
-		  background-color: #f12526 !important;
-		  border-color: #f12526 !important;
+		  background-color: #1b3d94 !important;
+		  border-color: #1b3d94 !important;
 		  color: #ffffff !important;
-		  box-shadow: 0 2px 6px 0 rgba(241, 37, 38, 0.4) !important;
+		  box-shadow: 0 2px 6px 0 rgba(27, 61, 148, 0.4) !important;
 		}
 		.btn-primary:hover, .btn-primary:focus {
-		  background-color: #c81e1f !important;
-		  border-color: #c81e1f !important;
+		  background-color: #153075 !important;
+		  border-color: #153075 !important;
 		  color: #ffffff !important;
-		  box-shadow: 0 4px 12px 0 rgba(241, 37, 38, 0.5) !important;
+		  box-shadow: 0 4px 12px 0 rgba(27, 61, 148, 0.5) !important;
 		}
 		.form-check-input:checked {
-		  background-color: #f12526 !important;
-		  border-color: #f12526 !important;
+		  background-color: #1b3d94 !important;
+		  border-color: #1b3d94 !important;
 		}
 		.form-control:focus {
-		  border-color: #f12526 !important;
-		  box-shadow: 0 0 0 0.25rem rgba(241, 37, 38, 0.2) !important;
+		  border-color: #1b3d94 !important;
+		  box-shadow: 0 0 0 0.25rem rgba(27, 61, 148, 0.2) !important;
 		}
 	</style>
   </head>
@@ -110,7 +111,7 @@
           <div class="card p-md-7 p-1">
             <!-- Logo -->
             <div class="app-brand justify-content-center mt-5">
-              <img src="<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo.png" id="companyLogo" class="img-fluid app-logo" alt="Logo">
+              <img src="<?= $_ENV['BASE_URL'] ?>assets/img/logo_new/fastlinklogoblue.png" id="companyLogo" class="img-fluid app-logo" alt="Fast Link Logo" style="max-height: 80px; width: auto; object-fit: contain;">
             </div>
             <!-- /Logo -->
 
@@ -120,8 +121,8 @@
 			  
 				<div class="form-floating form-floating-outline mb-6" style="display:none">
 					<select class="form-select" id="selectCompanyDropDown" name="selectCompanyDropDown">
-					  <option value="1" selected >AA Car Rental</option>
-					  <option value="1">AA Car Rental</option>
+					  <option value="1" selected >Fast Link</option>
+					  <option value="1">Fast Link</option>
 					  <option value="2">Class Rental Car</option>
 					</select>
 					<label for="selectCompanyDropDown">Choose Company</label>
@@ -239,10 +240,10 @@
 			setTimeout(() => {
 				const logoPath = (this.value === "2")
 					? "<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo_classic.png"
-					: "<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo.png";
+					: "<?= $_ENV['BASE_URL'] ?>assets/img/logo_new/fastlinklogoblue.png";
 				const logoPathSmall = (this.value === "2")
 					? "<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo_classic_small.png"
-					: "<?= $_ENV['BASE_URL'] ?>assets/img/logo/logo_small.png";
+					: "<?= $_ENV['BASE_URL'] ?>assets/img/logo_new/fastlinklogo_white%20(1).png";
 			
 				logo.src = logoPath;
 				logo.style.opacity = 1;
@@ -270,8 +271,7 @@
                         }
                         
                         setTimeout(function() {
-                            // Redirect to home. User logic often uses a val param for session context.
-                            window.location.href = "/Dashboard";
+                            window.location.href = "/ActiveContractsDashboard?val=<?= urlencode($this->encryption->encrypt('7,7-1')) ?>";
                         }, 1000);
                     } else {
                         if (typeof setupDropdown === 'function') {

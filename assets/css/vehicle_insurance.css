@@ -1,8 +1,8 @@
 /* Vehicle Insurance Timeline CSS */
 #insuranceTable thead th {
-    background: #ffeff0 !important;
-    color: #d12222 !important;
-    border-bottom: 2px solid #d12222 !important;
+    background: #eef3fc !important;
+    color: #1b3d94 !important;
+    border-bottom: 2px solid #1b3d94 !important;
     font-weight: 600;
 }
 .timeline-container {

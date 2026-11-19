@@ -6,6 +6,7 @@ class CustomerController
     var $varPDOModelObj;
     public $actionevents, $json, $client_json, $status, $ids;
     public $customer_name, $customer_type, $telephone, $email, $cprcr, $cprexpiryDate, $attention, $address, $company_id, $params = [];
+    public $nationality, $license_no, $license_issue_place, $license_expiry_date, $phone_1, $phone_2, $fax_no, $website, $vat_reg_no, $is_blacklisted, $blacklist_description, $customer_account_id;
 
     function __construct()
     {
@@ -42,6 +43,21 @@ class CustomerController
         $this->cprexpiryDate = !empty($data['cprexpiryDate']) ? $data['cprexpiryDate'] : null;
         $this->attention = $data['attention'] ?? null;
         $this->address = $data['address'] ?? null;
+        $this->nationality = $data['nationality'] ?? null;
+        $this->license_no = $data['license_no'] ?? null;
+        $this->license_issue_place = $data['license_issue_place'] ?? null;
+        $this->license_expiry_date = !empty($data['license_expiry_date']) ? $data['license_expiry_date'] : null;
+        $this->phone_1 = $data['phone_1'] ?? null;
+        $this->phone_2 = $data['phone_2'] ?? null;
+        $this->fax_no = $data['fax_no'] ?? null;
+        $this->website = $data['website'] ?? null;
+        $this->vat_reg_no = $data['vat_reg_no'] ?? null;
+        $this->is_blacklisted = !empty($data['is_blacklisted']) ? 1 : 0;
+        $this->blacklist_description = $data['blacklist_description'] ?? null;
+        $this->customer_account_id = !empty($data['customer_account_id']) ? (int)$data['customer_account_id'] : null;
+        if ($this->is_blacklisted === 1) {
+            $this->status = 'Blacklisted';
+        }
 
         $this->client_json = isset($data['clientsDoc']) ? json_encode($data['clientsDoc']) : json_encode([]);
         $this->actionevents = $data['action'] ?? null;
@@ -52,17 +68,30 @@ class CustomerController
     {
         $array = array();
         $array[0] = "INSERT INTO customer_details 
-                    (customer_name, customer_type,customer_mobile,customer_email,customer_addr,customer_attn,customer_cr_cpr, cpr_expiry_date, client_docs,company_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    (customer_name, customer_type, customer_account_id, customer_mobile, customer_email, customer_addr, customer_attn, customer_cr_cpr, cpr_expiry_date, nationality, license_no, license_issue_place, license_expiry_date, phone_1, phone_2, fax_no, website, vat_reg_no, status, is_blacklisted, blacklist_description, client_docs, company_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $this->params[0] = [
             $this->customer_name,
             $this->customer_type,
+            $this->customer_account_id,
             $this->telephone,
             $this->email,
             $this->address,
             $this->attention,
             $this->cprcr,
             $this->cprexpiryDate,
+            $this->nationality,
+            $this->license_no,
+            $this->license_issue_place,
+            $this->license_expiry_date,
+            $this->phone_1,
+            $this->phone_2,
+            $this->fax_no,
+            $this->website,
+            $this->vat_reg_no,
+            $this->status,
+            $this->is_blacklisted,
+            $this->blacklist_description,
             $this->client_json,
             $this->company_id
         ];
@@ -74,7 +103,7 @@ class CustomerController
         $var = $this->SQLArray();
         switch ($action) {
             case 'AddNewCustomer':
-                if (count($this->params[0]) !== 10) {
+                if (count($this->params[0]) !== 23) {
                     throw new Exception("Parameter count mismatch: " . count($this->params[0]));
                 }
                 $this->ReturnData = $this->varPDOModelObj->AddToTableAndReturnSpecifiedColumn($var[0], 'customer_id', 'customer_details', $this->params[0]);

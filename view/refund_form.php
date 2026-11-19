@@ -51,9 +51,9 @@ $companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
             padding-bottom: 6px !important;
         }
         #refundTable > thead > tr > th {
-            background: #ffeff0 !important;
-            color: #d12222 !important;
-            border-bottom: 2px solid #d12222 !important;
+            background: #eef3fc !important;
+            color: #1b3d94 !important;
+            border-bottom: 2px solid #1b3d94 !important;
             font-weight: 600;
             text-transform: uppercase;
         }
@@ -580,7 +580,7 @@ $companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     let balance = totalPaid - totalCharged;
 
                     let html = `
-                        <div class="d-flex justify-content-between align-items-center p-3" style="background-color: #d12222;">
+                        <div class="d-flex justify-content-between align-items-center p-3" style="background-color: #1b3d94;">
                             <h5 class="mb-0 fw-bold text-white fs-4">Refund Details</h5>
                             <i class="ri ri-close-line text-white fs-3" style="cursor:pointer;" onclick="Swal.close()"></i>
                         </div>

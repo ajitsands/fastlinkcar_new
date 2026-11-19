@@ -1,5 +1,5 @@
 <div class="offcanvas offcanvas-end offcanvas-half" tabindex="-1" id="cashmemoCanvas">
-    <div class="offcanvas-header pb-0" style="background-color: #d12222 !important; color: #fff !important; padding: 15px 20px;">
+    <div class="offcanvas-header pb-0" style="background-color: #1b3d94 !important; color: #fff !important; padding: 15px 20px;">
         <h4 id="canvasTitle" class="mb-0 text-white">Cash Memo</h4><input type="hidden" id="txt_qtn_draft">
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>

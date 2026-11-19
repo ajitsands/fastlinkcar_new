@@ -93,7 +93,7 @@ include ROOT_PATH . '/view/envinclude.php';
         #customerTable.dataTable.table-striped tbody tr.selected:hover > *,
         #customerTable.dataTable.table-striped > tbody > tr:nth-of-type(odd).selected,
         #customerTable.dataTable.table-striped > tbody > tr:nth-of-type(odd).selected > * {
-            background-color: #F87C63 !important;
+            background-color: #2b54b8 !important;
             color: #ffffff !important;
             box-shadow: none !important;
             outline: none !important;
@@ -105,7 +105,7 @@ include ROOT_PATH . '/view/envinclude.php';
         #customerTable tbody tr:not(.selected):hover > th,
         #customerTable.dataTable tbody tr:not(.selected):hover > *,
         #customerTable.dataTable.table-hover tbody tr:not(.selected):hover > * {
-            background-color: rgba(248, 124, 99, 0.15) !important;
+            background-color: rgba(43, 84, 184, 0.15) !important;
             color: inherit !important;
         }
 
@@ -998,7 +998,19 @@ $('#cprexpiryDate').on('input', function () {
                 cprexpiryDate : $('#cprexpiryDate').val(),
                 custAttn : $('#custattn').val(),
                 custType : $('#customer_type_onmodal').val(),
+                customer_account_id : $('#customer_account_id').val(),
                 customerAddress : $('#customerAddress').val(),
+                nationality: $('#nationality').val(),
+                license_no: $('#license_no').val(),
+                license_issue_place: $('#license_issue_place').val(),
+                license_expiry_date: $('#license_expiry_date').val(),
+                phone_1: $('#phone_1').val(),
+                phone_2: $('#phone_2').val(),
+                fax_no: $('#fax_no').val(),
+                website: $('#website').val(),
+                vat_reg_no: $('#vat_reg_no').val(),
+                is_blacklisted: $('#is_blacklisted').is(':checked') ? 1 : 0,
+                blacklist_description: $('#blacklist_description').val(),
                 customerDocObj:JSON.stringify(bookingMaster),
                  action: isEdit ? 'UpdateCustomerInformation' : 'AddCustomerInformationnew'   
                
@@ -1020,7 +1032,22 @@ $('#cprexpiryDate').on('input', function () {
                         svgSuccess + (isEdit ? "Customer updated successfully" : "Customer added successfully"),
                         'click'
                     );
-                    load_master_customer_list();
+                    load_master_customer_accounts();
+ function load_master_customer_accounts() {
+   fetch('/CustomerAccountController?action=list&active_only=1')
+     .then(r => r.json())
+     .then(res => {
+       const sel = $('#customer_account_id');
+       const cur = sel.val();
+       sel.find('option:not(:first)').remove();
+       (res.data || []).forEach(a => {
+         sel.append(`<option value="${a.ids}">${a.account_name}</option>`);
+       });
+       if (cur) sel.val(cur);
+     });
+ }
+
+ load_master_customer_list();
         
                     
                     resetCustomerForm();
@@ -1055,6 +1082,21 @@ $('#cprexpiryDate').on('input', function () {
 
             });   
        
+ load_master_customer_accounts();
+ function load_master_customer_accounts() {
+   fetch('/CustomerAccountController?action=list&active_only=1')
+     .then(r => r.json())
+     .then(res => {
+       const sel = $('#customer_account_id');
+       const cur = sel.val();
+       sel.find('option:not(:first)').remove();
+       (res.data || []).forEach(a => {
+         sel.append(`<option value="${a.ids}">${a.account_name}</option>`);
+       });
+       if (cur) sel.val(cur);
+     });
+ }
+
  load_master_customer_list();
  function load_master_customer_list() {
   // Destroy existing table
@@ -1105,6 +1147,9 @@ $('#cprexpiryDate').on('input', function () {
             { data: 'customer_mobile' },
             { data: 'customer_cr_cpr' },
             { data: 'status', render: function(data, type, row){
+                if (data === 'Blacklisted' || row.is_blacklisted == 1 || row.is_blacklisted === '1' || row.is_blacklisted === true) {
+                    return '<span class="badge bg-danger">Blacklisted</span>';
+                }
                 return (data === 'Active' || data === '1' || data === 1 || data === true) ? '<span class="badge bg-label-success">Active</span>' : '<span class="badge bg-label-danger">Inactive</span>';
             } }
           
@@ -1183,7 +1228,22 @@ $(document).on('click', '#msg_popup_confirmed', function () {
                     } else {
                         alert("Success: " + resp.message);
                     }
-                    load_master_customer_list();
+                    load_master_customer_accounts();
+ function load_master_customer_accounts() {
+   fetch('/CustomerAccountController?action=list&active_only=1')
+     .then(r => r.json())
+     .then(res => {
+       const sel = $('#customer_account_id');
+       const cur = sel.val();
+       sel.find('option:not(:first)').remove();
+       (res.data || []).forEach(a => {
+         sel.append(`<option value="${a.ids}">${a.account_name}</option>`);
+       });
+       if (cur) sel.val(cur);
+     });
+ }
+
+ load_master_customer_list();
                     $('#toggleCustomerStatusBtn').addClass('d-none');
                 } else {
                     if (typeof setupDropdown === 'function') {
@@ -1235,14 +1295,18 @@ function loadCustomerForEdit(data) {
 
     $('#saveCustomerData').text('Update Customer');
 
+    let isBlacklisted = (data.status === 'Blacklisted' || data.is_blacklisted == 1 || data.is_blacklisted === '1' || data.is_blacklisted === true);
     let isActive = (data.status === 'Active' || data.status === '1' || data.status === 1 || data.status === true);
-    if (isActive) {
-        $('#customerStatusBadge').removeClass('bg-label-danger').addClass('bg-label-success').text('Active');
+    if (isBlacklisted) {
+        $('#customerStatusBadge').removeClass('bg-label-success bg-label-danger').addClass('bg-danger').text('Blacklisted');
+    } else if (isActive) {
+        $('#customerStatusBadge').removeClass('bg-label-danger bg-danger').addClass('bg-label-success').text('Active');
     } else {
-        $('#customerStatusBadge').removeClass('bg-label-success').addClass('bg-label-danger').text('Inactive');
+        $('#customerStatusBadge').removeClass('bg-label-success bg-danger').addClass('bg-label-danger').text('Inactive');
     }
 
     // ✅ Correct field mapping
+    $('#customer_account_id').val(data.customer_account_id || '');
     $('#customerName').val(data.customer_name);
     $('#ContactNumber').val(data.customer_mobile);
     $('#emailId').val(data.customer_email);
@@ -1250,6 +1314,17 @@ function loadCustomerForEdit(data) {
     $('#cprexpiryDate').val(data.cpr_expiry_date);
     $('#customerAddress').val(data.customer_addr);
     $('#custattn').val(data.customer_attn);
+    $('#nationality').val(data.nationality || '');
+    $('#license_no').val(data.license_no || '');
+    $('#license_issue_place').val(data.license_issue_place || '');
+    $('#license_expiry_date').val(data.license_expiry_date || '');
+    $('#phone_1').val(data.phone_1 || '');
+    $('#phone_2').val(data.phone_2 || '');
+    $('#fax_no').val(data.fax_no || '');
+    $('#website').val(data.website || '');
+    $('#vat_reg_no').val(data.vat_reg_no || '');
+    $('#is_blacklisted').prop('checked', data.is_blacklisted == 1 || data.is_blacklisted === '1' || data.is_blacklisted === true);
+    $('#blacklist_description').val(data.blacklist_description || '');
   
     $('#customer_type_onmodal')
     .val(data.customer_type)

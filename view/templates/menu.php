@@ -13,6 +13,26 @@
  <aside id="layout-menu" class="layout-menu-horizontal menu-horizontal menu flex-grow-0">
    <div class="container-fluid d-flex h-100">
      <ul class="menu-inner">
+       <!-- Active Contracts -->
+       <li class="menu-item <?php if ($decrypt[0] == '7') {
+                              echo 'active';
+                            } ?>">
+         <a href="/ActiveContractsDashboard?val=<?php echo $this->encryption->encrypt('7,7-1'); ?>" class="menu-link">
+           <i class="menu-icon icon-base ri ri-file-check-line"></i>
+           <div data-i18n="Active Contracts">Active Contracts</div>
+         </a>
+       </li>
+
+       <!-- New Contract (Direct Contract) -->
+       <li class="menu-item <?php if ($decrypt[0] == '8' || ($decrypt[1] ?? '') == '3-11') {
+                              echo 'active';
+                            } ?>">
+         <a href="/DirectContract?val=<?php echo $this->encryption->encrypt('8,8-1'); ?>" class="menu-link">
+           <i class="menu-icon icon-base ri ri-file-add-line"></i>
+           <div data-i18n="New Contract">New Contract</div>
+         </a>
+       </li>
+
        <!-- Dashboards -->
        <li class="menu-item <?php if ($decrypt[0] == '1') {
                               echo 'active';
@@ -21,7 +41,6 @@
            <i class="menu-icon icon-base ri ri-home-smile-line"></i>
            <div data-i18n="Dashboard">Dashboard</div>
          </a>
-
        </li>
 
        <!-- Layouts -->
@@ -97,6 +116,14 @@
                <div data-i18n="Customers">Customers</div>
              </a>
            </li>
+           <li class="menu-item <?php if (($decrypt[1] ?? '') == '2-12') {
+                                  echo 'active';
+                                } ?>" data-permission="customers_access">
+             <a href="/CustomerAccounts?val=<?php echo $this->encryption->encrypt('2,2-12'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-bank-card-line"></i>
+               <div data-i18n="Customer Accounts">Customer Accounts</div>
+             </a>
+           </li>
            <li class="menu-item <?php if ($decrypt[0] == '2-9') {
                                   echo 'active';
                                 } ?>" data-permission="garage_and_service_access">
@@ -111,6 +138,14 @@
              <a href="/VehicleInsurance?val=<?php echo $this->encryption->encrypt('2,2-10'); ?>" class="menu-link">
                <i class="menu-icon icon-base ri ri-shield-line"></i>
                <div data-i18n="Vehicle Insurance & Passings">Vehicle Insurance & Passings</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($decrypt[0] == '2-11') {
+                                  echo 'active';
+                                } ?>">
+             <a href="/PrintFormatMaster?val=<?php echo $this->encryption->encrypt('2,2-11'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-printer-line"></i>
+               <div data-i18n="Print Header & Footer">Print Header & Footer</div>
              </a>
            </li>
            <li class="menu-item <?php if ($decrypt[0] == '2-2') {

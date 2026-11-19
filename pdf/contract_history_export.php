@@ -59,9 +59,9 @@ $balance = $totDebit - $totCredit;
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
     <style>
         body { font-family: 'Inter', sans-serif; background: #f8f9fa; color: #212529; font-size: 13px; }
-        .report-header { border-bottom: 2px solid #0d6efd; padding-bottom: 15px; margin-bottom: 20px; }
+        .report-header { border-bottom: 2px solid #1b3d94; padding-bottom: 15px; margin-bottom: 20px; }
         .section-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .section-title { background: #e7f1ff; color: #0d6efd; padding: 10px 15px; font-weight: bold; border-top-left-radius: 7px; border-top-right-radius: 7px; border-bottom: 1px solid #cff4fc; font-size: 14px; }
+        .section-title { background: #eef3fc; color: #1b3d94; padding: 10px 15px; font-weight: bold; border-top-left-radius: 7px; border-top-right-radius: 7px; border-bottom: 1px solid #b8c8f5; font-size: 14px; }
         .section-body { padding: 15px; }
         .table-sm td, .table-sm th { padding: 6px 10px; }
         .img-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; margin-right: 5px; margin-bottom: 5px; }
@@ -78,24 +78,19 @@ $balance = $totDebit - $totCredit;
 <div class="container my-4">
     <!-- Top Action Bar -->
     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-        <h4 class="mb-0 text-primary"><i class="ri-file-text-line"></i> Contract Audit & History Report</h4>
+        <h4 class="mb-0" style="color: #1b3d94;"><i class="ri-file-text-line"></i> Contract Audit & History Report</h4>
         <div>
-            <button onclick="window.print()" class="btn btn-primary btn-sm"><i class="ri-printer-line me-1"></i> Print / Save PDF</button>
+            <button onclick="window.print()" class="btn btn-sm text-white" style="background-color: #1b3d94; border-color: #1b3d94;"><i class="ri-printer-line me-1"></i> Print / Save PDF</button>
             <button onclick="window.close()" class="btn btn-outline-secondary btn-sm me-2"><i class="ri-close-line me-1"></i> Close</button>
         </div>
     </div>
 
     <!-- Report Header -->
-    <div class="report-header d-flex justify-content-between align-items-center">
-        <div>
-            <h3 class="fw-bold text-dark mb-0">AA CAR RENTAL</h3>
-            <p class="text-muted mb-0">Comprehensive Contract & Vehicle Replacement Audit Report</p>
-        </div>
-        <div class="text-end">
-            <span class="badge bg-primary fs-6 mb-1">Agreement No: <?= htmlspecialchars($agreementNo) ?></span>
-            <div class="text-muted small">Generated Date: <?= date('d/m/Y H:i A') ?></div>
-        </div>
-    </div>
+    <?php
+        require_once __DIR__ . '/print_settings_helper.php';
+        $printSettings = getPrintSettings($pdo ?? null);
+        echo renderPrintHeaderHtml($printSettings, 'Contract Audit & History Report', 'Agreement No: ' . $agreementNo, 'Generated Date: ' . date('d/m/Y H:i A'));
+    ?>
 
     <!-- Customer & Contract Overview -->
     <div class="section-card">
@@ -249,7 +244,7 @@ $balance = $totDebit - $totCredit;
             </div>
         </div>
     </div>
-
+    <?= renderPrintFooterHtml($printSettings) ?>
 </div>
 
 </body>

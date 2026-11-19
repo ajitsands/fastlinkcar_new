@@ -554,16 +554,21 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             fetch('/ActiveContractsDashboardController')
                 .then(r => r.json())
                 .then(res => {
-                    if (res.status !== 'success') return;
+                    if (res.status !== 'success') {
+                        $('#activeContractsTable tbody').html(`<tr><td colspan="9" class="text-center text-danger py-3">${escapeHtml(res.message || 'Failed to load active contracts.')}</td></tr>`);
+                        return;
+                    }
                     allContracts = res.data || [];
                     const s = res.summary || {};
                     $('#kpiTotalActive').text(s.total_active || 0);
                     $('#kpiDueToday').text(s.due_today || 0);
                     $('#kpiOverdue').text(s.overdue || 0);
-                    $('#kpiExtended').text(s.extended || 0);
                     renderFilteredTable();
                 })
-                .catch(err => console.error('Failed to load active contracts:', err));
+                .catch(err => {
+                    console.error('Failed to load active contracts:', err);
+                    $('#activeContractsTable tbody').html(`<tr><td colspan="9" class="text-center text-danger py-3">Error loading active contracts. Check console / network response.</td></tr>`);
+                });
         }
 
         $(document).on('click', '.kpi-card', function() {

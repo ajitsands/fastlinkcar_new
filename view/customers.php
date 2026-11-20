@@ -1128,7 +1128,13 @@ $('#cprexpiryDate').on('input', function () {
         });
     },
     dataSrc: function (json) {
-            return json.data.data; 
+            if (json && json.data && Array.isArray(json.data.data)) {
+                return json.data.data;
+            }
+            if (json && Array.isArray(json.data)) {
+                return json.data;
+            }
+            return [];
         }
     },
     columns: [

@@ -228,15 +228,16 @@ class CustomerMasterController
 			
 		
             case 'ListCustomerMaster':
-			    
 			    $this->ReturnData = $this->varPDOModelObj->ListFromTable($var[4]);
-			   
+                $decodedList = json_decode($this->ReturnData, true);
+                if (empty($decodedList['status']) || !isset($decodedList['data'])) {
+                    $this->ReturnData = $this->varPDOModelObj->ListFromTable("SELECT * FROM customer_details ORDER BY ids DESC");
+                    $decodedList = json_decode($this->ReturnData, true);
+                }
                 echo json_encode([
                     "status" => "success",
-                    "data" => json_decode($this->ReturnData, true)
+                    "data" => $decodedList ?: ['status' => true, 'data' => []]
                 ]);
-		
-			    
             break;	
             
             case 'get_driver_documnets':

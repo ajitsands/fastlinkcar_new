@@ -31,7 +31,7 @@
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
         </div>
         <div class="d-flex gap-2">
-          <button type="button" class="btn btn-success px-4 ladda-button" id="btn_save_dc_contract">
+          <button type="button" class="btn btn-success px-4 ladda-button d-none" id="btn_save_dc_contract">
               <span class="ladda-label">Save Contract</span>
           </button>
           <button type="button" class="btn btn-primary px-4 ladda-button" id="btn_save_rentout_dc_contract">

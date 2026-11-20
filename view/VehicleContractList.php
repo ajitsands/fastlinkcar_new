@@ -5646,14 +5646,42 @@ function executeReturnContract(customer_code)
                                 'click'
                             );
                         
-                            let modal = bootstrap.Modal.getInstance(
-                                document.getElementById('ReturncontractModal')
-                            );
-                        
-                            if (modal) {
-                                modal.hide();
+                            const closeReturnModal = function () {
+                                let modal = bootstrap.Modal.getInstance(
+                                    document.getElementById('ReturncontractModal')
+                                );
+                                if (modal) {
+                                    modal.hide();
+                                }
+                                searchContractList();
+                            };
+
+                            const receiptUrl = '/CashMemo?val=' + encodeURIComponent('<?= $this->encryption->encrypt('5,5-5') ?>')
+                                + '&contract_id=' + encodeURIComponent(agreement_id || '')
+                                + '&customer_code=' + encodeURIComponent(customer_code || '')
+                                + '&agreement_no=' + encodeURIComponent(agreement_no || '');
+
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    title: 'Vehicle Returned Successfully',
+                                    text: 'Do you want to generate a Receipt (Cash Memo) for agreement ' + (agreement_no || '') + '?',
+                                    icon: 'success',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Yes, Generate Receipt',
+                                    cancelButtonText: 'No',
+                                    confirmButtonColor: '#1b3d94'
+                                }).then(function (result) {
+                                    if (result.isConfirmed) {
+                                        (window.top || window).open(receiptUrl, '_blank');
+                                    }
+                                    closeReturnModal();
+                                });
+                            } else {
+                                if (confirm('Vehicle returned successfully. Do you want to generate a Receipt for ' + (agreement_no || '') + '?')) {
+                                    (window.top || window).open(receiptUrl, '_blank');
+                                }
+                                closeReturnModal();
                             }
-                        searchContractList();
                             return;
                         }
                         else

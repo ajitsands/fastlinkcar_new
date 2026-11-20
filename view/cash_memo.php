@@ -2837,6 +2837,89 @@ $('#btnSaveSignatures').click(function () {
 
 });// CLose of Jquery
 
+$(document).ready(function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const preContractId = urlParams.get('contract_id');
+    const preCustomerCode = urlParams.get('customer_code') || '';
+    const preAgreementNo = urlParams.get('agreement_no') || '';
+    if (!preContractId) return;
+
+    $.ajax({
+        url: '/ContractListController',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'GetContractDetails',
+            agreementid: preContractId,
+            customer_code: preCustomerCode
+        }),
+        success: function (res) {
+            const d = (typeof res === 'string') ? JSON.parse(res) : res;
+            if (!d || !d.contract) return;
+            const c = d.contract;
+            const cust = d.customer || {};
+
+            const cCode = cust.customer_id || c.customer_code || preCustomerCode;
+            const cName = cust.customer_name || c.customer_name || '';
+            $('#customer_code').val(cCode);
+            $('#customer_name').val(cName);
+            $('#customer_phone').val(cust.customer_mobile || '');
+            $('#customer_email').val(cust.customer_email || '');
+            $('#customer_cpr_cr').val(cust.customer_cr_cpr || '');
+            $('#customer_address').val(cust.customer_addr || cust.customer_address || '');
+            if (cName) {
+                const opt = new Option(cName, cCode, true, true);
+                $('#selectCustomerFromSelect2').append(opt).trigger('change.select2');
+            }
+
+            if (c.company_id && $('#company_id option[value="' + c.company_id + '"]').length > 0) {
+                $('#company_id').val(String(c.company_id));
+                const selComp = $('#company_id').find('option:selected');
+                $('#company_code').val(selComp.data('code') || '');
+                $('#company_name').val(selComp.data('name') || '');
+            }
+
+            initagreementload('cashmemo_selagreement', preContractId);
+
+            // Also load Contract Ledger summary and show balance due
+            $.post('/ContractListController', {
+                action: 'GetContractLedgerData',
+                contract_id: preContractId
+            }, function (lRes) {
+                const ld = (typeof lRes === 'string') ? JSON.parse(lRes) : lRes;
+                const rows = (ld && Array.isArray(ld.data)) ? ld.data : (Array.isArray(ld) ? ld : []);
+                let totalDebit = 0;
+                let totalCredit = 0;
+                rows.forEach(r => {
+                    totalDebit += parseFloat(r.debit || 0);
+                    if ((r.cheque_status || '') !== 'Bounced') {
+                        totalCredit += parseFloat(r.credit || 0);
+                    }
+                });
+                const balance = Math.max(0, totalDebit - totalCredit);
+                const agrDisp = c.agreement_no || preAgreementNo || ('#' + preContractId);
+                if ($('#returnReceiptLedgerBanner').length === 0) {
+                    const bannerHtml = `
+                        <div id="returnReceiptLedgerBanner" class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <div>
+                                <strong><i class="ri-file-list-3-line me-1"></i>Contract Ledger (${$('<div>').text(agrDisp).html()}):</strong>
+                                <span class="ms-2">Total Charges: <strong>${totalDebit.toFixed(3)} BHD</strong></span>
+                                <span class="ms-3">Paid: <strong class="text-success">${totalCredit.toFixed(3)} BHD</strong></span>
+                                <span class="ms-3">Balance Due: <strong class="text-danger">${balance.toFixed(3)} BHD</strong></span>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-primary viewContractLedgerBtn">
+                                <i class="ri-book-open-line me-1"></i> View Contract Ledger
+                            </button>
+                        </div>
+                    `;
+                    const $target = $('#cashmemo_selagreement').closest('.card-body, .row').parent();
+                    if ($target.length) $target.prepend(bannerHtml);
+                }
+            });
+        }
+    });
+});
+
 
     </script>
 </body>

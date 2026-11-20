@@ -43,6 +43,16 @@
          </a>
        </li>
 
+       <!-- Vehicle Insurance & Passings -->
+       <li class="menu-item <?php if ($decrypt[0] == '9' || ($decrypt[1] ?? '') == '2-10') {
+                              echo 'active';
+                            } ?>" data-permission="vehicle_insurance_access">
+         <a href="/VehicleInsurance?val=<?php echo $this->encryption->encrypt('9,9-1'); ?>" class="menu-link">
+           <i class="menu-icon icon-base ri ri-shield-check-line"></i>
+           <div data-i18n="Vehicle Insurance & Passings">Insurance &amp; Passings</div>
+         </a>
+       </li>
+
        <!-- Layouts -->
        <li class="menu-item <?php if ($decrypt[0] == '2') {
                               echo 'active';
@@ -130,14 +140,6 @@
              <a href="/GarageAndServiceMaster?val=<?php echo $this->encryption->encrypt('2,2-9'); ?>" class="menu-link">
                <i class="menu-icon icon-base ri ri-tools-line"></i>
                <div data-i18n="Garage and Service Master">Garage and Service Master</div>
-             </a>
-           </li>
-           <li class="menu-item <?php if ($decrypt[0] == '2-10') {
-                                  echo 'active';
-                                } ?>" data-permission="vehicle_insurance_access">
-             <a href="/VehicleInsurance?val=<?php echo $this->encryption->encrypt('2,2-10'); ?>" class="menu-link">
-               <i class="menu-icon icon-base ri ri-shield-line"></i>
-               <div data-i18n="Vehicle Insurance & Passings">Vehicle Insurance & Passings</div>
              </a>
            </li>
            <li class="menu-item <?php if ($decrypt[0] == '2-11') {

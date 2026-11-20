@@ -4,6 +4,9 @@ require_once ROOT_PATH . '/model/common/VehicleStatusHelper.php';
 header('Content-Type: application/json');
 
 $action = $_REQUEST['action'] ?? '';
+$type   = $_REQUEST['type'] ?? 'vehicle';
+$isContract = ($type === 'contract');
+$tableName  = $isContract ? 'tbl_contract_status_colors' : 'tbl_vehicle_status_colors';
 
 try {
     $host = $_ENV['DB_HOST'] ?? (defined('DB_HOST') ? DB_HOST : '127.0.0.1');
@@ -15,10 +18,14 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]);
 
-    VehicleStatusHelper::ensureTableAndDefaults($pdo);
+    if ($isContract) {
+        VehicleStatusHelper::ensureContractTableAndDefaults($pdo);
+    } else {
+        VehicleStatusHelper::ensureTableAndDefaults($pdo);
+    }
 
     if ($action === 'list') {
-        $rows = $pdo->query("SELECT ids, status_name, status_key, badge_color, text_color FROM tbl_vehicle_status_colors ORDER BY ids ASC")->fetchAll();
+        $rows = $pdo->query("SELECT ids, status_name, status_key, badge_color, text_color FROM {$tableName} ORDER BY ids ASC")->fetchAll();
         echo json_encode(['status' => 'success', 'data' => $rows]);
         exit;
     }
@@ -31,7 +38,7 @@ try {
             echo json_encode(['status' => 'error', 'message' => 'No status colors provided']);
             exit;
         }
-        $stmt = $pdo->prepare("UPDATE tbl_vehicle_status_colors SET badge_color = ?, text_color = ? WHERE status_key = ?");
+        $stmt = $pdo->prepare("UPDATE {$tableName} SET badge_color = ?, text_color = ? WHERE status_key = ?");
         foreach ($items as $it) {
             $key = trim((string)($it['status_key'] ?? ''));
             $color = trim((string)($it['badge_color'] ?? ''));
@@ -41,13 +48,22 @@ try {
             $textColor = VehicleStatusHelper::getContrastTextColor($color);
             $stmt->execute([$color, $textColor, $key]);
         }
-        $updated = VehicleStatusHelper::getStatusColorMap(true);
-        echo json_encode(['status' => 'success', 'message' => 'Vehicle status colors updated successfully', 'map' => $updated]);
+        $updated = $isContract ? VehicleStatusHelper::getContractStatusColorMap(true) : VehicleStatusHelper::getStatusColorMap(true);
+        echo json_encode(['status' => 'success', 'message' => ($isContract ? 'Contract' : 'Vehicle') . ' status colors updated successfully', 'map' => $updated]);
         exit;
     }
 
     if ($action === 'reset') {
-        $defaults = [
+        $defaults = $isContract ? [
+            'generated' => '#ff9f43',
+            'rentout'   => '#28c76f',
+            'extended'  => '#00cfe8',
+            'returned'  => '#1b3d94',
+            'closed'    => '#20c997',
+            'onhold'    => '#ff4c51',
+            'cancelled' => '#ea5455',
+            'replaced'  => '#6f42c1',
+        ] : [
             'available'   => '#28c76f',
             'parking'     => '#00cfe8',
             'rentout'     => '#ea5455',
@@ -57,11 +73,11 @@ try {
             'saleout'     => '#1b3d94',
             'deactivated' => '#82868b',
         ];
-        $stmt = $pdo->prepare("UPDATE tbl_vehicle_status_colors SET badge_color = ?, text_color = ? WHERE status_key = ?");
+        $stmt = $pdo->prepare("UPDATE {$tableName} SET badge_color = ?, text_color = ? WHERE status_key = ?");
         foreach ($defaults as $k => $c) {
             $stmt->execute([$c, VehicleStatusHelper::getContrastTextColor($c), $k]);
         }
-        $updated = VehicleStatusHelper::getStatusColorMap(true);
+        $updated = $isContract ? VehicleStatusHelper::getContractStatusColorMap(true) : VehicleStatusHelper::getStatusColorMap(true);
         echo json_encode(['status' => 'success', 'message' => 'Status colors reset to defaults', 'map' => $updated]);
         exit;
     }

@@ -431,8 +431,9 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                         {
                             data: 'agreement_no',
                             render: (v, t, row) => {
-                                const isExt = String(row.status).toLowerCase() === 'extended';
-                                const statusBadge = `<span class="badge ${isExt ? 'bg-label-info' : 'bg-label-success'} mt-1">${escapeHtml(row.status)}</span>`;
+                                const statusBadge = (typeof window.getContractStatusBadgeHtml === 'function')
+                                    ? window.getContractStatusBadgeHtml(row.status, 'mt-1')
+                                    : `<span class="badge ${String(row.status).toLowerCase() === 'extended' ? 'bg-label-info' : 'bg-label-success'} mt-1">${escapeHtml(row.status)}</span>`;
                                 return `
                                     <a href="javascript:void(0);" class="fw-semibold qv-trigger d-block" data-id="${row.id}" style="color: #1b3d94;">
                                         ${escapeHtml(v)}

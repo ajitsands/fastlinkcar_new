@@ -3,6 +3,7 @@
 class VehicleStatusHelper
 {
     private static $cachedMap = null;
+    private static $cachedContractMap = null;
 
     private static function getPdo()
     {
@@ -39,7 +40,7 @@ class VehicleStatusHelper
         $g = hexdec(substr($hex, 2, 2));
         $b = hexdec(substr($hex, 4, 2));
         $lum = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
-        return $lum > 0.62 ? '#1e293b' : '#ffffff';
+        return $lum > 0.78 ? '#1e293b' : '#ffffff';
     }
 
     public static function ensureTableAndDefaults($pdo = null)
@@ -65,7 +66,7 @@ class VehicleStatusHelper
             ['Parking',     'parking',     '#00cfe8', '#ffffff'],
             ['Rentout',     'rentout',     '#ea5455', '#ffffff'],
             ['Staff Use',   'staffuse',    '#ff4c51', '#ffffff'],
-            ['Maintenance', 'maintenance', '#ff9f43', '#1e293b'],
+            ['Maintenance', 'maintenance', '#ff9f43', '#ffffff'],
             ['Blocked',     'blocked',     '#4b4b4b', '#ffffff'],
             ['Sale Out',    'saleout',     '#1b3d94', '#ffffff'],
             ['Deactivated', 'deactivated', '#82868b', '#ffffff'],
@@ -86,6 +87,82 @@ class VehicleStatusHelper
                 }
             }
         } catch (Exception $e) {}
+
+        // Ensure default #ff9f43 Maintenance uses white text
+        try {
+            $pdo->exec("UPDATE tbl_vehicle_status_colors SET text_color = '#ffffff' WHERE status_key = 'maintenance' AND LOWER(badge_color) = '#ff9f43'");
+        } catch (Exception $e) {}
+    }
+
+    public static function ensureContractTableAndDefaults($pdo = null)
+    {
+        if ($pdo === null) {
+            $pdo = self::getPdo();
+        }
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `tbl_contract_status_colors` (
+              `ids` int(11) NOT NULL AUTO_INCREMENT,
+              `status_name` varchar(80) NOT NULL,
+              `status_key` varchar(80) NOT NULL,
+              `badge_color` varchar(20) NOT NULL DEFAULT '#28c76f',
+              `text_color` varchar(20) NOT NULL DEFAULT '#ffffff',
+              `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              PRIMARY KEY (`ids`),
+              UNIQUE KEY `uq_contract_status_key` (`status_key`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+
+        $defaults = [
+            ['Generated', 'generated', '#ff9f43', '#ffffff'],
+            ['Rentout',   'rentout',   '#28c76f', '#ffffff'],
+            ['Extended',  'extended',  '#00cfe8', '#ffffff'],
+            ['Returned',  'returned',  '#1b3d94', '#ffffff'],
+            ['Closed',    'closed',    '#20c997', '#ffffff'],
+            ['Onhold',    'onhold',    '#ff4c51', '#ffffff'],
+            ['Cancelled', 'cancelled', '#ea5455', '#ffffff'],
+            ['Replaced',  'replaced',  '#6f42c1', '#ffffff'],
+        ];
+
+        $stmtIns = $pdo->prepare("INSERT IGNORE INTO tbl_contract_status_colors (status_name, status_key, badge_color, text_color) VALUES (?, ?, ?, ?)");
+        foreach ($defaults as $d) {
+            $stmtIns->execute($d);
+        }
+
+        try {
+            $rows = $pdo->query("SELECT DISTINCT agreement_status FROM tbl_vehicle_rentout_contracts WHERE agreement_status IS NOT NULL AND TRIM(agreement_status) <> ''")->fetchAll(PDO::FETCH_COLUMN);
+            foreach ($rows as $st) {
+                $key = strtolower(preg_replace('/\s+/', '', (string)$st));
+                if ($key !== '') {
+                    $stmtIns->execute([trim($st), $key, '#6c757d', '#ffffff']);
+                }
+            }
+        } catch (Exception $e) {}
+    }
+
+    public static function getContractStatusColorMap($forceRefresh = false)
+    {
+        if (self::$cachedContractMap !== null && !$forceRefresh) {
+            return self::$cachedContractMap;
+        }
+        try {
+            $pdo = self::getPdo();
+            self::ensureContractTableAndDefaults($pdo);
+            $rows = $pdo->query("SELECT ids, status_name, status_key, badge_color, text_color FROM tbl_contract_status_colors ORDER BY ids ASC")->fetchAll();
+            $map = [];
+            foreach ($rows as $r) {
+                $map[$r['status_key']] = [
+                    'ids'         => (int)$r['ids'],
+                    'status_name' => $r['status_name'],
+                    'status_key'  => $r['status_key'],
+                    'badge_color' => $r['badge_color'],
+                    'text_color'  => $r['text_color'],
+                ];
+            }
+            self::$cachedContractMap = $map;
+            return $map;
+        } catch (Exception $e) {
+            return [];
+        }
     }
 
     public static function getStatusColorMap($forceRefresh = false)

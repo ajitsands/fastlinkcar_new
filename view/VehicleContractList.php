@@ -1116,39 +1116,10 @@ function load_contract_list(
             data: 'agreement_status',
             className: 'status-cell',
             render: function (data) {
-
-                let badgeClass = 'bg-secondary';
-
-                if (data == 'Generated') {
-                    badgeClass = 'bg-warning';
+                if (typeof window.getContractStatusBadgeHtml === 'function') {
+                    return window.getContractStatusBadgeHtml(data);
                 }
-                else if (data == 'Rentout') {
-                    badgeClass = 'bg-success';
-                }
-                else if (data == 'Extended') {
-                    badgeClass = 'bg-success';
-                }
-                else if (data == 'Returned') {
-                    badgeClass = 'bg-primary';
-                }
-                else if (data == 'Closed') {
-                    badgeClass = 'bg-success';
-                }
-                else if (data == 'Onhold') {
-                    badgeClass = 'bg-danger';
-                }
-                else if (data == 'Cancelled') {
-                    badgeClass = 'bg-danger';
-                }
-                else  {
-                    badgeClass = 'bg-danger';
-                }
-
-                return `
-                    <span class="badge ${badgeClass}">
-                        ${data}
-                    </span>
-                `;
+                return `<span class="badge bg-secondary">${data || ''}</span>`;
             }
         },
 

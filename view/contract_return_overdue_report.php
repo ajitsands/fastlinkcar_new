@@ -857,27 +857,10 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
 
         let tableData = [];
         rows.forEach((row, index) => {
-            // Status Badge matching ContractList page exactly
-            let badgeClass = 'bg-secondary';
             let s = (row.agreement_status || '').trim();
-            if (s === 'Generated') {
-                badgeClass = 'bg-warning';
-            } else if (s === 'Rentout') {
-                badgeClass = 'bg-success';
-            } else if (s === 'Extended') {
-                badgeClass = 'bg-success';
-            } else if (s === 'Returned') {
-                badgeClass = 'bg-primary';
-            } else if (s === 'Closed') {
-                badgeClass = 'bg-success';
-            } else if (s === 'Onhold') {
-                badgeClass = 'bg-danger';
-            } else if (s === 'Cancelled') {
-                badgeClass = 'bg-danger';
-            } else {
-                badgeClass = 'bg-danger';
-            }
-            let statusBadge = `<span class="badge ${badgeClass}">${escapeHtml(s || 'N/A')}</span>`;
+            let statusBadge = (typeof window.getContractStatusBadgeHtml === 'function')
+                ? window.getContractStatusBadgeHtml(s || 'N/A')
+                : `<span class="badge bg-secondary">${escapeHtml(s || 'N/A')}</span>`;
 
             // Company & Agreement Block with Clickable Agreement Number
             let compBadge = row.company_name && row.company_name !== 'N/A' 

@@ -43,6 +43,7 @@
     }
     $userPermissionsJson = json_encode($_SESSION['user_permissions'] ?? []);
     $vehicleStatusColorsJson = json_encode(VehicleStatusHelper::getStatusColorMap());
+    $contractStatusColorsJson = json_encode(VehicleStatusHelper::getContractStatusColorMap());
     
     // Map PHP date format to JS (Day.js) format
     $phpDateFormat = defined('SYS_DATE_FORMAT') ? SYS_DATE_FORMAT : 'Y-m-d';
@@ -51,6 +52,7 @@
     <script>
         window.USER_PERMISSIONS = <?= $userPermissionsJson ?>;
         window.VEHICLE_STATUS_COLORS = <?= $vehicleStatusColorsJson ?>;
+        window.CONTRACT_STATUS_COLORS = <?= $contractStatusColorsJson ?>;
         window.SYS_DATE_FORMAT = "<?= $jsDateFormat ?>";
 
         window.getVehicleStatusBadgeHtml = function(status) {
@@ -79,6 +81,23 @@
             else if (s === 'saleout') statusClass = 'bg-label-primary';
             
             return '<span class="badge ' + statusClass + '">' + status + '</span>';
+        };
+
+        window.getContractStatusBadgeHtml = function(status, extraClass = '') {
+            const label = (status || '').trim() || 'N/A';
+            const s = label.toLowerCase().replace(/\s+/g, '');
+            const customMap = window.CONTRACT_STATUS_COLORS || {};
+            if (customMap[s] && customMap[s].badge_color) {
+                const bg = customMap[s].badge_color;
+                const fg = customMap[s].text_color || '#ffffff';
+                return `<span class="badge ${extraClass}" style="background-color: ${bg}; color: ${fg};">${label}</span>`;
+            }
+            let badgeClass = 'bg-secondary';
+            if (s === 'generated') badgeClass = 'bg-warning';
+            else if (s === 'rentout' || s === 'extended' || s === 'closed') badgeClass = 'bg-success';
+            else if (s === 'returned') badgeClass = 'bg-primary';
+            else if (s === 'onhold' || s === 'cancelled') badgeClass = 'bg-danger';
+            return `<span class="badge ${badgeClass} ${extraClass}">${label}</span>`;
         };
     </script>
     <script src="<?= $_ENV['BASE_URL'] ?>user_js/rbac_ui_enforcer.js"></script>

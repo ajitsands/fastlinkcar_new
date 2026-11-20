@@ -809,20 +809,11 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                     data: 'agreement_status',
                     className: 'text-center',
                     render: d => {
-                        let badgeClass = 'bg-secondary';
-                        let s = (d || '').trim();
-                        if (s === 'Generated') {
-                            badgeClass = 'bg-warning';
-                        } else if (s === 'Rentout' || s === 'Extended' || s === 'Closed') {
-                            badgeClass = 'bg-success';
-                        } else if (s === 'Returned') {
-                            badgeClass = 'bg-primary';
-                        } else if (s === 'Onhold' || s === 'Cancelled') {
-                            badgeClass = 'bg-danger';
-                        } else {
-                            badgeClass = 'bg-danger';
+                        let s = (d || '').trim() || 'Rentout';
+                        if (typeof window.getContractStatusBadgeHtml === 'function') {
+                            return window.getContractStatusBadgeHtml(s);
                         }
-                        return `<span class="badge ${badgeClass}">${escapeHtml(s || 'Rentout')}</span>`;
+                        return `<span class="badge bg-secondary">${escapeHtml(s)}</span>`;
                     }
                 },
                 {

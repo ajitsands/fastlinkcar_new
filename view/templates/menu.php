@@ -33,16 +33,6 @@
          </a>
        </li>
 
-       <!-- Dashboards -->
-       <li class="menu-item <?php if ($decrypt[0] == '1') {
-                              echo 'active';
-                            } ?>" data-permission="dashboard_access">
-         <a href="/Dashboard?val=<?php echo $this->encryption->encrypt('1,1-1'); ?>" class="menu-link">
-           <i class="menu-icon icon-base ri ri-home-smile-line"></i>
-           <div data-i18n="Dashboard">Dashboard</div>
-         </a>
-       </li>
-
        <!-- Vehicle Insurance & Passings -->
        <li class="menu-item <?php if ($decrypt[0] == '9' || ($decrypt[1] ?? '') == '2-10') {
                               echo 'active';
@@ -50,6 +40,16 @@
          <a href="/VehicleInsurance?val=<?php echo $this->encryption->encrypt('9,9-1'); ?>" class="menu-link">
            <i class="menu-icon icon-base ri ri-shield-check-line"></i>
            <div data-i18n="Vehicle Insurance & Passings">Insurance &amp; Passings</div>
+         </a>
+       </li>
+
+       <!-- Dashboards -->
+       <li class="menu-item <?php if ($decrypt[0] == '1') {
+                              echo 'active';
+                            } ?>" data-permission="dashboard_access">
+         <a href="/Dashboard?val=<?php echo $this->encryption->encrypt('1,1-1'); ?>" class="menu-link">
+           <i class="menu-icon icon-base ri ri-home-smile-line"></i>
+           <div data-i18n="Dashboard">Dashboard</div>
          </a>
        </li>
 

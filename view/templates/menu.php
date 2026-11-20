@@ -466,6 +466,26 @@ if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
                 </div>
             </div>
         </div>
+        <script>
+        (function () {
+            function tightenHeaderGap() {
+                var h = document.getElementById('globalPageHeader');
+                if (!h) return;
+                var el = h.nextElementSibling;
+                while (el && (el.tagName === 'STYLE' || el.tagName === 'SCRIPT')) {
+                    el = el.nextElementSibling;
+                }
+                if (el) {
+                    el.style.setProperty('padding-top', '6px', 'important');
+                }
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', tightenHeaderGap);
+            } else {
+                tightenHeaderGap();
+            }
+        })();
+        </script>
         <?php
     }
 }

@@ -412,6 +412,36 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                             </div>
                         </div>
 
+                        <!-- Contract Ledger Details -->
+                        <div class="p-3 rounded border mb-3" id="qvLedgerSection" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-primary-subtle flex-wrap gap-2">
+                                <span class="fw-semibold" style="color: #1b3d94;"><i class="ri-book-open-line me-1"></i> Contract Ledger</span>
+                                <div class="small">
+                                    Debit: <strong id="qvLedDebit">0.000</strong> |
+                                    Credit: <strong class="text-success" id="qvLedCredit">0.000</strong> |
+                                    Balance: <strong class="text-danger" id="qvLedBalance">0.000</strong>
+                                </div>
+                            </div>
+                            <div class="table-responsive bg-white rounded border" style="max-height: 220px; overflow-y: auto;">
+                                <table class="table table-sm table-bordered table-hover align-middle mb-0" style="font-size: 12px;">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Date</th>
+                                            <th>Type</th>
+                                            <th>Description</th>
+                                            <th class="text-end">Debit</th>
+                                            <th class="text-end">Credit</th>
+                                            <th class="text-end">Balance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="qvLedgerBody">
+                                        <tr><td colspan="7" class="text-center text-muted py-2">Loading ledger...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         <!-- Car Survey OUT & Signatures -->
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -821,6 +851,46 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                         }).join(''));
                     }
                 }
+            });
+
+            // Load Contract Ledger
+            $('#qvLedgerBody').html('<tr><td colspan="7" class="text-center text-muted py-2">Loading ledger...</td></tr>');
+            $('#qvLedDebit, #qvLedCredit, #qvLedBalance').text('0.000');
+            $.getJSON('/CustomerLedgerController', {
+                action: 'GetContractLedgerData',
+                contract_id: row.id
+            }, function(lRes) {
+                const ld = (typeof lRes === 'string') ? JSON.parse(lRes) : lRes;
+                const rows = (ld && Array.isArray(ld.data)) ? ld.data : (Array.isArray(ld) ? ld : []);
+                if (!rows.length) {
+                    $('#qvLedgerBody').html('<tr><td colspan="7" class="text-center text-muted py-2">No ledger entries found</td></tr>');
+                    return;
+                }
+                let totD = 0, totC = 0, run = 0;
+                const html = rows.map((r, i) => {
+                    const deb = parseFloat(r.debit || 0);
+                    const cred = ((r.cheque_status || '') === 'Bounced') ? 0 : parseFloat(r.credit || 0);
+                    totD += deb;
+                    totC += cred;
+                    run += (deb - cred);
+                    const dt = r.trans_date || r.created_at || '-';
+                    const desc = r.remarks || r.notes || r.description || '-';
+                    return `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td class="text-nowrap">${escapeHtml(String(dt).substring(0, 10))}</td>
+                            <td><span class="badge bg-label-primary">${escapeHtml(r.trans_type || '-')}</span></td>
+                            <td>${escapeHtml(desc)}</td>
+                            <td class="text-end">${deb > 0 ? deb.toFixed(3) : '-'}</td>
+                            <td class="text-end text-success">${cred > 0 ? cred.toFixed(3) : '-'}</td>
+                            <td class="text-end fw-semibold">${run.toFixed(3)}</td>
+                        </tr>
+                    `;
+                }).join('');
+                $('#qvLedgerBody').html(html);
+                $('#qvLedDebit').text(totD.toFixed(3));
+                $('#qvLedCredit').text(totC.toFixed(3));
+                $('#qvLedBalance').text(Math.max(0, totD - totC).toFixed(3));
             });
         });
 

@@ -99,11 +99,20 @@ function buildDirectContractWizard(bookingDetails, vehicles) {
     contentContainer.append(customerTpl);
     
     // Populate customer tab
-    $('#dc_c_name').text(bookingDetails.customerName);
+    $('#dc_c_name').text(bookingDetails.customerName || '-');
     $('#dc_c_code').text(bookingDetails.customerCode || '-');
-    $('#dc_c_mobile').text($('#customerPhone').val() || '-');
-    $('#dc_c_email').text($('#customerEmail').val() || '-');
     $('#dc_c_cpr').text($('#customercprcr').val() || '-');
+    const accText = $('#customerAccountId').val() ? ($('#customerAccountId option:selected').text() || '-') : '-';
+    $('#dc_c_account').text(accText);
+    $('#dc_c_nationality').text($('#customerNationality').val() || '-');
+    $('#dc_c_license_no').text($('#customerLicenseNo').val() || '-');
+    $('#dc_c_license_issue').text($('#customerLicenseIssuePlace').val() || '-');
+    $('#dc_c_license_exp').text($('#customerLicenseExpiry').val() ? formatMyDateOnly($('#customerLicenseExpiry').val()) : '-');
+    $('#dc_c_mobile').text($('#customerPhone').val() || '-');
+    $('#dc_c_telephone').text($('#customerTelephone').val() || '-');
+    $('#dc_c_email').text($('#customerEmail').val() || '-');
+    $('#dc_c_attention').text($('#customerAttention').val() || '-');
+    $('#dc_c_address').text($('#customerAddress').val() || '-');
     
     // Force DD-MMM-YYYY format for the modal as requested
     let sysFormat = 'DD-MMM-YYYY';
@@ -137,13 +146,18 @@ function buildDirectContractWizard(bookingDetails, vehicles) {
     $('#dc_b_vat_perc').text(bookingDetails.vatPerc);
     $('#dc_b_vat_amt').text(bookingDetails.vatAmt);
     $('#dc_b_total').text(bookingDetails.total);
+    const grandTotal = (parseFloat(bookingDetails.total) || 0) * Math.max(vehicles.length, 1);
+    $('#dc_b_grand_total').text(grandTotal.toFixed(3));
+    const compText = $('#reservationCompanySelect').length ? ($('#reservationCompanySelect option:selected').text() || '-') : '-';
+    $('#dc_b_company').text(compText);
     $('#dc_b_notes').text(bookingDetails.notes || '-');
     $('#dc_b_vehicles').text(vehicles.length);
     
-    // For Model of vehicle, grab from the first vehicle or show 'Multiple'
-    let modelName = vehicles.length > 0 ? vehicles[0].modelName : '-';
-    if(vehicles.length > 1) modelName += ' (+' + (vehicles.length - 1) + ' more)';
-    $('#dc_b_model').text(modelName);
+    // Show all selected vehicles with model and plate number
+    const vehicleListText = vehicles.length > 0
+        ? vehicles.map(v => `${v.modelName} (${v.vehicleNumber})`).join(', ')
+        : '-';
+    $('#dc_b_model').text(vehicleListText);
     
     function formatMyDateOnly(dStr) {
         if(!dStr || dStr === '-') return '-';

@@ -60,19 +60,44 @@
                             <strong class="text-truncate d-block" id="dc_c_code"></strong>
                         </div>
                         <div class="col-3 mb-2">
-                            <small class="text-muted d-block">Contact Number</small>
+                            <small class="text-muted d-block">ID / CPR Number</small>
+                            <strong class="text-truncate d-block" id="dc_c_cpr"></strong>
+                        </div>
+                        <div class="col-3 mb-2">
+                            <small class="text-muted d-block">Customer Account</small>
+                            <strong class="text-truncate d-block" id="dc_c_account"></strong>
+                        </div>
+                        <div class="col-3 mb-2">
+                            <small class="text-muted d-block">Nationality</small>
+                            <strong class="text-truncate d-block" id="dc_c_nationality"></strong>
+                        </div>
+                        <div class="col-3 mb-2">
+                            <small class="text-muted d-block">Licence No.</small>
+                            <strong class="text-truncate d-block" id="dc_c_license_no"></strong>
+                        </div>
+                        <div class="col-3 mb-2">
+                            <small class="text-muted d-block">Issue Place</small>
+                            <strong class="text-truncate d-block" id="dc_c_license_issue"></strong>
+                        </div>
+                        <div class="col-3 mb-2">
+                            <small class="text-muted d-block">Licence Expire Date</small>
+                            <strong class="text-truncate d-block" id="dc_c_license_exp"></strong>
+                        </div>
+                        <div class="col-3 mb-2">
+                            <small class="text-muted d-block">Mobile</small>
                             <strong class="text-truncate d-block" id="dc_c_mobile"></strong>
+                        </div>
+                        <div class="col-3 mb-2">
+                            <small class="text-muted d-block">Telephone</small>
+                            <strong class="text-truncate d-block" id="dc_c_telephone"></strong>
                         </div>
                         <div class="col-3 mb-2">
                             <small class="text-muted d-block">Email</small>
                             <strong class="text-truncate d-block" id="dc_c_email"></strong>
                         </div>
-                        <div class="col-12 mt-1">
+                        <div class="col-3 mb-2">
                             <small class="text-muted d-block">Attn & Address</small>
                             <strong class="text-truncate d-block"><span id="dc_c_attention"></span> - <span id="dc_c_address"></span></strong>
-                        </div>
-                        <div class="col-12 mt-1 d-none" id="dc_c_cpr_container">
-                            <strong id="dc_c_cpr"></strong>
                         </div>
                     </div>
                 </fieldset>
@@ -109,31 +134,39 @@
                                 <span class="badge bg-primary ms-1" style="font-size:10px;">Min: <span id="dc_b_min_price"></span></span>
                             </strong>
                         </div>
-                        <div class="col-3">
-                            <small class="text-muted d-block">VAT Percentage</small>
+                        <div class="col-2">
+                            <small class="text-muted d-block">VAT %</small>
                             <strong class="text-truncate d-block" id="dc_b_vat_perc"></strong>
                         </div>
-                        <div class="col-3">
+                        <div class="col-2">
                             <small class="text-muted d-block">VAT Amount</small>
                             <strong class="text-truncate d-block" id="dc_b_vat_amt"></strong>
                         </div>
-                        <div class="col-3">
-                            <small class="text-muted d-block">Total</small>
+                        <div class="col-2">
+                            <small class="text-muted d-block">Per Vehicle Total</small>
                             <strong class="text-truncate d-block text-primary" id="dc_b_total"></strong>
+                        </div>
+                        <div class="col-3">
+                            <small class="text-muted d-block">Grand Total (All Vehicles)</small>
+                            <strong class="text-truncate d-block text-primary" id="dc_b_grand_total"></strong>
                         </div>
                     </div>
                     
                     <!-- Row 3: Vehicles & Remarks -->
                     <div class="row g-2">
-                        <div class="col-3 mb-2">
+                        <div class="col-2 mb-2">
+                            <small class="text-muted d-block">Company</small>
+                            <strong class="text-truncate d-block" id="dc_b_company"></strong>
+                        </div>
+                        <div class="col-2 mb-2">
                             <small class="text-muted d-block">Total Vehicles</small>
                             <strong class="text-truncate d-block" id="dc_b_vehicles"></strong>
                         </div>
-                        <div class="col-3 mb-2">
-                            <small class="text-muted d-block">Model of Vehicle</small>
-                            <strong class="text-truncate d-block" id="dc_b_model"></strong>
+                        <div class="col-4 mb-2">
+                            <small class="text-muted d-block">Selected Vehicles</small>
+                            <strong class="d-block" id="dc_b_model" style="font-size:11px;"></strong>
                         </div>
-                        <div class="col-6 mb-2">
+                        <div class="col-4 mb-2">
                             <small class="text-muted d-block">Remarks</small>
                             <strong class="d-block" id="dc_b_notes" style="white-space: pre-wrap; font-size:11px;"></strong>
                         </div>

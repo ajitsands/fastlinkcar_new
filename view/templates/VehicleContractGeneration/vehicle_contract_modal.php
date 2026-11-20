@@ -282,23 +282,41 @@
 
                 <!-- TAB 3: Checklist & Driver -->
                 <div id="tab-checklist-driver" class="content">
-                    <h6 class="fw-bold text-danger mb-3">Vehicle Checklist & Handover</h6>
+                    <h6 class="fw-bold text-primary mb-3">Vehicle Checklist & Handover</h6>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-2">
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="chk_tools">
-                                <label class="form-check-label">Jack & Tools</label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="chk_spare">
-                                <label class="form-check-label">Spare Tyre</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="chk_radio">
-                                <label class="form-check-label">Radio</label>
+                        <div class="col-md-4">
+                            <div class="row g-1">
+                                <div class="col-6">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="chk_tools">
+                                        <label class="form-check-label" for="chk_tools">Tools Kit</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="chk_spare">
+                                        <label class="form-check-label" for="chk_spare">S. Wheel</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="chk_wcup">
+                                        <label class="form-check-label" for="chk_wcup">W. Cup</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="chk_radio">
+                                        <label class="form-check-label" for="chk_radio">Radio</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="chk_scratches">
+                                        <label class="form-check-label" for="chk_scratches">Scratches Mark X</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="chk_seats">
+                                        <label class="form-check-label" for="chk_seats">Seats Cleanness</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-floating form-floating-outline mb-3">
                                 <input type="date" id="dt_contract_date" class="form-control" value="<?php echo date('Y-m-d') ?>">
                                 <label>Contract Date</label>
@@ -306,8 +324,15 @@
                         </div>
                         <div class="col-md-2">
                             <div class="form-floating form-floating-outline mb-3">
-                                <input type="text" id="fuel_level" class="form-control">
-                                <label>Fuel Level</label>
+                                <input type="text" id="fuel_level" list="vc_fuel_levels_list" class="form-control" placeholder="E - F">
+                                <datalist id="vc_fuel_levels_list">
+                                    <option value="Empty (E)">
+                                    <option value="1/4">
+                                    <option value="1/2">
+                                    <option value="3/4">
+                                    <option value="Full (F)">
+                                </datalist>
+                                <label>Fuel Level (E–F)</label>
                             </div>
                         </div>
                         <div class="col-md-2">
@@ -316,11 +341,31 @@
                                 <label>Odometer Reading</label>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-floating form-floating-outline mb-3">
                                 <input type="datetime-local" id="dt_out" class="form-control">
                                 <label>Rentout Time</label>
                             </div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-primary mb-2">Car Survey (OUT — تسليم للزبون)</h6>
+                    <div class="p-2 mb-4 rounded border bg-white">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                            <small class="text-muted">Click on the car diagram to mark scratches/damages (✕) or switch to Draw mode.</small>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary active" onclick="CarSurveyWidget.setMode('vc_survey_out', 'x'); $(this).addClass('active').siblings().removeClass('active');">
+                                    <i class="ri-close-line me-1"></i>Mark ✕
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" onclick="CarSurveyWidget.setMode('vc_survey_out', 'line'); $(this).addClass('active').siblings().removeClass('active');">
+                                    <i class="ri-pencil-line me-1"></i>Draw
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="CarSurveyWidget.undo('vc_survey_out')">Undo</button>
+                                <button type="button" class="btn btn-outline-danger" onclick="CarSurveyWidget.clear('vc_survey_out')">Clear</button>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <canvas id="vc_survey_out" width="360" height="220" class="border rounded" style="max-width: 100%; cursor: crosshair; touch-action: none;"></canvas>
                         </div>
                     </div>
 

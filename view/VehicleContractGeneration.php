@@ -291,6 +291,7 @@ tr.shown {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
      <script src="../httpdocs/user_js/vehicle_info.js"></script>
+     <script src="../httpdocs/user_js/car_survey_widget.js?v=<?= time() ?>"></script>
     <script>
 
 $(document).ready(function() {
@@ -1384,6 +1385,23 @@ function populateContractModal(d) {
             'checked',
             vehicle_accessiories_details.chk_radio && vehicle_accessiories_details.chk_radio === 'Yes'
         );
+         $('#chk_wcup').prop(
+            'checked',
+            vehicle_accessiories_details.chk_wcup && vehicle_accessiories_details.chk_wcup === 'Yes'
+        );
+         $('#chk_scratches').prop(
+            'checked',
+            vehicle_accessiories_details.chk_scratches && vehicle_accessiories_details.chk_scratches === 'Yes'
+        );
+         $('#chk_seats').prop(
+            'checked',
+            vehicle_accessiories_details.chk_seats && vehicle_accessiories_details.chk_seats === 'Yes'
+        );
+        $('#cust_driver_cpr').val(vehicle_accessiories_details.cust_driver_cpr || '');
+        $('#cust_driver_phone').val(vehicle_accessiories_details.cust_driver_phone || '');
+        if (window.CarSurveyWidget) {
+            CarSurveyWidget.init('vc_survey_out', vehicle_accessiories_details.car_survey_out || []);
+        }
           let currentOdo = (data.vehicle && data.vehicle.odo_meter && data.vehicle.odo_meter != '0') ? data.vehicle.odo_meter : '';
           $('#km_out').val(vehicle_accessiories_details.vehicle_km_out || currentOdo);
         $('#fuel_level').val(vehicle_accessiories_details.fuel_level || '');
@@ -2640,14 +2658,20 @@ const allVehicleImages = existingFileNames.concat(uploadedFileNames);
 let vehicle_accessories ={
                 chk_tools: $('#chk_tools').is(':checked') ? 'Yes' : 'No',
                 chk_spare: $('#chk_spare').is(':checked') ? 'Yes' : 'No',
+                chk_wcup: $('#chk_wcup').is(':checked') ? 'Yes' : 'No',
                 chk_radio: $('#chk_radio').is(':checked') ? 'Yes' : 'No',
+                chk_scratches: $('#chk_scratches').is(':checked') ? 'Yes' : 'No',
+                chk_seats: $('#chk_seats').is(':checked') ? 'Yes' : 'No',
                 date_out: $('#dt_out').val(),
                 vehicle_km_out: $('#km_out').val(),
                 fuel_level: $('#fuel_level').val(),
+                cust_driver_cpr: $('#cust_driver_cpr').val(),
                 cust_driver_name: $('#cust_driver').val(),
                 cust_driver_contact_no: $('#cust_driver_contact_no').val(),
+                cust_driver_phone: $('#cust_driver_phone').val(),
                 cust_driver_documents: bookingMaster,
-                vehicle_images:allVehicleImages
+                vehicle_images:allVehicleImages,
+                car_survey_out: window.CarSurveyWidget ? CarSurveyWidget.getMarks('vc_survey_out') : []
                 };
                 $.ajax({
                     url: '/VehicleContractGeneration',

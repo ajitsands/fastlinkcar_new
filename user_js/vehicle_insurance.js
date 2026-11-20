@@ -136,7 +136,7 @@ function initDataTable() {
                     const vNo = row.vehicle_number || '-';
                     const brandModel = [row.brand_name, row.model_names].filter(Boolean).join(' - ') || '-';
                     if (type === 'filter' || type === 'sort') {
-                        return `${vNo} ${brandModel} ${row.chassis_number || ''} ${row.vehicle_color || ''} ${row.vehicle_year || ''} ${row.category_name || ''} ${row.ownership_company || ''}`;
+                        return `${vNo} ${brandModel} ${row.vehicle_status || ''} ${row.chassis_number || ''} ${row.vehicle_color || ''} ${row.vehicle_year || ''} ${row.category_name || ''} ${row.ownership_company || ''}`;
                     }
                     let od = {};
                     if (row.other_details_json) {
@@ -146,12 +146,16 @@ function initDataTable() {
                     const gear = od.vehicleGearType || '';
                     const esc = (s) => $('<div>').text(s || '').html();
 
+                    const statusBadge = (typeof window.getVehicleStatusBadgeHtml === 'function')
+                        ? window.getVehicleStatusBadgeHtml(row.vehicle_status)
+                        : `<span class="badge bg-label-secondary">${esc(row.vehicle_status || 'Unknown')}</span>`;
+
                     let badges = '';
-                    if (row.category_name) badges += `<span class="badge bg-label-primary me-1">${esc(row.category_name)}</span>`;
-                    if (row.vehicle_year)  badges += `<span class="badge bg-label-info me-1"><i class="ri-calendar-line me-1"></i>${esc(row.vehicle_year)}</span>`;
-                    if (row.vehicle_color) badges += `<span class="badge bg-label-secondary me-1"><i class="ri-palette-line me-1"></i>${esc(row.vehicle_color)}</span>`;
-                    if (fuel)              badges += `<span class="badge bg-label-dark me-1"><i class="ri-gas-station-line me-1"></i>${esc(fuel)}</span>`;
-                    if (gear)              badges += `<span class="badge bg-label-dark me-1">${esc(gear)}</span>`;
+                    if (row.category_name) badges += `<span class="badge bg-label-primary me-1 mb-1">${esc(row.category_name)}</span>`;
+                    if (row.vehicle_year)  badges += `<span class="badge bg-label-info me-1 mb-1"><i class="ri-calendar-line me-1"></i>${esc(row.vehicle_year)}</span>`;
+                    if (row.vehicle_color) badges += `<span class="badge me-1 mb-1" style="background-color:#fef3c7;color:#92400e;"><span class="d-inline-block rounded-circle me-1 border" style="width:8px;height:8px;background-color:${esc(row.vehicle_color)};"></span>${esc(row.vehicle_color)}</span>`;
+                    if (fuel)              badges += `<span class="badge bg-label-success me-1 mb-1"><i class="ri-gas-station-line me-1"></i>${esc(fuel)}</span>`;
+                    if (gear)              badges += `<span class="badge me-1 mb-1" style="background-color:#ede9fe;color:#6d28d9;"><i class="ri-settings-4-line me-1"></i>${esc(gear)}</span>`;
 
                     let meta = `<span class="text-muted me-2"><i class="ri-barcode-line me-1"></i>Chassis: <strong>${esc(row.chassis_number || 'N/A')}</strong></span>`;
                     meta += `<span class="text-success me-2"><i class="ri-building-4-line me-1"></i>${esc(row.ownership_company || 'N/A')}</span>`;
@@ -161,9 +165,10 @@ function initDataTable() {
 
                     return `
                         <div class="d-flex flex-column gap-1">
-                            <div class="d-flex flex-wrap align-items-center gap-1">
-                                <span class="fw-bold fs-6 text-primary me-1">${esc(vNo)}</span>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="fw-bold fs-6 text-primary">${esc(vNo)}</span>
                                 <span class="fw-semibold text-dark">${esc(brandModel)}</span>
+                                ${statusBadge}
                             </div>
                             <div class="d-flex flex-wrap align-items-center">${badges}</div>
                             <div class="small d-flex flex-wrap align-items-center">${meta}</div>
@@ -185,15 +190,6 @@ function initDataTable() {
                     let dateStr = data ? dayjs(data).format(SYS_DATE_FORMAT) : 'Not Set';
                     let statusStr = getSingleDateStatus(data);
                     return `<div>${dateStr}</div>${statusStr}`;
-                }
-            },
-            {
-                "data": "vehicle_status",
-                "render": function (data, type, row) {
-                    if (typeof window.getVehicleStatusBadgeHtml === 'function') {
-                        return window.getVehicleStatusBadgeHtml(data);
-                    }
-                    return data; // Fallback
                 }
             },
             {

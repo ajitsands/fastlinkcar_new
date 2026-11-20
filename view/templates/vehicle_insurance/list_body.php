@@ -50,7 +50,6 @@ $isSingleCompany = count($allowedCompanies) <= 1;
                         <th style="color: white;">Vehicle Details</th>
                         <th style="color: white;">Next Insurance</th>
                         <th style="color: white;">Next Passing</th>
-                        <th style="color: white;">Status</th>
                         <th style="color: white;">Actions</th>
                     </tr>
                 </thead>

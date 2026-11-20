@@ -357,10 +357,14 @@ $carModelCat   = trim(($vehicle['model_name'] ?? ($vehMaster['model_names'] ?? '
 $carYear       = $vehicle['vehicle_year'] ?? ($vehMaster['vehicle_year'] ?? '');
 $carRegNo      = $vehicle['veh_no'] ?? ($data['vehicle_no'] ?? ($vehMaster['vehicle_number'] ?? ''));
 $kmOutVal      = (int)($data['km_out'] ?? ($accessories['vehicle_km_out'] ?? 0));
-$kmInVal       = (int)($data['km_in'] ?? 0);
-$kmUsedVal     = (int)($data['km_used'] ?? 0);
+$kmInVal       = (int)($data['km_in'] ?? ($accessories['vehicle_km_in'] ?? 0));
+$kmUsedVal     = (int)($data['km_used'] ?? ($kmInVal > $kmOutVal ? ($kmInVal - $kmOutVal) : 0));
 $fuelVal       = trim((string)($accessories['fuel_level'] ?? ''));
+$returnFuelVal = trim((string)($accessories['return_fuel_level'] ?? ''));
 $fuelDisplay   = $fuelVal !== '' ? (is_numeric($fuelVal) ? $fuelVal . '%' : ucfirst($fuelVal)) : '-';
+if ($returnFuelVal !== '') {
+    $fuelDisplay .= '  |  IN: ' . (is_numeric($returnFuelVal) ? $returnFuelVal . '%' : ucfirst($returnFuelVal));
+}
 
 $startRaw      = $data['service_start_date_time'] ?? ($contract_details['period_from'] ?? '');
 $endRaw        = !empty($latestExtEnd) ? $latestExtEnd : ($data['service_end_date_time'] ?? ($contract_details['period_to'] ?? ''));
@@ -384,7 +388,8 @@ $balanceAmt    = round($grandTotal - $totalPaidAmt, 3);
 
 $hirer_sig_img = '';
 if (!empty($data['hirer_signature'])) {
-    $hirer_path = ltrim($data['hirer_signature'], '/');
+    $hirer_rel = ltrim($data['hirer_signature'], '/');
+    $hirer_path = file_exists($hirer_rel) ? $hirer_rel : (dirname(__DIR__) . '/' . $hirer_rel);
     if (file_exists($hirer_path) && (extension_loaded('gd') || extension_loaded('imagick'))) {
         $img_data = base64_encode(file_get_contents($hirer_path));
         $hirer_sig_img = '<img src="@' . $img_data . '" width="100" height="32">';
@@ -714,9 +719,20 @@ $drawCarDiagram($pdf, 152, $boxTop + 37, 'تسليم للزبون OUT');
 $chkTop = $boxTop + $boxH + 4;
 $chkItems = ['Tools Kit', 'S. Wheel', 'W. Cup', 'Radio', 'Scratches Mark X', 'Seats Cleanness'];
 $outChecked = [
-    'Tools Kit' => (strtolower($accessories['chk_tools'] ?? '') === 'yes'),
-    'S. Wheel'  => (strtolower($accessories['chk_spare'] ?? '') === 'yes'),
-    'Radio'     => (strtolower($accessories['chk_radio'] ?? '') === 'yes'),
+    'Tools Kit'        => (strtolower($accessories['chk_tools'] ?? '') === 'yes'),
+    'S. Wheel'         => (strtolower($accessories['chk_spare'] ?? '') === 'yes'),
+    'W. Cup'           => (strtolower($accessories['chk_wcup'] ?? '') === 'yes'),
+    'Radio'            => (strtolower($accessories['chk_radio'] ?? '') === 'yes'),
+    'Scratches Mark X' => (strtolower($accessories['chk_scratches'] ?? '') === 'yes'),
+    'Seats Cleanness'  => (strtolower($accessories['chk_seats'] ?? '') === 'yes'),
+];
+$inChecked = [
+    'Tools Kit'        => (strtolower($accessories['ret_chk_tools'] ?? '') === 'yes'),
+    'S. Wheel'         => (strtolower($accessories['ret_chk_spare'] ?? '') === 'yes'),
+    'W. Cup'           => (strtolower($accessories['ret_chk_wcup'] ?? '') === 'yes'),
+    'Radio'            => (strtolower($accessories['ret_chk_radio'] ?? '') === 'yes'),
+    'Scratches Mark X' => (strtolower($accessories['ret_chk_scratches'] ?? '') === 'yes'),
+    'Seats Cleanness'  => (strtolower($accessories['ret_chk_seats'] ?? '') === 'yes'),
 ];
 
 $drawChecklist = function($pdf, $x, $y, $title, $items, $checkedMap = []) {
@@ -742,10 +758,27 @@ $drawChecklist = function($pdf, $x, $y, $title, $items, $checkedMap = []) {
     }
 };
 
-$drawChecklist($pdf, 14, $chkTop, 'إستلام من الزبون IN', $chkItems, []);
+$drawChecklist($pdf, 14, $chkTop, 'إستلام من الزبون IN', $chkItems, $inChecked);
 $drawChecklist($pdf, 128, $chkTop, 'تسليم للزبون OUT', $chkItems, $outChecked);
 
-// Center Fuel Gauge
+// Center Fuel Gauge (reflects Return fuel if closed, otherwise Rentout fuel)
+$fuelPct = 0.75;
+$activeFuelRaw = strtolower(trim($returnFuelVal !== '' ? $returnFuelVal : $fuelVal));
+if ($activeFuelRaw !== '') {
+    if (strpos($activeFuelRaw, 'empty') !== false || $activeFuelRaw === 'e' || $activeFuelRaw === '0') {
+        $fuelPct = 0.0;
+    } elseif (strpos($activeFuelRaw, '1/4') !== false || $activeFuelRaw === '25') {
+        $fuelPct = 0.25;
+    } elseif (strpos($activeFuelRaw, '1/2') !== false || $activeFuelRaw === '50') {
+        $fuelPct = 0.50;
+    } elseif (strpos($activeFuelRaw, '3/4') !== false || $activeFuelRaw === '75') {
+        $fuelPct = 0.75;
+    } elseif (strpos($activeFuelRaw, 'full') !== false || $activeFuelRaw === 'f' || $activeFuelRaw === '100') {
+        $fuelPct = 1.0;
+    } elseif (is_numeric(rtrim($activeFuelRaw, '%'))) {
+        $fuelPct = max(0.0, min(1.0, ((float)rtrim($activeFuelRaw, '%')) / 100.0));
+    }
+}
 $fuelCx = 101;
 $fuelCy = $chkTop + 31;
 $pdf->SetFont('dejavusans', 'B', 8);
@@ -768,8 +801,10 @@ $pdf->SetXY($fuelCx + 14, $fuelCy - 2);
 $pdf->Cell(8, 5, 'F', 0, 0, 'C');
 $pdf->SetFillColor(30, 30, 30);
 $pdf->Circle($fuelCx, $fuelCy, 2.5, 0, 360, 'F');
+$needleDeg = 165.0 - ($fuelPct * 150.0);
+$needleRad = deg2rad($needleDeg);
 $pdf->SetLineWidth(1.0);
-$pdf->Line($fuelCx, $fuelCy, $fuelCx + 9, $fuelCy - 9);
+$pdf->Line($fuelCx, $fuelCy, $fuelCx + cos($needleRad) * 13, $fuelCy - sin($needleRad) * 13);
 $pdf->SetLineWidth(0.3);
 
 // Declaration, Notes, Return Details & Rental Signature
@@ -777,12 +812,15 @@ $decY = $chkTop + 46;
 $pdf->SetXY(10, $decY);
 $delivered_sig_img = '';
 if (!empty($data['delivered_signature'])) {
-    $del_path = ltrim($data['delivered_signature'], '/');
+    $del_rel = ltrim($data['delivered_signature'], '/');
+    $del_path = file_exists($del_rel) ? $del_rel : (dirname(__DIR__) . '/' . $del_rel);
     if (file_exists($del_path) && (extension_loaded('gd') || extension_loaded('imagick'))) {
         $img_data = base64_encode(file_get_contents($del_path));
         $delivered_sig_img = '<img src="@' . $img_data . '" width="100" height="24">';
     }
 }
+$noteTopText = !empty($data['remarks1']) ? $data['remarks1'] : ($contract_details['notes'] ?? ($data['remarks'] ?? ''));
+$noteReturnText = !empty($data['remarks2']) ? $data['remarks2'] : ($accessories['return_note'] ?? '');
 
 $surveyHtml = '
 <table width="100%" cellpadding="2" style="font-family: dejavusans; font-size: 7.5pt;">
@@ -802,7 +840,7 @@ $surveyHtml = '
         <td width="50%" align="right"><b>ملاحظة:</b></td>
     </tr>
     <tr>
-        <td colspan="2" style="border: 0.7px solid #222; height: 28px;">' . htmlspecialchars($data['remarks1'] ?? '') . '</td>
+        <td colspan="2" style="border: 0.7px solid #222; height: 28px;">' . htmlspecialchars($noteTopText) . '</td>
     </tr>
 </table>
 <br>
@@ -825,7 +863,7 @@ $surveyHtml = '
         <td width="50%" align="right"><b>ملاحظة:</b></td>
     </tr>
     <tr>
-        <td colspan="2" style="border: 0.7px solid #222; height: 28px;">' . htmlspecialchars($data['remarks2'] ?? '') . '</td>
+        <td colspan="2" style="border: 0.7px solid #222; height: 28px;">' . htmlspecialchars($noteReturnText) . '</td>
     </tr>
 </table>
 <br>

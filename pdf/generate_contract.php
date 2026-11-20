@@ -718,41 +718,61 @@ $drawCarDiagram($pdf, 152, $boxTop + 37, 'تسليم للزبون OUT');
 // Checklist + Fuel Gauge Row
 $chkTop = $boxTop + $boxH + 4;
 $chkItems = ['Tools Kit', 'S. Wheel', 'W. Cup', 'Radio', 'Scratches Mark X', 'Seats Cleanness'];
+$isChkYes = function($val) {
+    if ($val === true || $val === 1 || $val === '1') return true;
+    return in_array(strtolower(trim((string)$val)), ['yes', 'true', '1', 'on'], true);
+};
+$returnLog = json_decode($data['return_log_json'] ?? '{}', true) ?: [];
+$retChkLog = (isset($returnLog['return_checklist']) && is_array($returnLog['return_checklist'])) ? $returnLog['return_checklist'] : [];
+
 $outChecked = [
-    'Tools Kit'        => (strtolower($accessories['chk_tools'] ?? '') === 'yes'),
-    'S. Wheel'         => (strtolower($accessories['chk_spare'] ?? '') === 'yes'),
-    'W. Cup'           => (strtolower($accessories['chk_wcup'] ?? '') === 'yes'),
-    'Radio'            => (strtolower($accessories['chk_radio'] ?? '') === 'yes'),
-    'Scratches Mark X' => (strtolower($accessories['chk_scratches'] ?? '') === 'yes'),
-    'Seats Cleanness'  => (strtolower($accessories['chk_seats'] ?? '') === 'yes'),
+    'Tools Kit'        => $isChkYes($accessories['chk_tools'] ?? ''),
+    'S. Wheel'         => $isChkYes($accessories['chk_spare'] ?? ''),
+    'W. Cup'           => $isChkYes($accessories['chk_wcup'] ?? ''),
+    'Radio'            => $isChkYes($accessories['chk_radio'] ?? ''),
+    'Scratches Mark X' => $isChkYes($accessories['chk_scratches'] ?? ''),
+    'Seats Cleanness'  => $isChkYes($accessories['chk_seats'] ?? ''),
 ];
 $inChecked = [
-    'Tools Kit'        => (strtolower($accessories['ret_chk_tools'] ?? '') === 'yes'),
-    'S. Wheel'         => (strtolower($accessories['ret_chk_spare'] ?? '') === 'yes'),
-    'W. Cup'           => (strtolower($accessories['ret_chk_wcup'] ?? '') === 'yes'),
-    'Radio'            => (strtolower($accessories['ret_chk_radio'] ?? '') === 'yes'),
-    'Scratches Mark X' => (strtolower($accessories['ret_chk_scratches'] ?? '') === 'yes'),
-    'Seats Cleanness'  => (strtolower($accessories['ret_chk_seats'] ?? '') === 'yes'),
+    'Tools Kit'        => $isChkYes($accessories['ret_chk_tools'] ?? ($retChkLog['ret_chk_tools'] ?? '')),
+    'S. Wheel'         => $isChkYes($accessories['ret_chk_spare'] ?? ($retChkLog['ret_chk_spare'] ?? '')),
+    'W. Cup'           => $isChkYes($accessories['ret_chk_wcup'] ?? ($retChkLog['ret_chk_wcup'] ?? '')),
+    'Radio'            => $isChkYes($accessories['ret_chk_radio'] ?? ($retChkLog['ret_chk_radio'] ?? '')),
+    'Scratches Mark X' => $isChkYes($accessories['ret_chk_scratches'] ?? ($retChkLog['ret_chk_scratches'] ?? '')),
+    'Seats Cleanness'  => $isChkYes($accessories['ret_chk_seats'] ?? ($retChkLog['ret_chk_seats'] ?? '')),
 ];
 
 $drawChecklist = function($pdf, $x, $y, $title, $items, $checkedMap = []) {
     $pdf->SetFont('dejavusans', 'B', 7.5);
+    $pdf->SetTextColor(20, 20, 20);
     $pdf->SetXY($x, $y);
     $pdf->Cell(58, 5, $title, 0, 1, 'C');
     $curY = $y + 6;
     $pdf->SetFont('dejavusans', 'B', 7);
     foreach ($items as $item) {
+        $isChecked = !empty($checkedMap[$item]);
         $pdf->SetDrawColor(30, 30, 30);
         $pdf->SetLineWidth(0.25);
         $pdf->Rect($x, $curY, 54, 6.2, 'D');
         $pdf->SetXY($x, $curY + 0.6);
         $pdf->Cell(54, 5, $item, 0, 0, 'C');
         // Circle on right
-        $pdf->Circle($x + 59.5, $curY + 3.1, 2.7, 0, 360, 'D');
-        if (!empty($checkedMap[$item])) {
-            $pdf->SetFont('dejavusans', 'B', 7);
-            $pdf->SetXY($x + 57, $curY + 0.5);
-            $pdf->Cell(5, 5, '✓', 0, 0, 'C');
+        $cx = $x + 59.5;
+        $cy = $curY + 3.1;
+        if ($isChecked) {
+            $pdf->SetFillColor(27, 61, 148);
+            $pdf->SetDrawColor(27, 61, 148);
+            $pdf->Circle($cx, $cy, 2.8, 0, 360, 'DF');
+            // Crisp thick white vector checkmark
+            $pdf->SetDrawColor(255, 255, 255);
+            $pdf->SetLineWidth(0.75);
+            $pdf->Line($cx - 1.3, $cy + 0.1, $cx - 0.3, $cy + 1.2);
+            $pdf->Line($cx - 0.3, $cy + 1.2, $cx + 1.5, $cy - 1.1);
+            $pdf->SetLineWidth(0.25);
+            $pdf->SetDrawColor(30, 30, 30);
+        } else {
+            $pdf->SetDrawColor(30, 30, 30);
+            $pdf->Circle($cx, $cy, 2.7, 0, 360, 'D');
         }
         $curY += 6.2;
     }
@@ -831,7 +851,7 @@ $surveyHtml = '
         </td>
     </tr>
     <tr>
-        <td align="right" style="padding-top: 6px; padding-bottom: 4px;"><b>التوقيع</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+        <td align="right" style="padding-top: 4px; padding-bottom: 4px;">' . (!empty($hirer_sig_img) ? $hirer_sig_img . ' &nbsp;&nbsp;' : '') . '<b>التوقيع</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
     </tr>
 </table>
 <table width="100%" cellpadding="2" style="font-family: dejavusans; font-size: 7.5pt;">

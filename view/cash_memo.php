@@ -2882,7 +2882,7 @@ $(document).ready(function () {
             initagreementload('cashmemo_selagreement', preContractId);
 
             // Also load Contract Ledger summary and show balance due
-            $.post('/ContractListController', {
+            $.getJSON('/CustomerLedgerController', {
                 action: 'GetContractLedgerData',
                 contract_id: preContractId
             }, function (lRes) {

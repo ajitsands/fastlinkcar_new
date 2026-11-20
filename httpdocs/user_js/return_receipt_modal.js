@@ -5,7 +5,7 @@ window.ReturnReceiptModal = (function () {
 
     function loadLedger(contractId) {
         $('#rr_ledger_tbody').html('<tr><td colspan="7" class="text-center text-muted py-2">Loading ledger...</td></tr>');
-        $.post('/ContractListController', {
+        $.getJSON('/CustomerLedgerController', {
             action: 'GetContractLedgerData',
             contract_id: contractId
         }, function (res) {
@@ -58,6 +58,7 @@ window.ReturnReceiptModal = (function () {
 
         $('#rr_contract_id').val(contractId);
         $('#rr_agreement_no').val(opts.agreement_no || '');
+        $('#rr_agreement_no_display').val(opts.agreement_no || '');
         $('#rr_agreement_label').text(opts.agreement_no || ('#' + contractId));
         $('#rr_customer_code').val(opts.customer_code || '');
         $('#rr_receipt_no').val('Auto (Sequential)');
@@ -92,6 +93,7 @@ window.ReturnReceiptModal = (function () {
                 const veh = d.vehicle || {};
 
                 $('#rr_agreement_no').val(c.agreement_no || opts.agreement_no || '');
+                $('#rr_agreement_no_display').val(c.agreement_no || opts.agreement_no || '');
                 $('#rr_agreement_label').text(c.agreement_no || opts.agreement_no || '');
                 $('#rr_customer_code').val(cust.customer_id || c.customer_code || opts.customer_code || '');
                 $('#rr_customer_name').val(cust.customer_name || c.customer_name || '');

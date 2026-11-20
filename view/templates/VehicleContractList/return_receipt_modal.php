@@ -2,9 +2,9 @@
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content border-0 shadow-lg">
       <div class="modal-header" style="background: linear-gradient(135deg, #1b3d94, #153075);">
-        <div>
+        <div class="d-flex align-items-center flex-wrap gap-2">
           <h5 class="modal-title text-white fw-bold mb-0"><i class="ri-receipt-line me-1"></i> RECEIPT VOUCHER</h5>
-          <small class="text-white-50">Agreement: <span id="rr_agreement_label">-</span></small>
+          <span class="badge bg-white text-primary fw-bold" id="rr_agreement_label">-</span>
         </div>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -43,11 +43,15 @@
         <!-- Receipt Voucher Form -->
         <div class="p-3 rounded border mb-3" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
           <div class="row g-2">
-            <div class="col-md-6">
+            <div class="col-md-4">
+              <label class="form-label form-label-sm mb-1 fw-semibold">Agreement No.</label>
+              <input type="text" id="rr_agreement_no_display" class="form-control form-control-sm bg-white fw-bold text-primary" readonly>
+            </div>
+            <div class="col-md-4">
               <label class="form-label form-label-sm mb-1 fw-semibold">Customer Name</label>
               <input type="text" id="rr_customer_name" class="form-control form-control-sm bg-white" readonly>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label class="form-label form-label-sm mb-1 fw-semibold">Car Type / Plate No.</label>
               <input type="text" id="rr_car_type" class="form-control form-control-sm bg-white" readonly>
             </div>

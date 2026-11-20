@@ -34,6 +34,7 @@ class VehicleInsuranceController {
         }
 
         $sql = "SELECT v.ids as vehicle_id, v.vehicle_number, v.chassis_number, 
+                       v.vehicle_year, v.vehicle_color, v.other_details_json,
                        v.next_insurance_date, v.next_passing_date, v.vehicle_status,
                        v.insurance_histroy, v.passing_histroy,
                        v.is_outsourced, 

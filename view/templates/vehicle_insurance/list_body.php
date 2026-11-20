@@ -47,8 +47,7 @@ $isSingleCompany = count($allowedCompanies) <= 1;
             <table class="table table-bordered table-hover" id="insuranceTable" style="width:100%">
                 <thead style="background: linear-gradient(135deg, #1b3d94, #153075); color: white;">
                     <tr>
-                        <th style="color: white;">Vehicle Number</th>
-                        <th style="color: white;">Model</th>
+                        <th style="color: white;">Vehicle Details</th>
                         <th style="color: white;">Next Insurance</th>
                         <th style="color: white;">Next Passing</th>
                         <th style="color: white;">Status</th>

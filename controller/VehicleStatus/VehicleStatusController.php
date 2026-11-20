@@ -1000,6 +1000,15 @@ $this->params[9] = [
                             <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem;">
                                 <?=$item['vehicle_status']?>
                             </span>
+                            <?php $vehBookings = $bookingsByVehicle[$item['ids']] ?? []; ?>
+                            <?php if (!empty($vehBookings)): ?>
+                                <span class="badge rounded-pill bg-warning text-dark shadow-sm position-absolute bottom-0 start-0 m-2 booking-banner"
+                                      data-bookings='<?= htmlspecialchars(json_encode($vehBookings), ENT_QUOTES, "UTF-8") ?>'
+                                      style="font-size: 0.65rem; cursor: pointer;"
+                                      title="Click to view upcoming/active bookings">
+                                    <i class="ri-calendar-event-line me-1"></i>Booked (<?= count($vehBookings) ?>)
+                                </span>
+                            <?php endif; ?>
                         </div>
                         <!-- Right Side Details -->
                           <div class="col-6">
@@ -1109,6 +1118,30 @@ $this->params[9] = [
                 exit;
             }
               $html = '';
+              $bookingsByVehicle = [];
+              $vehicleIds = array_values(array_unique(array_filter(array_column($resultvehicle['data'], 'ids'))));
+              if (!empty($vehicleIds)) {
+                  $placeholders = implode(',', array_fill(0, count($vehicleIds), '?'));
+                  $bSql = "SELECT vehicle_id, booking_no, customer_name, book_from_date, book_to_date, book_status
+                           FROM tbl_vehicle_bookings
+                           WHERE vehicle_id IN ($placeholders)
+                             AND book_status IN ('Booked', 'Confirmed')
+                             AND book_to_date >= NOW()
+                           ORDER BY book_from_date ASC";
+                  $bRes = json_decode($this->varPDOModelObj->ListFromTable($bSql, $vehicleIds), true);
+                  if (!empty($bRes['status']) && !empty($bRes['data'])) {
+                      foreach ($bRes['data'] as $bRow) {
+                          $vid = $bRow['vehicle_id'];
+                          $bookingsByVehicle[$vid][] = [
+                              'booking_no' => $bRow['booking_no'] ?? '',
+                              'customer_name' => $bRow['customer_name'] ?? '',
+                              'from' => $bRow['book_from_date'] ?? '',
+                              'to' => $bRow['book_to_date'] ?? '',
+                              'status' => $bRow['book_status'] ?? ''
+                          ];
+                      }
+                  }
+              }
            foreach ($resultvehicle['data'] as $item) {
         
             $images = [];
@@ -1149,6 +1182,15 @@ $this->params[9] = [
                             <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem;">
                                 <?=$item['vehicle_status']?>
                             </span>
+                            <?php $vehBookings = $bookingsByVehicle[$item['ids']] ?? []; ?>
+                            <?php if (!empty($vehBookings)): ?>
+                                <span class="badge rounded-pill bg-warning text-dark shadow-sm position-absolute bottom-0 start-0 m-2 booking-banner"
+                                      data-bookings='<?= htmlspecialchars(json_encode($vehBookings), ENT_QUOTES, "UTF-8") ?>'
+                                      style="font-size: 0.65rem; cursor: pointer;"
+                                      title="Click to view upcoming/active bookings">
+                                    <i class="ri-calendar-event-line me-1"></i>Booked (<?= count($vehBookings) ?>)
+                                </span>
+                            <?php endif; ?>
                         </div>
                         <!-- Right Side Details -->
                           <div class="col-6">
@@ -1417,38 +1459,52 @@ $this->params[9] = [
                             break;
                      case 'check_vehicle_availability':
                                         
-                                $sql = "
-                                    SELECT ids 
+                                $sqlOverlap = "
+                                    SELECT ids, booking_no, customer_name, book_from_date, book_to_date, book_status
                                     FROM tbl_vehicle_bookings
-                                    WHERE book_status in ('Booked','Confirmed') and vehicle_id = :vehicle_id
+                                    WHERE book_status IN ('Booked','Confirmed') AND vehicle_id = :vehicle_id
                                     AND (
                                         (:fromDate <= book_to_date)
                                         AND
                                         (:toDate >= book_from_date)
                                     )
-                                    LIMIT 1
+                                    ORDER BY book_from_date ASC
+                                ";
+
+                                $sqlFuture = "
+                                    SELECT ids, booking_no, customer_name, book_from_date, book_to_date, book_status
+                                    FROM tbl_vehicle_bookings
+                                    WHERE book_status IN ('Booked','Confirmed') AND vehicle_id = :vehicle_id
+                                    AND book_from_date > :toDate
+                                    ORDER BY book_from_date ASC
                                 ";
                             
-                                $res = json_decode(
-                                    $this->varPDOModelObj->ListFromTable($sql, [
+                                $resOverlap = json_decode(
+                                    $this->varPDOModelObj->ListFromTable($sqlOverlap, [
                                         ':vehicle_id' => $this->vehicle_id,
                                         ':fromDate' =>  $this->from,
                                         ':toDate' =>  $this->to
                                     ]),
                                     true
                                 );
+
+                                $resFuture = json_decode(
+                                    $this->varPDOModelObj->ListFromTable($sqlFuture, [
+                                        ':vehicle_id' => $this->vehicle_id,
+                                        ':toDate' =>  $this->to
+                                    ]),
+                                    true
+                                );
+
+                                $overlapping = (!empty($resOverlap['status']) && !empty($resOverlap['data'])) ? $resOverlap['data'] : [];
+                                $future = (!empty($resFuture['status']) && !empty($resFuture['data'])) ? $resFuture['data'] : [];
                             
-                                if ($res['status'] && !empty($res['data'])) {
-                                    echo json_encode([
-                                        "status" => true,
-                                        "exists" => true
-                                    ]);
-                                } else {
-                                    echo json_encode([
-                                        "status" => true,
-                                        "exists" => false
-                                    ]);
-                                }
+                                echo json_encode([
+                                    "status" => true,
+                                    "exists" => !empty($overlapping),
+                                    "overlapping_bookings" => $overlapping,
+                                    "future_bookings" => $future
+                                ]);
                                         
                                           
                             

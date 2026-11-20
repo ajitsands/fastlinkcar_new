@@ -1511,10 +1511,30 @@ $(document).on('click', '.btn_vehicle_select', function () {
         },
         success: function (res) {
 
+            const esc = (v) => $('<div>').text(v || '').html();
+            const fmtBookings = (list) => list.map(b => {
+                const no = b.booking_no ? `<strong>${esc(b.booking_no)}</strong>` : 'Booking';
+                const cust = b.customer_name ? ` — ${esc(b.customer_name)}` : '';
+                const st = b.book_status ? ` <span class="badge bg-label-warning">${esc(b.book_status)}</span>` : '';
+                return `<div class="small ms-2 mb-1">• ${no}${cust}${st}<br><span class="text-muted ms-2">${esc(b.book_from_date)} to ${esc(b.book_to_date)}</span></div>`;
+            }).join('');
+
+            const overlapping = (res && Array.isArray(res.overlapping_bookings)) ? res.overlapping_bookings : [];
+            const future = (res && Array.isArray(res.future_bookings)) ? res.future_bookings : [];
+
             // ✅ DB OVERLAP CHECK
-            if (res.status && res.exists) {
+            if (overlapping.length > 0) {
+                showConfirm = true;
+                message += '<div class="text-danger fw-semibold mb-1">⚠️ Vehicle already booked during the selected contract period:</div>' + fmtBookings(overlapping);
+            } else if (res && res.status && res.exists) {
                 showConfirm = true;
                 message += '⚠️ Vehicle already booked in selected date range<br>';
+            }
+
+            // ✅ FUTURE BOOKINGS CHECK
+            if (future.length > 0) {
+                showConfirm = true;
+                message += '<div class="text-warning fw-semibold mt-2 mb-1">📅 Vehicle has upcoming future booking(s):</div>' + fmtBookings(future);
             }
 
             // ✅ FINAL DECISION
@@ -2264,13 +2284,18 @@ $(document).on('click', '.booking-banner', function () {
         bookings.forEach((b, index) => {
 
             let badgeClass = 'secondary';
-            if (b.status === 'Pending') badgeClass = 'warning';
+            if (b.status === 'Pending' || b.status === 'Booked') badgeClass = 'warning';
+            if (b.status === 'Confirmed') badgeClass = 'primary';
             if (b.status === 'Cancelled') badgeClass = 'danger';
+
+            const refInfo = (b.booking_no || b.customer_name)
+                ? `<div class="small fw-semibold">${$('<div>').text(b.booking_no || '').html()}${b.customer_name ? ' — ' + $('<div>').text(b.customer_name).html() : ''}</div>`
+                : '';
 
             rows += `
                 <tr>
                     <td>${index + 1}</td>
-                    <td>${b.from}</td>
+                    <td>${refInfo}${b.from}</td>
                     <td>${b.to}</td>
                     <td>
                         <span class="badge bg-${badgeClass}">

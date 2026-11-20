@@ -267,11 +267,8 @@
                             <table id="customerTable" class="table table-sm table-hover align-middle">
                               <thead class="">
                                 <tr>
-                                  <th>#</th>
-                                  <th>Name</th>
-                                  <th>Contact No.</th>
-                                  <th>CR/Cpr</th>
-                                  <th>Status</th>
+                                  <th>Customer Details</th>
+                                  <th class="text-end">Status</th>
                                 </tr>
                               </thead>
                               <tbody>

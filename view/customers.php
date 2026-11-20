@@ -1138,26 +1138,38 @@ $('#cprexpiryDate').on('input', function () {
         }
     },
     columns: [
-           {
-                data: null,
-                render: function (data, type, row, meta) {
-                    return meta.row + meta.settings._iDisplayStart + 1;
-                }
-            },
             {
                 data: null,
                 render: function (data, type, row) {
-                    return row.customer_id + ' - ' + row.customer_name;
+                    const code = row.customer_id || '-';
+                    const name = row.customer_name || '-';
+                    const acc  = row.account_name ? `<span class="badge bg-label-info ms-1" style="font-size:10px;">${row.account_name}</span>` : '';
+                    const mob  = row.customer_mobile || '-';
+                    const cpr  = row.customer_cr_cpr || '-';
+                    return `
+                        <div class="d-flex flex-column gap-1">
+                            <div class="d-flex align-items-center flex-wrap gap-1">
+                                <span class="badge bg-label-primary" style="font-size:10px;">${code}</span>
+                                <strong class="text-dark">${name}</strong>${acc}
+                            </div>
+                            <div class="small text-muted d-flex flex-wrap gap-2">
+                                <span><i class="ri-phone-line me-1"></i>${mob}</span>
+                                <span><i class="ri-id-card-line me-1"></i>${cpr}</span>
+                            </div>
+                        </div>
+                    `;
                 }
             },
-            { data: 'customer_mobile' },
-            { data: 'customer_cr_cpr' },
-            { data: 'status', render: function(data, type, row){
-                if (data === 'Blacklisted' || row.is_blacklisted == 1 || row.is_blacklisted === '1' || row.is_blacklisted === true) {
-                    return '<span class="badge bg-danger">Blacklisted</span>';
+            {
+                data: 'status',
+                className: 'text-end',
+                render: function(data, type, row){
+                    if (data === 'Blacklisted' || row.is_blacklisted == 1 || row.is_blacklisted === '1' || row.is_blacklisted === true) {
+                        return '<span class="badge bg-danger">Blacklisted</span>';
+                    }
+                    return (data === 'Active' || data === '1' || data === 1 || data === true) ? '<span class="badge bg-label-success">Active</span>' : '<span class="badge bg-label-danger">Inactive</span>';
                 }
-                return (data === 'Active' || data === '1' || data === 1 || data === true) ? '<span class="badge bg-label-success">Active</span>' : '<span class="badge bg-label-danger">Inactive</span>';
-            } }
+            }
           
         ]
   });

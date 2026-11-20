@@ -263,6 +263,8 @@ class RoutingClass
 
             'CustomerAccountController' => 'CustomerAccountController',
             'CustomerAccountController/' => 'CustomerAccountController',
+            'VehicleStatusColorController' => 'VehicleStatusColorController',
+            'VehicleStatusColorController/' => 'VehicleStatusColorController',
 
             'VehicleLookupController' => 'VehicleLookupController',
             'VehicleLookupController/' => 'VehicleLookupController',
@@ -837,6 +839,10 @@ class RoutingClass
     private function CustomerAccountController(...$params)
     {
         $this->includeWithParams("controller/masters/CustomerAccountController.php", $_GET);
+    }
+    private function VehicleStatusColorController(...$params)
+    {
+        $this->includeWithParams("controller/masters/VehicleStatusColorController.php", $_GET);
     }
 
     private function VehicleLookupController(...$params)

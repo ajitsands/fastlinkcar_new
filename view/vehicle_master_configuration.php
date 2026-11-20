@@ -1635,6 +1635,94 @@ $('#saveBtnPricing').click(function () {
 });
 });// Jquery Close
 
+function getContrastTextColorHex(hex) {
+    hex = (hex || '#1b3d94').replace('#', '');
+    if (hex.length !== 6) return '#ffffff';
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.62 ? '#1e293b' : '#ffffff';
+}
+
+function loadStatusColorsTable() {
+    $.getJSON('/VehicleStatusColorController?action=list', function (res) {
+        const $tbody = $('#statusColorsTableBody');
+        $tbody.empty();
+        if (!res || res.status !== 'success' || !Array.isArray(res.data) || res.data.length === 0) {
+            $tbody.html('<tr><td colspan="5" class="text-center text-muted">No statuses found</td></tr>');
+            return;
+        }
+        res.data.forEach(function (row, idx) {
+            const bg = row.badge_color || '#6c757d';
+            const fg = row.text_color || getContrastTextColorHex(bg);
+            $tbody.append(`
+                <tr data-status-key="${row.status_key}">
+                    <td>${idx + 1}</td>
+                    <td class="fw-semibold">${$('<div>').text(row.status_name).html()}</td>
+                    <td>
+                        <input type="color" class="form-control form-control-color status-color-picker" value="${bg}" title="Pick badge color" style="width: 64px; height: 36px; cursor: pointer;">
+                    </td>
+                    <td>
+                        <code class="status-hex-label">${bg.toUpperCase()}</code>
+                    </td>
+                    <td>
+                        <span class="badge rounded-pill status-preview-badge" style="background-color: ${bg}; color: ${fg}; font-size: 0.85rem; padding: 6px 14px;">
+                            ${$('<div>').text(row.status_name).html()}
+                        </span>
+                    </td>
+                </tr>
+            `);
+        });
+    });
+}
+
+$(document).on('input change', '.status-color-picker', function () {
+    const $tr = $(this).closest('tr');
+    const hex = $(this).val();
+    const fg = getContrastTextColorHex(hex);
+    $tr.find('.status-hex-label').text(hex.toUpperCase());
+    $tr.find('.status-preview-badge').css({ 'background-color': hex, 'color': fg });
+});
+
+$(document).on('click', '#btnSaveStatusColors', function () {
+    const items = [];
+    $('#statusColorsTableBody tr[data-status-key]').each(function () {
+        items.push({
+            status_key: $(this).data('status-key'),
+            badge_color: $(this).find('.status-color-picker').val()
+        });
+    });
+    $.ajax({
+        url: '/VehicleStatusColorController?action=save',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ items: items }),
+        dataType: 'json',
+        success: function (res) {
+            if (res && res.status === 'success') {
+                if (res.map) window.VEHICLE_STATUS_COLORS = res.map;
+                setupDropdown('dropdownContent', 'success', svgSuccess + (res.message || 'Status colors saved'), 'click');
+            } else {
+                setupDropdown('dropdownContent', 'error', svgError + (res.message || 'Failed to save colors'), 'click');
+            }
+        }
+    });
+});
+
+$(document).on('click', '#btnResetStatusColors', function () {
+    $.post('/VehicleStatusColorController?action=reset', function (res) {
+        if (res && res.status === 'success') {
+            if (res.map) window.VEHICLE_STATUS_COLORS = res.map;
+            loadStatusColorsTable();
+            setupDropdown('dropdownContent', 'success', svgSuccess + (res.message || 'Reset to defaults'), 'click');
+        }
+    }, 'json');
+});
+
+$(document).ready(function () {
+    loadStatusColorsTable();
+});
+
         
         
     </script>

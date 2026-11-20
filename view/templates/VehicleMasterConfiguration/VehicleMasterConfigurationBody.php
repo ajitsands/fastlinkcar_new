@@ -33,6 +33,11 @@
                                   Pricing
                                 </button>
                               </li>
+                              <li class="nav-item" role="presentation">
+                                <button type="button" class="nav-link waves-effect waves-light" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-status-colors" aria-controls="navs-pills-top-status-colors" aria-selected="false">
+                                  Status Colors
+                                </button>
+                              </li>
                             </ul>
                             <div class="tab-content">
                               <div class="tab-pane fade active show" id="navs-pills-top-category" role="tabpanel">
@@ -49,6 +54,9 @@
                               </div>
                               <div class="tab-pane fade" id="navs-pills-top-pricing" role="tabpanel">
                                 <?php include('vehicleMasterPricing.php'); ?>
+                              </div>
+                              <div class="tab-pane fade" id="navs-pills-top-status-colors" role="tabpanel">
+                                <?php include('vehicleMasterStatusColors.php'); ?>
                               </div>
                             </div>
                           </div>

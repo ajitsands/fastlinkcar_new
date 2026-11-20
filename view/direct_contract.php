@@ -2287,7 +2287,9 @@ $(document).on('click', '.AvailcancelBtn', function () {
     let modal = bootstrap.Modal.getInstance(modalEl);
     modal.hide();
 });
-$(document).on('click', '.booking-banner', function () {
+$(document).on('click', '.booking-banner', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
 
     let bookings = $(this).data('bookings');
 
@@ -2308,13 +2310,14 @@ $(document).on('click', '.booking-banner', function () {
             if (b.status === 'Cancelled') badgeClass = 'danger';
 
             const refInfo = (b.booking_no || b.customer_name)
-                ? `<div class="small fw-semibold">${$('<div>').text(b.booking_no || '').html()}${b.customer_name ? ' — ' + $('<div>').text(b.customer_name).html() : ''}</div>`
-                : '';
+                ? `<div class="fw-semibold">${$('<div>').text(b.booking_no || '-').html()}</div><div class="small text-muted">${$('<div>').text(b.customer_name || '-').html()}</div>`
+                : '<span class="text-muted">-</span>';
 
             rows += `
                 <tr>
                     <td>${index + 1}</td>
-                    <td>${refInfo}${b.from}</td>
+                    <td>${refInfo}</td>
+                    <td>${b.from}</td>
                     <td>${b.to}</td>
                     <td>
                         <span class="badge bg-${badgeClass}">
@@ -2326,7 +2329,7 @@ $(document).on('click', '.booking-banner', function () {
         });
 
     } else {
-        rows = `<tr><td colspan="4" class="text-center">No bookings</td></tr>`;
+        rows = `<tr><td colspan="5" class="text-center">No bookings</td></tr>`;
     }
 
    $('#bookingListTableBody').html(rows);

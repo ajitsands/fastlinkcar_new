@@ -2100,7 +2100,9 @@ $(document).on('click', '.AvailcancelBtn', function () {
     let modal = bootstrap.Modal.getInstance(modalEl);
     modal.hide();
 });
-$(document).on('click', '.booking-banner', function () {
+$(document).on('click', '.booking-banner', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
 
     let bookings = $(this).data('bookings');
 
@@ -2116,12 +2118,18 @@ $(document).on('click', '.booking-banner', function () {
         bookings.forEach((b, index) => {
 
             let badgeClass = 'secondary';
-            if (b.status === 'Pending') badgeClass = 'warning';
+            if (b.status === 'Pending' || b.status === 'Booked') badgeClass = 'warning';
+            if (b.status === 'Confirmed') badgeClass = 'primary';
             if (b.status === 'Cancelled') badgeClass = 'danger';
+
+            const refInfo = (b.booking_no || b.customer_name)
+                ? `<div class="fw-semibold">${$('<div>').text(b.booking_no || '-').html()}</div><div class="small text-muted">${$('<div>').text(b.customer_name || '-').html()}</div>`
+                : '<span class="text-muted">-</span>';
 
             rows += `
                 <tr>
                     <td>${index + 1}</td>
+                    <td>${refInfo}</td>
                     <td>${b.from}</td>
                     <td>${b.to}</td>
                     <td>
@@ -2134,7 +2142,7 @@ $(document).on('click', '.booking-banner', function () {
         });
 
     } else {
-        rows = `<tr><td colspan="4" class="text-center">No bookings</td></tr>`;
+        rows = `<tr><td colspan="5" class="text-center">No bookings</td></tr>`;
     }
 
    $('#bookingListTableBody').html(rows);

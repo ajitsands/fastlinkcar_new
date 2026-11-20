@@ -44,14 +44,14 @@
                               <select id="customer_account_id" name="customer_account_id" class="form-select form-select-sm">
                                 <option value="">Select Customer Account</option>
                               </select>
-                              <label for="customer_account_id" class="form-label">Customer Account</label>
+                              <label for="customer_account_id" class="form-label">Customer Account *</label>
                             </div>
                           </div>
                         
                           <div class="col-12 col-md-6 col-lg-4">
                             <div class="form-floating form-floating-outline mb-5">
                               <input type="text" class="form-control" id="customerName" placeholder="Name" name="customerName">
-                              <label for="customerName">Name</label>
+                              <label for="customerName">Name *</label>
                             </div>
                           </div>
                         
@@ -59,7 +59,7 @@
                           <div class="col-12 col-md-6 col-lg-4">
                             <div class="form-floating form-floating-outline mb-5">
                               <input type="tel" class="form-control" id="ContactNumber" name="ContactNumber" placeholder="Contact Number" pattern="[0-9]{8,15}" >
-                              <label for="ContactNumber">Contact Number</label>
+                              <label for="ContactNumber">Contact Number *</label>
                             </div>
                           </div>
                         
@@ -114,7 +114,7 @@
                           <div class="col-12 col-md-6 col-lg-4">
                             <div class="form-floating form-floating-outline mb-5">
                               <input type="text" class="form-control" id="license_no" name="license_no" placeholder="Licence No.">
-                              <label for="license_no">Licence No. *</label>
+                              <label for="license_no">Licence No.</label>
                             </div>
                           </div>
 
@@ -132,14 +132,14 @@
                                 <option value="International">International</option>
                                 <option value="Other">Other</option>
                               </select>
-                              <label for="license_issue_place">Issue Place *</label>
+                              <label for="license_issue_place">Issue Place</label>
                             </div>
                           </div>
 
                           <div class="col-12 col-md-6 col-lg-4">
                             <div class="form-floating form-floating-outline mb-5">
                               <input type="date" class="form-control" id="license_expiry_date" name="license_expiry_date" placeholder="dd-mm-yyyy">
-                              <label for="license_expiry_date">Licence Expire Date *</label>
+                              <label for="license_expiry_date">Licence Expire Date</label>
                             </div>
                           </div>
 
@@ -186,14 +186,14 @@
                           </div>
                         
                           
-                         <div class="col-12 col-md-6 col-lg-8">
-                              <div class="form-floating form-floating-outline mb-5">
+                         <div class="col-12">
+                              <div class="form-floating form-floating-outline mb-3">
                                   <textarea 
                                       class="form-control" 
                                       id="customerAddress" 
                                       name="customerAddress" 
                                       placeholder="Customer Address"
-                                      style="height: 100px;"></textarea>
+                                      style="height: 90px;"></textarea>
                                 
                                 <label for="customerAddress">Customer Address</label>
                               </div>

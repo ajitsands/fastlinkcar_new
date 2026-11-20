@@ -944,6 +944,10 @@ $('#cprexpiryDate').on('input', function () {
                 setupDropdown('dropdownContent', 'error', svgError + "Please select the customer type", 'click');
                 return false;
             }
+            if (!$('#customer_account_id').val()) {
+                setupDropdown('dropdownContent', 'error', svgError + "Please select the customer account", 'click');
+                return false;
+            }
             let today = new Date();
             //let licenseexpiryDate = new Date($('#licenseexpiryDate').val());
             let cprexpiryDate = new Date($('#cprexpiryDate').val());

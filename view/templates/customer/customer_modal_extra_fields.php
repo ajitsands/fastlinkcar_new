@@ -29,11 +29,11 @@
         </select>
     </div>
     <div class="col-md-4 mb-0 mt-2">
-        <label for="license_no_onmodal" class="form-label">Licence No. *</label>
+        <label for="license_no_onmodal" class="form-label">Licence No.</label>
         <input class="form-control form-control-sm" id="license_no_onmodal" name="license_no_onmodal" type="text" placeholder="Licence No.">
     </div>
     <div class="col-md-4 mb-0 mt-2">
-        <label for="license_issue_place_onmodal" class="form-label">Issue Place *</label>
+        <label for="license_issue_place_onmodal" class="form-label">Issue Place</label>
         <select id="license_issue_place_onmodal" name="license_issue_place_onmodal" class="form-select form-select-sm">
             <option value="">Select Issue Place</option>
             <option value="Bahrain">Bahrain</option>
@@ -51,7 +51,7 @@
 
 <div class="row">
     <div class="col-md-4 mb-0 mt-2">
-        <label for="license_expiry_date_onmodal" class="form-label">Licence Expire Date *</label>
+        <label for="license_expiry_date_onmodal" class="form-label">Licence Expire Date</label>
         <input class="form-control form-control-sm" id="license_expiry_date_onmodal" name="license_expiry_date_onmodal" type="date">
     </div>
     <div class="col-md-4 mb-0 mt-2">

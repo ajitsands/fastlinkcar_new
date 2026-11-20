@@ -260,8 +260,8 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                     <div class="row g-3 mb-3">
                         <!-- Customer Information -->
                         <div class="col-md-6">
-                            <div class="p-3 rounded border bg-light h-100">
-                                <div class="fw-semibold mb-2 pb-1 border-bottom" style="color: #1b3d94;">
+                            <div class="p-3 rounded border h-100" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                                <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
                                     <i class="ri-user-line me-1"></i> Customer Information
                                 </div>
                                 <div class="row g-2 small">
@@ -281,8 +281,8 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
 
                         <!-- Vehicle & Rental Period -->
                         <div class="col-md-6">
-                            <div class="p-3 rounded border bg-light h-100">
-                                <div class="fw-semibold mb-2 pb-1 border-bottom" style="color: #1b3d94;">
+                            <div class="p-3 rounded border h-100" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                                <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
                                     <i class="ri-car-line me-1"></i> Vehicle &amp; Contract Period
                                 </div>
                                 <div class="row g-2 small">
@@ -306,43 +306,43 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                     </div>
 
                     <!-- Financial Breakdown -->
-                    <div class="p-3 rounded border bg-white">
-                        <div class="fw-semibold mb-2 pb-1 border-bottom" style="color: #1b3d94;">
+                    <div class="p-3 rounded border" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                        <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
                             <i class="ri-money-dollar-circle-line me-1"></i> Financial Summary
                         </div>
                         <div class="row g-2 text-center">
                             <div class="col-6 col-md-2">
-                                <div class="p-2 rounded bg-light border h-100">
+                                <div class="p-2 rounded bg-white border h-100">
                                     <div class="text-muted small">Contract Total</div>
                                     <div class="fw-bold mt-1" id="qvContractTotal">0.000 BHD</div>
                                 </div>
                             </div>
                             <div class="col-6 col-md-2">
-                                <div class="p-2 rounded bg-light border h-100">
+                                <div class="p-2 rounded bg-white border h-100">
                                     <div class="text-muted small">Received</div>
                                     <div class="fw-bold text-success mt-1" id="qvReceivedAmt">0.000 BHD</div>
                                 </div>
                             </div>
                             <div class="col-6 col-md-2">
-                                <div class="p-2 rounded bg-light border h-100">
+                                <div class="p-2 rounded bg-white border h-100">
                                     <div class="text-muted small">To Collect (Excl.)</div>
                                     <div class="fw-bold mt-1" style="color: #1b3d94;" id="qvToCollectExcl">0.000 BHD</div>
                                 </div>
                             </div>
                             <div class="col-6 col-md-2">
-                                <div class="p-2 rounded bg-light border h-100">
+                                <div class="p-2 rounded bg-white border h-100">
                                     <div class="text-muted small">Overdue <span id="qvOverdueDays"></span></div>
                                     <div class="fw-bold text-danger mt-1" id="qvOverdueAmt">0.000 BHD</div>
                                 </div>
                             </div>
                             <div class="col-6 col-md-2">
-                                <div class="p-2 rounded bg-light border h-100">
+                                <div class="p-2 rounded bg-white border h-100">
                                     <div class="text-muted small">To Collect (Incl.)</div>
                                     <div class="fw-bold text-success mt-1" id="qvToCollectIncl">0.000 BHD</div>
                                 </div>
                             </div>
                             <div class="col-6 col-md-2">
-                                <div class="p-2 rounded bg-light border h-100">
+                                <div class="p-2 rounded bg-white border h-100">
                                     <div class="text-muted small">Total Value</div>
                                     <div class="fw-bold mt-1" style="color: #1b3d94;" id="qvTotalAmount">0.000 BHD</div>
                                 </div>
@@ -356,8 +356,8 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                         <div class="row g-3 mb-3">
                             <!-- Rentout Checklist & Handover -->
                             <div class="col-md-6">
-                                <div class="p-3 rounded border bg-white h-100">
-                                    <div class="fw-semibold mb-2 pb-1 border-bottom" style="color: #1b3d94;">
+                                <div class="p-3 rounded border h-100" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                                    <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
                                         <i class="ri-checkbox-multiple-line me-1"></i> Rentout Handover &amp; Checklist (OUT)
                                     </div>
                                     <div class="row g-1 small mb-2">
@@ -374,8 +374,8 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
 
                             <!-- Driver Details -->
                             <div class="col-md-6">
-                                <div class="p-3 rounded border bg-white h-100">
-                                    <div class="fw-semibold mb-2 pb-1 border-bottom" style="color: #1b3d94;">
+                                <div class="p-3 rounded border h-100" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                                    <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
                                         <i class="ri-steering-2-line me-1"></i> Driver Details
                                     </div>
                                     <div class="row g-1 small">
@@ -393,8 +393,8 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                         </div>
 
                         <!-- Extensions (if any) -->
-                        <div class="p-3 rounded border bg-white mb-3 d-none" id="qvExtensionsSection">
-                            <div class="fw-semibold mb-2 pb-1 border-bottom" style="color: #1b3d94;">
+                        <div class="p-3 rounded border mb-3 d-none" id="qvExtensionsSection" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                            <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
                                 <i class="ri-calendar-event-line me-1"></i> Contract Extensions
                             </div>
                             <div class="table-responsive">
@@ -415,26 +415,26 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                         <!-- Car Survey OUT & Signatures -->
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <div class="p-3 rounded border bg-white h-100 text-center">
-                                    <div class="fw-semibold mb-2 pb-1 border-bottom text-start" style="color: #1b3d94;">
+                                <div class="p-3 rounded border h-100 text-center" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                                    <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle text-start" style="color: #1b3d94;">
                                         <i class="ri-car-washing-line me-1"></i> Car Survey (OUT)
                                     </div>
-                                    <canvas id="qvSurveyOutCanvas" width="360" height="220" class="border rounded bg-light" style="max-width: 100%;"></canvas>
+                                    <canvas id="qvSurveyOutCanvas" width="360" height="220" class="border rounded bg-white" style="max-width: 100%;"></canvas>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="p-3 rounded border bg-white h-100">
-                                    <div class="fw-semibold mb-2 pb-1 border-bottom" style="color: #1b3d94;">
+                                <div class="p-3 rounded border h-100" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                                    <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
                                         <i class="ri-quill-pen-line me-1"></i> Signatures &amp; Images
                                     </div>
                                     <div class="row g-2 text-center small mb-2">
                                         <div class="col-6">
                                             <div class="text-muted mb-1">Hirer Signature</div>
-                                            <div id="qvHirerSignBox" class="border rounded p-1 bg-light" style="min-height: 55px;">-</div>
+                                            <div id="qvHirerSignBox" class="border rounded p-1 bg-white" style="min-height: 55px;">-</div>
                                         </div>
                                         <div class="col-6">
                                             <div class="text-muted mb-1">Delivered By</div>
-                                            <div id="qvDeliveredSignBox" class="border rounded p-1 bg-light" style="min-height: 55px;">-</div>
+                                            <div id="qvDeliveredSignBox" class="border rounded p-1 bg-white" style="min-height: 55px;">-</div>
                                         </div>
                                     </div>
                                     <div id="qvRentoutImages" class="d-flex flex-wrap gap-2 mt-2"></div>

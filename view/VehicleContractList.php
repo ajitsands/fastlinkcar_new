@@ -465,7 +465,15 @@ $(document).on('shown.bs.modal hidden.bs.modal', '#ReturncontractModal', functio
     if (e.type === 'hidden') {
         const qp = new URLSearchParams(window.location.search);
         if (qp.get('embed_return') === '1' && window.parent && window.parent !== window) {
-            window.parent.postMessage({ type: 'returnModalClosed', returned: window.__returnSuccess === true }, '*');
+            const promptInfo = window.__pendingReceiptPrompt || null;
+            window.__pendingReceiptPrompt = null;
+            window.parent.postMessage({
+                type: 'returnModalClosed',
+                returned: window.__returnSuccess === true,
+                promptReceipt: !!(promptInfo && promptInfo.receiptUrl),
+                receiptUrl: promptInfo ? promptInfo.receiptUrl : '',
+                agreementNo: promptInfo ? promptInfo.agreementNo : ''
+            }, '*');
         }
     }
 });
@@ -5646,45 +5654,46 @@ function executeReturnContract(customer_code)
                                 'click'
                             );
                         
-                            const closeReturnModal = function () {
-                                let modal = bootstrap.Modal.getInstance(
-                                    document.getElementById('ReturncontractModal')
-                                );
-                                if (modal) {
-                                    modal.hide();
-                                }
-                                searchContractList();
-                            };
-
                             const receiptUrl = '/CashMemo?val=' + encodeURIComponent('<?= $this->encryption->encrypt('5,5-5') ?>')
                                 + '&contract_id=' + encodeURIComponent(agreement_id || '')
                                 + '&customer_code=' + encodeURIComponent(customer_code || '')
                                 + '&agreement_no=' + encodeURIComponent(agreement_no || '');
 
-                            if (typeof Swal !== 'undefined') {
-                                Swal.fire({
-                                    title: 'Vehicle Returned Successfully',
-                                    text: 'Do you want to generate a Receipt (Cash Memo) for agreement ' + (agreement_no || '') + '?',
-                                    icon: 'success',
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Yes, Generate Receipt',
-                                    cancelButtonText: 'No',
-                                    confirmButtonColor: '#1b3d94',
-                                    didOpen: function (popup) {
-                                        const c = popup.closest('.swal2-container');
-                                        if (c) c.style.setProperty('z-index', '999999', 'important');
-                                    }
-                                }).then(function (result) {
-                                    if (result.isConfirmed) {
-                                        (window.top || window).open(receiptUrl, '_blank');
-                                    }
-                                    closeReturnModal();
-                                });
-                            } else {
-                                if (confirm('Vehicle returned successfully. Do you want to generate a Receipt for ' + (agreement_no || '') + '?')) {
-                                    (window.top || window).open(receiptUrl, '_blank');
+                            const qpEmbed = new URLSearchParams(window.location.search).get('embed_return') === '1';
+                            if (qpEmbed && window.parent && window.parent !== window) {
+                                window.__pendingReceiptPrompt = { receiptUrl: receiptUrl, agreementNo: agreement_no || '' };
+                            }
+
+                            let modal = bootstrap.Modal.getInstance(
+                                document.getElementById('ReturncontractModal')
+                            );
+                            if (modal) {
+                                modal.hide();
+                            }
+                            searchContractList();
+
+                            if (!(qpEmbed && window.parent && window.parent !== window)) {
+                                if (typeof Swal !== 'undefined') {
+                                    Swal.fire({
+                                        title: 'Vehicle Returned Successfully',
+                                        text: 'Do you want to generate a Receipt (Cash Memo) for agreement ' + (agreement_no || '') + '?',
+                                        icon: 'success',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Yes, Generate Receipt',
+                                        cancelButtonText: 'No',
+                                        confirmButtonColor: '#1b3d94',
+                                        didOpen: function (popup) {
+                                            const c = popup.closest('.swal2-container');
+                                            if (c) c.style.setProperty('z-index', '999999', 'important');
+                                        }
+                                    }).then(function (result) {
+                                        if (result.isConfirmed) {
+                                            window.open(receiptUrl, '_blank');
+                                        }
+                                    });
+                                } else if (confirm('Vehicle returned successfully. Do you want to generate a Receipt for ' + (agreement_no || '') + '?')) {
+                                    window.open(receiptUrl, '_blank');
                                 }
-                                closeReturnModal();
                             }
                             return;
                         }

@@ -884,6 +884,27 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                 if (event.data.returned) {
                     loadActiveContracts();
                 }
+                if (event.data.promptReceipt && event.data.receiptUrl) {
+                    const rUrl = event.data.receiptUrl;
+                    const agrNo = event.data.agreementNo || '';
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Vehicle Returned Successfully',
+                            text: 'Do you want to generate a Receipt (Cash Memo) for agreement ' + agrNo + '?',
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, Generate Receipt',
+                            cancelButtonText: 'No',
+                            confirmButtonColor: '#1b3d94'
+                        }).then(function(result) {
+                            if (result.isConfirmed) {
+                                window.open(rUrl, '_blank');
+                            }
+                        });
+                    } else if (confirm('Vehicle returned successfully. Do you want to generate a Receipt for ' + agrNo + '?')) {
+                        window.open(rUrl, '_blank');
+                    }
+                }
             }
         });
 

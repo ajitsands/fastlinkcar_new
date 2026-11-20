@@ -1,12 +1,12 @@
-<div class="row">
-    <div class="col-md-4 mb-0 mt-2">
-        <label for="customer_account_id_onmodal" class="form-label">Customer Account</label>
+<div class="row g-2 mt-1">
+    <div class="col-md-4">
+        <label for="customer_account_id_onmodal" class="form-label form-label-sm mb-1">Customer Account <span class="text-danger">*</span></label>
         <select id="customer_account_id_onmodal" name="customer_account_id_onmodal" class="form-select form-select-sm">
             <option value="">Select Customer Account</option>
         </select>
     </div>
-    <div class="col-md-4 mb-0 mt-2">
-        <label for="nationality_onmodal" class="form-label">Nationality *</label>
+    <div class="col-md-4">
+        <label for="nationality_onmodal" class="form-label form-label-sm mb-1">Nationality <span class="text-danger">*</span></label>
         <select id="nationality_onmodal" name="nationality_onmodal" class="form-select form-select-sm">
             <option value="">Select Nationality</option>
             <option value="Bahrain">Bahrain</option>
@@ -28,12 +28,15 @@
             <option value="Other">Other</option>
         </select>
     </div>
-    <div class="col-md-4 mb-0 mt-2">
-        <label for="license_no_onmodal" class="form-label">Licence No.</label>
+    <div class="col-md-4">
+        <label for="license_no_onmodal" class="form-label form-label-sm mb-1">Licence No.</label>
         <input class="form-control form-control-sm" id="license_no_onmodal" name="license_no_onmodal" type="text" placeholder="Licence No.">
     </div>
-    <div class="col-md-4 mb-0 mt-2">
-        <label for="license_issue_place_onmodal" class="form-label">Issue Place</label>
+</div>
+
+<div class="row g-2 mt-1">
+    <div class="col-md-6">
+        <label for="license_issue_place_onmodal" class="form-label form-label-sm mb-1">Issue Place</label>
         <select id="license_issue_place_onmodal" name="license_issue_place_onmodal" class="form-select form-select-sm">
             <option value="">Select Issue Place</option>
             <option value="Bahrain">Bahrain</option>
@@ -47,39 +50,39 @@
             <option value="Other">Other</option>
         </select>
     </div>
-</div>
-
-<div class="row">
-    <div class="col-md-4 mb-0 mt-2">
-        <label for="license_expiry_date_onmodal" class="form-label">Licence Expire Date</label>
+    <div class="col-md-6">
+        <label for="license_expiry_date_onmodal" class="form-label form-label-sm mb-1">Licence Expire Date</label>
         <input class="form-control form-control-sm" id="license_expiry_date_onmodal" name="license_expiry_date_onmodal" type="date">
     </div>
-    <div class="col-md-4 mb-0 mt-2">
-        <label for="phone_1_onmodal" class="form-label">Phone 1</label>
+</div>
+
+<div class="row g-2 mt-1">
+    <div class="col-md-4">
+        <label for="phone_1_onmodal" class="form-label form-label-sm mb-1">Phone 1</label>
         <input class="form-control form-control-sm" id="phone_1_onmodal" name="phone_1_onmodal" type="text" placeholder="Phone 1">
     </div>
-    <div class="col-md-4 mb-0 mt-2">
-        <label for="phone_2_onmodal" class="form-label">Phone 2</label>
+    <div class="col-md-4">
+        <label for="phone_2_onmodal" class="form-label form-label-sm mb-1">Phone 2</label>
         <input class="form-control form-control-sm" id="phone_2_onmodal" name="phone_2_onmodal" type="text" placeholder="Phone 2">
+    </div>
+    <div class="col-md-4">
+        <label for="fax_no_onmodal" class="form-label form-label-sm mb-1">Fax No.</label>
+        <input class="form-control form-control-sm" id="fax_no_onmodal" name="fax_no_onmodal" type="text" placeholder="Fax No.">
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-4 mb-0 mt-2">
-        <label for="fax_no_onmodal" class="form-label">Fax No.</label>
-        <input class="form-control form-control-sm" id="fax_no_onmodal" name="fax_no_onmodal" type="text" placeholder="Fax No.">
-    </div>
-    <div class="col-md-4 mb-0 mt-2">
-        <label for="website_onmodal" class="form-label">Website</label>
+<div class="row g-2 mt-1">
+    <div class="col-md-6">
+        <label for="website_onmodal" class="form-label form-label-sm mb-1">Website</label>
         <input class="form-control form-control-sm" id="website_onmodal" name="website_onmodal" type="text" placeholder="Website">
     </div>
-    <div class="col-md-4 mb-0 mt-2">
-        <label for="vat_reg_no_onmodal" class="form-label">VAT Registration #</label>
+    <div class="col-md-6">
+        <label for="vat_reg_no_onmodal" class="form-label form-label-sm mb-1">VAT Registration #</label>
         <input class="form-control form-control-sm" id="vat_reg_no_onmodal" name="vat_reg_no_onmodal" type="text" placeholder="VAT Registration #">
     </div>
 </div>
 
-<div class="row mt-3">
+<div class="row g-2 mt-2">
     <div class="col-12">
         <div class="p-2 rounded border" style="background-color: #fff8f8; border-color: #f5c2c7 !important;">
             <div class="d-flex justify-content-between align-items-center mb-1">

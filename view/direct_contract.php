@@ -793,12 +793,16 @@ $('#addCustomerBtn').click(function () {
                 $('#customer_code').val(res.customerId || '');
                 $('#customerName').val(customerData.customer_name || '');
                 $('#customerPhone').val(customerData.telephone || '');
-                $('#customerTelephone').val('');
+                $('#customerTelephone').val($('#phone_1_onmodal').val() || '');
                 $('#customerEmail').val(customerData.email || '');
                 $('#customerAddress').val(customerData.address || '');
                 $('#customerAttention').val(customerData.attention || '');
                 $('#customercprcr').val(customerData.cprcr || '');
-                $('#customerNationality, #customerLicenseNo, #customerLicenseIssuePlace, #customerLicenseExpiry, #customerAccountId').val('');
+                $('#customerNationality').val($('#nationality_onmodal').val() || '');
+                $('#customerLicenseNo').val($('#license_no_onmodal').val() || '');
+                $('#customerLicenseIssuePlace').val($('#license_issue_place_onmodal').val() || '');
+                $('#customerLicenseExpiry').val($('#license_expiry_date_onmodal').val() || '');
+                $('#customerAccountId').val($('#customer_account_id_onmodal').val() || '');
     
             } else {
                 setupDropdown(

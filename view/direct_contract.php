@@ -1374,6 +1374,12 @@ function getBookingDetails() {
 $(document).on('click', '.btn_vehicle_select', function () {
 
     const $btn = $(this);
+    try {
+        const tip = bootstrap.Tooltip.getInstance($btn[0]);
+        if (tip) tip.hide();
+    } catch (e) {}
+    $('.tooltip').remove();
+    $btn.blur();
     const $card = $btn.closest('.vehicle-card');
     const bookingDetails = getBookingDetails();
 
@@ -1590,7 +1596,7 @@ function processVehicleSelection($btn, $card, bookingDetails) {
 
         $card.addClass('selected');
         $btn.removeClass('btn-primary').addClass('btn-outline-danger');
-        $btn.attr('title', 'Deselect');
+        $btn.attr('title', 'Deselect').attr('data-bs-original-title', 'Deselect');
         $btn.html('<i class="ri ri-close-line me-1"></i> Deselect');
 
     } else {
@@ -1599,9 +1605,21 @@ function processVehicleSelection($btn, $card, bookingDetails) {
 
         $card.removeClass('selected');
         $btn.removeClass('btn-outline-danger').addClass('btn-primary');
-        $btn.attr('title', 'Select');
+        $btn.attr('title', 'Select').attr('data-bs-original-title', 'Select');
         $btn.html('<i class="ri ri-check-line me-1"></i> Select');
     }
+
+    try {
+        const tip = bootstrap.Tooltip.getInstance($btn[0]);
+        if (tip) {
+            tip.hide();
+            if (typeof tip.setContent === 'function') {
+                tip.setContent({ '.tooltip-inner': index === -1 ? 'Deselect' : 'Select' });
+            }
+        }
+    } catch (e) {}
+    $('.tooltip').remove();
+    $btn.blur();
 
     updateSelectedFooter();
 }

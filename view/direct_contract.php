@@ -1303,7 +1303,7 @@ function toggleFooter(isOpen) {
 
     selectedVehicles.forEach(vehicle => {
         const item = $(`
-            <div class="badge bg-danger text-white d-flex align-items-center gap-1">
+            <div class="badge bg-primary text-white d-flex align-items-center gap-1">
                 ${vehicle.modelName} - ${vehicle.vehicleNumber}
                 <i class="ri ri-close-line ms-1 cursor-pointer" style="font-size:14px;"></i>
             </div>

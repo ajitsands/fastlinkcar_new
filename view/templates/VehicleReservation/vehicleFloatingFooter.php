@@ -1,9 +1,9 @@
 
 
-<div id="selectedVehiclesFooter" class="position-fixed bottom-0 start-50 translate-middle-x w-100 mx-auto bg-white shadow-lg p-3 rounded-top d-none" style="z-index: 1050; max-width: 1200px;">
+<div id="selectedVehiclesFooter" class="position-fixed bottom-0 start-50 translate-middle-x w-100 mx-auto bg-white shadow-lg border-top border-primary-subtle p-3 rounded-top d-none" style="z-index: 1050; max-width: 1200px;">
     <!-- Header: Selected Vehicles + Clear All -->
     <div class="d-flex justify-content-between align-items-center mb-2">
-        <h6 class="mb-0 fw-bold text-dark"><i class="ri-car-fill text-danger me-1"></i>Selected Vehicles (<span id="selectedCount">0</span>)</h6>
+        <h6 class="mb-0 fw-bold text-primary"><i class="ri-car-fill text-primary me-1"></i>Selected Vehicles (<span id="selectedCount">0</span>)</h6>
         <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSelectedVehicles">
             Clear All
         </button>
@@ -27,7 +27,7 @@
 
     <!-- Proceed button: right aligned -->
     <div class="ms-auto">
-        <button class="btn btn-danger btn-sm" id="proceedSelectedVehicles">
+        <button class="btn btn-primary btn-sm" id="proceedSelectedVehicles">
             Proceed <i class="ri ri-arrow-right-line"></i>
         </button>
     </div>

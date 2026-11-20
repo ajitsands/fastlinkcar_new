@@ -225,10 +225,65 @@ function buildDirectContractWizard(bookingDetails, vehicles) {
                                .replace(/{COLOR}/g, v.vehicleColor || v.color || '-')
                                .replace(/{YEAR}/g, v.vehicleYear || v.year || '-')
                                .replace(/{INSURANCE}/g, formatMyDateOnly(v.insuranceExpiry || v.insurance_expiry_date))
-                               .replace(/{PASSING}/g, formatMyDateOnly(v.passingExpiry || v.passing_expiry_date));
+                               .replace(/{PASSING}/g, formatMyDateOnly(v.passingExpiry || v.passing_expiry_date))
+                               .replace(/{STATUS}/g, v.currentStatusName || '-')
+                               .replace(/{MAINTENANCE}/g, '-');
 
                                
         contentContainer.append(vehicleTpl);
+
+        // Fetch full vehicle profile details (Fuel, Gear, Maintenance, etc.)
+        $.ajax({
+            url: '/AddVehicles',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ action: 'get_vehicle_profile', vehicle_id: v.id }),
+            dataType: 'json',
+            success: function(res) {
+                if (res && res.status && res.data) {
+                    const vd = res.data;
+                    let od = {};
+                    if (vd.other_details_json) {
+                        try { od = JSON.parse(vd.other_details_json) || {}; } catch (e) {}
+                    }
+                    const fuel = od.vehicleFuelType || vd.fuel_type || '-';
+                    const gear = od.vehicleGearType || vd.gear_type || '-';
+                    $(`#dc_v_fuel_gear_${v.id}`).text(`${fuel} / ${gear}`);
+                    const st = vd.vehicle_status || v.currentStatusName || '-';
+                    const maint = vd.next_maintenance_date ? formatMyDateOnly(vd.next_maintenance_date) : '-';
+                    $(`#dc_v_status_maint_${v.id}`).text(`${st} / ${maint}`);
+                }
+            }
+        });
+
+        // Check & display overlapping or future bookings for this vehicle
+        $.ajax({
+            url: '/VehicleStatusController',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'check_vehicle_availability',
+                vehicle_id: v.id,
+                fromDate: bookingDetails.fromDate,
+                toDate: bookingDetails.toDate
+            },
+            success: function(res) {
+                const overlap = (res && Array.isArray(res.overlapping_bookings)) ? res.overlapping_bookings : [];
+                const future = (res && Array.isArray(res.future_bookings)) ? res.future_bookings : [];
+                if (overlap.length > 0 || future.length > 0) {
+                    const esc = (s) => $('<div>').text(s || '').html();
+                    const renderList = (arr, label, cls) => arr.length === 0 ? '' : (
+                        `<div class="${cls} fw-semibold mb-1">${label}</div>` +
+                        arr.map(b => `<div class="ms-2">• <strong>${esc(b.booking_no || 'Booking')}</strong>${b.customer_name ? ' — ' + esc(b.customer_name) : ''} (${esc(b.book_from_date)} to ${esc(b.book_to_date)}) <span class="badge bg-label-warning">${esc(b.book_status)}</span></div>`).join('')
+                    );
+                    const html = `<div class="alert alert-warning py-1 px-2 mb-0" style="font-size: 11px;">` +
+                        renderList(overlap, '⚠️ Overlapping Booking(s) in Contract Period:', 'text-danger') +
+                        renderList(future, '📅 Upcoming Future Booking(s):', 'text-dark') +
+                        `</div>`;
+                    $(`#dc_v_bookings_${v.id}`).html(html).removeClass('d-none');
+                }
+            }
+        });
         
         // Auto-populate Rentout Time to current date time
         let now = new Date();
@@ -1012,7 +1067,10 @@ function gatherDirectContractData() {
             checklist: {
                 tools: $(`#chk_tools_${v.id}`).is(':checked') ? 1 : 0,
                 tyre: $(`#chk_spare_${v.id}`).is(':checked') ? 1 : 0,
+                w_cup: $(`#chk_wcup_${v.id}`).is(':checked') ? 1 : 0,
                 radio: $(`#chk_radio_${v.id}`).is(':checked') ? 1 : 0,
+                scratches: $(`#chk_scratches_${v.id}`).is(':checked') ? 1 : 0,
+                seats_cleanness: $(`#chk_seats_${v.id}`).is(':checked') ? 1 : 0,
                 aid: $(`#chk_aid_${v.id}`).is(':checked') ? 1 : 0,
                 mats: $(`#chk_mats_${v.id}`).is(':checked') ? 1 : 0
             },

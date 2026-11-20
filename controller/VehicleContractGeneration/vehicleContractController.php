@@ -1412,7 +1412,10 @@ class VehiclesContractController
                         $vehicle_accessories_details = json_encode([
                             'chk_tools' => (!empty($chk['tools']) ? 'Yes' : 'No'),
                             'chk_spare' => (!empty($chk['tyre']) ? 'Yes' : 'No'),
+                            'chk_wcup' => (!empty($chk['w_cup']) ? 'Yes' : 'No'),
                             'chk_radio' => (!empty($chk['radio']) ? 'Yes' : 'No'),
+                            'chk_scratches' => (!empty($chk['scratches']) ? 'Yes' : 'No'),
+                            'chk_seats' => (!empty($chk['seats_cleanness']) ? 'Yes' : 'No'),
                             'date_out' => $date_out,
                             'vehicle_km_out' => $odo_out,
                             'fuel_level' => $fuel_out,

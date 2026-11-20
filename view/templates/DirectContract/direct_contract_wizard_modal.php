@@ -218,7 +218,16 @@
                                     <span class="me-1">{INSURANCE}</span> | <span class="ms-1">{PASSING}</span>
                                 </div>
                             </div>
+                            <div class="col-6 mt-1">
+                                <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Fuel / Gear</div>
+                                <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;" id="dc_v_fuel_gear_{ID}">-</div>
+                            </div>
+                            <div class="col-6 mt-1">
+                                <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Status / Maint.</div>
+                                <div class="fw-semibold text-truncate" style="font-size: 11px; line-height: 1.2;" id="dc_v_status_maint_{ID}">{STATUS} / {MAINTENANCE}</div>
+                            </div>
                         </div>
+                        <div id="dc_v_bookings_{ID}" class="mt-2 d-none"></div>
                     </div>
                 </div>
             </div>
@@ -226,21 +235,39 @@
         
         <h6 class="fw-bold text-primary mb-3">Vehicle Checklist & Handover</h6>
         <div class="row g-3 mb-4">
-            <div class="col-md-2">
-                <div class="form-check mb-2">
-                    <input class="form-check-input dc-chk" type="checkbox" id="chk_tools_{ID}">
-                    <label class="form-check-label">Jack & Tools</label>
-                </div>
-                <div class="form-check mb-2">
-                    <input class="form-check-input dc-chk" type="checkbox" id="chk_spare_{ID}">
-                    <label class="form-check-label">Spare Tyre</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input dc-chk" type="checkbox" id="chk_radio_{ID}">
-                    <label class="form-check-label">Radio</label>
+            <div class="col-md-4">
+                <div class="row g-1">
+                    <div class="col-6">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input dc-chk" type="checkbox" id="chk_tools_{ID}">
+                            <label class="form-check-label" for="chk_tools_{ID}">Tools Kit</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input dc-chk" type="checkbox" id="chk_spare_{ID}">
+                            <label class="form-check-label" for="chk_spare_{ID}">S. Wheel</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input dc-chk" type="checkbox" id="chk_wcup_{ID}">
+                            <label class="form-check-label" for="chk_wcup_{ID}">W. Cup</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input dc-chk" type="checkbox" id="chk_radio_{ID}">
+                            <label class="form-check-label" for="chk_radio_{ID}">Radio</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input dc-chk" type="checkbox" id="chk_scratches_{ID}">
+                            <label class="form-check-label" for="chk_scratches_{ID}">Scratches Mark X</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input dc-chk" type="checkbox" id="chk_seats_{ID}">
+                            <label class="form-check-label" for="chk_seats_{ID}">Seats Cleanness</label>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="form-floating form-floating-outline mb-3">
                     <input type="date" id="dt_contract_date_{ID}" class="form-control dc-inp" value="<?php echo date('Y-m-d') ?>">
                     <label>Contract Date</label>
@@ -248,8 +275,15 @@
             </div>
             <div class="col-md-2">
                 <div class="form-floating form-floating-outline mb-3">
-                    <input type="text" id="fuel_level_{ID}" class="form-control dc-inp">
-                    <label>Fuel Level</label>
+                    <input type="text" id="fuel_level_{ID}" list="dc_fuel_levels_{ID}" class="form-control dc-inp" placeholder="E - F">
+                    <datalist id="dc_fuel_levels_{ID}">
+                        <option value="Empty (E)">
+                        <option value="1/4">
+                        <option value="1/2">
+                        <option value="3/4">
+                        <option value="Full (F)">
+                    </datalist>
+                    <label>Fuel Level (E–F)</label>
                 </div>
             </div>
             <div class="col-md-2">
@@ -258,7 +292,7 @@
                     <label>Odometer Reading</label>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="form-floating form-floating-outline mb-3">
                     <input type="datetime-local" id="dt_out_{ID}" class="form-control dc-inp">
                     <label>Rentout Time</label>

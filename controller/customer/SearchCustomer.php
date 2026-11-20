@@ -23,12 +23,13 @@ class CustomerController
 		$array =  array();
         
         
-            $array[0] = "SELECT customer_id AS id,customer_id AS customer_code, customer_name, customer_mobile, customer_type,customer_address,customer_email,customer_addr,customer_attn,customer_cr_cpr,status,is_blacklisted,blacklist_description
-                        FROM customer_details
+            $array[0] = "SELECT cd.customer_id AS id, cd.customer_id AS customer_code, cd.customer_name, cd.customer_mobile, cd.phone_1, cd.customer_type, cd.customer_address, cd.customer_email, cd.customer_addr, cd.customer_attn, cd.customer_cr_cpr, cd.nationality, cd.license_no, cd.license_issue_place, cd.license_expiry_date, cd.customer_account_id, ca.account_name, cd.status, cd.is_blacklisted, cd.blacklist_description
+                        FROM customer_details cd
+                        LEFT JOIN tbl_customer_accounts ca ON ca.ids = cd.customer_account_id
                         WHERE
-                            customer_name LIKE ?
-                            OR customer_mobile LIKE ?
-                            OR customer_cr_cpr LIKE ?
+                            cd.customer_name LIKE ?
+                            OR cd.customer_mobile LIKE ?
+                            OR cd.customer_cr_cpr LIKE ?
                         LIMIT 20";
             $search = '%' . $this->search . '%';
             $this->params[0] = 

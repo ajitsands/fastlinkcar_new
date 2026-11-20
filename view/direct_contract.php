@@ -628,12 +628,19 @@ setTimeout(function() {
                         text: item.customer_name,
                         customer_name: item.customer_name,
                         customer_mobile: item.customer_mobile,
+                        phone_1: item.phone_1,
                         customer_id: item.customer_name,
-                        customer_address: item.customer_addr,
+                        customer_address: item.customer_addr || item.customer_address,
                         customer_email: item.customer_email,
                         customer_code: item.customer_code,
                         customer_attn: item.customer_attn,
                         customer_cr_cpr: item.customer_cr_cpr,
+                        nationality: item.nationality,
+                        license_no: item.license_no,
+                        license_issue_place: item.license_issue_place,
+                        license_expiry_date: item.license_expiry_date,
+                        customer_account_id: item.customer_account_id,
+                        account_name: item.account_name,
                         status: item.status,
                         is_blacklisted: item.is_blacklisted,
                         blacklist_description: item.blacklist_description
@@ -645,6 +652,18 @@ setTimeout(function() {
         templateSelection: formatCustomerSelection
     });
 }, 100);
+
+$(document).ready(function () {
+    $.getJSON('/CustomerAccountController?action=list&active_only=1', function (res) {
+        if (res && res.status === 'success' && Array.isArray(res.data)) {
+            const $sel = $('#customerAccountId');
+            $sel.find('option:not(:first)').remove();
+            res.data.forEach(function (acc) {
+                $sel.append($('<option>', { value: acc.ids, text: acc.account_name }));
+            });
+        }
+    });
+});
 
 function formatCustomer(customer) {
     if (!customer.id) return customer.text;
@@ -695,32 +714,37 @@ $('#selectCustomerFromSelect2').on('select2:select', function (e) {
         $('#selectCustomerFromSelect2').closest('.col, .col-12, .mb-3, .form-floating, div').parent().append(alertHtml);
 
         $('#selectCustomerFromSelect2').val(null).trigger('change');
-        $('#customer_code, #customerName, #customerPhone, #customerEmail, #customerAddress, #customerAttention, #customercprcr').val('');
+        $('#customer_code, #customerName, #customerPhone, #customerTelephone, #customerEmail, #customerAddress, #customerAttention, #customercprcr, #customerNationality, #customerLicenseNo, #customerLicenseIssuePlace, #customerLicenseExpiry, #customerAccountId').val('');
         setupDropdown('dropdownContent', 'error', svgError + 'Cannot select blacklisted customer. Remarks: ' + remarksText, 'click');
         return;
     }
 
     window.__selectedCustomerBlacklisted = false;
-    $('#customer_code').val(data.customer_code);
-    $('#customerName').val(data.customer_name);
-    $('#customerPhone').val(data.customer_mobile);
-    $('#customerEmail').val(data.customer_email);
-    $('#customerAddress').val(data.customer_address);
-    $('#customerAttention').val(data.customer_attn);
-    $('#customercprcr').val(data.customer_cr_cpr);
+    $('#customer_code').val(data.customer_code || '');
+    $('#customerName').val(data.customer_name || '');
+    $('#customerPhone').val(data.customer_mobile || '');
+    $('#customerTelephone').val(data.phone_1 || '');
+    $('#customerEmail').val(data.customer_email || '');
+    $('#customerAddress').val(data.customer_address || '');
+    $('#customerAttention').val(data.customer_attn || '');
+    $('#customercprcr').val(data.customer_cr_cpr || '');
+    $('#customerNationality').val(data.nationality || '');
+    $('#customerLicenseNo').val(data.license_no || '');
+    $('#customerLicenseIssuePlace').val(data.license_issue_place || '');
+    $('#customerLicenseExpiry').val(data.license_expiry_date ? String(data.license_expiry_date).substring(0, 10) : '');
+
+    const accId = data.customer_account_id ? String(data.customer_account_id) : '';
+    if (accId && $('#customerAccountId option[value="' + accId + '"]').length === 0 && data.account_name) {
+        $('#customerAccountId').append($('<option>', { value: accId, text: data.account_name }));
+    }
+    $('#customerAccountId').val(accId);
 });
 
 
 $('#selectCustomerFromSelect2').on('select2:clear', function () {
     window.__selectedCustomerBlacklisted = false;
     $('#blacklistedCustomerAlert').remove();
-    $('#customerName').val('');
-    $('#customer_code').val('');
-    $('#customerPhone').val('');
-    $('#customerEmail').val('');
-    $('#customerAddress').val('');
-    $('#customerAttention').val('');
-    $('#customercprcr').val('');
+    $('#customer_code, #customerName, #customerPhone, #customerTelephone, #customerEmail, #customerAddress, #customerAttention, #customercprcr, #customerNationality, #customerLicenseNo, #customerLicenseIssuePlace, #customerLicenseExpiry, #customerAccountId').val('');
 }); 
 
 $('#addCustomerBtn').click(function () {
@@ -766,12 +790,15 @@ $('#addCustomerBtn').click(function () {
                 $('#selectCustomerFromSelect2').append(newOption).trigger('change');
                 
                 // Fill the direct contract customer fields
-                $('#customerName').val(customerData.customer_name);
-                $('#customerPhone').val(customerData.telephone);
-                $('#customerEmail').val(customerData.email);
-                $('#customerAddress').val(customerData.address);
-                $('#customerAttention').val(customerData.attention);
-                $('#customercprcr').val(customerData.cprcr);
+                $('#customer_code').val(res.customerId || '');
+                $('#customerName').val(customerData.customer_name || '');
+                $('#customerPhone').val(customerData.telephone || '');
+                $('#customerTelephone').val('');
+                $('#customerEmail').val(customerData.email || '');
+                $('#customerAddress').val(customerData.address || '');
+                $('#customerAttention').val(customerData.attention || '');
+                $('#customercprcr').val(customerData.cprcr || '');
+                $('#customerNationality, #customerLicenseNo, #customerLicenseIssuePlace, #customerLicenseExpiry, #customerAccountId').val('');
     
             } else {
                 setupDropdown(

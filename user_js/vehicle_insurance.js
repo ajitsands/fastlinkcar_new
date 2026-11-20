@@ -179,7 +179,7 @@ function initDataTable() {
             { 
                 "data": "next_insurance_date",
                 "render": function(data) {
-                    let dateStr = data ? dayjs(data).format(SYS_DATE_FORMAT) : 'Not Set';
+                    let dateStr = (data && data !== '0000-00-00') ? dayjs(data).format('DD-MMM-YYYY') : 'Not Set';
                     let statusStr = getSingleDateStatus(data);
                     return `<div>${dateStr}</div>${statusStr}`;
                 }
@@ -187,7 +187,7 @@ function initDataTable() {
             { 
                 "data": "next_passing_date",
                 "render": function(data) {
-                    let dateStr = data ? dayjs(data).format(SYS_DATE_FORMAT) : 'Not Set';
+                    let dateStr = (data && data !== '0000-00-00') ? dayjs(data).format('DD-MMM-YYYY') : 'Not Set';
                     let statusStr = getSingleDateStatus(data);
                     return `<div>${dateStr}</div>${statusStr}`;
                 }
@@ -494,7 +494,7 @@ function renderTimeline() {
         timelineDataStore.forEach(item => {
             let typeClass = item.type === 'insurance' ? 'type-insurance' : 'type-passing';
             let badgeClass = item.type === 'insurance' ? 'insurance' : 'passing';
-            let displayDate = dayjs(item.date).format(SYS_DATE_FORMAT);
+            let displayDate = dayjs(item.date).format('DD-MMM-YYYY');
             let createdDate = item.created_at ? dayjs(item.created_at).format('MMM D, YYYY HH:mm') : '';
             
             let attachmentHtml = '';

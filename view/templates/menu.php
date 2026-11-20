@@ -395,3 +395,71 @@
      </ul>
    </div>
  </aside>
+<?php
+if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
+    $reqPath = trim((string)parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+    $routeHeaderMap = [
+        'DirectContract'              => ['New Direct Contract', 'Create a new rental agreement directly for a customer and available vehicle.', 'ri-file-add-line'],
+        'Dashboard'                   => ['Dashboard', 'Overview of fleet status, reservations, revenue, and operations.', 'ri-home-smile-line'],
+        'AddUser'                     => ['Users & Roles Master', 'Manage system users, roles, and access permissions.', 'ri-user-settings-line'],
+        'VehicleMasterConfiguration'  => ['Vehicle Master Configuration', 'Configure vehicle categories, brands, models, and model pricing.', 'ri-settings-3-line'],
+        'RegisterVehicles'            => ['Vehicle Master', 'Register vehicles, specifications, pricing preview, insurance, and passing.', 'ri-car-line'],
+        'RegisterDrivers'             => ['Drivers Master', 'Register and manage company drivers and license details.', 'ri-steering-2-line'],
+        'RegisterStaff'               => ['Staff Master', 'Manage staff profiles and contact details.', 'ri-team-line'],
+        'OutsourcingCompany'          => ['Outsourcing Companies Master', 'Manage external fleet outsourcing partner companies.', 'ri-building-2-line'],
+        'GarageAndServiceMaster'      => ['Garage & Service Master', 'Manage service garages, maintenance categories, and service items.', 'ri-tools-line'],
+        'VehicleInsurance'            => ['Vehicle Insurance & Passing', 'Track and renew vehicle insurance policies and passing dates.', 'ri-shield-check-line'],
+        'ListofVehicles'              => ['Fleet Vehicles List', 'View and filter all registered fleet vehicles and statuses.', 'ri-list-check-2'],
+        'VehicleReservation'          => ['Vehicle Reservation', 'Create and manage vehicle reservations.', 'ri-pushpin-fill'],
+        'Reservation'                 => ['Reservations List', 'View, filter, and convert vehicle reservations.', 'ri-survey-line'],
+        'VehicleContract'             => ['Vehicle Contract Generation', 'Generate rental contracts from approved bookings and reservations.', 'ri-file-text-line'],
+        'ContractGeneration'          => ['Contract Generation', 'Generate and manage customer vehicle hire agreements.', 'ri-file-text-line'],
+        'ContractList'                => ['Vehicle Contracts List', 'Search, view, print, extend, replace, and return rental contracts.', 'ri-file-list-3-line'],
+        'MaintenanceRequest'          => ['Maintenance Requests', 'Log and track vehicle maintenance and garage jobs.', 'ri-wrench-line'],
+        'NonRevenueTickets'           => ['Non-Revenue Tickets (Staff Use)', 'Manage internal staff vehicle usage tickets.', 'ri-coupon-3-line'],
+        'Quotation'                   => ['Quotations', 'Create and manage customer rental quotations.', 'ri-file-paper-2-line'],
+        'Invoice'                     => ['Invoices', 'Generate and manage customer tax invoices.', 'ri-bill-line'],
+        'CashMemo'                    => ['Cash Memo', 'Record and print customer cash memos.', 'ri-receipt-line'],
+        'ExpenseVoucher'              => ['Expense Vouchers', 'Record and track operational expense vouchers.', 'ri-money-dollar-box-line'],
+        'CustomerLedger'              => ['Customer Ledger', 'View customer debits, credits, payments, and running balances.', 'ri-book-open-line'],
+        'FundFlow'                    => ['Fund Flow', 'Track cash and bank fund inflows and outflows.', 'ri-exchange-dollar-line'],
+        'UnbilledContracts'           => ['Unbilled Contracts', 'Review active or closed contracts pending billing.', 'ri-file-warning-line'],
+        'RefundForm'                  => ['Customer Refunds', 'Process and track customer deposit and credit refunds.', 'ri-refund-2-line'],
+        'VehicleInsight'              => ['Vehicle Insights', 'Analyze vehicle utilization, revenue, and status history.', 'ri-bar-chart-grouped-line'],
+        'VehicleMovementReport'       => ['Vehicle Movement Report', 'Track vehicle check-out, check-in, and status movements.', 'ri-route-line'],
+        'VehicleUtilizationReport'    => ['Vehicle Utilization Report', 'Analyze fleet utilization rates across periods.', 'ri-pie-chart-2-line'],
+        'ReturnReport'                => ['Vehicle Return Report', 'Review returned vehicles, mileage, and return dates.', 'ri-arrow-go-back-line'],
+        'CustomerBalances'            => ['Customer Balance Report', 'View outstanding balances across all customers.', 'ri-scales-3-line'],
+        'DailyRentalReport'           => ['Daily Rental Report', 'Daily summary of rental contracts and charges.', 'ri-file-chart-line'],
+        'DailyCashReport'             => ['Daily Cash Report', 'Daily cash and payment collection summary.', 'ri-funds-line'],
+        'NonRevenueTicketReport'      => ['Staff Use Report', 'Summary of non-revenue staff vehicle usage.', 'ri-coupon-3-line'],
+        'ContractHistoryReport'       => ['Contract & Replacement History', 'Audit trail of contracts and vehicle replacements.', 'ri-history-line'],
+        'ContractReturnOverdueReport' => ['Contract Return & Overdue Report', 'Track contract returns and overdue charges.', 'ri-time-line'],
+    ];
+    if (isset($routeHeaderMap[$reqPath])) {
+        [$pTitle, $pDesc, $pIcon] = $routeHeaderMap[$reqPath];
+        ?>
+        <style>
+            @media (min-width: 992px) {
+                #globalPageHeader { padding-top: 55px !important; }
+                #globalPageHeader + .container-p-y,
+                #globalPageHeader + .layout-demo-placeholder > .container-p-y { padding-top: 12px !important; }
+            }
+            @media (max-width: 991.98px) {
+                #globalPageHeader { padding-top: 15px !important; }
+            }
+        </style>
+        <div class="container-fluid pb-0" id="globalPageHeader">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h4 class="fw-bold mb-1" style="color: #1b3d94;">
+                        <i class="<?= htmlspecialchars($pIcon) ?> me-1"></i> <?= htmlspecialchars($pTitle) ?>
+                    </h4>
+                    <p class="text-muted mb-0"><?= htmlspecialchars($pDesc) ?></p>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+}
+?>

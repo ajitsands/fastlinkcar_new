@@ -1647,7 +1647,18 @@ class VehiclesContractController
                     
                     $this->varPDOModelObj->varDBPDO->commit();
                     
-                    echo json_encode(['status' => true, 'message' => 'Contracts generated successfully', 'contract_ids' => $contract_ids]);
+                    echo json_encode([
+                        'status' => true,
+                        'message' => 'Contracts generated successfully',
+                        'contract_ids' => $contract_ids,
+                        'contracts' => [
+                            [
+                                'contract_id' => $contract_ids[0] ?? '',
+                                'agreement_no' => $agreement_no ?? '',
+                                'customer_code' => $customer_code ?? ''
+                            ]
+                        ]
+                    ]);
                     
                 } catch (Exception $e) {
                     if ($this->varPDOModelObj->varDBPDO->inTransaction()) {

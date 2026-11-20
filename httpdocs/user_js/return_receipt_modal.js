@@ -68,12 +68,19 @@ window.ReturnReceiptModal = (function () {
         $('#rr_tax_amount').val('0.000');
         $('#rr_note').val('');
         $('#rr_cheque_no, #rr_cheque_date, #rr_cheque_bank').val('');
+        $('#rr_payment_type').val(opts.default_payment_type || 'FULL SETTLEMENT');
         $('#rr_payment_mode').val('Cash').trigger('change');
         $('#rr_success_banner').addClass('d-none').removeClass('d-flex');
         $('#rr_btn_print, #rr_btn_whatsapp').addClass('d-none');
         $('#rr_btn_generate').prop('disabled', false).show();
 
         const modalEl = document.getElementById('returnReceiptVoucherModal');
+        $(modalEl).off('hidden.bs.modal.rrClose');
+        if (typeof opts.onClose === 'function') {
+            $(modalEl).on('hidden.bs.modal.rrClose', function () {
+                opts.onClose();
+            });
+        }
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
 
         $.ajax({

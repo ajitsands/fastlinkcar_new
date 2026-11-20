@@ -1126,7 +1126,43 @@ function submitDirectContracts(isRentout) {
             if (res.status) {
                 $('#directContractWizardModal').modal('hide');
                 setupDropdown('dropdownContent', 'success', svgSuccess + ' Contracts Generated Successfully!', 'click');
-                setTimeout(() => location.reload(), 2000);
+                const firstContract = (Array.isArray(res.contracts) && res.contracts.length > 0) ? res.contracts[0] : null;
+                const cId = (firstContract && firstContract.contract_id) ? firstContract.contract_id : ((Array.isArray(res.contract_ids) && res.contract_ids[0]) ? res.contract_ids[0] : '');
+                const agrNo = (firstContract && firstContract.agreement_no) ? firstContract.agreement_no : '';
+                const custCode = (firstContract && firstContract.customer_code) ? firstContract.customer_code : ($('#customer_code').val() || '');
+
+                if (cId && window.ReturnReceiptModal) {
+                    const recOpts = {
+                        contract_id: cId,
+                        agreement_no: agrNo,
+                        customer_code: custCode,
+                        default_payment_type: 'ADVANCE / DEPOSIT',
+                        onClose: function () { location.reload(); }
+                    };
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Contract Generated Successfully!',
+                            text: 'Do you want to collect a Deposit or Payment for ' + (agrNo || 'this contract') + '?',
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, Collect Payment / Deposit',
+                            cancelButtonText: 'No, Later',
+                            confirmButtonColor: '#1b3d94'
+                        }).then(function (result) {
+                            if (result.isConfirmed) {
+                                window.ReturnReceiptModal.open(recOpts);
+                            } else {
+                                location.reload();
+                            }
+                        });
+                    } else if (confirm('Contract generated! Do you want to collect a Deposit or Payment now?')) {
+                        window.ReturnReceiptModal.open(recOpts);
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    setTimeout(() => location.reload(), 2000);
+                }
             } else {
                 setupDropdown('dropdownContent', 'error', svgError + (res.message || 'Error saving contracts'), 'click');
             }

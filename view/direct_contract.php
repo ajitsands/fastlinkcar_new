@@ -432,6 +432,7 @@ input[type="number"] {
     <?php include('templates/vehicles/vehicle_profile_modal.php'); ?>
     <?php include('templates/VehicleContractGeneration/customer_driver_documents_upload.php'); ?>
     <?php include('templates/VehicleContractGeneration/terms_condition_modal.php'); ?>
+    <?php include('templates/VehicleContractList/return_receipt_modal.php'); ?>
     <?php include('templates/scripts.php'); ?>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
@@ -453,6 +454,7 @@ input[type="number"] {
     
     <script src="../httpdocs/user_js/vehicle_info.js"></script>
     <script src="../httpdocs/user_js/car_survey_widget.js?v=<?= time() ?>"></script>
+    <script src="../httpdocs/user_js/return_receipt_modal.js?v=<?= time() ?>"></script>
     <script src="../httpdocs/user_js/direct_contract_wizard.js?v=<?= time() + 1 ?>"></script>
     
     <script>

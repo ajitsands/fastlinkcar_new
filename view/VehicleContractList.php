@@ -1882,6 +1882,18 @@ function populatereturnContractModal(d) {
             'checked',
             vehicle_accessiories_details.chk_radio && vehicle_accessiories_details.chk_radio === 'Yes'
         );
+         $('#chk_wcup').prop(
+            'checked',
+            vehicle_accessiories_details.chk_wcup && vehicle_accessiories_details.chk_wcup === 'Yes'
+        );
+         $('#chk_scratches').prop(
+            'checked',
+            vehicle_accessiories_details.chk_scratches && vehicle_accessiories_details.chk_scratches === 'Yes'
+        );
+         $('#chk_seats').prop(
+            'checked',
+            vehicle_accessiories_details.chk_seats && vehicle_accessiories_details.chk_seats === 'Yes'
+        );
         $('#km_out').val(vehicle_accessiories_details.vehicle_km_out || 0);
          $('#km_in').val(vehicle_accessiories_details.vehicle_km_in || 0);
          if (typeof calcOdoDiff === "function") {
@@ -1926,8 +1938,10 @@ function populatereturnContractModal(d) {
         
        $('#cust_driver').val(contract.customer_driver_name || '');
        $('#cust_driver_contact_no').val(contract.customer_driver_contact_number || '');
-       $('#disp_cust_driver').text(contract.customer_driver_name || '-');
-       $('#disp_cust_driver_contact_no').text(contract.customer_driver_contact_number || '-');
+       $('#disp_cust_driver').text(contract.customer_driver_name || vehicle_accessiories_details.cust_driver_name || '-');
+       $('#disp_cust_driver_contact_no').text(contract.customer_driver_contact_number || vehicle_accessiories_details.cust_driver_contact_no || '-');
+       $('#disp_cust_driver_cpr').text(vehicle_accessiories_details.cust_driver_cpr || '-');
+       $('#disp_cust_driver_phone').text(vehicle_accessiories_details.cust_driver_phone || '-');
        $('#disp_km_out').text($('#km_out').val() || '-');
        $('#disp_dt_out').text(formatReadableDateTime($('#dt_out').val()));
         $('.driverclass').show(); 

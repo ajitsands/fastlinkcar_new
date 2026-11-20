@@ -494,25 +494,37 @@
                 <input type="hidden" id="cust_driver" value="">
                 <input type="hidden" id="cust_driver_contact_no" value="">
 
-                <div class="row g-2 align-items-center" style="font-size: 12.5px;">
-                  <div class="col-md-4">
+                <div class="row g-2 align-items-start" style="font-size: 12.5px;">
+                  <div class="col-md-5">
                     <span class="d-block text-uppercase fw-semibold" style="font-size: 10.5px; color: #64748b;">Rentout Checklist</span>
                     <div class="d-flex flex-wrap gap-3 mt-1">
                       <div class="form-check form-check-inline mb-0 me-1">
                         <input class="form-check-input" type="checkbox" id="chk_tools" disabled style="opacity: 1;">
-                        <label class="form-check-label fw-semibold" style="color: #1e293b; opacity: 1;">Jack &amp; Tools</label>
+                        <label class="form-check-label fw-semibold" style="color: #1e293b; opacity: 1;">Tools Kit</label>
                       </div>
                       <div class="form-check form-check-inline mb-0 me-1">
                         <input class="form-check-input" type="checkbox" id="chk_spare" disabled style="opacity: 1;">
-                        <label class="form-check-label fw-semibold" style="color: #1e293b; opacity: 1;">Spare Tyre</label>
+                        <label class="form-check-label fw-semibold" style="color: #1e293b; opacity: 1;">S. Wheel</label>
                       </div>
-                      <div class="form-check form-check-inline mb-0">
+                      <div class="form-check form-check-inline mb-0 me-1">
+                        <input class="form-check-input" type="checkbox" id="chk_wcup" disabled style="opacity: 1;">
+                        <label class="form-check-label fw-semibold" style="color: #1e293b; opacity: 1;">W. Cup</label>
+                      </div>
+                      <div class="form-check form-check-inline mb-0 me-1">
                         <input class="form-check-input" type="checkbox" id="chk_radio" disabled style="opacity: 1;">
                         <label class="form-check-label fw-semibold" style="color: #1e293b; opacity: 1;">Radio</label>
                       </div>
+                      <div class="form-check form-check-inline mb-0 me-1">
+                        <input class="form-check-input" type="checkbox" id="chk_scratches" disabled style="opacity: 1;">
+                        <label class="form-check-label fw-semibold" style="color: #1e293b; opacity: 1;">Scratches Mark X</label>
+                      </div>
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input" type="checkbox" id="chk_seats" disabled style="opacity: 1;">
+                        <label class="form-check-label fw-semibold" style="color: #1e293b; opacity: 1;">Seats Cleanness</label>
+                      </div>
                     </div>
                   </div>
-                  <div class="col-6 col-md-3">
+                  <div class="col-6 col-md-2">
                     <span class="d-block text-uppercase fw-semibold" style="font-size: 10.5px; color: #64748b;">Rentout Date</span>
                     <strong style="color: #1e293b;" id="disp_dt_out">-</strong>
                   </div>
@@ -525,8 +537,9 @@
                     <strong style="color: #1e293b;" id="disp_km_out">-</strong>
                   </div>
                   <div class="col-6 col-md-3">
-                    <span class="d-block text-uppercase fw-semibold" style="font-size: 10.5px; color: #64748b;">Driver / Contact</span>
+                    <span class="d-block text-uppercase fw-semibold" style="font-size: 10.5px; color: #64748b;">Customer Driver / Other Driver</span>
                     <strong style="color: #1e293b;"><span id="disp_cust_driver">-</span> <span class="text-muted fw-normal">|</span> <span id="disp_cust_driver_contact_no">-</span></strong>
+                    <div class="small text-muted" style="font-size: 11px;">CPR: <span id="disp_cust_driver_cpr">-</span> <span class="mx-1">|</span> Phone: <span id="disp_cust_driver_phone">-</span></div>
                   </div>
                 </div>
                 <ul id="contractcustdriverdocpreview" class="list-unstyled d-flex align-items-center avatar-group mb-0 mt-1"></ul>

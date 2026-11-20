@@ -54,6 +54,46 @@ $(document).ready(function () {
     );
 });
 
+function getInsuranceExpiryAlerts(rows) {
+    const today = new Date(new Date().toDateString());
+    const alerts = [];
+    (rows || []).forEach(v => {
+        [['next_insurance_date', 'Insurance'], ['next_passing_date', 'Passing']].forEach(([col, label]) => {
+            const d = v[col];
+            if (!d || d === '0000-00-00') return;
+            const diff = Math.ceil((new Date(d + 'T00:00:00') - today) / 86400000);
+            if (diff <= 30) {
+                alerts.push({
+                    vehicle_number: v.vehicle_number,
+                    type: label,
+                    date: d,
+                    days: diff,
+                    expired: diff < 0
+                });
+            }
+        });
+    });
+    const $banner = $('#vehicleExpiryAlertBanner');
+    if (!alerts.length) {
+        $banner.hide().empty();
+        return;
+    }
+    const expiredCnt = alerts.filter(a => a.expired).length;
+    const soonCnt = alerts.length - expiredCnt;
+    const tags = alerts.slice(0, 8).map(a =>
+        `<span class="badge ${a.expired ? 'bg-danger' : 'bg-warning text-dark'} me-1 mb-1">${a.vehicle_number} (${a.type}: ${a.expired ? 'Expired ' + Math.abs(a.days) + 'd ago' : 'Due in ' + a.days + 'd'})</span>`
+    ).join('');
+    $banner.html(`
+        <div class="alert ${expiredCnt > 0 ? 'alert-danger' : 'alert-warning'} d-flex align-items-start gap-2 mb-0">
+            <i class="ri-alarm-warning-line fs-4 mt-1"></i>
+            <div>
+                <div class="fw-bold">Vehicle Insurance &amp; Passing Expiry Alerts (${expiredCnt} Expired, ${soonCnt} Expiring within 30 Days)</div>
+                <div class="mt-1">${tags}${alerts.length > 8 ? ` <span class="small text-muted">+${alerts.length - 8} more</span>` : ''}</div>
+            </div>
+        </div>
+    `).show();
+}
+
 function getSingleDateStatus(dateString) {
     if (!dateString) return `<small class="text-muted d-block lh-1 mt-1">No Data</small>`;
     
@@ -82,8 +122,10 @@ function initDataTable() {
             },
             "dataSrc": function (json) {
                 if (json.status) {
+                    getInsuranceExpiryAlerts(json.data);
                     return json.data;
                 }
+                getInsuranceExpiryAlerts([]);
                 return [];
             }
         },

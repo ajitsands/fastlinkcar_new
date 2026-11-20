@@ -8,6 +8,7 @@ if (!empty($_SESSION['company_json'])) {
 }
 $isSingleCompany = count($allowedCompanies) <= 1;
 ?>
+<div id="vehicleExpiryAlertBanner" class="mb-3" style="display:none;"></div>
 <div class="card mb-4" id="vehicleInsuranceContainer">
     <div class="card-header custom-modal-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0 text-white">Vehicle Insurance & Passings</h5>

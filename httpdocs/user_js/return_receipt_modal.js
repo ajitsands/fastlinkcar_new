@@ -3,6 +3,20 @@ window.ReturnReceiptModal = (function () {
         return $('<div>').text(s || '').html();
     }
 
+    function fmtDisplayDate(val) {
+        if (!val) return '-';
+        const s = String(val).substring(0, 10);
+        const parts = s.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const mIdx = parseInt(parts[1], 10) - 1;
+            if (mIdx >= 0 && mIdx < 12) {
+                return `${parts[2]}-${months[mIdx]}-${parts[0]}`;
+            }
+        }
+        return s;
+    }
+
     function loadLedger(contractId) {
         $('#rr_ledger_tbody').html('<tr><td colspan="7" class="text-center text-muted py-2">Loading ledger...</td></tr>');
         $.getJSON('/CustomerLedgerController', {
@@ -25,13 +39,14 @@ window.ReturnReceiptModal = (function () {
                 totalDebit += deb;
                 totalCredit += cred;
                 running += (deb - cred);
-                const dt = r.trans_date || r.created_at || '-';
-                const desc = r.remarks || r.notes || r.description || '-';
+                const dt = fmtDisplayDate(r.trans_date || r.created_at);
+                const desc = r.description || r.remarks || r.notes || '-';
+                const methodBadge = (r.payment_method && r.payment_method !== 'N/A') ? ` <span class="badge bg-label-info">${esc(r.payment_method)}</span>` : '';
                 return `
                     <tr>
                         <td>${idx + 1}</td>
-                        <td class="text-nowrap">${esc(String(dt).substring(0, 10))}</td>
-                        <td><span class="badge bg-label-primary">${esc(r.trans_type || '-')}</span></td>
+                        <td class="text-nowrap">${esc(dt)}</td>
+                        <td><span class="badge bg-label-primary">${esc(r.trans_type || '-')}</span>${methodBadge}</td>
                         <td>${esc(desc)}</td>
                         <td class="text-end">${deb > 0 ? deb.toFixed(3) : '-'}</td>
                         <td class="text-end text-success">${cred > 0 ? cred.toFixed(3) : '-'}</td>

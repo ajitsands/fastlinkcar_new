@@ -1234,7 +1234,27 @@ $(document).on('click', '#btn_save_rentout_dc_contract', function() {
         return;
     }
 
-    submitDirectContracts(true);
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Confirm Contract Generation',
+            text: 'Are you sure you want to generate this contract and rent out the selected vehicle(s)?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Generate & Rentout',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#1b3d94',
+            didOpen: function (popup) {
+                const c = popup.closest('.swal2-container');
+                if (c) c.style.setProperty('z-index', '999999', 'important');
+            }
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                submitDirectContracts(true);
+            }
+        });
+    } else if (confirm('Are you sure you want to generate this contract and rent out the selected vehicle(s)?')) {
+        submitDirectContracts(true);
+    }
 });
 
 $(document).on('click', '.btn-lookup-cust-driver', function () {

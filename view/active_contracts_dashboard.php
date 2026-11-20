@@ -873,13 +873,21 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                     totD += deb;
                     totC += cred;
                     run += (deb - cred);
-                    const dt = r.trans_date || r.created_at || '-';
-                    const desc = r.remarks || r.notes || r.description || '-';
+                    const dtRaw = r.trans_date || r.created_at || '-';
+                    let dtDisp = String(dtRaw).substring(0, 10);
+                    const dp = dtDisp.split('-');
+                    if (dp.length === 3 && dp[0].length === 4) {
+                        const ms = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                        const mi = parseInt(dp[1], 10) - 1;
+                        if (mi >= 0 && mi < 12) dtDisp = `${dp[2]}-${ms[mi]}-${dp[0]}`;
+                    }
+                    const desc = r.description || r.remarks || r.notes || '-';
+                    const mBadge = (r.payment_method && r.payment_method !== 'N/A') ? ` <span class="badge bg-label-info">${escapeHtml(r.payment_method)}</span>` : '';
                     return `
                         <tr>
                             <td>${i + 1}</td>
-                            <td class="text-nowrap">${escapeHtml(String(dt).substring(0, 10))}</td>
-                            <td><span class="badge bg-label-primary">${escapeHtml(r.trans_type || '-')}</span></td>
+                            <td class="text-nowrap">${escapeHtml(dtDisp)}</td>
+                            <td><span class="badge bg-label-primary">${escapeHtml(r.trans_type || '-')}</span>${mBadge}</td>
                             <td>${escapeHtml(desc)}</td>
                             <td class="text-end">${deb > 0 ? deb.toFixed(3) : '-'}</td>
                             <td class="text-end text-success">${cred > 0 ? cred.toFixed(3) : '-'}</td>

@@ -342,7 +342,8 @@ class cashmemoController
                             $contractData = $stmt->fetch(PDO::FETCH_ASSOC);
                             $agreement_group_ref_no = $contractData['agreement_group_ref_no'];
                             $quotation_number  = $contractData['quotation_number'];
-                        $ledger_des='Auto Post From Receipt '.$cashmemoNo;
+                        $itemSummary = !empty($this->cashmemo_notes) ? trim((string)$this->cashmemo_notes) : (!empty($this->items[0]['item_name']) ? trim((string)$this->items[0]['item_name']) : '');
+                        $ledger_des = 'Auto Post From Receipt ' . $cashmemoNo . ($itemSummary !== '' ? ' (' . $itemSummary . ')' : '');
                              $sql_ledger = "INSERT INTO tbl_customer_ledger 
                                 (customer_code, quotation_no, booking_no, trans_date, cheque_date, trans_type, payment_method, debit, credit, ref_no, cheque_status, description, user_id, company_id,booking_ids,contract_ids,agreement_no) 
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?, ?, ?, ?)";

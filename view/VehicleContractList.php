@@ -5669,7 +5669,11 @@ function executeReturnContract(customer_code)
                                     showCancelButton: true,
                                     confirmButtonText: 'Yes, Generate Receipt',
                                     cancelButtonText: 'No',
-                                    confirmButtonColor: '#1b3d94'
+                                    confirmButtonColor: '#1b3d94',
+                                    didOpen: function (popup) {
+                                        const c = popup.closest('.swal2-container');
+                                        if (c) c.style.setProperty('z-index', '999999', 'important');
+                                    }
                                 }).then(function (result) {
                                     if (result.isConfirmed) {
                                         (window.top || window).open(receiptUrl, '_blank');

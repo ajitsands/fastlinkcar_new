@@ -1012,8 +1012,10 @@ function gatherDirectContractData() {
                 salik_out: $(`#salik_out_${v.id}`).val(), // if still present
                 
                 // Customer Driver
+                cust_driver_cpr: $(`#cust_driver_cpr_${v.id}`).val(),
                 cust_driver: $(`#cust_driver_${v.id}`).val(),
                 cust_driver_contact_no: $(`#cust_driver_contact_no_${v.id}`).val(),
+                cust_driver_phone: $(`#cust_driver_phone_${v.id}`).val(),
                 cust_driver_documents: dcCustomerDriverDocs[v.id] || [],
                 
                 // Company Driver
@@ -1120,4 +1122,27 @@ $(document).on('click', '#btn_save_rentout_dc_contract', function() {
     }
 
     submitDirectContracts(true);
+});
+
+$(document).on('click', '.btn-lookup-cust-driver', function () {
+    const vid = $(this).data('vid');
+    const q = ($(`#cust_driver_cpr_${vid}`).val() || '').trim();
+    if (!q) {
+        if (typeof setupDropdown === 'function') {
+            setupDropdown('dropdownContent', 'error', svgError + ' Enter CPR/ID to lookup driver', 'click');
+        }
+        return;
+    }
+    $.getJSON('/SearchCustomerDetails', { search: q }, function (res) {
+        const list = (res && Array.isArray(res.data)) ? res.data : (Array.isArray(res) ? res : []);
+        if (list.length > 0) {
+            const c = list[0];
+            $(`#cust_driver_cpr_${vid}`).val(c.customer_cr_cpr || q);
+            $(`#cust_driver_${vid}`).val(c.customer_name || '');
+            $(`#cust_driver_contact_no_${vid}`).val(c.customer_mobile || '');
+            $(`#cust_driver_phone_${vid}`).val(c.phone_1 || '');
+        } else if (typeof setupDropdown === 'function') {
+            setupDropdown('dropdownContent', 'error', svgError + ' No matching customer found for "' + q + '"', 'click');
+        }
+    });
 });

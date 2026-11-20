@@ -233,21 +233,38 @@
             </div>
         </div>
 
-        <h6 class="fw-bold text-primary mb-3">Customer Driver</h6>
+        <h6 class="fw-bold text-primary mb-3">Customer Driver (Other Drivers)</h6>
         <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="form-floating form-floating-outline">
-                    <input type="text" id="cust_driver_{ID}" class="form-control dc-inp">
-                    <label>Customer Driver Name</label>
+            <div class="col-md-3">
+                <div class="input-group input-group-sm">
+                    <div class="form-floating form-floating-outline">
+                        <input type="text" id="cust_driver_cpr_{ID}" class="form-control dc-inp" placeholder="ID / CPR">
+                        <label>Other Drivers ID/CPR</label>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-lookup-cust-driver" data-vid="{ID}" title="Lookup Customer by CPR/Name">
+                        <i class="ri-user-search-line"></i>
+                    </button>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="form-floating form-floating-outline">
-                    <input type="text" id="cust_driver_contact_no_{ID}" class="form-control dc-inp">
-                    <label>Contact Number</label>
+                    <input type="text" id="cust_driver_{ID}" class="form-control dc-inp" placeholder="Other Driver Name">
+                    <label>Other Driver Name</label>
                 </div>
             </div>
-            <div class="col-md-4 d-flex align-items-center">
+            <div class="col-md-3">
+                <div class="form-floating form-floating-outline">
+                    <input type="text" id="cust_driver_contact_no_{ID}" class="form-control dc-inp" placeholder="Mobile">
+                    <label>Mobile</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-floating form-floating-outline">
+                    <input type="text" id="cust_driver_phone_{ID}" class="form-control dc-inp" placeholder="Phone No">
+                    <label>Phone No</label>
+                </div>
+            </div>
+            <div class="col-12 d-flex align-items-center">
                 <a href="javascript:;" class="openAddCustDriverDocModal badge bg-label-primary rounded-pill p-2" data-vid="{ID}">
                     Customer Driver Documents
                 </a>

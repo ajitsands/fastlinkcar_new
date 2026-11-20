@@ -324,21 +324,33 @@
                         </div>
                     </div>
 
-                    <h6 class="fw-bold text-danger mb-3">Customer Driver</h6>
+                    <h6 class="fw-bold text-danger mb-3">Customer Driver (Other Drivers)</h6>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-floating form-floating-outline">
-                                <input type="text" id="cust_driver" class="form-control">
-                                <label>Customer Driver Name</label>
+                                <input type="text" id="cust_driver_cpr" class="form-control" placeholder="ID / CPR">
+                                <label>Other Drivers ID/CPR</label>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-floating form-floating-outline">
-                                <input type="text" id="cust_driver_contact_no" class="form-control">
-                                <label>Contact Number</label>
+                                <input type="text" id="cust_driver" class="form-control" placeholder="Other Driver Name">
+                                <label>Other Driver Name</label>
                             </div>
                         </div>
-                        <div class="col-md-4 d-flex align-items-center">
+                        <div class="col-md-3">
+                            <div class="form-floating form-floating-outline">
+                                <input type="text" id="cust_driver_contact_no" class="form-control" placeholder="Mobile">
+                                <label>Mobile</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-floating form-floating-outline">
+                                <input type="text" id="cust_driver_phone" class="form-control" placeholder="Phone No">
+                                <label>Phone No</label>
+                            </div>
+                        </div>
+                        <div class="col-12 d-flex align-items-center">
                             <a href="javascript:;" class="openAddCustDriverDocModal badge bg-label-primary rounded-pill p-2">
                                 Customer Driver Documents
                             </a>

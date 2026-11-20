@@ -1416,8 +1416,10 @@ class VehiclesContractController
                             'date_out' => $date_out,
                             'vehicle_km_out' => $odo_out,
                             'fuel_level' => $fuel_out,
-                            'cust_driver_name' => $v['cust_driver'] ?? '',
-                            'cust_driver_contact_no' => $v['cust_driver_contact_no'] ?? '',
+                            'cust_driver_cpr' => $v['handover']['cust_driver_cpr'] ?? '',
+                            'cust_driver_name' => $v['handover']['cust_driver'] ?? ($v['cust_driver'] ?? ''),
+                            'cust_driver_contact_no' => $v['handover']['cust_driver_contact_no'] ?? ($v['cust_driver_contact_no'] ?? ''),
+                            'cust_driver_phone' => $v['handover']['cust_driver_phone'] ?? '',
                             'cust_driver_documents' => ['vehicles' => []],
                             'vehicle_images' => []
                         ]);

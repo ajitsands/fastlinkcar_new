@@ -52,6 +52,7 @@ class VehiclesContractListController
         $this->tc_ids = $data['tc_ids'] ?? null;
         $this->terms_condition = $data['terms_condition'] ?? '';
         $this->t_c_name = $data['t_c_name'] ?? '';
+        $this->rawData = is_array($data) ? $data : [];
         $this->contract_ids = $data['contract_ids'] ?? '';
         $this->data_source_val = $data['data_source_val'] ?? '';
         $this->filter_from = $data['filter_from'] ?? '';
@@ -1804,13 +1805,14 @@ class VehiclesContractListController
                                             );
                                             $vadRow = $stmtVad ? $stmtVad->fetch(PDO::FETCH_ASSOC) : null;
                                             $vadArr = !empty($vadRow['vehicle_accessories_details']) ? (json_decode($vadRow['vehicle_accessories_details'], true) ?: []) : [];
-                                            $retChk = isset($data['return_checklist']) && is_array($data['return_checklist']) ? $data['return_checklist'] : [];
+                                            $reqData = $this->rawData ?? [];
+                                            $retChk = isset($reqData['return_checklist']) && is_array($reqData['return_checklist']) ? $reqData['return_checklist'] : [];
                                             $vadArr['vehicle_km_in'] = $this->km_in;
                                             $vadArr['date_in'] = $this->return_date_in;
-                                            $vadArr['return_fuel_level'] = $data['return_fuel_level'] ?? '';
-                                            $vadArr['return_note'] = $data['return_note'] ?? '';
-                                            if (isset($data['car_survey_in']) && is_array($data['car_survey_in'])) {
-                                                $vadArr['car_survey_in'] = $data['car_survey_in'];
+                                            $vadArr['return_fuel_level'] = $reqData['return_fuel_level'] ?? '';
+                                            $vadArr['return_note'] = $reqData['return_note'] ?? '';
+                                            if (isset($reqData['car_survey_in']) && is_array($reqData['car_survey_in'])) {
+                                                $vadArr['car_survey_in'] = $reqData['car_survey_in'];
                                             }
                                             foreach (['ret_chk_tools', 'ret_chk_spare', 'ret_chk_wcup', 'ret_chk_radio', 'ret_chk_scratches', 'ret_chk_seats', 'ret_survey_confirmed'] as $rk) {
                                                 if (isset($retChk[$rk])) {

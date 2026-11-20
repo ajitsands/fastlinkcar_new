@@ -547,24 +547,80 @@
 
               <h6 class="mb-2 fw-bold text-uppercase" style="color: #1b3d94; font-size: 12px; letter-spacing: 0.4px;">Return Details (To Fill)</h6>
               <div class="row g-3 mb-3">
-                  <div class="col-md-4">
+                  <div class="col-md-3">
                       <div class="form-floating form-floating-outline">
                         <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,''); calcOdoDiff();" id="km_in" class="form-control border-primary" required>
                         <label>Return Odometer Reading <span class="text-danger">*</span></label>
                       </div>
                   </div>
-                  <div class="col-md-4">
+                  <div class="col-md-3">
                       <div class="form-floating form-floating-outline">
                         <input type="text" id="odo_diff" class="form-control fw-bold" style="background-color: #f8faff; border: 1px solid #cbd5e1; color: #1b3d94;" readonly>
                         <label>Odometer Difference</label>
                       </div>
                   </div>
-                  <div class="col-md-4">
+                  <div class="col-md-3">
                       <div class="form-floating form-floating-outline">
                         <input type="datetime-local" id="dt_in" class="form-control border-primary" required>
                         <label>Date Time In <span class="text-danger">*</span></label>
                       </div>
                   </div>
+                  <div class="col-md-3">
+                      <div class="form-floating form-floating-outline">
+                        <input type="text" id="return_fuel_level" list="return_fuel_levels_list" class="form-control border-primary" placeholder="E - F">
+                        <datalist id="return_fuel_levels_list">
+                          <option value="Empty (E)">
+                          <option value="1/4">
+                          <option value="1/2">
+                          <option value="3/4">
+                          <option value="Full (F)">
+                        </datalist>
+                        <label>Return Fuel (E–F)</label>
+                      </div>
+                  </div>
+              </div>
+
+              <div class="p-3 mb-3 rounded border" style="background-color: #f8faff; border-color: #dbe4ff !important;">
+                <span class="d-block text-uppercase fw-semibold mb-2" style="font-size: 10.5px; color: #1b3d94;">Return Checklist (IN)</span>
+                <div class="d-flex flex-wrap gap-3 mb-2">
+                  <div class="form-check form-check-inline mb-0">
+                    <input class="form-check-input" type="checkbox" id="ret_chk_tools">
+                    <label class="form-check-label fw-semibold" for="ret_chk_tools">Tools Kit</label>
+                  </div>
+                  <div class="form-check form-check-inline mb-0">
+                    <input class="form-check-input" type="checkbox" id="ret_chk_spare">
+                    <label class="form-check-label fw-semibold" for="ret_chk_spare">S. Wheel</label>
+                  </div>
+                  <div class="form-check form-check-inline mb-0">
+                    <input class="form-check-input" type="checkbox" id="ret_chk_wcup">
+                    <label class="form-check-label fw-semibold" for="ret_chk_wcup">W. Cup</label>
+                  </div>
+                  <div class="form-check form-check-inline mb-0">
+                    <input class="form-check-input" type="checkbox" id="ret_chk_radio">
+                    <label class="form-check-label fw-semibold" for="ret_chk_radio">Radio</label>
+                  </div>
+                  <div class="form-check form-check-inline mb-0">
+                    <input class="form-check-input" type="checkbox" id="ret_chk_scratches">
+                    <label class="form-check-label fw-semibold" for="ret_chk_scratches">Scratches Mark X</label>
+                  </div>
+                  <div class="form-check form-check-inline mb-0">
+                    <input class="form-check-input" type="checkbox" id="ret_chk_seats">
+                    <label class="form-check-label fw-semibold" for="ret_chk_seats">Seats Cleanness</label>
+                  </div>
+                </div>
+                <div class="row g-2 align-items-center mt-1">
+                  <div class="col-md-7">
+                    <input type="text" id="return_note" class="form-control form-control-sm" placeholder="Return Note / Remarks...">
+                  </div>
+                  <div class="col-md-5">
+                    <div class="form-check mb-0">
+                      <input class="form-check-input" type="checkbox" id="ret_survey_confirmed" checked>
+                      <label class="form-check-label small text-muted" for="ret_survey_confirmed">
+                        I surveyed the car and didn't find any other damages.
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <h6 class="mb-2 fw-bold text-uppercase" style="color: #1b3d94; font-size: 12px; letter-spacing: 0.4px;">Vehicle Return Images</h6>

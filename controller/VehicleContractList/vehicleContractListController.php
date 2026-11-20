@@ -1796,6 +1796,31 @@ class VehiclesContractListController
                                         $updateContractParams
                                     );
 
+                                    if ($this->ReturnData) {
+                                        try {
+                                            $stmtVad = $this->varPDOModelObj->selectexecuteQuery(
+                                                "SELECT vehicle_accessories_details FROM tbl_vehicle_rentout_contracts WHERE ids = :agreement_id",
+                                                [':agreement_id' => $this->agreementid]
+                                            );
+                                            $vadRow = $stmtVad ? $stmtVad->fetch(PDO::FETCH_ASSOC) : null;
+                                            $vadArr = !empty($vadRow['vehicle_accessories_details']) ? (json_decode($vadRow['vehicle_accessories_details'], true) ?: []) : [];
+                                            $retChk = isset($data['return_checklist']) && is_array($data['return_checklist']) ? $data['return_checklist'] : [];
+                                            $vadArr['vehicle_km_in'] = $this->km_in;
+                                            $vadArr['date_in'] = $this->return_date_in;
+                                            $vadArr['return_fuel_level'] = $data['return_fuel_level'] ?? '';
+                                            $vadArr['return_note'] = $data['return_note'] ?? '';
+                                            foreach (['ret_chk_tools', 'ret_chk_spare', 'ret_chk_wcup', 'ret_chk_radio', 'ret_chk_scratches', 'ret_chk_seats', 'ret_survey_confirmed'] as $rk) {
+                                                if (isset($retChk[$rk])) {
+                                                    $vadArr[$rk] = $retChk[$rk];
+                                                }
+                                            }
+                                            $this->varPDOModelObj->executeQuery(
+                                                "UPDATE tbl_vehicle_rentout_contracts SET vehicle_accessories_details = :vad WHERE ids = :agreement_id",
+                                                [':vad' => json_encode($vadArr), ':agreement_id' => $this->agreementid]
+                                            );
+                                        } catch (Exception $eVad) {}
+                                    }
+
                                     if ($this->ReturnData && $returnEndDateTime !== null) {
                                         try {
                                             $stmtCdj = $this->varPDOModelObj->selectexecuteQuery(

@@ -1901,6 +1901,15 @@ function populatereturnContractModal(d) {
          }
         $('#fuel_level').val(vehicle_accessiories_details.fuel_level || '');
         $('#disp_fuel_level').text(vehicle_accessiories_details.fuel_level || '-');
+        $('#return_fuel_level').val(vehicle_accessiories_details.return_fuel_level || '');
+        $('#return_note').val(vehicle_accessiories_details.return_note || '');
+        $('#ret_chk_tools').prop('checked', vehicle_accessiories_details.ret_chk_tools === 'Yes');
+        $('#ret_chk_spare').prop('checked', vehicle_accessiories_details.ret_chk_spare === 'Yes');
+        $('#ret_chk_wcup').prop('checked', vehicle_accessiories_details.ret_chk_wcup === 'Yes');
+        $('#ret_chk_radio').prop('checked', vehicle_accessiories_details.ret_chk_radio === 'Yes');
+        $('#ret_chk_scratches').prop('checked', vehicle_accessiories_details.ret_chk_scratches === 'Yes');
+        $('#ret_chk_seats').prop('checked', vehicle_accessiories_details.ret_chk_seats === 'Yes');
+        $('#ret_survey_confirmed').prop('checked', vehicle_accessiories_details.ret_survey_confirmed !== 'No');
         
         let getCurrentDateTimeLocal = function() {
             let now = new Date();
@@ -5625,6 +5634,17 @@ function executeReturnContract(customer_code)
                         km_in: km_in,
                         km_used:km_used,
                         return_date_in: return_date_in,
+                        return_fuel_level: ($('#return_fuel_level').val() || '').trim(),
+                        return_note: ($('#return_note').val() || '').trim(),
+                        return_checklist: {
+                            ret_chk_tools: $('#ret_chk_tools').is(':checked') ? 'Yes' : 'No',
+                            ret_chk_spare: $('#ret_chk_spare').is(':checked') ? 'Yes' : 'No',
+                            ret_chk_wcup: $('#ret_chk_wcup').is(':checked') ? 'Yes' : 'No',
+                            ret_chk_radio: $('#ret_chk_radio').is(':checked') ? 'Yes' : 'No',
+                            ret_chk_scratches: $('#ret_chk_scratches').is(':checked') ? 'Yes' : 'No',
+                            ret_chk_seats: $('#ret_chk_seats').is(':checked') ? 'Yes' : 'No',
+                            ret_survey_confirmed: $('#ret_survey_confirmed').is(':checked') ? 'Yes' : 'No'
+                        },
                         returnvehicleimages: allVehicleReturnImages,
                         receiver_name:receiver_name,
                         ReceiverSign: receiver_signature,

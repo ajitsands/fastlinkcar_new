@@ -440,17 +440,24 @@ if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
         [$pTitle, $pDesc, $pIcon] = $routeHeaderMap[$reqPath];
         ?>
         <style>
+            .content-wrapper { justify-content: flex-start !important; }
+            .content-footer { margin-top: auto !important; }
+            #globalPageHeader + .container-p-y,
+            #globalPageHeader + .container-fluid,
+            #globalPageHeader + .container-xxl,
+            #globalPageHeader + .layout-demo-placeholder > .container-p-y {
+                padding-top: 6px !important;
+                margin-top: 0 !important;
+            }
             @media (min-width: 992px) {
-                #globalPageHeader { padding-top: 55px !important; }
-                #globalPageHeader + .container-p-y,
-                #globalPageHeader + .layout-demo-placeholder > .container-p-y { padding-top: 12px !important; }
+                #globalPageHeader { padding-top: 52px !important; padding-bottom: 0 !important; }
             }
             @media (max-width: 991.98px) {
-                #globalPageHeader { padding-top: 15px !important; }
+                #globalPageHeader { padding-top: 12px !important; padding-bottom: 0 !important; }
             }
         </style>
         <div class="container-fluid pb-0" id="globalPageHeader">
-            <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-1">
                 <div>
                     <h4 class="fw-bold mb-1" style="color: #1b3d94;">
                         <i class="<?= htmlspecialchars($pIcon) ?> me-1"></i> <?= htmlspecialchars($pTitle) ?>

@@ -931,70 +931,95 @@ while (ob_get_level() > 0) {
     ob_end_clean();
 }
 
-// 3rd Page: Vehicle Images
-$images_json = $data['vehicle_rentout_images'] ?? '[]';
-$images_arr = json_decode($images_json, true);
-
-if (!empty($images_arr) && is_array($images_arr)) {
-    // Normalize and sort images if they are stored with numeric keys
-    $normalized_images = [];
-    foreach ($images_arr as $key => $val) {
+// Last Page: Vehicle Images (Rentout & Return)
+$extractImagePaths = function($jsonStr) {
+    $arr = json_decode($jsonStr ?: '[]', true);
+    if (empty($arr) || !is_array($arr)) return [];
+    $normalized = [];
+    foreach ($arr as $key => $val) {
         if (is_string($val)) {
-            $normalized_images[$key] = $val;
+            $normalized[$key] = $val;
         } elseif (is_array($val) && isset($val['image'])) {
-            $normalized_images[$key] = $val['image'];
+            $normalized[$key] = $val['image'];
         } elseif (is_array($val) && isset($val['file'])) {
-            $normalized_images[$key] = $val['file'];
+            $normalized[$key] = $val['file'];
         }
     }
-    ksort($normalized_images);
-
-    if (count($normalized_images) > 0) {
-        $pdf->AddPage();
-        $pdf->SetFont('dejavusans', 'B', 12);
-        $pdf->Cell(0, 10, 'Vehicle Images / صور المركبة', 0, 1, 'C');
-        $pdf->SetFont('dejavusans', '', 9);
-
-        $html_images = '<table cellpadding="5" border="0" width="100%">';
-        $col = 0;
-        
-        foreach ($normalized_images as $key => $filename) {
-            if (empty($filename)) continue;
-            
-            // Clean up filename just in case
-            $filename = basename($filename);
-           // $img_path = ROOT_PATH . '/../uploads/rentvehicleImages/' . $filename;
-             $img_path ='uploads/rentvehicleImages/' . $filename;
-            
-            if (file_exists($img_path)) {
-                $img_data = base64_encode(file_get_contents($img_path));
-                
-                if ($col == 0) {
-                    $html_images .= '<tr>';
-                }
-                
-                $html_images .= '<td width="50%" align="center">';
-                $html_images .= '<b>Image ' . htmlspecialchars($key) . '</b><br><br>';
-                // Using 250 for width to ensure they fit side-by-side in portrait mode nicely
-                $html_images .= '<img src="@' . $img_data . '" width="250" height="180">';
-                $html_images .= '</td>';
-                
-                $col++;
-                if ($col == 2) {
-                    $html_images .= '</tr>';
-                    $col = 0;
-                }
+    ksort($normalized);
+    $paths = [];
+    foreach ($normalized as $rawFile) {
+        if (empty($rawFile)) continue;
+        $fname = basename($rawFile);
+        $candidates = [
+            'uploads/rentvehicleImages/' . $fname,
+            dirname(__DIR__) . '/uploads/rentvehicleImages/' . $fname,
+            dirname(__DIR__) . '/httpdocs/uploads/rentvehicleImages/' . $fname,
+        ];
+        foreach ($candidates as $cand) {
+            if (file_exists($cand) && is_file($cand)) {
+                $paths[] = $cand;
+                break;
             }
         }
-        
-        // Fill remaining cell if odd number
-        if ($col == 1) {
-            $html_images .= '<td width="50%"></td></tr>';
-        }
-        $html_images .= '</table>';
-        
-        $pdf->writeHTML($html_images, true, false, true, false, '');
     }
+    return $paths;
+};
+
+$rentoutImagePaths = $extractImagePaths($data['vehicle_rentout_images'] ?? '[]');
+$returnImagePaths  = $extractImagePaths($data['vehicle_return_images'] ?? '[]');
+
+if (!empty($rentoutImagePaths) || !empty($returnImagePaths)) {
+    $pdf->AddPage('P', 'A4');
+    $pdf->SetTextColor(27, 61, 148);
+    $pdf->SetFont('dejavusans', 'B', 12);
+    $pdf->Cell(0, 8, 'Vehicle Images / صور المركبة', 0, 1, 'C');
+    $pdf->Ln(2);
+
+    $buildImageSection = function($titleEn, $titleAr, $paths) {
+        if (empty($paths)) return '';
+        $html = '
+        <table width="100%" cellpadding="5" cellspacing="0" style="font-family: dejavusans; margin-bottom: 6px; border-collapse: collapse;">
+            <tr>
+                <td width="50%" align="left" style="background-color: #eef2ff; color: #1b3d94; font-size: 9pt; font-weight: bold; border-top: 0.75px solid #1b3d94; border-bottom: 0.75px solid #1b3d94;">' . htmlspecialchars($titleEn) . '</td>
+                <td width="50%" align="right" style="background-color: #eef2ff; color: #1b3d94; font-size: 9pt; font-weight: bold; border-top: 0.75px solid #1b3d94; border-bottom: 0.75px solid #1b3d94;">' . htmlspecialchars($titleAr) . '</td>
+            </tr>
+        </table>
+        <table width="100%" cellpadding="6" cellspacing="6" border="0">';
+
+        $col = 0;
+        foreach ($paths as $imgPath) {
+            $rawBytes = @file_get_contents($imgPath);
+            if ($rawBytes === false) continue;
+            $imgData = base64_encode($rawBytes);
+
+            if ($col === 0) {
+                $html .= '<tr>';
+            }
+            $html .= '<td width="50%" align="center" style="border: 0.75px solid #cbd5e1; background-color: #f8fafc;">';
+            $html .= '<img src="@' . $imgData . '" width="245" height="175">';
+            $html .= '</td>';
+
+            $col++;
+            if ($col === 2) {
+                $html .= '</tr>';
+                $col = 0;
+            }
+        }
+        if ($col === 1) {
+            $html .= '<td width="50%"></td></tr>';
+        }
+        $html .= '</table>';
+        return $html;
+    };
+
+    $htmlImages = $buildImageSection('Rentout Images', 'صور تسليم المركبة', $rentoutImagePaths);
+    if (!empty($rentoutImagePaths) && !empty($returnImagePaths)) {
+        $htmlImages .= '<br><br>';
+    }
+    $htmlImages .= $buildImageSection('Return Images', 'صور إرجاع المركبة', $returnImagePaths);
+
+    $pdf->writeHTML($htmlImages, true, false, true, false, '');
+    $pdf->SetTextColor(15, 15, 15);
 }
 
 

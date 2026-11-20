@@ -536,12 +536,22 @@ setTimeout(function() {
                         text: item.customer_name,
                         customer_name: item.customer_name,
                         customer_mobile: item.customer_mobile,
+                        phone_1: item.phone_1,
                         customer_id: item.customer_name,
-                        customer_address: item.customer_addr,
+                        customer_address: item.customer_addr || item.customer_address,
                         customer_email: item.customer_email,
                         customer_code: item.customer_code,
                         customer_attn: item.customer_attn,
-                        customer_cr_cpr:item.customer_cr_cpr
+                        customer_cr_cpr: item.customer_cr_cpr,
+                        nationality: item.nationality,
+                        license_no: item.license_no,
+                        license_issue_place: item.license_issue_place,
+                        license_expiry_date: item.license_expiry_date,
+                        customer_account_id: item.customer_account_id,
+                        account_name: item.account_name,
+                        status: item.status,
+                        is_blacklisted: item.is_blacklisted,
+                        blacklist_description: item.blacklist_description
                     }))
                 };
             }
@@ -550,6 +560,18 @@ setTimeout(function() {
         templateSelection: formatCustomerSelection
     });
 }, 100);
+
+$(document).ready(function () {
+    $.getJSON('/CustomerAccountController?action=list&active_only=1', function (res) {
+        if (res && res.status === 'success' && Array.isArray(res.data)) {
+            const $sel = $('#customerAccountId');
+            $sel.find('option:not(:first)').remove();
+            res.data.forEach(function (acc) {
+                $sel.append($('<option>', { value: acc.ids, text: acc.account_name }));
+            });
+        }
+    });
+});
 
 function formatCustomer(customer) {
     if (!customer.id) return customer.text;
@@ -570,24 +592,29 @@ function formatCustomerSelection(customer) {
 
 $('#selectCustomerFromSelect2').on('select2:select', function (e) {
     let data = e.params.data;
-    $('#customer_code').val(data.customer_code);
-    $('#customerName').val(data.customer_name);
-    $('#customerPhone').val(data.customer_mobile);
-    $('#customerEmail').val(data.customer_email);
-    $('#customerAddress').val(data.customer_address);
-    $('#customerAttention').val(data.customer_attn);
-    $('#customercprcr').val(data.customer_cr_cpr);
+    $('#customer_code').val(data.customer_code || '');
+    $('#customerName').val(data.customer_name || '');
+    $('#customerPhone').val(data.customer_mobile || '');
+    $('#customerTelephone').val(data.phone_1 || '');
+    $('#customerEmail').val(data.customer_email || '');
+    $('#customerAddress').val(data.customer_address || '');
+    $('#customerAttention').val(data.customer_attn || '');
+    $('#customercprcr').val(data.customer_cr_cpr || '');
+    $('#customerNationality').val(data.nationality || '');
+    $('#customerLicenseNo').val(data.license_no || '');
+    $('#customerLicenseIssuePlace').val(data.license_issue_place || '');
+    $('#customerLicenseExpiry').val(data.license_expiry_date ? String(data.license_expiry_date).substring(0, 10) : '');
+
+    const accId = data.customer_account_id ? String(data.customer_account_id) : '';
+    if (accId && $('#customerAccountId option[value="' + accId + '"]').length === 0 && data.account_name) {
+        $('#customerAccountId').append($('<option>', { value: accId, text: data.account_name }));
+    }
+    $('#customerAccountId').val(accId);
 });
 
 
 $('#selectCustomerFromSelect2').on('select2:clear', function () {
-    $('#customerName').val('');
-    $('#customer_code').val('');
-    $('#customerPhone').val('');
-    $('#customerEmail').val('');
-    $('#customerAddress').val('');
-    $('#customerAttention').val('');
-    $('#customercprcr').val('');
+    $('#customer_code, #customerName, #customerPhone, #customerTelephone, #customerEmail, #customerAddress, #customerAttention, #customercprcr, #customerNationality, #customerLicenseNo, #customerLicenseIssuePlace, #customerLicenseExpiry, #customerAccountId').val('');
 }); 
 
 $('#addCustomerBtn').click(function () {
@@ -626,6 +653,24 @@ $('#addCustomerBtn').click(function () {
                 );
     
                 $("#QtnAddNewCustomerModal").modal("hide");
+
+                if (res.customerId) {
+                    let newOption = new Option(customerData.customer_name, res.customerId, true, true);
+                    $('#selectCustomerFromSelect2').append(newOption).trigger('change');
+                    $('#customer_code').val(res.customerId || '');
+                    $('#customerName').val(customerData.customer_name || '');
+                    $('#customerPhone').val(customerData.telephone || '');
+                    $('#customerTelephone').val($('#phone_1_onmodal').val() || '');
+                    $('#customerEmail').val(customerData.email || '');
+                    $('#customerAddress').val(customerData.address || '');
+                    $('#customerAttention').val(customerData.attention || '');
+                    $('#customercprcr').val(customerData.cprcr || '');
+                    $('#customerNationality').val($('#nationality_onmodal').val() || '');
+                    $('#customerLicenseNo').val($('#license_no_onmodal').val() || '');
+                    $('#customerLicenseIssuePlace').val($('#license_issue_place_onmodal').val() || '');
+                    $('#customerLicenseExpiry').val($('#license_expiry_date_onmodal').val() || '');
+                    $('#customerAccountId').val($('#customer_account_id_onmodal').val() || '');
+                }
     
     
             } else {
@@ -1323,10 +1368,30 @@ $(document).on('click', '.btn_vehicle_select', function () {
         },
         success: function (res) {
 
+            const esc = (v) => $('<div>').text(v || '').html();
+            const fmtBookings = (list) => list.map(b => {
+                const no = b.booking_no ? `<strong>${esc(b.booking_no)}</strong>` : 'Booking';
+                const cust = b.customer_name ? ` — ${esc(b.customer_name)}` : '';
+                const st = b.book_status ? ` <span class="badge bg-label-warning">${esc(b.book_status)}</span>` : '';
+                return `<div class="small ms-2 mb-1">• ${no}${cust}${st}<br><span class="text-muted ms-2">${esc(b.book_from_date)} to ${esc(b.book_to_date)}</span></div>`;
+            }).join('');
+
+            const overlapping = (res && Array.isArray(res.overlapping_bookings)) ? res.overlapping_bookings : [];
+            const future = (res && Array.isArray(res.future_bookings)) ? res.future_bookings : [];
+
             // ✅ DB OVERLAP CHECK
-            if (res.status && res.exists) {
+            if (overlapping.length > 0) {
+                showConfirm = true;
+                message += '<div class="text-danger fw-semibold mb-1">⚠️ Vehicle already booked during the selected period:</div>' + fmtBookings(overlapping);
+            } else if (res && res.status && res.exists) {
                 showConfirm = true;
                 message += '⚠️ Vehicle already booked in selected date range<br>';
+            }
+
+            // ✅ FUTURE BOOKINGS CHECK
+            if (future.length > 0) {
+                showConfirm = true;
+                message += '<div class="text-warning fw-semibold mt-2 mb-1">📅 Vehicle has upcoming future booking(s):</div>' + fmtBookings(future);
             }
 
             // ✅ FINAL DECISION
@@ -1373,7 +1438,7 @@ function processVehicleSelection($btn, $card, bookingDetails) {
 
         $card.addClass('selected');
         $btn.removeClass('btn-primary').addClass('btn-outline-danger');
-        $btn.attr('title', 'Deselect');
+        $btn.attr('title', 'Deselect').attr('data-bs-original-title', 'Deselect');
         $btn.html('<i class="ri ri-close-line me-1"></i> Deselect');
 
     } else {
@@ -1382,9 +1447,21 @@ function processVehicleSelection($btn, $card, bookingDetails) {
 
         $card.removeClass('selected');
         $btn.removeClass('btn-outline-danger').addClass('btn-primary');
-        $btn.attr('title', 'Select');
+        $btn.attr('title', 'Select').attr('data-bs-original-title', 'Select');
         $btn.html('<i class="ri ri-check-line me-1"></i> Select');
     }
+
+    try {
+        const tip = bootstrap.Tooltip.getInstance($btn[0]);
+        if (tip) {
+            tip.hide();
+            if (typeof tip.setContent === 'function') {
+                tip.setContent({ '.tooltip-inner': index === -1 ? 'Deselect' : 'Select' });
+            }
+        }
+    } catch (e) {}
+    $('.tooltip').remove();
+    $btn.blur();
 
     updateSelectedFooter();
 }

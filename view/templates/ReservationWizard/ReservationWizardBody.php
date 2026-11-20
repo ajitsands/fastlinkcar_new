@@ -159,33 +159,59 @@ $isMultiCompany = count($allowedCompanies) > 1;
             <div class="col-12 col-md-6">
               <!-- CUSTOMER DETAILS -->
               <div class="card mb-1 shadow-none border">
-                <div class="card-header fw-semibold">Customer Details</div>
+                <div class="card-header fw-semibold">Customer Information</div>
                 <div class="card-body">
                   <input type="hidden" id="customer_code" name="customer_code">
                   <div class="row g-2">
+                    <div class="col-12 col-md-6">
+                      <label class="form-label small">ID - CPR Number <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-sm" id="customercprcr" placeholder="ID - CPR Number">
+                    </div>
                     <div class="col-12 col-md-6">
                       <label class="form-label small">Customer Name</label>
                       <input type="text" class="form-control form-control-sm" id="customerName" placeholder="Customer Name" readonly>
                     </div>
                     <div class="col-12 col-md-6">
+                      <label class="form-label small">Nationality</label>
+                      <input type="text" class="form-control form-control-sm" id="customerNationality" placeholder="Nationality" readonly>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label small">Licence No.</label>
+                      <input type="text" class="form-control form-control-sm" id="customerLicenseNo" placeholder="Licence No." readonly>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label small">Issue Place</label>
+                      <input type="text" class="form-control form-control-sm" id="customerLicenseIssuePlace" placeholder="Issue Place" readonly>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label small">Expire Date</label>
+                      <input type="date" class="form-control form-control-sm" id="customerLicenseExpiry" readonly>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label small">Address</label>
+                      <input type="text" class="form-control form-control-sm" id="customerAddress" placeholder="Address">
+                    </div>
+                    <div class="col-12 col-md-6">
                       <label class="form-label small">Telephone</label>
-                      <input type="text" class="form-control form-control-sm" id="customerPhone" placeholder="Telephone" >
+                      <input type="text" class="form-control form-control-sm" id="customerTelephone" placeholder="Telephone" readonly>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label small">Mobile</label>
+                      <input type="text" class="form-control form-control-sm" id="customerPhone" placeholder="Mobile">
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label small">Customer Account <span class="text-danger">*</span></label>
+                      <select class="form-select form-select-sm" id="customerAccountId">
+                        <option value="">Select a Customer Account</option>
+                      </select>
                     </div>
                     <div class="col-12 col-md-6">
                       <label class="form-label small">Email</label>
-                      <input type="email" class="form-control form-control-sm" id="customerEmail" placeholder="Email" >
+                      <input type="email" class="form-control form-control-sm" id="customerEmail" placeholder="Email">
                     </div>
                     <div class="col-12 col-md-6">
                       <label class="form-label small">Attention</label>
-                      <input type="text" class="form-control form-control-sm" id="customerAttention" placeholder="Attention" >
-                    </div>
-                    <div class="col-12 col-md-6">
-                      <label class="form-label small">CPR/CR</label>
-                      <input type="text" class="form-control form-control-sm" id="customercprcr" placeholder="CPR/CR" >
-                    </div>
-                    <div class="col-12">
-                      <label class="form-label small">Address</label>
-                      <textarea class="form-control form-control-sm" id="customerAddress" rows="2" placeholder="Address" ></textarea>
+                      <input type="text" class="form-control form-control-sm" id="customerAttention" placeholder="Attention">
                     </div>
                   </div>
                 </div>

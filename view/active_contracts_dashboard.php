@@ -350,6 +350,98 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                         </div>
                         <div class="mt-2 small text-muted" id="qvNotes"></div>
                     </div>
+
+                    <!-- Extended Full Contract Details (loaded via GetContractDetails) -->
+                    <div id="qvFullDetailsContainer" class="mt-3">
+                        <div class="row g-3 mb-3">
+                            <!-- Rentout Checklist & Handover -->
+                            <div class="col-md-6">
+                                <div class="p-3 rounded border bg-white h-100">
+                                    <div class="fw-semibold mb-2 pb-1 border-bottom" style="color: #1b3d94;">
+                                        <i class="ri-checkbox-multiple-line me-1"></i> Rentout Handover &amp; Checklist (OUT)
+                                    </div>
+                                    <div class="row g-1 small mb-2">
+                                        <div class="col-4 text-muted">KM Out</div>
+                                        <div class="col-8 fw-semibold" id="qvKmOut">-</div>
+                                        <div class="col-4 text-muted">Fuel Out</div>
+                                        <div class="col-8 fw-semibold" id="qvFuelOut">-</div>
+                                        <div class="col-4 text-muted">Rentout Time</div>
+                                        <div class="col-8 fw-semibold" id="qvDtOut">-</div>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-1" id="qvChecklistBadges"></div>
+                                </div>
+                            </div>
+
+                            <!-- Driver Details -->
+                            <div class="col-md-6">
+                                <div class="p-3 rounded border bg-white h-100">
+                                    <div class="fw-semibold mb-2 pb-1 border-bottom" style="color: #1b3d94;">
+                                        <i class="ri-steering-2-line me-1"></i> Driver Details
+                                    </div>
+                                    <div class="row g-1 small">
+                                        <div class="col-5 text-muted">Customer Driver</div>
+                                        <div class="col-7 fw-semibold" id="qvCustDriverName">-</div>
+                                        <div class="col-5 text-muted">Driver CPR / ID</div>
+                                        <div class="col-7 fw-semibold" id="qvCustDriverCpr">-</div>
+                                        <div class="col-5 text-muted">Driver Mobile / Phone</div>
+                                        <div class="col-7 fw-semibold" id="qvCustDriverContact">-</div>
+                                        <div class="col-5 text-muted">Company Driver</div>
+                                        <div class="col-7 fw-semibold" id="qvCompanyDriver">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Extensions (if any) -->
+                        <div class="p-3 rounded border bg-white mb-3 d-none" id="qvExtensionsSection">
+                            <div class="fw-semibold mb-2 pb-1 border-bottom" style="color: #1b3d94;">
+                                <i class="ri-calendar-event-line me-1"></i> Contract Extensions
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered mb-0 small">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Period</th>
+                                            <th>Duration</th>
+                                            <th class="text-end">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="qvExtensionsBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Car Survey OUT & Signatures -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="p-3 rounded border bg-white h-100 text-center">
+                                    <div class="fw-semibold mb-2 pb-1 border-bottom text-start" style="color: #1b3d94;">
+                                        <i class="ri-car-washing-line me-1"></i> Car Survey (OUT)
+                                    </div>
+                                    <canvas id="qvSurveyOutCanvas" width="360" height="220" class="border rounded bg-light" style="max-width: 100%;"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded border bg-white h-100">
+                                    <div class="fw-semibold mb-2 pb-1 border-bottom" style="color: #1b3d94;">
+                                        <i class="ri-quill-pen-line me-1"></i> Signatures &amp; Images
+                                    </div>
+                                    <div class="row g-2 text-center small mb-2">
+                                        <div class="col-6">
+                                            <div class="text-muted mb-1">Hirer Signature</div>
+                                            <div id="qvHirerSignBox" class="border rounded p-1 bg-light" style="min-height: 55px;">-</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted mb-1">Delivered By</div>
+                                            <div id="qvDeliveredSignBox" class="border rounded p-1 bg-light" style="min-height: 55px;">-</div>
+                                        </div>
+                                    </div>
+                                    <div id="qvRentoutImages" class="d-flex flex-wrap gap-2 mt-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer justify-content-between">
                     <div class="d-flex gap-2">
@@ -377,6 +469,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
 
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>httpdocs/user_js/car_survey_widget.js?v=<?= time() ?>"></script>
 
     <script>
     (function() {
@@ -518,10 +611,13 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                             data: 'id',
                             className: 'text-center text-nowrap',
                             orderable: false,
-                            render: (id) => `
+                            render: (id, t, row) => `
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-outline-primary qv-trigger" data-id="${id}" title="View Contract">
+                                    <button type="button" class="btn btn-outline-primary qv-trigger" data-id="${id}" title="View Full Contract Details">
                                         <i class="ri-eye-line me-1"></i> View
+                                    </button>
+                                    <button type="button" class="btn btn-outline-dark ac-print-btn" data-agreement="${escapeHtml(row.agreement_no || '')}" title="Print Agreement">
+                                        <i class="ri-printer-line"></i>
                                     </button>
                                     <button type="button" class="btn btn-outline-success btn-return-modal" data-id="${id}" title="Return Vehicle">
                                         <i class="ri-roadster-line me-1"></i> Return
@@ -636,7 +732,104 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
 
             $('#qvReturnBtn').data('id', row.id).attr('data-id', row.id);
 
+            // Reset extended fields while loading full contract details
+            $('#qvKmOut, #qvFuelOut, #qvDtOut, #qvCustDriverName, #qvCustDriverCpr, #qvCustDriverContact, #qvCompanyDriver').text('Loading...');
+            $('#qvChecklistBadges, #qvExtensionsBody, #qvRentoutImages').empty();
+            $('#qvExtensionsSection').addClass('d-none');
+            $('#qvHirerSignBox, #qvDeliveredSignBox').html('-');
+            if (window.CarSurveyWidget) {
+                CarSurveyWidget.init('qvSurveyOutCanvas', [], { readOnly: true });
+            }
+
             new bootstrap.Modal(document.getElementById('quickViewContractModal')).show();
+
+            $.ajax({
+                url: '/ContractListController',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    action: 'GetContractDetails',
+                    agreementid: row.id,
+                    vehicleid: row.vehicle_id || '',
+                    customer_code: row.customer_code || '',
+                    model_ids: row.model_id || ''
+                }),
+                success: function(res) {
+                    const d = (typeof res === 'string') ? JSON.parse(res) : res;
+                    if (!d || !d.contract) return;
+                    const c = d.contract;
+                    let acc = {};
+                    let drv = {};
+                    try { acc = JSON.parse(c.vehicle_accessories_details || '{}') || {}; } catch (e) {}
+                    try { drv = JSON.parse(c.driver_details || '{}') || {}; } catch (e) {}
+
+                    $('#qvKmOut').text(acc.vehicle_km_out || c.km_out || '-');
+                    $('#qvFuelOut').text(acc.fuel_level || '-');
+                    $('#qvDtOut').text(acc.date_out ? formatDateTime(acc.date_out.replace('T', ' ')) : (c.service_start_date_time ? formatDateTime(c.service_start_date_time) : '-'));
+
+                    const chkList = [
+                        ['Tools Kit', acc.chk_tools],
+                        ['S. Wheel', acc.chk_spare],
+                        ['W. Cup', acc.chk_wcup],
+                        ['Radio', acc.chk_radio],
+                        ['Scratches Mark X', acc.chk_scratches],
+                        ['Seats Cleanness', acc.chk_seats]
+                    ];
+                    $('#qvChecklistBadges').html(chkList.map(([lbl, val]) => {
+                        const yes = String(val || '').toLowerCase() === 'yes';
+                        return `<span class="badge ${yes ? 'bg-label-success' : 'bg-label-secondary'}">${yes ? '✓' : '✗'} ${lbl}</span>`;
+                    }).join(''));
+
+                    $('#qvCustDriverName').text(c.customer_driver_name || acc.cust_driver_name || '-');
+                    $('#qvCustDriverCpr').text(acc.cust_driver_cpr || '-');
+                    const drvPhones = [c.customer_driver_contact_number || acc.cust_driver_contact_no, acc.cust_driver_phone].filter(Boolean).join(' / ');
+                    $('#qvCustDriverContact').text(drvPhones || '-');
+                    $('#qvCompanyDriver').text(drv.driver_name && drv.driver_name !== 'Select Driver' ? `${drv.driver_name}${drv.driver_mobile ? ' (' + drv.driver_mobile + ')' : ''}` : '-');
+
+                    if (Array.isArray(d.extensions) && d.extensions.length > 0) {
+                        $('#qvExtensionsBody').html(d.extensions.map((ext, i) => {
+                            let ed = {};
+                            try { ed = JSON.parse(ext.extend_details || '{}') || {}; } catch (e) {}
+                            return `<tr><td>${i + 1}</td><td>${escapeHtml(ext.extend_start_date || '')} → ${escapeHtml(ext.extend_end_date || '')}</td><td>${escapeHtml((ed.duration || '') + ' ' + (ed.rate_type || ''))}</td><td class="text-end">${Number(ed.total_amt || 0).toFixed(3)}</td></tr>`;
+                        }).join(''));
+                        $('#qvExtensionsSection').removeClass('d-none');
+                    }
+
+                    if (window.CarSurveyWidget) {
+                        CarSurveyWidget.init('qvSurveyOutCanvas', Array.isArray(acc.car_survey_out) ? acc.car_survey_out : [], { readOnly: true });
+                    }
+
+                    if (c.hirer_signature) {
+                        const hp = c.hirer_signature.startsWith('/') ? c.hirer_signature : '/' + c.hirer_signature;
+                        $('#qvHirerSignBox').html(`<img src="${hp}" style="max-height:50px; max-width:100%;" onerror="this.parentNode.innerText='-'">`);
+                    }
+                    if (c.delivered_signature) {
+                        const dp = c.delivered_signature.startsWith('/') ? c.delivered_signature : '/' + c.delivered_signature;
+                        $('#qvDeliveredSignBox').html(`<img src="${dp}" style="max-height:50px; max-width:100%;" onerror="this.parentNode.innerText='-'">`);
+                    }
+
+                    let imgs = [];
+                    try { imgs = JSON.parse(c.vehicle_rentout_images || '[]') || []; } catch (e) {}
+                    if (Array.isArray(imgs) && imgs.length > 0) {
+                        $('#qvRentoutImages').html(imgs.map(im => {
+                            const file = (typeof im === 'string') ? im : (im.image || im.file || '');
+                            if (!file) return '';
+                            const src = file.includes('/') ? (file.startsWith('/') ? file : '/' + file) : '/uploads/rentvehicleImages/' + file;
+                            return `<a href="${src}" target="_blank"><img src="${src}" class="rounded border" style="width:64px; height:48px; object-fit:cover;"></a>`;
+                        }).join(''));
+                    }
+                }
+            });
+        });
+
+        $(document).on('click', '.ac-print-btn', function() {
+            const agr = $(this).data('agreement');
+            if (!agr) return;
+            fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(agr))
+                .then(r => r.text())
+                .then(token => {
+                    if (token) window.open('/PrintAgreement?token=' + encodeURIComponent(token.trim()), '_blank');
+                });
         });
 
         let returnIframeReady = false;

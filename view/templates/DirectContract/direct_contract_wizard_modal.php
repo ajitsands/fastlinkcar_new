@@ -48,8 +48,8 @@
     <div id="tab-dc-customer" class="content">
         <div class="row g-3">
             <div class="col-12">
-                <fieldset class="border rounded p-3" style="background-color: #fff1f1; border-color: #ffc9c9 !important;">
-                    <legend class="fw-bold text-danger w-auto px-2 mb-0" style="font-size:13px; float:none; line-height:1;">Customer Details</legend>
+                <fieldset class="border rounded p-3" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                    <legend class="fw-bold text-primary w-auto px-2 mb-0" style="font-size:13px; float:none; line-height:1;">Customer Details</legend>
                     <div class="row g-2">
                         <div class="col-3 mb-2">
                             <small class="text-muted d-block">Customer Name</small>
@@ -78,10 +78,10 @@
                 </fieldset>
             </div>
             <div class="col-12">
-                <fieldset class="border rounded p-3" style="background-color: #fff1f1; border-color: #ffc9c9 !important;">
-                    <legend class="fw-bold text-danger w-auto px-2 mb-0" style="font-size:13px; float:none; line-height:1;">Contract Details</legend>
+                <fieldset class="border rounded p-3" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                    <legend class="fw-bold text-primary w-auto px-2 mb-0" style="font-size:13px; float:none; line-height:1;">Contract Details</legend>
                     <!-- Row 1: Dates, Service, Duration -->
-                    <div class="row g-2 mb-2 border-bottom pb-2 border-danger-subtle">
+                    <div class="row g-2 mb-2 border-bottom pb-2 border-primary-subtle">
                         <div class="col-3">
                             <small class="text-muted d-block">From</small>
                             <strong class="d-block text-truncate" id="dc_b_from_date" style="font-size: 11px;"></strong>
@@ -101,12 +101,12 @@
                     </div>
 
                     <!-- Row 2: Pricing Info -->
-                    <div class="row g-2 mb-2 border-bottom pb-2 border-danger-subtle">
+                    <div class="row g-2 mb-2 border-bottom pb-2 border-primary-subtle">
                         <div class="col-3">
                             <small class="text-muted d-block">Unit Price</small>
                             <strong class="text-truncate d-block">
                                 <span id="dc_b_unit_price"></span> 
-                                <span class="badge bg-danger ms-1" style="font-size:10px;">Min: <span id="dc_b_min_price"></span></span>
+                                <span class="badge bg-primary ms-1" style="font-size:10px;">Min: <span id="dc_b_min_price"></span></span>
                             </strong>
                         </div>
                         <div class="col-3">
@@ -119,7 +119,7 @@
                         </div>
                         <div class="col-3">
                             <small class="text-muted d-block">Total</small>
-                            <strong class="text-truncate d-block text-danger" id="dc_b_total"></strong>
+                            <strong class="text-truncate d-block text-primary" id="dc_b_total"></strong>
                         </div>
                     </div>
                     
@@ -150,8 +150,8 @@
 <!-- Template for Vehicle Checklist Tab -->
 <template id="dc-tpl-vehicle">
     <div id="tab-dc-vehicle-{ID}" class="content dc-vehicle-tab" data-vid="{ID}">
-        <h6 class="fw-bold text-danger mb-1" style="font-size:13px;">Vehicle Details</h6>
-        <div class="card border-0 mb-3" style="background-color: #fce8e8; font-size: 11px;">
+        <h6 class="fw-bold text-primary mb-1" style="font-size:13px;">Vehicle Details</h6>
+        <div class="card mb-3" style="background-color: #f4f7ff; border: 1px solid #cfe0ff !important; font-size: 11px;">
             <div class="card-body p-2">
                 <div class="d-flex">
                     <div class="me-3 d-flex flex-column align-items-center justify-content-center" style="width: 250px;">
@@ -191,7 +191,7 @@
             </div>
         </div>
         
-        <h6 class="fw-bold text-danger mb-3">Vehicle Checklist & Handover</h6>
+        <h6 class="fw-bold text-primary mb-3">Vehicle Checklist & Handover</h6>
         <div class="row g-3 mb-4">
             <div class="col-md-2">
                 <div class="form-check mb-2">
@@ -233,7 +233,7 @@
             </div>
         </div>
 
-        <h6 class="fw-bold text-danger mb-3">Customer Driver</h6>
+        <h6 class="fw-bold text-primary mb-3">Customer Driver</h6>
         <div class="row g-3 mb-4">
             <div class="col-md-4">
                 <div class="form-floating form-floating-outline">
@@ -260,7 +260,7 @@
         </div>
         
         <div id="assign_company_driver_section_{ID}" style="display: none;">
-            <h6 class="fw-bold text-danger mb-1" style="font-size:13px;">Assign Company Driver</h6>
+            <h6 class="fw-bold text-primary mb-1" style="font-size:13px;">Assign Company Driver</h6>
             <div class="row g-2 mb-3">
                 <div class="col-12 col-md-4">
                     <div class="form-floating form-floating-outline mb-1 h-100">
@@ -268,7 +268,7 @@
                     </div>
                 </div>
                 <div class="col-12 col-md-8" id="company_driver_details_container_{ID}" style="display:none;">
-                    <div class="p-2 rounded h-100 driverclass" style="background-color: #fff1f1; border: 1px solid #ffc9c9;">
+                    <div class="p-2 rounded h-100 driverclass" style="background-color: #f4f7ff; border: 1px solid #cfe0ff;">
                         <div class="row g-1">
                             <div class="col-4 mb-1">
                                 <div class="text-muted" style="font-size: 10px; line-height: 1.2;">Name</div>
@@ -304,7 +304,7 @@
             </div>
         </div>
 
-        <h6 class="fw-bold text-danger mb-3">Rentout Images</h6>
+        <h6 class="fw-bold text-primary mb-3">Rentout Images</h6>
         <div class="row mb-4">
             <div class="col-12">
                 <div class="p-4 border border-dashed rounded text-center mb-3">
@@ -331,7 +331,7 @@
 <template id="dc-tpl-terms">
     <div id="tab-dc-terms" class="content">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="fw-bold text-danger mb-0">Terms & Conditions</h6>
+            <h6 class="fw-bold text-primary mb-0">Terms & Conditions</h6>
             <button id="dc_btn_terms_condition" class="btn btn-primary btn-sm">
                 <span class="ri-settings-3-line me-1"></span> Manage Terms
             </button>
@@ -380,7 +380,7 @@
 <!-- Template for Signatures Tab -->
 <template id="dc-tpl-signatures">
     <div id="tab-dc-signatures" class="content">
-        <h6 class="fw-bold text-danger mb-3">Global Signatures</h6>
+        <h6 class="fw-bold text-primary mb-3">Global Signatures</h6>
         <p class="text-muted small mb-4">These signatures will be applied to all generated contracts for the selected vehicles.</p>
         
         <div class="row mb-4">

@@ -1424,7 +1424,8 @@ class VehiclesContractController
                             'cust_driver_contact_no' => $v['handover']['cust_driver_contact_no'] ?? ($v['cust_driver_contact_no'] ?? ''),
                             'cust_driver_phone' => $v['handover']['cust_driver_phone'] ?? '',
                             'cust_driver_documents' => ['vehicles' => []],
-                            'vehicle_images' => []
+                            'vehicle_images' => [],
+                            'car_survey_out' => $v['handover']['car_survey_out'] ?? []
                         ]);
 
                         $driver_ids = $v['handover']['company_driver_id'] ?? '';

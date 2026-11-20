@@ -329,6 +329,7 @@ html, body {
      <script src="../assets/vendor/libs/fullcalendar/fullcalendar.js"></script>
      <script src="../assets/vendor/libs/notyf/notyf.js"></script>
      <script src="../httpdocs/user_js/vehicle_info.js"></script>
+     <script src="../httpdocs/user_js/car_survey_widget.js?v=<?= time() ?>"></script>
     <script>
          const fullToolbar = [
                 [
@@ -1881,6 +1882,10 @@ function populatereturnContractModal(d) {
         $('#ret_chk_scratches').prop('checked', vehicle_accessiories_details.ret_chk_scratches === 'Yes');
         $('#ret_chk_seats').prop('checked', vehicle_accessiories_details.ret_chk_seats === 'Yes');
         $('#ret_survey_confirmed').prop('checked', vehicle_accessiories_details.ret_survey_confirmed !== 'No');
+        if (window.CarSurveyWidget) {
+            CarSurveyWidget.init('ret_survey_out_preview', vehicle_accessiories_details.car_survey_out || [], { readOnly: true });
+            CarSurveyWidget.init('ret_survey_in', vehicle_accessiories_details.car_survey_in || []);
+        }
         
         let getCurrentDateTimeLocal = function() {
             let now = new Date();
@@ -5616,6 +5621,7 @@ function executeReturnContract(customer_code)
                             ret_chk_seats: $('#ret_chk_seats').is(':checked') ? 'Yes' : 'No',
                             ret_survey_confirmed: $('#ret_survey_confirmed').is(':checked') ? 'Yes' : 'No'
                         },
+                        car_survey_in: window.CarSurveyWidget ? CarSurveyWidget.getMarks('ret_survey_in') : [],
                         returnvehicleimages: allVehicleReturnImages,
                         receiver_name:receiver_name,
                         ReceiverSign: receiver_signature,

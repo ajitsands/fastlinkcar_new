@@ -623,6 +623,32 @@
                 </div>
               </div>
 
+              <div class="p-3 mb-3 rounded border" style="background-color: #ffffff; border-color: #dbe4ff !important;">
+                <span class="d-block text-uppercase fw-semibold mb-2" style="font-size: 10.5px; color: #1b3d94;">Car Survey (OUT vs IN)</span>
+                <div class="row g-3">
+                  <div class="col-md-6 text-center">
+                    <div class="small fw-semibold text-muted mb-1">OUT (At Rentout - Reference)</div>
+                    <canvas id="ret_survey_out_preview" width="360" height="220" class="border rounded bg-light" style="max-width: 100%;"></canvas>
+                  </div>
+                  <div class="col-md-6 text-center">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <span class="small fw-semibold text-primary">IN (At Return - Mark Damages)</span>
+                      <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary active" onclick="CarSurveyWidget.setMode('ret_survey_in', 'x'); $(this).addClass('active').siblings().removeClass('active');">
+                          <i class="ri-close-line"></i> ✕
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="CarSurveyWidget.setMode('ret_survey_in', 'line'); $(this).addClass('active').siblings().removeClass('active');">
+                          <i class="ri-pencil-line"></i> Draw
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="CarSurveyWidget.undo('ret_survey_in')">Undo</button>
+                        <button type="button" class="btn btn-outline-danger" onclick="CarSurveyWidget.clear('ret_survey_in')">Clear</button>
+                      </div>
+                    </div>
+                    <canvas id="ret_survey_in" width="360" height="220" class="border rounded" style="max-width: 100%; cursor: crosshair; touch-action: none;"></canvas>
+                  </div>
+                </div>
+              </div>
+
               <h6 class="mb-2 fw-bold text-uppercase" style="color: #1b3d94; font-size: 12px; letter-spacing: 0.4px;">Vehicle Return Images</h6>
               <input type="file" id="returncarImages" class="form-control mb-3" multiple accept="image/*" capture="environment">
               <div id="returnpreview" class="d-flex flex-wrap gap-2 mb-3"></div>

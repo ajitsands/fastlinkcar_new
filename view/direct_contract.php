@@ -452,6 +452,7 @@ input[type="number"] {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda.min.js"></script>
     
     <script src="../httpdocs/user_js/vehicle_info.js"></script>
+    <script src="../httpdocs/user_js/car_survey_widget.js?v=<?= time() ?>"></script>
     <script src="../httpdocs/user_js/direct_contract_wizard.js?v=<?= time() + 1 ?>"></script>
     
     <script>

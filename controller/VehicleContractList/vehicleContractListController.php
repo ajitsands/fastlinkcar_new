@@ -1809,6 +1809,9 @@ class VehiclesContractListController
                                             $vadArr['date_in'] = $this->return_date_in;
                                             $vadArr['return_fuel_level'] = $data['return_fuel_level'] ?? '';
                                             $vadArr['return_note'] = $data['return_note'] ?? '';
+                                            if (isset($data['car_survey_in']) && is_array($data['car_survey_in'])) {
+                                                $vadArr['car_survey_in'] = $data['car_survey_in'];
+                                            }
                                             foreach (['ret_chk_tools', 'ret_chk_spare', 'ret_chk_wcup', 'ret_chk_radio', 'ret_chk_scratches', 'ret_chk_seats', 'ret_survey_confirmed'] as $rk) {
                                                 if (isset($retChk[$rk])) {
                                                     $vadArr[$rk] = $retChk[$rk];

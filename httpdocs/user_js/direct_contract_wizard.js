@@ -232,6 +232,10 @@ function buildDirectContractWizard(bookingDetails, vehicles) {
                                
         contentContainer.append(vehicleTpl);
 
+        if (window.CarSurveyWidget) {
+            CarSurveyWidget.init(`dc_survey_out_${v.id}`, []);
+        }
+
         // Fetch full vehicle profile details (Fuel, Gear, Maintenance, etc.)
         $.ajax({
             url: '/AddVehicles',
@@ -1093,8 +1097,9 @@ function gatherDirectContractData() {
                 // Company Driver
                 company_driver_id: $(`#driverSelect_${v.id}`).val(),
                 
-                // Rentout Images
-                rentout_images: dcUploadedImages[v.id] || []
+                // Rentout Images & Car Survey OUT
+                rentout_images: dcUploadedImages[v.id] || [],
+                car_survey_out: window.CarSurveyWidget ? CarSurveyWidget.getMarks(`dc_survey_out_${v.id}`) : []
             }
         };
         payload.vehicles.push(vData);

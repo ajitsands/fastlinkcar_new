@@ -388,6 +388,30 @@
             </div>
         </div>
 
+        <h6 class="fw-bold text-primary mb-2">Car Survey (OUT — تسليم للزبون)</h6>
+        <div class="p-2 mb-4 rounded border bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <small class="text-muted">Click on the car diagram to mark scratches/damages (✕) or switch to Draw mode.</small>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary active" onclick="CarSurveyWidget.setMode('dc_survey_out_{ID}', 'x'); $(this).addClass('active').siblings().removeClass('active');">
+                        <i class="ri-close-line me-1"></i>Mark ✕
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="CarSurveyWidget.setMode('dc_survey_out_{ID}', 'line'); $(this).addClass('active').siblings().removeClass('active');">
+                        <i class="ri-pencil-line me-1"></i>Draw
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="CarSurveyWidget.undo('dc_survey_out_{ID}')">
+                        <i class="ri-arrow-go-back-line"></i> Undo
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="CarSurveyWidget.clear('dc_survey_out_{ID}')">
+                        <i class="ri-delete-bin-line"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="text-center">
+                <canvas id="dc_survey_out_{ID}" width="360" height="220" class="border rounded" style="max-width: 100%; cursor: crosshair; touch-action: none;"></canvas>
+            </div>
+        </div>
+
         <h6 class="fw-bold text-primary mb-3">Rentout Images</h6>
         <div class="row mb-4">
             <div class="col-12">

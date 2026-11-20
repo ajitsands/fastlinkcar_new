@@ -657,7 +657,7 @@ $pdf->SetLineWidth(0.35);
 $pdf->Rect(10, $boxTop, 190, $boxH);
 
 // Helper to draw clean top-down car inspection diagram
-$drawCarDiagram = function($pdf, $cx, $cy, $title) {
+$drawCarDiagram = function($pdf, $cx, $cy, $title, $marks = []) {
     $pdf->SetFont('dejavusans', 'B', 8);
     $pdf->SetXY($cx - 42, $cy - 32);
     $pdf->Cell(84, 5, $title, 0, 0, 'C');
@@ -694,11 +694,11 @@ $drawCarDiagram = function($pdf, $cx, $cy, $title) {
 
     // Labels
     $pdf->SetTextColor(20, 20, 20);
-    $pdf->SetFont('dejavusans', '', 6);
-    $pdf->SetXY($cx - 34, $cy - 5);
-    $pdf->Cell(18, 8, "غطاء المحرك\nHOOD", 0, 0, 'C');
+    $pdf->SetFont('dejavusans', '', 5.8);
+    $pdf->SetXY($cx - 34, $cy - 4);
+    $pdf->MultiCell(18, 3.8, "غطاء المحرك\nHOOD", 0, 'C', false, 0);
     $pdf->SetXY($cx - 5, $cy - 4);
-    $pdf->Cell(18, 8, "سقف\nROOF", 0, 0, 'C');
+    $pdf->MultiCell(18, 3.8, "سقف\nROOF", 0, 'C', false, 0);
     $pdf->SetXY($cx + 24, $cy - 3);
     $pdf->Cell(12, 6, 'TRUNK', 0, 0, 'C');
     $pdf->SetFont('dejavusans', '', 5.2);
@@ -710,10 +710,40 @@ $drawCarDiagram = function($pdf, $cx, $cy, $title) {
     $pdf->Cell(14, 5, 'DOOR باب', 0, 0, 'C');
     $pdf->SetXY($cx + 3, $cy + 15);
     $pdf->Cell(14, 5, 'DOOR باب', 0, 0, 'C');
+
+    // Draw saved damage/scratch survey marks in crisp red
+    if (!empty($marks) && is_array($marks)) {
+        $pdf->SetDrawColor(220, 38, 38);
+        $pdf->SetLineWidth(0.75);
+        foreach ($marks as $m) {
+            if (!is_array($m)) continue;
+            $type = $m['type'] ?? '';
+            if ($type === 'x' && isset($m['nx'], $m['ny'])) {
+                $mx = $cx + ((float)$m['nx']) * 40.0;
+                $my = $cy + ((float)$m['ny']) * 20.0;
+                $pdf->Line($mx - 1.8, $my - 1.8, $mx + 1.8, $my + 1.8);
+                $pdf->Line($mx + 1.8, $my - 1.8, $mx - 1.8, $my + 1.8);
+            } elseif ($type === 'line' && !empty($m['pts']) && is_array($m['pts'])) {
+                $pts = $m['pts'];
+                for ($i = 1; $i < count($pts); $i++) {
+                    if (!isset($pts[$i - 1]['nx'], $pts[$i - 1]['ny'], $pts[$i]['nx'], $pts[$i]['ny'])) continue;
+                    $x1 = $cx + ((float)$pts[$i - 1]['nx']) * 40.0;
+                    $y1 = $cy + ((float)$pts[$i - 1]['ny']) * 20.0;
+                    $x2 = $cx + ((float)$pts[$i]['nx']) * 40.0;
+                    $y2 = $cy + ((float)$pts[$i]['ny']) * 20.0;
+                    $pdf->Line($x1, $y1, $x2, $y2);
+                }
+            }
+        }
+        $pdf->SetDrawColor(30, 30, 30);
+        $pdf->SetLineWidth(0.3);
+    }
 };
 
-$drawCarDiagram($pdf, 58, $boxTop + 37, 'إستلام من الزبون IN');
-$drawCarDiagram($pdf, 152, $boxTop + 37, 'تسليم للزبون OUT');
+$surveyInMarks  = (isset($accessories['car_survey_in']) && is_array($accessories['car_survey_in'])) ? $accessories['car_survey_in'] : [];
+$surveyOutMarks = (isset($accessories['car_survey_out']) && is_array($accessories['car_survey_out'])) ? $accessories['car_survey_out'] : [];
+$drawCarDiagram($pdf, 58, $boxTop + 37, 'إستلام من الزبون IN', $surveyInMarks);
+$drawCarDiagram($pdf, 152, $boxTop + 37, 'تسليم للزبون OUT', $surveyOutMarks);
 
 // Checklist + Fuel Gauge Row
 $chkTop = $boxTop + $boxH + 4;

@@ -257,6 +257,7 @@ html, body {
               <?php include('templates/VehicleContractList/confirmafteroptvalidation_modal.php'); ?>
                <?php include('templates/VehicleContractList/extend_contract_modal.php'); ?>
                <?php include('templates/VehicleContractList/return_contract_modal.php'); ?>
+               <?php include('templates/VehicleContractList/return_receipt_modal.php'); ?>
                <?php include('templates/VehicleContractList/replace_contract_modal.php'); ?>
                
               <?php include('templates/VehicleContractList/extension_list_modal.php'); ?>
@@ -330,6 +331,7 @@ html, body {
      <script src="../assets/vendor/libs/notyf/notyf.js"></script>
      <script src="../httpdocs/user_js/vehicle_info.js"></script>
      <script src="../httpdocs/user_js/car_survey_widget.js?v=<?= time() ?>"></script>
+     <script src="../httpdocs/user_js/return_receipt_modal.js?v=<?= time() ?>"></script>
     <script>
          const fullToolbar = [
                 [
@@ -470,9 +472,10 @@ $(document).on('shown.bs.modal hidden.bs.modal', '#ReturncontractModal', functio
             window.parent.postMessage({
                 type: 'returnModalClosed',
                 returned: window.__returnSuccess === true,
-                promptReceipt: !!(promptInfo && promptInfo.receiptUrl),
-                receiptUrl: promptInfo ? promptInfo.receiptUrl : '',
-                agreementNo: promptInfo ? promptInfo.agreementNo : ''
+                promptReceipt: !!(promptInfo && promptInfo.contract_id),
+                contract_id: promptInfo ? promptInfo.contract_id : '',
+                customer_code: promptInfo ? promptInfo.customer_code : '',
+                agreementNo: promptInfo ? promptInfo.agreement_no : ''
             }, '*');
         }
     }
@@ -5654,14 +5657,15 @@ function executeReturnContract(customer_code)
                                 'click'
                             );
                         
-                            const receiptUrl = '/CashMemo?val=' + encodeURIComponent('<?= $this->encryption->encrypt('5,5-5') ?>')
-                                + '&contract_id=' + encodeURIComponent(agreement_id || '')
-                                + '&customer_code=' + encodeURIComponent(customer_code || '')
-                                + '&agreement_no=' + encodeURIComponent(agreement_no || '');
+                            const receiptInfo = {
+                                contract_id: agreement_id || '',
+                                customer_code: customer_code || '',
+                                agreement_no: agreement_no || ''
+                            };
 
                             const qpEmbed = new URLSearchParams(window.location.search).get('embed_return') === '1';
                             if (qpEmbed && window.parent && window.parent !== window) {
-                                window.__pendingReceiptPrompt = { receiptUrl: receiptUrl, agreementNo: agreement_no || '' };
+                                window.__pendingReceiptPrompt = receiptInfo;
                             }
 
                             let modal = bootstrap.Modal.getInstance(
@@ -5676,7 +5680,7 @@ function executeReturnContract(customer_code)
                                 if (typeof Swal !== 'undefined') {
                                     Swal.fire({
                                         title: 'Vehicle Returned Successfully',
-                                        text: 'Do you want to generate a Receipt (Cash Memo) for agreement ' + (agreement_no || '') + '?',
+                                        text: 'Do you want to generate a Receipt for agreement ' + (agreement_no || '') + '?',
                                         icon: 'success',
                                         showCancelButton: true,
                                         confirmButtonText: 'Yes, Generate Receipt',
@@ -5687,12 +5691,12 @@ function executeReturnContract(customer_code)
                                             if (c) c.style.setProperty('z-index', '999999', 'important');
                                         }
                                     }).then(function (result) {
-                                        if (result.isConfirmed) {
-                                            window.open(receiptUrl, '_blank');
+                                        if (result.isConfirmed && window.ReturnReceiptModal) {
+                                            window.ReturnReceiptModal.open(receiptInfo);
                                         }
                                     });
                                 } else if (confirm('Vehicle returned successfully. Do you want to generate a Receipt for ' + (agreement_no || '') + '?')) {
-                                    window.open(receiptUrl, '_blank');
+                                    if (window.ReturnReceiptModal) window.ReturnReceiptModal.open(receiptInfo);
                                 }
                             }
                             return;

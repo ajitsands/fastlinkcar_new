@@ -467,9 +467,11 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             style="display:none; position:fixed; inset:0; width:100vw; height:100vh; border:0; z-index:99999 !important; background:transparent;">
     </iframe>
 
+    <?php include ROOT_PATH . '/view/templates/VehicleContractList/return_receipt_modal.php'; ?>
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>httpdocs/user_js/car_survey_widget.js?v=<?= time() ?>"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>httpdocs/user_js/return_receipt_modal.js?v=<?= time() ?>"></script>
 
     <script>
     (function() {
@@ -884,25 +886,28 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                 if (event.data.returned) {
                     loadActiveContracts();
                 }
-                if (event.data.promptReceipt && event.data.receiptUrl) {
-                    const rUrl = event.data.receiptUrl;
-                    const agrNo = event.data.agreementNo || '';
+                if (event.data.promptReceipt && event.data.contract_id) {
+                    const recInfo = {
+                        contract_id: event.data.contract_id,
+                        customer_code: event.data.customer_code || '',
+                        agreement_no: event.data.agreementNo || ''
+                    };
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             title: 'Vehicle Returned Successfully',
-                            text: 'Do you want to generate a Receipt (Cash Memo) for agreement ' + agrNo + '?',
+                            text: 'Do you want to generate a Receipt for agreement ' + recInfo.agreement_no + '?',
                             icon: 'success',
                             showCancelButton: true,
                             confirmButtonText: 'Yes, Generate Receipt',
                             cancelButtonText: 'No',
                             confirmButtonColor: '#1b3d94'
                         }).then(function(result) {
-                            if (result.isConfirmed) {
-                                window.open(rUrl, '_blank');
+                            if (result.isConfirmed && window.ReturnReceiptModal) {
+                                window.ReturnReceiptModal.open(recInfo);
                             }
                         });
-                    } else if (confirm('Vehicle returned successfully. Do you want to generate a Receipt for ' + agrNo + '?')) {
-                        window.open(rUrl, '_blank');
+                    } else if (confirm('Vehicle returned successfully. Do you want to generate a Receipt for ' + recInfo.agreement_no + '?')) {
+                        if (window.ReturnReceiptModal) window.ReturnReceiptModal.open(recInfo);
                     }
                 }
             }

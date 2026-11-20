@@ -368,9 +368,9 @@ if ($returnFuelVal !== '') {
 
 $startRaw      = $data['service_start_date_time'] ?? ($contract_details['period_from'] ?? '');
 $endRaw        = !empty($latestExtEnd) ? $latestExtEnd : ($data['service_end_date_time'] ?? ($contract_details['period_to'] ?? ''));
-$receivedDate  = !empty($startRaw) ? date('d/m/Y', strtotime($startRaw)) : '-';
+$receivedDate  = !empty($startRaw) ? date('d-M-Y', strtotime($startRaw)) : '-';
 $timeOut       = !empty($startRaw) ? date('H:i', strtotime($startRaw)) : '-';
-$returnDtStr   = !empty($endRaw) ? date('d/m/Y   H:i', strtotime($endRaw)) : '-';
+$returnDtStr   = !empty($endRaw) ? date('d-M-Y   H:i', strtotime($endRaw)) : '-';
 $rentPeriod    = trim(($contract_details['duration'] ?? '') . ($rateTypeStr !== '' ? ' ' . ucfirst(strtolower($rateTypeStr)) : ''));
 $depositAmt    = (float)($contract_details['refundable_deposit'] ?? 0);
 
@@ -399,14 +399,14 @@ $renterNameDisp = !empty($data['hirer_name']) ? $data['hirer_name'] : $custName;
 
 $html = '
 <style>
-    table.agr-table { width: 100%; border-collapse: collapse; font-family: dejavusans; font-size: 7.2pt; border: 0.7px solid #222; }
-    table.agr-table td { border-left: 0.6px solid #222; border-right: 0.6px solid #222; border-top: none; border-bottom: none; padding: 1.7px 5px; }
-    table.agr-table tr.sec-top td { border-top: 0.7px solid #222; }
-    table.agr-table tr.sec-bot td { border-bottom: 0.7px solid #222; }
-    .lbl-en { width: 28%; color: #111; }
-    .val-mid { width: 44%; text-align: center; color: #000; }
-    .lbl-ar { width: 28%; text-align: right; color: #111; }
-    .cond-hdr { background-color: #f3f4f6; font-weight: bold; border-top: 0.7px solid #222; border-bottom: 0.7px solid #222; }
+    table.agr-table { width: 100%; border-collapse: collapse; font-family: dejavusans; font-size: 7.4pt; border: 0.75px solid #1b3d94; }
+    table.agr-table td { border-left: 0.6px solid #cbd5e1; border-right: 0.6px solid #cbd5e1; border-top: none; border-bottom: 0.25px solid #e2e8f0; padding: 2.3px 6px; }
+    table.agr-table tr.sec-top td { border-top: 0.75px solid #1b3d94; }
+    table.agr-table tr.sec-bot td { border-bottom: 0.75px solid #1b3d94; }
+    .lbl-en { width: 28%; color: #1e293b; }
+    .val-mid { width: 44%; text-align: center; color: #000000; }
+    .lbl-ar { width: 28%; text-align: right; color: #1e293b; }
+    .cond-hdr { background-color: #eef2ff; color: #1b3d94; font-weight: bold; border-top: 0.75px solid #1b3d94; border-bottom: 0.75px solid #1b3d94; }
 </style>
 
 <table class="agr-table">
@@ -560,9 +560,9 @@ $html = '
     </tr>
 </table>
 
-<table width="100%" cellpadding="3" style="border: 0.7px solid #222; border-top: none; font-family: dejavusans; font-size: 6.8pt;">
+<table width="100%" cellpadding="4" style="border: 0.75px solid #1b3d94; border-top: none; font-family: dejavusans; font-size: 6.9pt;">
     <tr>
-        <td align="right" style="line-height: 1.35;">
+        <td align="right" style="line-height: 1.42;">
             1 - لا يحق للمستأجر تسليم السيارة لشخص آخر لاستعمالها دون موافقة الشركة.<br>
             2 - لا يسمح بالتدخين بداخل السيارة وإذا خالف المستأجر هذا الشرط يتحمل مبلغ وقدره 15 دينار.<br>
             3 - يتوجب على المستأجر فحص السيارة قبل استلامها والتأكد من وجود جميع الأجهزة واللوازم الخاصة بالمركبة وفي حال ضياعها أو تلفها يلتزم المستأجر بدفع قيمتها.<br>
@@ -572,7 +572,7 @@ $html = '
         </td>
     </tr>
     <tr>
-        <td align="left" style="line-height: 1.35; border-top: 0.5px solid #ccc;">
+        <td align="left" style="line-height: 1.42; border-top: 0.5px solid #cbd5e1;">
             1 The renter shall not deliver the car to someone else to use without the company approval.<br>
             2 SMOKING is not permitted inside the car and if the renter violates this condition shall bear an amount of 15 BD.<br>
             3 The renter should check the car before the receipt and make sure all the equipment and supplies it is in the car and in case of loss or damage to the equipment or supplies the renter shall pay for the loss.<br>
@@ -583,13 +583,13 @@ $html = '
     </tr>
 </table>
 
-<table width="100%" cellpadding="2" style="font-family: dejavusans; font-size: 7.5pt; margin-top: 4px;">
+<table width="100%" cellpadding="2.5" style="font-family: dejavusans; font-size: 7.5pt; margin-top: 6px;">
     <tr>
         <td width="58%" valign="bottom">
             <b>Renter:</b> &nbsp; ' . htmlspecialchars($renterNameDisp) . '
         </td>
         <td width="42%">
-            <table width="100%" cellpadding="1.5" style="font-size: 7.5pt;">
+            <table width="100%" cellpadding="2" style="font-size: 7.5pt;">
                 <tr>
                     <td width="55%"><b>Rent Amount</b></td>
                     <td width="45%" align="right">' . number_format($rentAmt, 3) . '</td>

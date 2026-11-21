@@ -184,7 +184,7 @@
                             } ?>">
          <a href="javascript:void(0)" class="menu-link menu-toggle">
            <i class="menu-icon icon-base ri ri-layout-2-line"></i>
-           <div data-i18n="Operations">Operations</div>
+           <div data-i18n="Reservation">Reservation</div>
          </a>
 
          <ul class="menu-sub">

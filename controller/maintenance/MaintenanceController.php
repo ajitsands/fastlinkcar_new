@@ -222,8 +222,9 @@ try {
         $stmt = $pdo->prepare("
             SELECT r.ids, r.request_no, r.status, r.created_on, 
                    v.vehicle_number, v.chassis_number, v.is_outsourced, v.vehicle_status,
+                   v.vehicle_year, v.vehicle_color, v.other_details_json,
                    (SELECT odometer FROM tbl_vehicle_log_movement WHERE vehicle_ids = v.ids AND odometer IS NOT NULL AND odometer != '' ORDER BY log_datetime DESC, ids DESC LIMIT 1) as present_odometer,
-                   b.brand_name, m.modal_name as model_name,
+                   b.brand_name, m.modal_name as model_name, cat.category_name,
                    g.garage_name, g.contact_person, g.contact_number, g.email_id,
                    cmp.company_name as registration_company,
                    o.company_name as outsourcing_company_name
@@ -231,6 +232,7 @@ try {
             LEFT JOIN tbl_vehicles v ON r.vehicle_id = v.ids
             LEFT JOIN tbl_vehicle_brand b ON v.brand_id = b.ids
             LEFT JOIN tbl_vehicle_model m ON v.model_id = m.ids
+            LEFT JOIN tbl_vehicle_category cat ON v.category_id = cat.ids
             LEFT JOIN tbl_garages g ON r.garage_id = g.ids
             LEFT JOIN tbl_company cmp ON v.company_id = cmp.ids
             LEFT JOIN tbl_outsourcing_companies o ON v.outsourcing_company_id = o.ids

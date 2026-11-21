@@ -495,20 +495,49 @@ $(document).ready(function() {
                 { 
                     data: null, 
                     render: function(data, type, row) {
-                        let outsourceText = row.is_outsourced === 'Yes' ? (row.outsourcing_company_name ? `Outsource (${row.outsourcing_company_name})` : 'Outsource') : 'Fleet';
-                        let typeBadge = row.is_outsourced === 'Yes' ? `<span class="badge bg-label-warning">${outsourceText}</span>` : `<span class="badge bg-label-primary">${outsourceText}</span>`;
-                        let statusBadge = row.vehicle_status ? (typeof window.getVehicleStatusBadgeHtml === 'function' ? window.getVehicleStatusBadgeHtml(row.vehicle_status) : `<span class="badge bg-label-info">${row.vehicle_status}</span>`) : '';
-                        let company = row.registration_company ? `<span class="badge bg-label-secondary"><i class="ri ri-building-line align-middle me-1"></i>${row.registration_company}</span>` : '';
-                        let chassis = row.chassis_number ? `<small class="text-muted d-block"><i class="ri ri-barcode-line align-middle"></i> ${row.chassis_number}</small>` : '';
-                        
-                        return `<b>${row.vehicle_number}</b>
-                                <br><small class="text-muted">${row.brand_name} ${row.model_name}</small>
-                                ${chassis}
-                                <div class="d-flex flex-wrap gap-1 mt-1">
-                                    ${typeBadge}
+                        const vNo = row.vehicle_number || '-';
+                        const brandModel = [row.brand_name, row.model_name].filter(Boolean).join(' - ') || '-';
+                        if (type === 'filter' || type === 'sort') {
+                            return `${vNo} ${brandModel} ${row.vehicle_status || ''} ${row.chassis_number || ''} ${row.vehicle_color || ''} ${row.vehicle_year || ''} ${row.category_name || ''} ${row.registration_company || ''}`;
+                        }
+                        let od = {};
+                        if (row.other_details_json) {
+                            try { od = JSON.parse(row.other_details_json) || {}; } catch (e) {}
+                        }
+                        const fuel = od.vehicleFuelType || '';
+                        const gear = od.vehicleGearType || '';
+                        const esc = (s) => $('<div>').text(s || '').html();
+
+                        const statusBadge = row.vehicle_status
+                            ? (typeof window.getVehicleStatusBadgeHtml === 'function'
+                                ? window.getVehicleStatusBadgeHtml(row.vehicle_status)
+                                : `<span class="badge bg-label-info">${esc(row.vehicle_status)}</span>`)
+                            : '';
+
+                        let badges = '';
+                        if (row.category_name) badges += `<span class="badge bg-label-primary me-1 mb-1">${esc(row.category_name)}</span>`;
+                        if (row.vehicle_year)  badges += `<span class="badge bg-label-info me-1 mb-1"><i class="ri ri-calendar-line me-1"></i>${esc(row.vehicle_year)}</span>`;
+                        if (row.vehicle_color) badges += `<span class="badge me-1 mb-1" style="background-color:#fef3c7;color:#92400e;"><span class="d-inline-block rounded-circle me-1 border" style="width:8px;height:8px;background-color:${esc(row.vehicle_color)};"></span>${esc(row.vehicle_color)}</span>`;
+                        if (fuel)              badges += `<span class="badge bg-label-success me-1 mb-1"><i class="ri ri-gas-station-line me-1"></i>${esc(fuel)}</span>`;
+                        if (gear)              badges += `<span class="badge me-1 mb-1" style="background-color:#ede9fe;color:#6d28d9;"><i class="ri ri-settings-4-line me-1"></i>${esc(gear)}</span>`;
+
+                        let meta = `<span class="text-muted me-2"><i class="ri ri-barcode-line me-1"></i>Chassis: <strong>${esc(row.chassis_number || 'N/A')}</strong></span>`;
+                        meta += `<span class="text-success me-2"><i class="ri ri-building-4-line me-1"></i>${esc(row.registration_company || 'N/A')}</span>`;
+                        if (row.is_outsourced === 'Yes') {
+                            meta += `<span class="badge bg-label-warning"><i class="ri ri-share-forward-line me-1"></i>Outsource: ${esc(row.outsourcing_company_name || 'N/A')}</span>`;
+                        }
+
+                        return `
+                            <div class="d-flex flex-column gap-1">
+                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                    <span class="fw-bold fs-6 text-primary">${esc(vNo)}</span>
+                                    <span class="fw-semibold text-dark">${esc(brandModel)}</span>
                                     ${statusBadge}
-                                    ${company}
-                                </div>`;
+                                </div>
+                                <div class="d-flex flex-wrap align-items-center">${badges}</div>
+                                <div class="small d-flex flex-wrap align-items-center">${meta}</div>
+                            </div>
+                        `;
                     } 
                 },
                 { 

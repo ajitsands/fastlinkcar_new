@@ -583,15 +583,15 @@ $period_val = '
         <i class="icon-history me-1"></i> '.$prefix.implode(' ', $duration).'
     </span>
 </div>';
+                    $ref_with_status = '<div><b>' . $booking_no . '</b><div class="mt-1">' . $status_badge . '</div></div>';
                     $data[] = [
                          $sl++, 
-                        $booking_no,
+                        $ref_with_status,
                         $staff_val,
                         $vehicle_link,
                         $period_val,
                         $notes,
-                        $return_notes,
-                        $status_badge
+                        $return_notes
                     ];
                 }
             }

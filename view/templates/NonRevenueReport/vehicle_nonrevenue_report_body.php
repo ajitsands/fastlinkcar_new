@@ -85,18 +85,16 @@
                     <thead>
                       <tr>
                     <th>SNo</th>
-                    <th>Ref. No</th>
+                    <th>Ref. No / Status</th>
                     <th>Staff</th>
                     <th>Vehicle</th>
                     <th>Period</th>
                     <th>Notes</th>
                     <th>Return Notes</th>
-                    <th>Status</th>
                       </tr>
                     </thead>
                     <tfoot>
                     <tr>
-                        <th></th>
                         <th></th>
                         <th></th>
                         <th></th>

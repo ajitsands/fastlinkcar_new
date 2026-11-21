@@ -176,14 +176,58 @@
          </ul>
        </li>
 
-       <!-- Vehicle Insurance & Passings -->
-       <li class="menu-item <?php if ($decrypt[0] == '9' || ($decrypt[1] ?? '') == '2-10') {
+       <!-- Vehicles -->
+       <li class="menu-item <?php if (in_array($menuRoute, ['VehicleInsurance', 'RegisterVehicles', 'VehicleMasterConfiguration', 'VehicleInsight', 'VehicleMovementReport', 'VehicleUtilizationReport'], true) || ($decrypt[0] ?? '') == '9' || in_array($menuSubCode, ['2-1', '2-10', '6-1', '6-8', '6-9'], true)) {
                               echo 'active';
-                            } ?>" data-permission="vehicle_insurance_access">
-         <a href="/VehicleInsurance?val=<?php echo $this->encryption->encrypt('9,9-1'); ?>" class="menu-link">
-           <i class="menu-icon icon-base ri ri-shield-check-line"></i>
-           <div data-i18n="Vehicle Insurance & Passings">Insurance &amp; Passings</div>
+                            } ?>" data-permission="vehicle_insurance_access,vehicle_registration_access,vehicle_registration_manage,vehicle_config_access,vehicle_config_manage,vehicle_insight_access">
+         <a href="javascript:void(0)" class="menu-link menu-toggle">
+           <i class="menu-icon icon-base ri ri-car-line"></i>
+           <div data-i18n="Vehicles">Vehicles</div>
          </a>
+         <ul class="menu-sub">
+           <li class="menu-item <?php if ($menuRoute === 'VehicleInsurance' || ($decrypt[0] ?? '') == '9' || $menuSubCode == '2-10') {
+                                  echo 'active';
+                                } ?>" data-permission="vehicle_insurance_access">
+             <a href="/VehicleInsurance?val=<?php echo $this->encryption->encrypt('9,9-1'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-shield-check-line"></i>
+               <div data-i18n="Vehicle Insurance & Passings">Insurance &amp; Passings</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'RegisterVehicles' || $menuSubCode == '2-1') {
+                                  echo 'active';
+                                } ?>" data-permission="vehicle_registration_access,vehicle_registration_manage">
+             <a href="/RegisterVehicles?val=<?php echo $this->encryption->encrypt('2,2-1'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-car-line"></i>
+               <div data-i18n="Vehicle Registration">Vehicle Registration</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'VehicleMasterConfiguration') {
+                                  echo 'active';
+                                } ?>" data-permission="vehicle_config_access,vehicle_config_manage">
+             <a href="/VehicleMasterConfiguration?val=<?php echo $this->encryption->encrypt('2,2-3'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-node-tree"></i>
+               <div data-i18n="Vehicle Configuration">Vehicle Configuration</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'VehicleInsight' || $menuSubCode == '6-1') { echo 'active'; } ?>" data-permission="vehicle_insight_access">
+             <a href="/VehicleInsight?val=<?php echo $this->encryption->encrypt('6,6-1'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-car-line"></i>
+               <div data-i18n="Vehicle Insight">Vehicle Insight</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'VehicleMovementReport' || $menuSubCode == '6-8') { echo 'active'; } ?>" data-permission="vehicle_insight_access">
+             <a href="/VehicleMovementReport?val=<?php echo $this->encryption->encrypt('6,6-8'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-route-line"></i>
+               <div data-i18n="Vehicle Movement Report">Vehicle Movement Report</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'VehicleUtilizationReport' || $menuSubCode == '6-9') { echo 'active'; } ?>" data-permission="vehicle_insight_access">
+             <a href="/VehicleUtilizationReport?val=<?php echo $this->encryption->encrypt('6,6-9'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-pie-chart-line"></i>
+               <div data-i18n="Vehicle Utilization Report">Vehicle Utilization Report</div>
+             </a>
+           </li>
+         </ul>
        </li>
 
         <li class="menu-item <?php if ($decrypt[0] == '5') { echo 'active'; } ?>">
@@ -255,30 +299,12 @@
          </ul>
        </li>
        
-        <li class="menu-item <?php if (($decrypt[0] ?? '') == '6' && !in_array($menuSubCode, ['6-2', '6-6', '6-7', '6-10'], true) && !in_array($menuRoute, ['NonRevenueTicketReport', 'ReturnReport', 'ContractHistoryReport', 'ContractReturnOverdueReport'], true)) { echo 'active'; } ?>">
+        <li class="menu-item <?php if (($decrypt[0] ?? '') == '6' && !in_array($menuSubCode, ['6-1', '6-2', '6-6', '6-7', '6-8', '6-9', '6-10'], true) && !in_array($menuRoute, ['NonRevenueTicketReport', 'ReturnReport', 'ContractHistoryReport', 'ContractReturnOverdueReport', 'VehicleInsight', 'VehicleMovementReport', 'VehicleUtilizationReport'], true)) { echo 'active'; } ?>">
                  <a href="javascript:void(0)" class="menu-link menu-toggle">
                    <i class="menu-icon icon-base ri ri-bar-chart-box-line"></i>
                    <div data-i18n="Reports">Reports</div>
                  </a>
                  <ul class="menu-sub">
-                   <li class="menu-item <?php if ($decrypt[0] == '6-1') { echo 'active'; } ?>" data-permission="vehicle_insight_access">
-                     <a href="/VehicleInsight?val=<?php echo $this->encryption->encrypt('6,6-1'); ?>" class="menu-link">
-                       <i class="menu-icon icon-base ri ri-car-line"></i>
-                       <div data-i18n="Vehicle Insight">Vehicle Insight</div>
-                     </a>
-                   </li>
-                   <li class="menu-item <?php if ($decrypt[0] == '6-8') { echo 'active'; } ?>" data-permission="vehicle_insight_access">
-                     <a href="/VehicleMovementReport?val=<?php echo $this->encryption->encrypt('6,6-8'); ?>" class="menu-link">
-                       <i class="menu-icon icon-base ri ri-route-line"></i>
-                       <div data-i18n="Vehicle Movement Report">Vehicle Movement Report</div>
-                     </a>
-                   </li>
-                   <li class="menu-item <?php if ($decrypt[0] == '6-9') { echo 'active'; } ?>" data-permission="vehicle_insight_access">
-                     <a href="/VehicleUtilizationReport?val=<?php echo $this->encryption->encrypt('6,6-9'); ?>" class="menu-link">
-                       <i class="menu-icon icon-base ri ri-pie-chart-line"></i>
-                       <div data-i18n="Vehicle Utilization Report">Vehicle Utilization Report</div>
-                     </a>
-                   </li>
                      <li class="menu-item <?php if ($decrypt[0] == '6-3') { echo 'active'; } ?>" data-permission="customer_balances_access">
                       <a href="/CustomerBalances?val=<?php echo $this->encryption->encrypt('6,6-3'); ?>" class="menu-link">
                         <i class="menu-icon icon-base ri ri-wallet-3-line"></i>
@@ -301,7 +327,7 @@
         </li>
 
         <!-- Masters (Right-aligned before Send Contract) -->
-        <li class="menu-item ms-auto <?php if (($decrypt[0] ?? '') == '2' && !in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest', 'VehicleInsurance', 'RegisterStaff'], true)) {
+        <li class="menu-item ms-auto <?php if (($decrypt[0] ?? '') == '2' && !in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest', 'VehicleInsurance', 'RegisterStaff', 'RegisterVehicles', 'VehicleMasterConfiguration'], true)) {
                                echo 'active';
                              } ?>">
           <a href="javascript:void(0)" class="menu-link menu-toggle">
@@ -318,23 +344,7 @@
                 <div data-i18n="Users">Users</div>
               </a>
             </li>
-              <li class="menu-item <?php if ($decrypt[0] == '2-3') {
-                                   echo 'active';
-                                 } ?>" data-permission="vehicle_config_access,vehicle_config_manage">
-              <a href="/VehicleMasterConfiguration?val=<?php echo $this->encryption->encrypt('2,2-3'); ?>" class="menu-link">
-                <i class="menu-icon icon-base ri ri-node-tree"></i>
-                <div data-i18n="Vehicle Configuration">Vehicle Configuration</div>
-              </a>
-            </li>
-            <li class="menu-item <?php if ($decrypt[0] == '2-1') {
-                                   echo 'active';
-                                 } ?>" data-permission="vehicle_registration_access,vehicle_registration_manage">
-              <a href="/RegisterVehicles?val=<?php echo $this->encryption->encrypt('2,2-1'); ?>" class="menu-link">
-                <i class="menu-icon icon-base ri ri-car-line"></i>
-                <div data-i18n="Vehicle Registration">Vehicle Registration</div>
-              </a>
-            </li>
-            <li class="menu-item <?php if ($decrypt[0] == '2-3') {
+            <li class="menu-item <?php if ($menuRoute === 'RegisterDrivers') {
                                    echo 'active';
                                  } ?>" data-permission="driver_registration_access,driver_registration_manage">
               <a href="/RegisterDrivers?val=<?php echo $this->encryption->encrypt('2,2-3'); ?>" class="menu-link">

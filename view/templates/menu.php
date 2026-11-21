@@ -385,8 +385,8 @@
         </li>
 
         <!-- Send Contract (Icon-only right-aligned action) -->
-        <li class="menu-item ms-auto" data-permission="send_contract_access" title="Send Contract" data-bs-toggle="tooltip" data-bs-placement="bottom">
-          <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#sendContractModal" class="menu-link px-3" aria-label="Send Contract">
+        <li id="sendContractMenuBtn" class="menu-item ms-auto" data-permission="send_contract_access" title="Send Contract" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-trigger="hover" onclick="if (window.bootstrap && bootstrap.Tooltip) { var t = bootstrap.Tooltip.getInstance(this); if (t) t.hide(); } this.blur();">
+          <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#sendContractModal" class="menu-link px-3" aria-label="Send Contract" onclick="this.blur();">
             <i class="menu-icon icon-base ri ri-send-plane-fill me-0" style="font-size: 1.45rem;"></i>
           </a>
         </li>

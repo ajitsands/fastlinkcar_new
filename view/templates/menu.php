@@ -35,14 +35,42 @@
          </a>
        </li>
 
-       <!-- Contract List -->
-       <li class="menu-item <?php if (($decrypt[0] ?? '') == '3-4' || ($decrypt[1] ?? '') == '3-4') {
+       <!-- Contracts -->
+       <li class="menu-item <?php if (in_array($menuRoute, ['ContractList', 'ReturnReport', 'ContractHistoryReport', 'ContractReturnOverdueReport'], true) || in_array($menuSubCode, ['3-4', '6-2', '6-7', '6-10'], true)) {
                               echo 'active';
-                            } ?>" data-permission="contract_list_access">
-         <a href="/ContractList?val=<?php echo $this->encryption->encrypt('3,3-4'); ?>" class="menu-link">
+                            } ?>" data-permission="contract_list_access,expected_returns_access,contract_history_report_access">
+         <a href="javascript:void(0)" class="menu-link menu-toggle">
            <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
-           <div data-i18n="Contract List">Contract List</div>
+           <div data-i18n="Contracts">Contracts</div>
          </a>
+         <ul class="menu-sub">
+           <li class="menu-item <?php if ($menuRoute === 'ContractList' || $menuSubCode == '3-4') {
+                                  echo 'active';
+                                } ?>" data-permission="contract_list_access">
+             <a href="/ContractList?val=<?php echo $this->encryption->encrypt('3,3-4'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
+               <div data-i18n="Contract List">Contract List</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'ReturnReport' || $menuSubCode == '6-2') { echo 'active'; } ?>" data-permission="expected_returns_access">
+             <a href="/ReturnReport?val=<?php echo $this->encryption->encrypt('6,6-2'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-calendar-check-line"></i>
+               <div data-i18n="Expected Returns">Expected Returns</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'ContractHistoryReport' || $menuSubCode == '6-7') { echo 'active'; } ?>" data-permission="contract_history_report_access">
+             <a href="/ContractHistoryReport?val=<?php echo $this->encryption->encrypt('6,6-7'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-history-line"></i>
+               <div data-i18n="Contract & Replacement History">Contract & Replacement History</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'ContractReturnOverdueReport' || $menuSubCode == '6-10') { echo 'active'; } ?>">
+             <a href="/ContractReturnOverdueReport?val=<?php echo $this->encryption->encrypt('6,6-10'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-time-line"></i>
+               <div data-i18n="Contract Return & Overdue Report">Contract Return & Overdue Report</div>
+             </a>
+           </li>
+         </ul>
        </li>
 
        <!-- Staff Use -->
@@ -227,7 +255,7 @@
          </ul>
        </li>
        
-        <li class="menu-item <?php if (($decrypt[0] ?? '') == '6' && $menuSubCode !== '6-6' && $menuRoute !== 'NonRevenueTicketReport') { echo 'active'; } ?>">
+        <li class="menu-item <?php if (($decrypt[0] ?? '') == '6' && !in_array($menuSubCode, ['6-2', '6-6', '6-7', '6-10'], true) && !in_array($menuRoute, ['NonRevenueTicketReport', 'ReturnReport', 'ContractHistoryReport', 'ContractReturnOverdueReport'], true)) { echo 'active'; } ?>">
                  <a href="javascript:void(0)" class="menu-link menu-toggle">
                    <i class="menu-icon icon-base ri ri-bar-chart-box-line"></i>
                    <div data-i18n="Reports">Reports</div>
@@ -251,12 +279,6 @@
                        <div data-i18n="Vehicle Utilization Report">Vehicle Utilization Report</div>
                      </a>
                    </li>
-                   <li class="menu-item <?php if ($decrypt[0] == '6-2') { echo 'active'; } ?>" data-permission="expected_returns_access">
-                      <a href="/ReturnReport?val=<?php echo $this->encryption->encrypt('6,6-2'); ?>" class="menu-link">
-                        <i class="menu-icon icon-base ri ri-calendar-check-line"></i>
-                        <div data-i18n="Expected Returns">Expected Returns</div>
-                      </a>
-                    </li>
                      <li class="menu-item <?php if ($decrypt[0] == '6-3') { echo 'active'; } ?>" data-permission="customer_balances_access">
                       <a href="/CustomerBalances?val=<?php echo $this->encryption->encrypt('6,6-3'); ?>" class="menu-link">
                         <i class="menu-icon icon-base ri ri-wallet-3-line"></i>
@@ -273,18 +295,6 @@
                       <a href="/DailyCashReport?val=<?php echo $this->encryption->encrypt('6,6-5'); ?>" class="menu-link">
                         <i class="menu-icon icon-base ri ri-funds-line"></i>
                         <div data-i18n="Daily Cash Report">Daily Cash Report</div>
-                      </a>
-                    </li>
-                    <li class="menu-item <?php if ($decrypt[0] == '6-7') { echo 'active'; } ?>" data-permission="contract_history_report_access">
-                      <a href="/ContractHistoryReport?val=<?php echo $this->encryption->encrypt('6,6-7'); ?>" class="menu-link">
-                        <i class="menu-icon icon-base ri ri-history-line"></i>
-                        <div data-i18n="Contract & Replacement History">Contract & Replacement History</div>
-                      </a>
-                    </li>
-                    <li class="menu-item <?php if (($decrypt[0] ?? '') == '6-10' || ($decrypt[1] ?? '') == '6-10') { echo 'active'; } ?>">
-                      <a href="/ContractReturnOverdueReport?val=<?php echo $this->encryption->encrypt('6,6-10'); ?>" class="menu-link">
-                        <i class="menu-icon icon-base ri ri-time-line"></i>
-                        <div data-i18n="Contract Return & Overdue Report">Contract Return & Overdue Report</div>
                       </a>
                     </li>
                  </ul>

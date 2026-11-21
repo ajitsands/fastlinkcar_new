@@ -224,12 +224,6 @@
                 <div data-i18n="Reservation List">Reservation List</div>
               </a>
             </li>
-           <li class="menu-item" data-permission="send_contract_access">
-             <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#sendContractModal" class="menu-link">
-               <i class="menu-icon icon-base ri ri-send-plane-fill"></i>
-               <div data-i18n="Send Contract">Send Contract</div>
-             </a>
-           </li>
          </ul>
        </li>
         <li class="menu-item <?php if (in_array($decrypt[0] ?? '', ['2-6', '2-9'], true) || in_array($decrypt[1] ?? '', ['2-6', '2-9'], true)) { echo 'active open'; } ?>" data-permission="garage_and_service_access,maintenance_request_access">
@@ -389,8 +383,13 @@
                     </li>
                  </ul>
         </li>
-       
-       
+
+        <!-- Send Contract (Icon-only right-aligned action) -->
+        <li class="menu-item ms-auto" data-permission="send_contract_access" title="Send Contract" data-bs-toggle="tooltip" data-bs-placement="bottom">
+          <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#sendContractModal" class="menu-link px-3" aria-label="Send Contract">
+            <i class="menu-icon icon-base ri ri-send-plane-fill me-0" style="font-size: 1.45rem;"></i>
+          </a>
+        </li>
      </ul>
    </div>
  </aside>

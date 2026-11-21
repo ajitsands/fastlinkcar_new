@@ -46,9 +46,9 @@
        </li>
 
        <!-- Staff Use -->
-       <li class="menu-item <?php if (in_array($menuRoute, ['RegisterStaff', 'NonRevenueTickets'], true) || $menuSubCode == '3-5') {
+       <li class="menu-item <?php if (in_array($menuRoute, ['RegisterStaff', 'NonRevenueTickets', 'NonRevenueTicketReport'], true) || in_array($menuSubCode, ['3-5', '6-6'], true)) {
                               echo 'active';
-                            } ?>" data-permission="staff_registration_access,staff_registration_manage,staff_use_allocation_access">
+                            } ?>" data-permission="staff_registration_access,staff_registration_manage,staff_use_allocation_access,staff_use_report_access">
          <a href="javascript:void(0)" class="menu-link menu-toggle">
            <i class="menu-icon icon-base ri ri-user-shared-line"></i>
            <div data-i18n="Staff Use">Staff Use</div>
@@ -68,6 +68,14 @@
              <a href="/NonRevenueTickets?val=<?php echo $this->encryption->encrypt('3,3-5'); ?>" class="menu-link">
                <i class="menu-icon icon-base ri ri-user-shared-line"></i>
                <div data-i18n="Staff Use Allocation">Staff Use Allocation</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'NonRevenueTicketReport' || $menuSubCode == '6-6') {
+                                  echo 'active';
+                                } ?>" data-permission="staff_use_report_access">
+             <a href="/NonRevenueTicketReport?val=<?php echo $this->encryption->encrypt('6,6-6'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-coupon-3-line"></i>
+               <div data-i18n="Staff Use Report">Staff Use Report</div>
              </a>
            </li>
          </ul>
@@ -219,7 +227,7 @@
          </ul>
        </li>
        
-        <li class="menu-item <?php if ($decrypt[0] == '6') { echo 'active'; } ?>">
+        <li class="menu-item <?php if (($decrypt[0] ?? '') == '6' && $menuSubCode !== '6-6' && $menuRoute !== 'NonRevenueTicketReport') { echo 'active'; } ?>">
                  <a href="javascript:void(0)" class="menu-link menu-toggle">
                    <i class="menu-icon icon-base ri ri-bar-chart-box-line"></i>
                    <div data-i18n="Reports">Reports</div>
@@ -265,12 +273,6 @@
                       <a href="/DailyCashReport?val=<?php echo $this->encryption->encrypt('6,6-5'); ?>" class="menu-link">
                         <i class="menu-icon icon-base ri ri-funds-line"></i>
                         <div data-i18n="Daily Cash Report">Daily Cash Report</div>
-                      </a>
-                    </li>
-                    <li class="menu-item <?php if ($decrypt[0] == '6-6') { echo 'active'; } ?>" data-permission="staff_use_report_access">
-                      <a href="/NonRevenueTicketReport?val=<?php echo $this->encryption->encrypt('6,6-6'); ?>" class="menu-link">
-                        <i class="menu-icon icon-base ri ri-coupon-3-line"></i>
-                        <div data-i18n="Staff Use Report">Staff Use Report</div>
                       </a>
                     </li>
                     <li class="menu-item <?php if ($decrypt[0] == '6-7') { echo 'active'; } ?>" data-permission="contract_history_report_access">

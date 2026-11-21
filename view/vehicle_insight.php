@@ -1295,11 +1295,11 @@ function openVehicleProfile(vehicleId) {
                 }
                 
                 // Status badge
-                let statusClass = "bg-label-primary";
-                if(v.vehicle_status === "Available") statusClass = "bg-label-success";
-                else if(v.vehicle_status === "Rentout") statusClass = "bg-label-danger";
-                else if(v.vehicle_status === "Maintenance") statusClass = "bg-label-warning";
-                $("#vpStatusBadge").attr("class", "badge " + statusClass).text(v.vehicle_status || "Unknown");
+                if (typeof window.applyVehicleStatusBadge === "function") {
+                    window.applyVehicleStatusBadge("#vpStatusBadge", v.vehicle_status);
+                } else {
+                    $("#vpStatusBadge").attr("class", "badge bg-label-primary").text(v.vehicle_status || "Unknown");
+                }
                 
                 // Ownership
                 $("#vpRegCompany").text(v.ownership_company || "N/A");

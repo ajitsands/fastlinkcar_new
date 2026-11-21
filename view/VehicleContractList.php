@@ -7842,16 +7842,10 @@ $(document).on('change select2:select select2:clear', '#replace_select_new_vehic
         $('#replace_new_v_status').text(status);
 
         // Status badge color
-        let $badge = $('#replace_new_v_status_badge');
-        $badge.text(status).removeClass('bg-success bg-danger bg-warning bg-secondary bg-info');
-        if (status === 'Available' || status === 'Parking') {
-            $badge.addClass('bg-success');
-        } else if (status === 'Rentout') {
-            $badge.addClass('bg-danger');
-        } else if (status === 'Maintenance') {
-            $badge.addClass('bg-warning');
+        if (typeof window.applyVehicleStatusBadge === 'function') {
+            window.applyVehicleStatusBadge('#replace_new_v_status_badge', status);
         } else {
-            $badge.addClass('bg-secondary');
+            $('#replace_new_v_status_badge').text(status).attr('class', 'badge bg-secondary');
         }
 
         $('#replace_new_v_passing').text(selected.next_passing_date || 'NA');
@@ -8408,11 +8402,11 @@ function openVehicleProfile(vehicleId) {
                 }
                 
                 // Status badge
-                let statusClass = "bg-label-primary";
-                if(v.vehicle_status === "Available") statusClass = "bg-label-success";
-                else if(v.vehicle_status === "Rentout") statusClass = "bg-label-danger";
-                else if(v.vehicle_status === "Maintenance") statusClass = "bg-label-warning";
-                $("#vpStatusBadge").attr("class", "badge " + statusClass).text(v.vehicle_status || "Unknown");
+                if (typeof window.applyVehicleStatusBadge === "function") {
+                    window.applyVehicleStatusBadge("#vpStatusBadge", v.vehicle_status);
+                } else {
+                    $("#vpStatusBadge").attr("class", "badge bg-label-primary").text(v.vehicle_status || "Unknown");
+                }
                 
                 // Ownership
                 $("#vpRegCompany").text(v.ownership_company || "N/A");

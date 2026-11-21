@@ -1613,7 +1613,11 @@ console.log("Loaded bookingMaster:", bookingMaster);
         $('#vpMileageKm').text(v.mileage_km ? (v.mileage_km + ' km') : '-');
         $('#vpBodyType').text(v.body_type || '-');
         $('#vpCapacityCc').text(v.capacity_cc || '-');
-        $('#vpStatusBadge').text(v.vehicle_status || 'Available');
+        if (typeof window.applyVehicleStatusBadge === 'function') {
+            window.applyVehicleStatusBadge('#vpStatusBadge', v.vehicle_status || 'Available');
+        } else {
+            $('#vpStatusBadge').text(v.vehicle_status || 'Available');
+        }
         $('#vpRegCompany').text(v.reg_company_name || '-');
         $('#vpOutsourceCompany').text(v.is_outsourced === 'Yes' ? (v.outsourcing_company_name || 'Yes') : 'Own Fleet');
         $('#vpPurchaseDate').text(v.vehicle_purchase_date || 'Not Set');

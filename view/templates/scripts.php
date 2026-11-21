@@ -55,10 +55,12 @@
         window.CONTRACT_STATUS_COLORS = <?= $contractStatusColorsJson ?>;
         window.SYS_DATE_FORMAT = "<?= $jsDateFormat ?>";
 
-        window.getVehicleStatusBadgeHtml = function(status) {
-            if (!status) return '<span class="badge bg-label-secondary">Unknown</span>';
-            
-            let s = status.toLowerCase().replace(/\s+/g, ''); // Normalize spacing and case
+        window.getVehicleStatusColorInfo = function(status) {
+            if (!status) {
+                return { label: 'Unknown', bg: '', fg: '', fallbackClass: 'bg-label-secondary' };
+            }
+
+            let s = status.toLowerCase().replace(/\s+/g, '');
             if (s === 'active') s = 'available';
             else if (s === 'parked') s = 'parking';
             else if (s === 'rented' || s === 'onrent') s = 'rentout';
@@ -67,20 +69,44 @@
 
             const customMap = window.VEHICLE_STATUS_COLORS || {};
             if (customMap[s] && customMap[s].badge_color) {
-                const bg = customMap[s].badge_color;
-                const fg = customMap[s].text_color || '#ffffff';
-                return `<span class="badge" style="background-color: ${bg}; color: ${fg};">${status}</span>`;
+                return {
+                    label: status,
+                    bg: customMap[s].badge_color,
+                    fg: customMap[s].text_color || '#ffffff',
+                    fallbackClass: ''
+                };
             }
 
-            let statusClass = 'bg-label-secondary';
-            if (s === 'available') statusClass = 'bg-label-success';
-            else if (s === 'parking') statusClass = 'bg-label-info';
-            else if (s === 'rentout' || s === 'staffuse') statusClass = 'bg-label-danger';
-            else if (s === 'maintenance') statusClass = 'bg-label-warning';
-            else if (s === 'blocked') statusClass = 'bg-label-dark';
-            else if (s === 'saleout') statusClass = 'bg-label-primary';
-            
-            return '<span class="badge ' + statusClass + '">' + status + '</span>';
+            let fallbackClass = 'bg-label-secondary';
+            if (s === 'available') fallbackClass = 'bg-label-success';
+            else if (s === 'parking') fallbackClass = 'bg-label-info';
+            else if (s === 'rentout' || s === 'staffuse') fallbackClass = 'bg-label-danger';
+            else if (s === 'maintenance') fallbackClass = 'bg-label-warning';
+            else if (s === 'blocked') fallbackClass = 'bg-label-dark';
+            else if (s === 'saleout') fallbackClass = 'bg-label-primary';
+
+            return { label: status, bg: '', fg: '', fallbackClass: fallbackClass };
+        };
+
+        window.getVehicleStatusBadgeHtml = function(status) {
+            const info = window.getVehicleStatusColorInfo(status);
+            if (info.bg) {
+                return `<span class="badge" style="background-color: ${info.bg}; color: ${info.fg};">${info.label}</span>`;
+            }
+            return `<span class="badge ${info.fallbackClass}">${info.label}</span>`;
+        };
+
+        window.applyVehicleStatusBadge = function(selectorOrEl, status, extraClass = '') {
+            const $el = $(selectorOrEl);
+            if (!$el.length) return;
+            const info = window.getVehicleStatusColorInfo(status);
+            const cls = extraClass ? ('badge ' + extraClass) : 'badge';
+            $el.text(info.label).css({ 'background-color': '', 'color': '' });
+            if (info.bg) {
+                $el.attr('class', cls).css({ 'background-color': info.bg, 'color': info.fg });
+            } else {
+                $el.attr('class', cls + ' ' + info.fallbackClass);
+            }
         };
 
         window.getContractStatusBadgeHtml = function(status, extraClass = '') {

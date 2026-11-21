@@ -120,7 +120,7 @@ $(document).ready(function() {
                                 </div>
                                 <div>
                                     <h6 class="mb-0 fw-medium">Status</h6>
-                                    <span class="badge bg-label-info">${v.vehicle_status}</span>
+                                    ${typeof window.getVehicleStatusBadgeHtml === 'function' ? window.getVehicleStatusBadgeHtml(v.vehicle_status) : `<span class="badge bg-label-info">${v.vehicle_status}</span>`}
                                 </div>
                             </div>
                             <!-- Next Insurance -->
@@ -463,7 +463,7 @@ $(document).ready(function() {
                     render: function(data, type, row) {
                         let outsourceText = row.is_outsourced === 'Yes' ? (row.outsourcing_company_name ? `Outsource (${row.outsourcing_company_name})` : 'Outsource') : 'Fleet';
                         let typeBadge = row.is_outsourced === 'Yes' ? `<span class="badge bg-label-warning">${outsourceText}</span>` : `<span class="badge bg-label-primary">${outsourceText}</span>`;
-                        let statusBadge = row.vehicle_status ? `<span class="badge bg-label-info">${row.vehicle_status}</span>` : '';
+                        let statusBadge = row.vehicle_status ? (typeof window.getVehicleStatusBadgeHtml === 'function' ? window.getVehicleStatusBadgeHtml(row.vehicle_status) : `<span class="badge bg-label-info">${row.vehicle_status}</span>`) : '';
                         let company = row.registration_company ? `<span class="badge bg-label-secondary"><i class="ri ri-building-line align-middle me-1"></i>${row.registration_company}</span>` : '';
                         let chassis = row.chassis_number ? `<small class="text-muted d-block"><i class="ri ri-barcode-line align-middle"></i> ${row.chassis_number}</small>` : '';
                         

@@ -255,7 +255,8 @@ function buildDirectContractWizard(bookingDetails, vehicles) {
                     $(`#dc_v_fuel_gear_${v.id}`).text(`${fuel} / ${gear}`);
                     const st = vd.vehicle_status || v.currentStatusName || '-';
                     const maint = vd.next_maintenance_date ? formatMyDateOnly(vd.next_maintenance_date) : '-';
-                    $(`#dc_v_status_maint_${v.id}`).text(`${st} / ${maint}`);
+                    const stHtml = (typeof window.getVehicleStatusBadgeHtml === 'function' && st !== '-') ? window.getVehicleStatusBadgeHtml(st) : st;
+                    $(`#dc_v_status_maint_${v.id}`).html(`${stHtml} / ${maint}`);
                 }
             }
         });

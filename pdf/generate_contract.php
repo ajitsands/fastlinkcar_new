@@ -335,10 +335,10 @@ $pdf = new AA_Contract_PDF('P', 'mm', 'A4', true, 'UTF-8', false);
 $pdf->printSettings = $printSettings;
 $pdf->SetCreator(PDF_CREATOR);
 $pdf->SetTitle('Contract ' . $data['agreement_no']);
-$pdf->SetMargins(10, 39, 10);
+$pdf->SetMargins(10, 38, 10);
 $pdf->SetHeaderMargin(5);
 $pdf->SetFooterMargin(10);
-$pdf->SetAutoPageBreak(TRUE, 14);
+$pdf->SetAutoPageBreak(TRUE, 12);
 $pdf->AddPage('P', 'A4');
 $pdf->SetFont('dejavusans', '', 8);
 
@@ -393,25 +393,25 @@ if (!empty($data['hirer_signature'])) {
     $hirer_path = file_exists($hirer_rel) ? $hirer_rel : (dirname(__DIR__) . '/' . $hirer_rel);
     if (file_exists($hirer_path) && (extension_loaded('gd') || extension_loaded('imagick'))) {
         $img_data = base64_encode(file_get_contents($hirer_path));
-        $hirer_sig_img = '<img src="@' . $img_data . '" width="100" height="32">';
+        $hirer_sig_img = '<img src="@' . $img_data . '" width="90" height="26">';
     }
 }
 $renterNameDisp = !empty($data['hirer_name']) ? $data['hirer_name'] : $custName;
 
 $html = '
 <style>
-    table.agr-table { width: 100%; border-collapse: collapse; font-family: dejavusans; font-size: 8.2pt; border: 0.75px solid #1b3d94; }
-    table.agr-table td { border-left: 0.6px solid #cbd5e1; border-right: 0.6px solid #cbd5e1; border-top: none; border-bottom: 0.25px solid #e2e8f0; padding: 3.3px 7px; }
+    table.agr-table { width: 100%; border-collapse: collapse; font-family: dejavusans; font-size: 7.8pt; border: 0.75px solid #1b3d94; }
+    table.agr-table td { border-left: 0.6px solid #cbd5e1; border-right: 0.6px solid #cbd5e1; border-top: none; border-bottom: 0.25px solid #e2e8f0; padding: 2.6px 6px; }
     table.agr-table tr.sec-top td { border-top: 0.75px solid #1b3d94; }
     table.agr-table tr.sec-bot td { border-bottom: 0.75px solid #1b3d94; }
     .lbl-en { width: 28%; color: #1e293b; }
     .val-mid { width: 44%; text-align: center; color: #000000; }
     .lbl-ar { width: 28%; text-align: right; color: #1e293b; }
-    .cond-hdr { background-color: #eef2ff; color: #1b3d94; font-weight: bold; border-top: 0.75px solid #1b3d94; border-bottom: 0.75px solid #1b3d94; padding: 4px 7px; }
+    .cond-hdr { background-color: #eef2ff; color: #1b3d94; font-weight: bold; border-top: 0.75px solid #1b3d94; border-bottom: 0.75px solid #1b3d94; padding: 3px 6px; }
     .ql-align-right { text-align: right; }
     .ql-align-center { text-align: center; }
     .ql-align-justify { text-align: justify; }
-    .tc-box p { margin: 0 0 3px 0; }
+    .tc-box p { margin: 0; }
 </style>
 
 <table class="agr-table">
@@ -599,24 +599,25 @@ if ($useDefaultTerms) {
     foreach ($tcSections as $idx => $secHtml) {
         $secHtml = trim($secHtml);
         if ($secHtml === '') continue;
+        $secHtml = preg_replace('/line-height\s*:\s*[^;"\']+;?/i', '', $secHtml);
         $topBorder = ($idx > 0) ? ' border-top: 0.5px solid #cbd5e1;' : '';
         $alignAttr = (stripos($secHtml, 'dir="rtl"') !== false || stripos($secHtml, 'text-align:right') !== false || stripos($secHtml, 'text-align: right') !== false) ? ' align="right"' : '';
-        $termsRowsHtml .= '<tr><td class="tc-box"' . $alignAttr . ' style="line-height: 1.50;' . $topBorder . '">' . $secHtml . '</td></tr>';
+        $termsRowsHtml .= '<tr><td class="tc-box"' . $alignAttr . ' style="line-height: 1.38;' . $topBorder . '">' . $secHtml . '</td></tr>';
     }
 }
 
 $html .= '
-<table width="100%" cellpadding="5" style="border: 0.75px solid #1b3d94; border-top: none; font-family: dejavusans; font-size: 7.5pt;">
+<table width="100%" cellpadding="4" style="border: 0.75px solid #1b3d94; border-top: none; font-family: dejavusans; font-size: 7.1pt;">
     ' . $termsRowsHtml . '
 </table>
 
-<table width="100%" cellpadding="3" style="font-family: dejavusans; font-size: 8.2pt; margin-top: 8px;">
+<table width="100%" cellpadding="2" style="font-family: dejavusans; font-size: 7.8pt; margin-top: 5px;">
     <tr>
         <td width="58%" valign="bottom">
             <b>Renter:</b> &nbsp; ' . htmlspecialchars($renterNameDisp) . '
         </td>
         <td width="42%">
-            <table width="100%" cellpadding="2.5" style="font-size: 8.2pt;">
+            <table width="100%" cellpadding="1.8" style="font-size: 7.8pt;">
                 <tr>
                     <td width="55%"><b>Rent Amount</b></td>
                     <td width="45%" align="right">' . number_format($rentAmt, 3) . '</td>

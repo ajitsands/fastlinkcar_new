@@ -613,6 +613,8 @@ class RoutingClass
             
             'DashboardController' => 'DashboardController',
             'DashboardController/' => 'DashboardController',
+            'SessionCheck' => 'SessionCheck',
+            'SessionCheck/' => 'SessionCheck',
         );
 
         // Parse the URL
@@ -622,14 +624,45 @@ class RoutingClass
         // Reconstruct the first segment to match the defined routes
         $firstSegment = implode('/', array_slice($urlSegments, 0, 2));
 
-        // Route based on the first segment
+        $matchedRoute = null;
+        $routeParams = $urlSegments;
         if (isset($this->routes[$firstSegment])) {
-            $method = $this->routes[$firstSegment];
-            $this->$method($urlSegments);
-        } else if (isset($this->routes[$urlSegments[0]])) {
-            $method = $this->routes[$urlSegments[0]];
-            array_shift($urlSegments); // Remove the route part from the params
-            $this->$method($urlSegments);
+            $matchedRoute = $this->routes[$firstSegment];
+        } elseif (isset($this->routes[$urlSegments[0]])) {
+            $matchedRoute = $this->routes[$urlSegments[0]];
+            array_shift($routeParams);
+        }
+
+        if ($matchedRoute !== null) {
+            $publicRoutes = [
+                'Login', 'LoginController', 'Logout', 'logOut', 'OtherEventController',
+                'TestPage', 'SessionCheck', 'PrintAgreement', 'QuotationPDF', 'InvoicePDF',
+                'CashMemoPDF', 'ExpenseVoucherPDF', 'DailyRentalExport', 'DailyCashExport',
+                'NonRevenueTicketExport', 'ContractHistoryExport', 'PrintMaintenanceReport'
+            ];
+            if (!in_array($matchedRoute, $publicRoutes, true) && empty($_SESSION['user_id'])) {
+                $isAjax = strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest'
+                    || stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false
+                    || stripos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false;
+                if ($isAjax) {
+                    http_response_code(401);
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'status' => false,
+                        'session_expired' => true,
+                        'redirect' => '/Logout',
+                        'message' => 'Session expired. Redirecting to login...'
+                    ]);
+                    exit();
+                }
+                $_SESSION = [];
+                if (session_status() === PHP_SESSION_ACTIVE) {
+                    session_destroy();
+                }
+                header("Location: /Login");
+                exit();
+            }
+            $this->$matchedRoute($routeParams);
         } else {
 
             header("HTTP/1.0 404 Not Found...!");
@@ -909,6 +942,15 @@ class RoutingClass
     private function logOut(...$params)
     {
         $this->includeWithParams("view/logout.php", $_GET);
+    }
+
+    private function SessionCheck(...$params)
+    {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'authenticated' => !empty($_SESSION['user_id'])
+        ]);
+        exit();
     }
     
     private function OtherEventController(...$params)

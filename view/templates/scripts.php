@@ -140,4 +140,56 @@
 				logo.src = savedLogo;
 			}
 		});
+
+		<?php if (!empty($_SESSION['user_id'])): ?>
+		(function() {
+			let sessionRedirecting = false;
+			function redirectToLoginOnExpiry() {
+				if (sessionRedirecting) return;
+				sessionRedirecting = true;
+				window.location.href = '/Logout';
+			}
+
+			// Intercept jQuery AJAX 401 / session_expired responses
+			if (window.jQuery) {
+				$(document).ajaxError(function(event, jqxhr) {
+					if (jqxhr && (jqxhr.status === 401 || (jqxhr.responseJSON && jqxhr.responseJSON.session_expired))) {
+						redirectToLoginOnExpiry();
+					}
+				});
+			}
+
+			// Intercept fetch() 401 responses
+			if (window.fetch) {
+				const origFetch = window.fetch;
+				window.fetch = function() {
+					return origFetch.apply(this, arguments).then(function(res) {
+						if (res && res.status === 401) {
+							redirectToLoginOnExpiry();
+						}
+						return res;
+					});
+				};
+			}
+
+			// Periodic & tab-focus session check
+			function checkSessionAlive() {
+				if (sessionRedirecting) return;
+				window.fetch('/SessionCheck', { credentials: 'same-origin', cache: 'no-store' })
+					.then(function(r) { return r.json(); })
+					.then(function(data) {
+						if (data && data.authenticated === false) {
+							redirectToLoginOnExpiry();
+						}
+					})
+					.catch(function() {});
+			}
+			setInterval(checkSessionAlive, 60000);
+			document.addEventListener('visibilitychange', function() {
+				if (document.visibilityState === 'visible') {
+					checkSessionAlive();
+				}
+			});
+		})();
+		<?php endif; ?>
 	</script>

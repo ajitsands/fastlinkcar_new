@@ -14,6 +14,7 @@ class VehicleInsightController
     public $vehicles = [];
     public $returnvehicles = [];
     public $returnVehicleIds = [];
+    private $statusColorMap = null;
      
         function __construct()
     {
@@ -294,6 +295,27 @@ $this->params[2] = [
         return $array;
     }
     
+    function getStatusBadgeHtml($status) {
+        if ($this->statusColorMap === null) {
+            require_once ROOT_PATH . '/model/common/VehicleStatusHelper.php';
+            $this->statusColorMap = VehicleStatusHelper::getStatusColorMap();
+        }
+        $label = trim((string)$status);
+        $s = strtolower(preg_replace('/\s+/', '', $label));
+        if ($s === 'active') $s = 'available';
+        elseif ($s === 'parked') $s = 'parking';
+        elseif ($s === 'rented' || $s === 'onrent') $s = 'rentout';
+        elseif ($s === 'maintence' || $s === 'workshop') $s = 'maintenance';
+        elseif ($s === 'inactive') $s = 'deactivated';
+
+        if (!empty($this->statusColorMap[$s]['badge_color'])) {
+            $bg = htmlspecialchars($this->statusColorMap[$s]['badge_color'], ENT_QUOTES, 'UTF-8');
+            $fg = htmlspecialchars($this->statusColorMap[$s]['text_color'] ?? '#ffffff', ENT_QUOTES, 'UTF-8');
+            return '<span class="badge rounded-pill" style="background-color: ' . $bg . '; color: ' . $fg . ';">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</span>';
+        }
+        return '<span class="badge rounded-pill ' . $this->getStatusClass($label) . '">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</span>';
+    }
+
     function getStatusClass($status) {
         switch(strtolower($status)) {
             case 'available':
@@ -617,9 +639,7 @@ $this->params[2] = [
 
                 <div class="mt-1">
                     <span><i class="icon-base ri ri-car-line me-1"></i><?=$vehicleGearType?></span>
-                    <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?>">
-                        <?=$item['vehicle_status']?>
-                    </span>
+                    <?= $this->getStatusBadgeHtml($item['vehicle_status'] ?? '') ?>
                 </div>
 
             </div>

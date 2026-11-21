@@ -129,6 +129,7 @@ $mysqli = @new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if ($mysqli->connect_error) {
     die("Database Connection Error");
 }
+$mysqli->set_charset('utf8mb4');
 
 $stmt = $mysqli->prepare("SELECT * FROM tbl_vehicle_rentout_contracts WHERE agreement_no = ? ");
 $stmt->bind_param("s", $contract_no);
@@ -407,6 +408,10 @@ $html = '
     .val-mid { width: 44%; text-align: center; color: #000000; }
     .lbl-ar { width: 28%; text-align: right; color: #1e293b; }
     .cond-hdr { background-color: #eef2ff; color: #1b3d94; font-weight: bold; border-top: 0.75px solid #1b3d94; border-bottom: 0.75px solid #1b3d94; padding: 4px 7px; }
+    .ql-align-right { text-align: right; }
+    .ql-align-center { text-align: center; }
+    .ql-align-justify { text-align: justify; }
+    .tc-box p { margin: 0 0 3px 0; }
 </style>
 
 <table class="agr-table">
@@ -559,8 +564,14 @@ $html = '
         <td class="lbl-ar">مبلغ إيجار الأيام الإضافية</td>
     </tr>
 </table>
+';
 
-<table width="100%" cellpadding="5" style="border: 0.75px solid #1b3d94; border-top: none; font-family: dejavusans; font-size: 7.5pt;">
+$rawContractTerms = trim((string)($data['terms_condition'] ?? ''));
+$plainTermsCheck  = trim(strip_tags(str_replace('&nbsp;', ' ', $rawContractTerms)));
+$useDefaultTerms  = ($plainTermsCheck === '' || strpos($rawContractTerms, '????') !== false);
+
+if ($useDefaultTerms) {
+    $termsRowsHtml = '
     <tr>
         <td align="right" style="line-height: 1.50;">
             1 - لا يحق للمستأجر تسليم السيارة لشخص آخر لاستعمالها دون موافقة الشركة.<br>
@@ -580,7 +591,23 @@ $html = '
             5 The renter shall bear the amount of 9 BD per day throughout the vehicle stopped working because of an accident or damage to the car.<br>
             6 In the event that the renter fails to pay the agreed rent within 7 days, or violate the terms and conditions of the agreement the leasing company may withdraw the vehicle without notice to the renter, and the company are not liable for any collectibles or money inside the vehicle.
         </td>
-    </tr>
+    </tr>';
+} else {
+    // Split on <hr> so bilingual or sectioned terms get clean row dividers in TCPDF
+    $tcSections = preg_split('/<hr\s*\/?>/i', $rawContractTerms);
+    $termsRowsHtml = '';
+    foreach ($tcSections as $idx => $secHtml) {
+        $secHtml = trim($secHtml);
+        if ($secHtml === '') continue;
+        $topBorder = ($idx > 0) ? ' border-top: 0.5px solid #cbd5e1;' : '';
+        $alignAttr = (stripos($secHtml, 'dir="rtl"') !== false || stripos($secHtml, 'text-align:right') !== false || stripos($secHtml, 'text-align: right') !== false) ? ' align="right"' : '';
+        $termsRowsHtml .= '<tr><td class="tc-box"' . $alignAttr . ' style="line-height: 1.50;' . $topBorder . '">' . $secHtml . '</td></tr>';
+    }
+}
+
+$html .= '
+<table width="100%" cellpadding="5" style="border: 0.75px solid #1b3d94; border-top: none; font-family: dejavusans; font-size: 7.5pt;">
+    ' . $termsRowsHtml . '
 </table>
 
 <table width="100%" cellpadding="3" style="font-family: dejavusans; font-size: 8.2pt; margin-top: 8px;">

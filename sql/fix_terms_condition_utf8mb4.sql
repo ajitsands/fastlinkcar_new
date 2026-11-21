@@ -1,0 +1,11 @@
+-- Fix UTF-8 / Arabic (utf8mb4) support for Terms & Conditions tables
+ALTER TABLE tbl_terms_and_condition_contract
+    CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+ALTER TABLE tbl_vehicle_rentout_contracts
+    MODIFY terms_condition LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Restore the default Arabic/English Terms & Conditions row if it was saved with ????
+UPDATE tbl_terms_and_condition_contract
+SET terms_condition = '<div dir="rtl" style="text-align:right; line-height:1.6;"><p>1 - لا يحق للمستأجر تسليم السيارة لشخص آخر لاستعمالها دون موافقة الشركة.<br>2 - لا يسمح بالتدخين بداخل السيارة وإذا خالف المستأجر هذا الشرط يتحمل مبلغ وقدره 15 دينار.<br>3 - يتوجب على المستأجر فحص السيارة قبل استلامها والتأكد من وجود جميع الأجهزة واللوازم الخاصة بالمركبة وفي حال ضياعها أو تلفها يلتزم المستأجر بدفع قيمتها.<br>4 - يتعهد المستأجر بإشعار إدارة المرور في حال وقوع حادث للمركبة.<br>5 - يتحمل المستأجر مبلغ 9 دينار لكل يوم طيلة توقف المركبة عن العمل بسبب حادث تسبب فيه أو تلف للسيارة.<br>6 - في حال تخلف المستأجر عن دفع الأجار لمدة 7 أيام من التاريخ المتفق عليه للدفع أو مخالفة أحد شروط هذا العقد يحق للشركة سحب السيارة أينما كانت وبدون إخطار مسبق للمستأجر ولا تتحمل الشركة فقدان المقتنيات الشخصية والأموال المتعلقة بالمستأجر.</p></div><hr><div dir="ltr" style="text-align:left; line-height:1.6;"><p>1 The renter shall not deliver the car to someone else to use without the company approval.<br>2 SMOKING is not permitted inside the car and if the renter violates this condition shall bear an amount of 15 BD.<br>3 The renter should check the car before the receipt and make sure all the equipment and supplies it is in the car and in case of loss or damage to the equipment or supplies the renter shall pay for the loss.<br>4 The renter undertakes to notify the traffic management in the event of an accident.<br>5 The renter shall bear the amount of 9 BD per day throughout the vehicle stopped working because of an accident or damage to the car.<br>6 In the event that the renter fails to pay the agreed rent within 7 days, or violate the terms and conditions of the agreement the leasing company may withdraw the vehicle without notice to the renter, and the company are not liable for any collectibles or money inside the vehicle.</p></div>'
+WHERE terms_condition LIKE '%????%';

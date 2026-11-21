@@ -23,6 +23,29 @@ $(document).ready(function() {
     $('#filterFromDate').val(firstDay);
     $('#filterToDate').val(lastDay);
 
+    function formatMaintDate(dateStr, includeTime = false) {
+        if (!dateStr) return '';
+        const raw = String(dateStr).trim();
+        if (!raw) return '';
+        if (typeof dayjs === 'function') {
+            const d = dayjs(raw);
+            if (d.isValid()) {
+                return includeTime ? d.format('DD-MMM-YYYY HH:mm') : d.format('DD-MMM-YYYY');
+            }
+        }
+        const normalized = raw.includes(' ') && !raw.includes('T') ? raw.replace(' ', 'T') : raw;
+        const dt = new Date(normalized);
+        if (isNaN(dt.getTime())) return raw;
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const dd = String(dt.getDate()).padStart(2, '0');
+        const mmm = months[dt.getMonth()];
+        const yyyy = dt.getFullYear();
+        if (!includeTime) return `${dd}-${mmm}-${yyyy}`;
+        const hh = String(dt.getHours()).padStart(2, '0');
+        const mm = String(dt.getMinutes()).padStart(2, '0');
+        return `${dd}-${mmm}-${yyyy} ${hh}:${mm}`;
+    }
+
     // Initialize Select2
     $('#selCompany, #selVehicle, #selGarage').each(function() {
         $(this).select2({
@@ -130,7 +153,7 @@ $(document).ready(function() {
                                 </div>
                                 <div>
                                     <h6 class="mb-0 fw-medium">Next Insurance</h6>
-                                    <small class="text-muted">${v.next_insurance_date && !isNaN(new Date(v.next_insurance_date).getTime()) ? new Date(v.next_insurance_date).toLocaleDateString() : 'Not Set'}</small>
+                                    <small class="text-muted">${v.next_insurance_date ? (formatMaintDate(v.next_insurance_date) || 'Not Set') : 'Not Set'}</small>
                                 </div>
                             </div>
                             <!-- Next Passing -->
@@ -140,7 +163,7 @@ $(document).ready(function() {
                                 </div>
                                 <div>
                                     <h6 class="mb-0 fw-medium">Next Passing</h6>
-                                    <small class="text-muted">${v.next_passing_date && !isNaN(new Date(v.next_passing_date).getTime()) ? new Date(v.next_passing_date).toLocaleDateString() : 'Not Set'}</small>
+                                    <small class="text-muted">${v.next_passing_date ? (formatMaintDate(v.next_passing_date) || 'Not Set') : 'Not Set'}</small>
                                 </div>
                             </div>
                             <!-- Reg Company -->
@@ -169,8 +192,7 @@ $(document).ready(function() {
                     if (assign) {
                         let expectedReturnHtml = '';
                         if (assign.expected_return) {
-                            let d = new Date(assign.expected_return);
-                            let formattedDate = !isNaN(d.getTime()) ? d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : assign.expected_return;
+                            let formattedDate = formatMaintDate(assign.expected_return, true) || assign.expected_return;
                             
                             expectedReturnHtml = `
                             <div class="col-12 col-sm-6 col-md-4 d-flex align-items-center">
@@ -457,7 +479,19 @@ $(document).ready(function() {
                 }
             },
             columns: [
-                { data: 'request_no' },
+                {
+                    data: 'request_no',
+                    render: function(data, type, row) {
+                        if (type === 'sort' || type === 'type') return data || '';
+                        let st = row.status || '';
+                        let badge = 'bg-label-primary';
+                        if (st === 'Completed') badge = 'bg-label-success';
+                        else if (st === 'In Progress') badge = 'bg-label-warning';
+                        else if (st === 'Approved') badge = 'bg-label-info';
+                        let statusHtml = st ? `<div class="mt-1"><span class="badge ${badge}">${st}</span></div>` : '';
+                        return `<b>${data || '-'}</b>${statusHtml}`;
+                    }
+                },
                 { 
                     data: null, 
                     render: function(data, type, row) {
@@ -503,18 +537,9 @@ $(document).ready(function() {
                 },
                 { 
                     data: 'created_on',
-                    render: function(data) {
-                        return data ? data : '';
-                    }
-                },
-                { 
-                    data: 'status',
-                    render: function(data) {
-                        let badge = 'bg-label-primary';
-                        if (data === 'Completed') badge = 'bg-label-success';
-                        else if (data === 'In Progress') badge = 'bg-label-warning';
-                        else if (data === 'Approved') badge = 'bg-label-info';
-                        return `<span class="badge ${badge}">${data}</span>`;
+                    render: function(data, type) {
+                        if (type === 'sort' || type === 'type') return data || '';
+                        return data ? formatMaintDate(data) : '';
                     }
                 },
                 {
@@ -1058,13 +1083,13 @@ $(document).ready(function() {
                     let inOdo = null;
 
                     if (outLog) {
-                        $('#viewOutDate').text(outLog.log_datetime);
+                        $('#viewOutDate').text(formatMaintDate(outLog.log_datetime, true) || outLog.log_datetime);
                         $('#viewOutOdometer').text(outLog.odometer);
                         $('#viewOutLoggedBy').text(outLog.created_name);
                         outOdo = parseFloat(outLog.odometer);
                     }
                     if (inLog) {
-                        $('#viewInDate').text(inLog.log_datetime);
+                        $('#viewInDate').text(formatMaintDate(inLog.log_datetime, true) || inLog.log_datetime);
                         $('#viewInOdometer').text(inLog.odometer);
                         $('#viewInLoggedBy').text(inLog.created_name);
                         inOdo = parseFloat(inLog.odometer);

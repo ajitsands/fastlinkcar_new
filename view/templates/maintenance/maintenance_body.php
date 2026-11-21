@@ -199,11 +199,10 @@ $isSingleCompany = count($allowedCompanies) <= 1;
                             <table class="table table-hover align-middle w-100" id="tblAssignedVehicles">
                                 <thead>
                                     <tr>
-                                        <th>Ref No</th>
+                                        <th>Ref No / Status</th>
                                         <th>Vehicle Details</th>
                                         <th>Garage</th>
                                         <th>Assigned Date</th>
-                                        <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>

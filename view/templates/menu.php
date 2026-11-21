@@ -1,5 +1,7 @@
 <?php $decrypt = $this->encryption->decrypt($_GET['val'] ?? null);
-  $decrypt = explode(",", $decrypt);
+  $decrypt = explode(",", (string)$decrypt);
+  $menuRoute = trim((string)parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+  $menuSubCode = $decrypt[1] ?? ($decrypt[0] ?? '');
 
   ?>
  <style>
@@ -74,7 +76,7 @@
        </li>
 
        <!-- Layouts -->
-       <li class="menu-item <?php if ($decrypt[0] == '2') {
+       <li class="menu-item <?php if (($decrypt[0] ?? '') == '2' && !in_array($menuSubCode, ['2-6', '2-9', '2-10'], true) && !in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest', 'VehicleInsurance'], true)) {
                               echo 'active';
                             } ?>">
          <a href="javascript:void(0)" class="menu-link menu-toggle">
@@ -179,7 +181,7 @@
        </li>
      
 
-       <li class="menu-item <?php if ($decrypt[0] == '3') {
+       <li class="menu-item <?php if (($decrypt[0] ?? '') == '3' && !in_array($menuSubCode, ['3-4', '3-5', '3-11'], true) && !in_array($menuRoute, ['ContractList', 'NonRevenueTickets', 'DirectContract'], true)) {
                               echo 'active';
                             } ?>">
          <a href="javascript:void(0)" class="menu-link menu-toggle">
@@ -226,7 +228,7 @@
             </li>
          </ul>
        </li>
-        <li class="menu-item <?php if (in_array($decrypt[0] ?? '', ['2-6', '2-9'], true) || in_array($decrypt[1] ?? '', ['2-6', '2-9'], true)) { echo 'active open'; } ?>" data-permission="garage_and_service_access,maintenance_request_access">
+        <li class="menu-item <?php if (in_array($menuSubCode, ['2-6', '2-9'], true) || in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest'], true)) { echo 'active'; } ?>" data-permission="garage_and_service_access,maintenance_request_access">
          <a href="javascript:void(0)" class="menu-link menu-toggle">
            <i class="menu-icon icon-base ri ri-tools-line"></i>
            <div data-i18n="Maintenance Request">Maintenance Request</div>

@@ -132,16 +132,6 @@
          </a>
        </li>
 
-       <!-- Dashboards -->
-       <li class="menu-item <?php if ($decrypt[0] == '1') {
-                              echo 'active';
-                            } ?>" data-permission="dashboard_access">
-         <a href="/Dashboard?val=<?php echo $this->encryption->encrypt('1,1-1'); ?>" class="menu-link">
-           <i class="menu-icon icon-base ri ri-home-smile-line"></i>
-           <div data-i18n="Dashboard">Dashboard</div>
-         </a>
-       </li>
-
        <!-- Layouts -->
        <li class="menu-item <?php if (($decrypt[0] ?? '') == '2' && !in_array($menuSubCode, ['2-6', '2-9', '2-10'], true) && !in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest', 'VehicleInsurance'], true)) {
                               echo 'active';
@@ -388,6 +378,13 @@
         <li id="sendContractMenuBtn" class="menu-item ms-auto" data-permission="send_contract_access" title="Send Contract" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-trigger="hover" onclick="if (window.bootstrap && bootstrap.Tooltip) { var t = bootstrap.Tooltip.getInstance(this); if (t) t.hide(); } this.blur();">
           <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#sendContractModal" class="menu-link px-3" aria-label="Send Contract" onclick="this.blur();">
             <i class="menu-icon icon-base ri ri-send-plane-fill me-0" style="font-size: 1.45rem;"></i>
+          </a>
+        </li>
+
+        <!-- Dashboard (Icon-only right-aligned action) -->
+        <li class="menu-item <?php if (($decrypt[0] ?? '') == '1' || $menuRoute === 'Dashboard') { echo 'active'; } ?>" data-permission="dashboard_access" title="Dashboard" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-trigger="hover" onclick="if (window.bootstrap && bootstrap.Tooltip) { var t = bootstrap.Tooltip.getInstance(this); if (t) t.hide(); } this.blur();">
+          <a href="/Dashboard?val=<?php echo $this->encryption->encrypt('1,1-1'); ?>" class="menu-link px-3" aria-label="Dashboard" onclick="this.blur();">
+            <i class="menu-icon icon-base ri ri-home-smile-line me-0" style="font-size: 1.45rem;"></i>
           </a>
         </li>
      </ul>

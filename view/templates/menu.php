@@ -132,110 +132,6 @@
          </a>
        </li>
 
-       <!-- Layouts -->
-       <li class="menu-item <?php if (($decrypt[0] ?? '') == '2' && !in_array($menuSubCode, ['2-6', '2-9', '2-10'], true) && !in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest', 'VehicleInsurance'], true)) {
-                              echo 'active';
-                            } ?>">
-         <a href="javascript:void(0)" class="menu-link menu-toggle">
-           <i class="menu-icon icon-base ri ri-layout-2-line"></i>
-           <div data-i18n="Masters">Masters</div>
-         </a>
-
-         <ul class="menu-sub">
-             <li class="menu-item <?php if ($decrypt[0] == '2-4') {
-                                  echo 'active';
-                                } ?>" data-permission="users_access">
-             <a href="/AddUser?val=<?php echo $this->encryption->encrypt('2,2-4'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-user-add-fill"></i>
-               <div data-i18n="Users">Users</div>
-             </a>
-           </li>
-             <li class="menu-item <?php if ($decrypt[0] == '2-3') {
-                                  echo 'active';
-                                } ?>" data-permission="vehicle_config_access,vehicle_config_manage">
-             <a href="/VehicleMasterConfiguration?val=<?php echo $this->encryption->encrypt('2,2-3'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-node-tree"></i>
-               <div data-i18n="Vehicle Configuration">Vehicle Configuration</div>
-             </a>
-           </li>
-           <li class="menu-item <?php if ($decrypt[0] == '2-1') {
-                                  echo 'active';
-                                } ?>" data-permission="vehicle_registration_access,vehicle_registration_manage">
-             <a href="/RegisterVehicles?val=<?php echo $this->encryption->encrypt('2,2-1'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-car-line"></i>
-               <div data-i18n="Vehicle Registration">Vehicle Registration</div>
-             </a>
-           </li>
-           <li class="menu-item <?php if ($decrypt[0] == '2-3') {
-                                  echo 'active';
-                                } ?>" data-permission="driver_registration_access,driver_registration_manage">
-             <a href="/RegisterDrivers?val=<?php echo $this->encryption->encrypt('2,2-3'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-user-shared-line"></i>
-               <div data-i18n="Driver Registration">Driver Registration</div>
-             </a>
-           </li>
-           <li class="menu-item <?php if ($decrypt[0] == '2-6') {
-                                  echo 'active';
-                                } ?>" data-permission="staff_registration_access,staff_registration_manage">
-             <a href="/RegisterStaff?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-id-card-line"></i>
-               <div data-i18n="Staff Registration">Staff Registration</div>
-             </a>
-           </li>
-           <li class="menu-item <?php if ($decrypt[0] == '2-8') {
-                                  echo 'active';
-                                } ?>" data-permission="outsourcing_company_access">
-             <a href="/OutsourcingCompany?val=<?php echo $this->encryption->encrypt('2,2-8'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-building-4-line"></i>
-               <div data-i18n="Outsourcing Company">Outsourcing Company</div>
-             </a>
-           </li>
-           <li class="menu-item <?php if ($decrypt[0] == '2-5') {
-                                  echo 'active';
-                                } ?>" data-permission="customers_access">
-             <a href="/Customers?val=<?php echo $this->encryption->encrypt('2,2-5'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-group-line"></i>
-               <div data-i18n="Customers">Customers</div>
-             </a>
-           </li>
-           <li class="menu-item <?php if (($decrypt[1] ?? '') == '2-12') {
-                                  echo 'active';
-                                } ?>" data-permission="customers_access">
-             <a href="/CustomerAccounts?val=<?php echo $this->encryption->encrypt('2,2-12'); ?>" class="menu-link">
-               <i class="menu-icon icon-base ri ri-bank-card-line"></i>
-               <div data-i18n="Customer Accounts">Customer Accounts</div>
-             </a>
-           </li>
-           <li class="menu-item <?php if ($decrypt[0] == '2-11') {
-                                  echo 'active';
-                                } ?>">
-             <a href="/PrintFormatMaster?val=<?php echo $this->encryption->encrypt('2,2-11'); ?>" class="menu-link">
-               <i class="menu-icon icon-base ri ri-printer-line"></i>
-               <div data-i18n="Print Header & Footer">Print Header & Footer</div>
-             </a>
-           </li>
-           <li class="menu-item <?php if ($decrypt[0] == '2-2') {
-                                  echo 'active';
-                                } ?>" data-permission="list_of_vehicles_access" style="display: none;">
-             <a href="/ListofVehicles?val=<?php echo $this->encryption->encrypt('2,2-2'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-list-unordered"></i>
-               <div data-i18n="List of Vehicles">List of Vehicles</div>
-             </a>
-           </li>
-       
-
-         </ul>
-         
-         
-       </li>
         <li class="menu-item <?php if ($decrypt[0] == '5') { echo 'active'; } ?>">
          <a href="javascript:void(0)" class="menu-link menu-toggle">
            <i class="menu-icon icon-base ri ri-wallet-line"></i>
@@ -374,8 +270,101 @@
                  </ul>
         </li>
 
+        <!-- Masters (Right-aligned before Send Contract) -->
+        <li class="menu-item ms-auto <?php if (($decrypt[0] ?? '') == '2' && !in_array($menuSubCode, ['2-6', '2-9', '2-10'], true) && !in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest', 'VehicleInsurance'], true)) {
+                               echo 'active';
+                             } ?>">
+          <a href="javascript:void(0)" class="menu-link menu-toggle">
+            <i class="menu-icon icon-base ri ri-layout-2-line"></i>
+            <div data-i18n="Masters">Masters</div>
+          </a>
+
+          <ul class="menu-sub">
+              <li class="menu-item <?php if ($decrypt[0] == '2-4') {
+                                   echo 'active';
+                                 } ?>" data-permission="users_access">
+              <a href="/AddUser?val=<?php echo $this->encryption->encrypt('2,2-4'); ?>" class="menu-link">
+                <i class="menu-icon icon-base ri ri-user-add-fill"></i>
+                <div data-i18n="Users">Users</div>
+              </a>
+            </li>
+              <li class="menu-item <?php if ($decrypt[0] == '2-3') {
+                                   echo 'active';
+                                 } ?>" data-permission="vehicle_config_access,vehicle_config_manage">
+              <a href="/VehicleMasterConfiguration?val=<?php echo $this->encryption->encrypt('2,2-3'); ?>" class="menu-link">
+                <i class="menu-icon icon-base ri ri-node-tree"></i>
+                <div data-i18n="Vehicle Configuration">Vehicle Configuration</div>
+              </a>
+            </li>
+            <li class="menu-item <?php if ($decrypt[0] == '2-1') {
+                                   echo 'active';
+                                 } ?>" data-permission="vehicle_registration_access,vehicle_registration_manage">
+              <a href="/RegisterVehicles?val=<?php echo $this->encryption->encrypt('2,2-1'); ?>" class="menu-link">
+                <i class="menu-icon icon-base ri ri-car-line"></i>
+                <div data-i18n="Vehicle Registration">Vehicle Registration</div>
+              </a>
+            </li>
+            <li class="menu-item <?php if ($decrypt[0] == '2-3') {
+                                   echo 'active';
+                                 } ?>" data-permission="driver_registration_access,driver_registration_manage">
+              <a href="/RegisterDrivers?val=<?php echo $this->encryption->encrypt('2,2-3'); ?>" class="menu-link">
+                <i class="menu-icon icon-base ri ri-user-shared-line"></i>
+                <div data-i18n="Driver Registration">Driver Registration</div>
+              </a>
+            </li>
+            <li class="menu-item <?php if ($decrypt[0] == '2-6') {
+                                   echo 'active';
+                                 } ?>" data-permission="staff_registration_access,staff_registration_manage">
+              <a href="/RegisterStaff?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
+                <i class="menu-icon icon-base ri ri-id-card-line"></i>
+                <div data-i18n="Staff Registration">Staff Registration</div>
+              </a>
+            </li>
+            <li class="menu-item <?php if ($decrypt[0] == '2-8') {
+                                   echo 'active';
+                                 } ?>" data-permission="outsourcing_company_access">
+              <a href="/OutsourcingCompany?val=<?php echo $this->encryption->encrypt('2,2-8'); ?>" class="menu-link">
+                <i class="menu-icon icon-base ri ri-building-4-line"></i>
+                <div data-i18n="Outsourcing Company">Outsourcing Company</div>
+              </a>
+            </li>
+            <li class="menu-item <?php if ($decrypt[0] == '2-5') {
+                                   echo 'active';
+                                 } ?>" data-permission="customers_access">
+              <a href="/Customers?val=<?php echo $this->encryption->encrypt('2,2-5'); ?>" class="menu-link">
+                <i class="menu-icon icon-base ri ri-group-line"></i>
+                <div data-i18n="Customers">Customers</div>
+              </a>
+            </li>
+            <li class="menu-item <?php if (($decrypt[1] ?? '') == '2-12') {
+                                   echo 'active';
+                                 } ?>" data-permission="customers_access">
+              <a href="/CustomerAccounts?val=<?php echo $this->encryption->encrypt('2,2-12'); ?>" class="menu-link">
+                <i class="menu-icon icon-base ri ri-bank-card-line"></i>
+                <div data-i18n="Customer Accounts">Customer Accounts</div>
+              </a>
+            </li>
+            <li class="menu-item <?php if ($decrypt[0] == '2-11') {
+                                   echo 'active';
+                                 } ?>">
+              <a href="/PrintFormatMaster?val=<?php echo $this->encryption->encrypt('2,2-11'); ?>" class="menu-link">
+                <i class="menu-icon icon-base ri ri-printer-line"></i>
+                <div data-i18n="Print Header & Footer">Print Header & Footer</div>
+              </a>
+            </li>
+            <li class="menu-item <?php if ($decrypt[0] == '2-2') {
+                                   echo 'active';
+                                 } ?>" data-permission="list_of_vehicles_access" style="display: none;">
+              <a href="/ListofVehicles?val=<?php echo $this->encryption->encrypt('2,2-2'); ?>" class="menu-link">
+                <i class="menu-icon icon-base ri ri-list-unordered"></i>
+                <div data-i18n="List of Vehicles">List of Vehicles</div>
+              </a>
+            </li>
+          </ul>
+        </li>
+
         <!-- Send Contract (Icon-only right-aligned action) -->
-        <li id="sendContractMenuBtn" class="menu-item ms-auto" data-permission="send_contract_access" title="Send Contract" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-trigger="hover" onclick="if (window.bootstrap && bootstrap.Tooltip) { var t = bootstrap.Tooltip.getInstance(this); if (t) t.hide(); } this.blur();">
+        <li id="sendContractMenuBtn" class="menu-item" data-permission="send_contract_access" title="Send Contract" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-trigger="hover" onclick="if (window.bootstrap && bootstrap.Tooltip) { var t = bootstrap.Tooltip.getInstance(this); if (t) t.hide(); } this.blur();">
           <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#sendContractModal" class="menu-link px-3" aria-label="Send Contract" onclick="this.blur();">
             <i class="menu-icon icon-base ri ri-send-plane-fill me-0" style="font-size: 1.45rem;"></i>
           </a>

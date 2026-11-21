@@ -276,10 +276,17 @@ class VehiclesContractListController
 
                     $baseQuery = "
                         SELECT tbl_vehicle_rentout_contracts.*, tc.company_name,
-                            DATE_FORMAT(tbl_vehicle_rentout_contracts.service_start_date_time, '%d-%m-%Y %H:%i') AS from_date_format,
-                            DATE_FORMAT(tbl_vehicle_rentout_contracts.service_end_date_time, '%d-%m-%Y %H:%i') AS to_date_format,DATE_FORMAT(tbl_vehicle_rentout_contracts.agreement_date, '%d-%m-%Y') AS agreement_date_format
+                            tv.chassis_number, tv.vehicle_year, tv.vehicle_color, tv.other_details_json AS veh_other_details_json, tv.vehicle_status,
+                            tb.brand_name,
+                            cd.customer_cr_cpr, cd.customer_email, cd.nationality AS customer_nationality, cd.customer_address,
+                            DATE_FORMAT(tbl_vehicle_rentout_contracts.service_start_date_time, '%d-%b-%Y %h:%i %p') AS from_date_format,
+                            DATE_FORMAT(tbl_vehicle_rentout_contracts.service_end_date_time, '%d-%b-%Y %h:%i %p') AS to_date_format,
+                            DATE_FORMAT(tbl_vehicle_rentout_contracts.agreement_date, '%d-%b-%Y') AS agreement_date_format
                         FROM tbl_vehicle_rentout_contracts
                         LEFT JOIN tbl_company tc ON tc.ids = tbl_vehicle_rentout_contracts.company_id
+                        LEFT JOIN tbl_vehicles tv ON tv.ids = tbl_vehicle_rentout_contracts.vehicle_id
+                        LEFT JOIN tbl_vehicle_brand tb ON tb.ids = tv.brand_id
+                        LEFT JOIN customer_details cd ON cd.customer_id = tbl_vehicle_rentout_contracts.customer_code
                         WHERE 1=1
                     ";
                 
@@ -333,33 +340,46 @@ class VehiclesContractListController
                         ) ?? [];
                         
                 
+                        $vehOther = json_decode($row['veh_other_details_json'] ?? '{}', true) ?? [];
+
                         $data[] = [
                 
-                            "id"                => $row['ids'],
-                            "ids"               => $row['ids'],
-                            "booking_ids"       => $row['booking_ids'],
-                            "booking_no"       => $row['agreement_group_ref_no'],
-                            "agreement_no"      => $row['agreement_no'],
-                            "company_name"      => $row['company_name'] ?? 'Direct Contract',
-                            "agreement_date"  => $row['agreement_date'],
-                            "agreement_date_format"  => $row['agreement_date_format'],
-                            "customer_name"     => $row['customer_name'],
-                            "customer_code"     => $row['customer_code'],
-                            "mobile"            => $custdetails['customer_mobile'] ?? '-',
+                            "id"                   => $row['ids'],
+                            "ids"                  => $row['ids'],
+                            "booking_ids"          => $row['booking_ids'],
+                            "booking_no"           => $row['agreement_group_ref_no'],
+                            "agreement_no"         => $row['agreement_no'],
+                            "company_name"         => $row['company_name'] ?? 'Direct Contract',
+                            "agreement_date"       => $row['agreement_date'],
+                            "agreement_date_format"=> $row['agreement_date_format'],
+                            "customer_name"        => $row['customer_name'],
+                            "customer_code"        => $row['customer_code'],
+                            "mobile"               => $custdetails['customer_mobile'] ?? '-',
+                            "customer_cpr"         => $row['customer_cr_cpr'] ?? ($custdetails['customer_cr_cpr'] ?? ($custdetails['cpr'] ?? '')),
+                            "customer_email"       => $row['customer_email'] ?? ($custdetails['customer_email'] ?? ''),
+                            "customer_nationality" => $row['customer_nationality'] ?? ($custdetails['nationality'] ?? ''),
+                            "customer_address"     => $row['customer_address'] ?? ($custdetails['customer_address'] ?? ''),
                 
-                            "vehicle_id"        => $row['vehicle_id'],
-                            "vehicle_no"        => $row['vehicle_no'],
-                            "category_name"     => $vehicledetails['category_name'],
-                            "model_name"        => $vehicledetails['model_name'],
-                            "model_id"        => $vehicledetails['model_id'],
+                            "vehicle_id"           => $row['vehicle_id'],
+                            "vehicle_no"           => $row['vehicle_no'],
+                            "brand_name"           => $row['brand_name'] ?? '',
+                            "category_name"        => $vehicledetails['category_name'] ?? '',
+                            "model_name"           => $vehicledetails['model_name'] ?? '',
+                            "model_id"             => $vehicledetails['model_id'] ?? '',
+                            "chassis_number"       => $row['chassis_number'] ?? '',
+                            "vehicle_year"         => $row['vehicle_year'] ?? '',
+                            "vehicle_color"        => $row['vehicle_color'] ?? '',
+                            "fuel_type"            => $vehOther['vehicleFuelType'] ?? '',
+                            "gear_type"            => $vehOther['vehicleGearType'] ?? '',
+                            "vehicle_status"       => $row['vehicle_status'] ?? '',
                 
-                            "agreement_status"  => $row['agreement_status'],
+                            "agreement_status"     => $row['agreement_status'],
                 
-                            "from_date"         => $row['service_start_date_time'],
-                            "to_date"           => $row['service_end_date_time'],
+                            "from_date"            => $row['service_start_date_time'],
+                            "to_date"              => $row['service_end_date_time'],
                 
-                            "from_date_format"  => $row['from_date_format'],
-                            "to_date_format"    => $row['to_date_format']
+                            "from_date_format"     => $row['from_date_format'],
+                            "to_date_format"       => $row['to_date_format']
                         ];
                     }
                 

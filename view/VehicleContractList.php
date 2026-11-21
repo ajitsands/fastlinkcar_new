@@ -1045,29 +1045,110 @@ function load_contract_list(
             }
         },
 
-        // Agreement No
+        // Agreement / Company / Ref / Status
         {
             data: 'agreement_no',
             render: function (data, type, row) {
+                if (type === 'filter' || type === 'sort') {
+                    return `${data || ''} ${row.company_name || ''} ${row.booking_no || 'Direct Contract'} ${row.agreement_status || ''}`;
+                }
+                const esc = (s) => $('<div>').text(s || '').html();
+                let compBadge = `<span class="badge bg-label-danger">${esc(row.company_name || '')}</span>`;
+                let sourceText = row.booking_no ? `Booking: ${esc(row.booking_no)}` : 'Direct Contract';
+                let sourceBadge = `<span class="badge bg-label-secondary">${sourceText}</span>`;
+                let statusBadge = (typeof window.getContractStatusBadgeHtml === 'function')
+                    ? window.getContractStatusBadgeHtml(row.agreement_status)
+                    : `<span class="badge bg-secondary">${esc(row.agreement_status || '')}</span>`;
 
                 return `
-                    <div class="fw-semibold">
-                        ${data}
+                    <div class="d-flex flex-column gap-1">
+                        <div class="fw-bold text-primary">${esc(data || '')}</div>
+                        <div class="d-flex flex-wrap align-items-center gap-1">
+                            ${compBadge}
+                            <span class="status-cell">${statusBadge}</span>
+                        </div>
+                        <div>${sourceBadge}</div>
                     </div>
                 `;
             }
         },
-        
-        // Company & Ref No
+
+        // Vehicle Details
         {
             data: null,
             render: function (data, type, row) {
-                let badge = `<span class="badge bg-label-danger">${row.company_name}</span>`;
-                let ref = row.booking_no ? row.booking_no : 'Direct Contract';
+                if (type === 'filter' || type === 'sort') {
+                    return `${row.vehicle_no || ''} ${row.brand_name || ''} ${row.model_name || ''} ${row.category_name || ''} ${row.chassis_number || ''} ${row.vehicle_year || ''} ${row.vehicle_color || ''}`;
+                }
+                const esc = (s) => $('<div>').text(s || '').html();
+                const brandModel = [row.brand_name, row.model_name].filter(Boolean).join(' - ') || '-';
+                const vStatus = row.vehicle_status
+                    ? (typeof window.getVehicleStatusBadgeHtml === 'function' ? window.getVehicleStatusBadgeHtml(row.vehicle_status) : `<span class="badge bg-label-info">${esc(row.vehicle_status)}</span>`)
+                    : '';
+
+                let badges = '';
+                if (row.category_name) badges += `<span class="badge bg-label-primary me-1 mb-1">${esc(row.category_name)}</span>`;
+                if (row.vehicle_year) badges += `<span class="badge bg-label-info me-1 mb-1"><i class="ri-calendar-line me-1"></i>${esc(row.vehicle_year)}</span>`;
+                if (row.vehicle_color) badges += `<span class="badge me-1 mb-1" style="background-color:#fef3c7;color:#92400e;"><span class="d-inline-block rounded-circle me-1 border" style="width:8px;height:8px;background-color:${esc(row.vehicle_color)};"></span>${esc(row.vehicle_color)}</span>`;
+                if (row.fuel_type) badges += `<span class="badge bg-label-success me-1 mb-1"><i class="ri-gas-station-line me-1"></i>${esc(row.fuel_type)}</span>`;
+                if (row.gear_type) badges += `<span class="badge me-1 mb-1" style="background-color:#ede9fe;color:#6d28d9;"><i class="ri-settings-4-line me-1"></i>${esc(row.gear_type)}</span>`;
+
+                let chassisHtml = row.chassis_number ? `<small class="text-muted"><i class="ri-barcode-line me-1"></i>Chassis: <strong>${esc(row.chassis_number)}</strong></small>` : '';
+
                 return `
-                    <div>
-                        ${badge}<br>
-                        <small>${ref}</small>
+                    <div class="d-flex flex-column gap-1">
+                        <div class="d-flex flex-wrap align-items-center gap-1">
+                            <span class="fw-bold text-dark">${esc(row.vehicle_no || '-')}</span>
+                            <span class="text-muted fw-semibold">${esc(brandModel)}</span>
+                            ${vStatus}
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center">${badges}</div>
+                        ${chassisHtml}
+                    </div>
+                `;
+            }
+        },
+
+        // Customer Details
+        {
+            data: null,
+            render: function (data, type, row) {
+                if (type === 'filter' || type === 'sort') {
+                    return `${row.customer_name || ''} ${row.customer_code || ''} ${row.mobile || ''} ${row.customer_cpr || ''} ${row.customer_email || ''}`;
+                }
+                const esc = (s) => $('<div>').text(s || '').html();
+                let meta = [];
+                if (row.mobile && row.mobile !== '-') meta.push(`<i class="ri-phone-line me-1"></i>${esc(row.mobile)}`);
+                if (row.customer_cpr) meta.push(`<i class="ri-id-card-line me-1"></i>${esc(row.customer_cpr)}`);
+                if (row.customer_nationality) meta.push(`<i class="ri-global-line me-1"></i>${esc(row.customer_nationality)}`);
+
+                let emailLine = row.customer_email ? `<small class="text-muted d-block text-truncate" style="max-width:200px;"><i class="ri-mail-line me-1"></i>${esc(row.customer_email)}</small>` : '';
+
+                return `
+                    <div class="d-flex flex-column gap-1">
+                        <div class="d-flex flex-wrap align-items-center gap-1">
+                            <strong class="text-dark">${esc(row.customer_name || '-')}</strong>
+                            <span class="badge bg-label-secondary">${esc(row.customer_code || '')}</span>
+                        </div>
+                        <small class="text-muted d-flex flex-wrap gap-2">${meta.join(' ')}</small>
+                        ${emailLine}
+                    </div>
+                `;
+            }
+        },
+
+        // Contract Period (Date & Time)
+        {
+            data: null,
+            render: function (data, type, row) {
+                if (type === 'filter' || type === 'sort') {
+                    return `${row.from_date || ''} ${row.to_date || ''}`;
+                }
+                const esc = (s) => $('<div>').text(s || '').html();
+                return `
+                    <div class="d-flex flex-column gap-1 small">
+                        <div><span class="text-muted fw-semibold">From:</span> <strong class="text-dark">${esc(row.from_date_format || '-')}</strong></div>
+                        <div><span class="text-muted fw-semibold">To:</span> <strong class="text-dark">${esc(row.to_date_format || '-')}</strong></div>
                     </div>
                 `;
             }
@@ -1075,65 +1156,10 @@ function load_contract_list(
 
         // Agreement Date
         {
-            data: 'agreement_date_format'
-        },
-
-        // Customer
-        {
-            data: null,
+            data: 'agreement_date_format',
             render: function (data, type, row) {
-             return `
-                        <div>
-                            <strong>${row.customer_name}</strong><br>
-                            <small>Code: ${row.customer_code}</small>
-                         <small>☎ ${row.mobile}.</small>
-                        </div>
-                        `;
-                
-            }
-        },
-
-        // Vehicle
-        {
-            data: null,
-            render: function (data, type, row) {
-                return `
-                        <div>
-                            <strong>${row.vehicle_no}</strong><br>
-                            <small>Code: ${row.category_name}</small>
-                         <small>, ${row.model_name}</small>
-                        </div>
-                        `;
-                
-            }
-        },
-
-        // Period
-        {
-            data: null,
-            render: function (data, type, row) {
-               return `
-                        <div>
-                            <strong>
-                                <small>
-                                    ${(row.from_date_format || '')} to ${(row.to_date_format || '')}
-                                </small>
-                            </strong>
-                        </div>
-                    `;
-               
-            }
-        },
-
-        // Status
-        {
-            data: 'agreement_status',
-            className: 'status-cell',
-            render: function (data) {
-                if (typeof window.getContractStatusBadgeHtml === 'function') {
-                    return window.getContractStatusBadgeHtml(data);
-                }
-                return `<span class="badge bg-secondary">${data || ''}</span>`;
+                if (type === 'sort') return row.agreement_date || '';
+                return `<span class="fw-semibold text-nowrap">${data || '-'}</span>`;
             }
         },
 

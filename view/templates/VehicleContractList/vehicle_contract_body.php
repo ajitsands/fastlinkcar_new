@@ -102,14 +102,12 @@
                   <table id="contractTable" class="table table-bordered table-sm">
                             <thead>
                                 <tr>
-                                    <th></th>
-                                    <th>Agreement No</th>
-                                    <th>Company / Ref No</th>
+                                    <th>#</th>
+                                    <th>Agreement / Ref / Status</th>
+                                    <th>Vehicle Details</th>
+                                    <th>Customer Details</th>
+                                    <th>Contract Period</th>
                                     <th>Agreement Date</th>
-                                    <th>Customer</th>
-                                    <th>Vehicle</th>
-                                    <th>Period</th>
-                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>

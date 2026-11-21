@@ -1,5 +1,5 @@
-<div class="container-fluid flex-grow-1 container-p-y" style="padding-top: 20px !important;">
- <div class="d-flex justify-content-end align-items-center py-2">
+<div class="container-fluid flex-grow-1" style="padding-top: 6px !important;">
+ <div class="d-flex justify-content-end align-items-center py-1 mb-1">
     <div class="d-flex align-items-center">
         <label for="filterCompany" class="form-label mb-0 me-2 fw-bold text-nowrap">Company:</label>
         <select id="filterCompany" class="form-select form-select-sm" style="width: 250px;">

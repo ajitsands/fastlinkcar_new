@@ -295,7 +295,7 @@ $this->params[2] = [
         return $array;
     }
     
-    function getStatusBadgeHtml($status) {
+    function getStatusBadgeHtml($status, $extraClass = '', $extraStyle = '') {
         if ($this->statusColorMap === null) {
             require_once ROOT_PATH . '/model/common/VehicleStatusHelper.php';
             $this->statusColorMap = VehicleStatusHelper::getStatusColorMap();
@@ -308,12 +308,16 @@ $this->params[2] = [
         elseif ($s === 'maintence' || $s === 'workshop') $s = 'maintenance';
         elseif ($s === 'inactive') $s = 'deactivated';
 
+        $cls = trim('badge rounded-pill ' . $extraClass);
+        $styleTail = $extraStyle !== '' ? (' ' . $extraStyle) : '';
+
         if (!empty($this->statusColorMap[$s]['badge_color'])) {
             $bg = htmlspecialchars($this->statusColorMap[$s]['badge_color'], ENT_QUOTES, 'UTF-8');
             $fg = htmlspecialchars($this->statusColorMap[$s]['text_color'] ?? '#ffffff', ENT_QUOTES, 'UTF-8');
-            return '<span class="badge rounded-pill" style="background-color: ' . $bg . '; color: ' . $fg . ';">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</span>';
+            return '<span class="' . $cls . '" style="background-color: ' . $bg . '; color: ' . $fg . ';' . $styleTail . '">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</span>';
         }
-        return '<span class="badge rounded-pill ' . $this->getStatusClass($label) . '">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</span>';
+        $styleAttr = $extraStyle !== '' ? ' style="' . htmlspecialchars($extraStyle, ENT_QUOTES, 'UTF-8') . '"' : '';
+        return '<span class="' . $cls . ' ' . $this->getStatusClass($label) . '"' . $styleAttr . '>' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</span>';
     }
 
     function getStatusClass($status) {
@@ -613,137 +617,70 @@ $this->params[2] = [
         ?>
         
             <div class="col-12 col-sm-6 col-md-6 col-lg-12 col-xl-4">
-                <div class="vehicle-card d-flex flex-column p-2 border rounded shadow-sm position-relative">
-  
+                <div class="card h-100 shadow-sm border-0 vehicle-card rounded-4 overflow-hidden" style="transition: transform 0.2s, box-shadow 0.2s; min-height: 180px;">
+                    <div class="row g-0 h-100">
+                        <!-- Left Side Image -->
+                        <div class="col-6 bg-white border-end position-relative vehicle-image p-0" data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>' style="cursor:pointer;">
+                            <img src="uploads/vehicleImages/<?= $lastImage ?>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; padding: 0.5rem;" alt="Vehicle Image">
+                            <?= $this->getStatusBadgeHtml($item['vehicle_status'] ?? '', 'shadow-sm position-absolute top-0 start-0 m-2', 'font-size: 0.65rem;') ?>
+                        </div>
+                        <!-- Right Side Details -->
+                        <div class="col-6">
+                            <div class="card-body p-2 d-flex flex-column h-100">
+                                <div class="mb-2">
+                                    <h5 class="mb-0 fw-bold text-danger text-truncate veh_no" title="<?= htmlspecialchars($item['vehicle_number']) ?>"><?= htmlspecialchars($item['vehicle_number']) ?></h5>
+                                    <small class="text-body fw-semibold text-truncate d-block" title="<?= htmlspecialchars($item['model_names']) ?>" style="font-size: 1rem;"><?= htmlspecialchars($item['model_names']) ?></small>
+                                </div>
 
-        <div class="d-flex align-items-center">
+                                <div class="row g-1 mb-2 mt-auto" style="font-size: 1rem;">
+                                    <div class="col-12 d-flex align-items-center text-truncate text-secondary fw-semibold" title="Chassis: <?= htmlspecialchars($item['chassis_number'] ?? 'N/A') ?>">
+                                        <i class="ri ri-barcode-line me-1"></i> <?= htmlspecialchars($item['chassis_number'] ?? 'N/A') ?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-calendar-check-line me-1"></i> <?= htmlspecialchars($item['vehicle_year'] ?? '') ?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-palette-line me-1"></i> <?= htmlspecialchars($item['vehicle_color'] ?? '') ?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-gas-station-line me-1"></i> <?= htmlspecialchars($vehicleFuelType ?? '') ?>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center text-secondary fw-semibold">
+                                        <i class="ri ri-car-line me-1"></i> <?= htmlspecialchars($vehicleGearType ?? '') ?>
+                                    </div>
+                                </div>
 
-           <div class="me-2 vehicle-image"
-             data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>'>
-             
-            <img src="uploads/vehicleImages/<?= $lastImage ?>" 
-                 
-                 style="width:80px;height:80px;object-fit:cover;">
-        </div>
-
-            <div class="flex-grow-1">
-                <h5 class="card-title mb-0 veh_no"><?=$item['vehicle_number']?></h5>
-
-                <div class="text-muted small fw-bold text-dark"><?=$item['model_names']?></div>
-
-                <div class="d-flex align-items-center gap-2 mt-1 small text-muted">
-                    <span><i class="icon-base ri ri-calendar-check-line me-1"></i><?=$item['vehicle_year']?></span>
-                    <span><i class="icon-base ri ri-palette-line me-1"></i><?=$item['vehicle_color']?></span>
-                    <span><i class="icon-base ri ri-gas-station-line me-1"></i><?=$vehicleFuelType?></span>
+                                <div class="d-flex gap-1 border-top pt-2 mt-auto flex-wrap">
+                                    <button class="btn btn-sm btn-outline-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_view px-1"
+                                        data-bs-toggle="tooltip" data-bs-trigger="hover" title="View Details" data-id="<?= $item['ids'] ?>" style="font-size: 1rem;">
+                                        <i class="ri ri-information-2-line me-1"></i> Details
+                                    </button>
+                                    <button class="btn btn-sm btn-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_select px-1"
+                                        data-bs-toggle="tooltip" data-bs-trigger="hover" title="Select"
+                                        data-status="<?= ($item['vehicle_status'] == 'Staff Use') ? 'Staff Use' : 'Available' ?>"
+                                        data-insurance="<?= $item['next_insurance_date'] ?>"
+                                        data-passing="<?= $item['next_passing_date'] ?>"
+                                        data-maintenance="<?= $item['next_maintenance_date'] ?>"
+                                        data-modelName="<?= htmlspecialchars($item['model_names']) ?>"
+                                        data-model="<?= $item['model_id'] ?>"
+                                        data-veh_no="<?= htmlspecialchars($item['vehicle_number']) ?>"
+                                        data-id="<?= $item['ids'] ?>" style="font-size: 1rem;">
+                                        <i class="ri ri-check-line me-1"></i> Select
+                                    </button>
+                                    <?php if ($item['vehicle_status'] == 'Staff Use') { ?>
+                                        <div class="small w-100 mt-2 border-top pt-1">
+                                            <strong>Staff Use:</strong> <?= htmlspecialchars($item['staff_name'] ?? '') ?><br>
+                                            <strong class="text-danger">Ref No:</strong> <?= htmlspecialchars($item['booking_no'] ?? '') ?><br>
+                                            <strong class="text-danger">Exp Return:</strong><br>
+                                            <?= !empty($exp_return_date) ? htmlspecialchars($exp_return_date) : '' ?>
+                                        </div>
+                                    <?php } ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="mt-1">
-                    <span><i class="icon-base ri ri-car-line me-1"></i><?=$vehicleGearType?></span>
-                    <?= $this->getStatusBadgeHtml($item['vehicle_status'] ?? '') ?>
-                </div>
-
-            </div>
-
-            <!-- BUTTONS -->
-           <div class="d-flex flex-column gap-2 ms-2">
-
-    <div class="d-flex align-items-center gap-2">
-
-        <!-- View Button -->
-        <button class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center gap-1 action-btn btn_vehicle_view flex-shrink-0"
-            style="width: fit-content;"
-            data-bs-toggle="tooltip"
-            data-bs-trigger="hover"
-            data-bs-placement="top"
-            title="View Details"
-            data-id="<?= $item['ids'] ?>">
-            <i class="ri ri-information-2-line icon-18px"></i>
-        </button>
-
-
-        <?php if ($item['vehicle_status'] == 'Staff Use') { ?>
-
-            <!-- Select Button in same row -->
-            <button class="btn btn-sm btn-primary d-flex align-items-center gap-1 action-btn btn_vehicle_select"
-                data-bs-toggle="tooltip"
-                data-bs-trigger="hover"
-                data-bs-placement="top"
-                title="Select"
-                data-status="Staff Use"
-                data-insurance="<?= $item['next_insurance_date'] ?>"
-                data-passing="<?= $item['next_passing_date'] ?>"
-                data-maintenance="<?= $item['next_maintenance_date'] ?>"
-                data-modelName="<?= $item['model_names'] ?>"
-                data-model="<?= $item['model_id'] ?>"
-                data-veh_no="<?= $item['vehicle_number'] ?>"
-                data-id="<?= $item['ids'] ?>">
-                <i class="ri ri-check-line icon-18px"></i>
-            </button>
-
-        <?php } else { ?>
-
-            <button class="btn btn-sm btn-primary d-flex align-items-center gap-1 action-btn btn_vehicle_select"
-                data-bs-toggle="tooltip"
-                data-bs-trigger="hover"
-                title="Select"
-                data-status="Available"
-                data-insurance="<?= $item['next_insurance_date'] ?>"
-                data-passing="<?= $item['next_passing_date'] ?>"
-                data-maintenance="<?= $item['next_maintenance_date'] ?>"
-                data-modelName="<?= $item['model_names'] ?>"
-                data-model="<?= $item['model_id'] ?>"
-                data-veh_no="<?= $item['vehicle_number'] ?>"
-                data-id="<?= $item['ids'] ?>">
-                <i class="ri ri-check-line icon-18px"></i>
-            </button>
-
-        <?php } ?>
-
-    </div>
-
-
-    <?php if ($item['vehicle_status'] == 'Staff Use') { ?>
-
-        <div class="small">
-            <strong>Staff Use:</strong> <?= $item['staff_name'] ?? '' ?><br>
-
-            <strong class="text-danger">Ref No:</strong>
-            <?= $item['booking_no'] ?? '' ?><br>
-
-            <strong class="text-danger">Exp Return:</strong><br>
-            <?= !empty($exp_return_date) 
-                ? $exp_return_date
-                : '' ?>
-        </div>
-
-    <?php } ?>
-
-</div>
-
-        </div>
-
-        <!-- BOTTOM SECTION -->
-        <div class="mt-3 small text-muted border-top pt-2">
-
-            <div class="d-flex justify-content-between">
-                <span><i class="ri-calendar-check-line text-success me-1"></i>Passing</span>
-                <span><?= $nextPassing ?></span>
-            </div>
-
-            <div class="d-flex justify-content-between">
-                <span><i class="ri-shield-check-line text-info me-1"></i>Insurance</span>
-                <span><?=$nextInsurance?></span>
-            </div>
-
-            <div class="d-flex justify-content-between">
-                <span><i class="ri-tools-line text-danger me-1"></i>Maintenance</span>
-                <span><?=$nextMaintenance?></span>
-            </div>
-
-        </div>
-
-        </div>
-    </div> 
+            </div> 
     <?php
         $html .= ob_get_clean();
     } 

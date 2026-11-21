@@ -111,7 +111,10 @@
 
         window.getContractStatusBadgeHtml = function(status, extraClass = '') {
             const label = (status || '').trim() || 'N/A';
-            const s = label.toLowerCase().replace(/\s+/g, '');
+            let s = label.toLowerCase().replace(/[\s_-]+/g, '');
+            if (s === 'canceled') s = 'cancelled';
+            else if (s === 'return') s = 'returned';
+            else if (s === 'extend') s = 'extended';
             const customMap = window.CONTRACT_STATUS_COLORS || {};
             if (customMap[s] && customMap[s].badge_color) {
                 const bg = customMap[s].badge_color;

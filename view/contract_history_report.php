@@ -999,8 +999,11 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
         let custCode = contract.customer_code || customer.customer_code || 'N/A';
 
         // Top KPI Header Banner & Badges
+        const modalStatusHtml = (typeof window.getContractStatusBadgeHtml === 'function')
+            ? window.getContractStatusBadgeHtml(contract.agreement_status || 'Rentout')
+            : `<span class="badge bg-success">${contract.agreement_status || 'Rentout'}</span>`;
         $('#modal_agreement_no_display').text(contract.agreement_no || 'N/A');
-        $('#modal_agreement_status_display').html(`<span class="badge bg-success">${contract.agreement_status || 'Rentout'}</span>`);
+        $('#modal_agreement_status_display').html(modalStatusHtml);
         $('#btn_export_contract_pdf').attr('href', '/ContractHistoryExport?agreement_id=' + contract.ids);
 
         $('#modal_kpi_cust_name').text(custName);
@@ -1025,7 +1028,7 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
         $('#m_quot_no').text(contract.quotation_number || 'N/A');
         $('#m_service_type').text(contract.service_type || 'N/A');
         $('#m_rental_rate').text(contract.rent_amount ? contract.rent_amount + ' BHD' : (contract.rental_rate ? contract.rental_rate + ' BHD' : 'N/A'));
-        $('#m_status_badge').html(`<span class="badge bg-success">${contract.agreement_status || 'Rentout'}</span>`);
+        $('#m_status_badge').html(modalStatusHtml);
 
         // Vehicles & Replacement Timeline Tab
         let $timeline = $('#container_vehicle_timeline').empty();

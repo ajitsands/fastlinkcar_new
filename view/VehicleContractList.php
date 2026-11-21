@@ -5857,7 +5857,7 @@ function populateviewContractModal(d) {
         $('#viewcontractdt_contract_date').val(contract.agreement_date || '');
         
        $('#viewcontractcust_driver').val(contract.customer_driver_name || '');
-        $('#viewcontract_agreement_status').text(contract.agreement_status);
+        $('#viewcontract_agreement_status').html(typeof window.getContractStatusBadgeHtml === 'function' ? window.getContractStatusBadgeHtml(contract.agreement_status) : (contract.agreement_status || ''));
        
        $('#viewcontractcust_driver_contact_no').val(contract.customer_driver_contact_number || '');
         $('.driverclass').show(); 

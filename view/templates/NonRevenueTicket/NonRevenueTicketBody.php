@@ -1,5 +1,4 @@
-<div class="container-fluid flex-grow-1 container-p-y" style="padding-top: 50px !important;">
- <h4 class="fw-bold py-3">Non-Revenue Tickets</h4>
+<div class="container-fluid flex-grow-1 container-p-y" style="padding-top: 20px !important;">
           
          
   <!-- Nav Tabs -->

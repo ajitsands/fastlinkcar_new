@@ -1004,6 +1004,8 @@ function load_contract_list(
    table = $('#contractTable').DataTable({
     processing: true,
     serverSide: false,
+    pageLength: 15,
+    lengthMenu: [10, 15, 25, 50, 100],
     ajax: {
         url: '/ContractListController',
         type: 'POST',

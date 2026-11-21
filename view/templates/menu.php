@@ -134,14 +134,6 @@
                <div data-i18n="Customer Accounts">Customer Accounts</div>
              </a>
            </li>
-           <li class="menu-item <?php if ($decrypt[0] == '2-9') {
-                                  echo 'active';
-                                } ?>" data-permission="garage_and_service_access">
-             <a href="/GarageAndServiceMaster?val=<?php echo $this->encryption->encrypt('2,2-9'); ?>" class="menu-link">
-               <i class="menu-icon icon-base ri ri-tools-line"></i>
-               <div data-i18n="Garage and Service Master">Garage and Service Master</div>
-             </a>
-           </li>
            <li class="menu-item <?php if ($decrypt[0] == '2-11') {
                                   echo 'active';
                                 } ?>">
@@ -221,14 +213,6 @@
                <div data-i18n="Contract List">Contract List</div>
              </a>
            </li>
-           <li class="menu-item <?php if ($decrypt[0] == '2-6') {
-                                  echo 'active';
-                                } ?>" data-permission="maintenance_request_access">
-             <a href="/MaintenanceRequest?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
-               <i class="menu-icon icon-base ri ri-tools-line"></i>
-               <div data-i18n="Maintenance Request">Maintenance Request</div>
-             </a>
-           </li>
            <li class="menu-item" data-permission="send_contract_access">
              <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#sendContractModal" class="menu-link">
                <i class="menu-icon icon-base ri ri-send-plane-fill"></i>
@@ -242,6 +226,26 @@
 
                <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
                <div data-i18n="Staff Use Allocation">Staff Use Allocation</div>
+             </a>
+           </li>
+         </ul>
+       </li>
+        <li class="menu-item <?php if (in_array($decrypt[0] ?? '', ['2-6', '2-9'], true) || in_array($decrypt[1] ?? '', ['2-6', '2-9'], true)) { echo 'active open'; } ?>" data-permission="garage_and_service_access,maintenance_request_access">
+         <a href="javascript:void(0)" class="menu-link menu-toggle">
+           <i class="menu-icon icon-base ri ri-tools-line"></i>
+           <div data-i18n="Maintenance Request">Maintenance Request</div>
+         </a>
+         <ul class="menu-sub">
+           <li class="menu-item <?php if (($decrypt[0] ?? '') == '2-9' || ($decrypt[1] ?? '') == '2-9') { echo 'active'; } ?>" data-permission="garage_and_service_access">
+             <a href="/GarageAndServiceMaster?val=<?php echo $this->encryption->encrypt('2,2-9'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-tools-line"></i>
+               <div data-i18n="Garage and Service Master">Garage and Service Master</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if (($decrypt[0] ?? '') == '2-6' || ($decrypt[1] ?? '') == '2-6') { echo 'active'; } ?>" data-permission="maintenance_request_access">
+             <a href="/MaintenanceRequest?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-wrench-line"></i>
+               <div data-i18n="Maintenance Request">Maintenance Request</div>
              </a>
            </li>
          </ul>

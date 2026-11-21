@@ -45,14 +45,32 @@
          </a>
        </li>
 
-       <!-- Staff Use Allocation -->
-       <li class="menu-item <?php if (($decrypt[0] ?? '') == '3-5' || ($decrypt[1] ?? '') == '3-5') {
+       <!-- Staff Use -->
+       <li class="menu-item <?php if (in_array($menuRoute, ['RegisterStaff', 'NonRevenueTickets'], true) || $menuSubCode == '3-5') {
                               echo 'active';
-                            } ?>" data-permission="staff_use_allocation_access">
-         <a href="/NonRevenueTickets?val=<?php echo $this->encryption->encrypt('3,3-5'); ?>" class="menu-link">
+                            } ?>" data-permission="staff_registration_access,staff_registration_manage,staff_use_allocation_access">
+         <a href="javascript:void(0)" class="menu-link menu-toggle">
            <i class="menu-icon icon-base ri ri-user-shared-line"></i>
-           <div data-i18n="Staff Use Allocation">Staff Use Allocation</div>
+           <div data-i18n="Staff Use">Staff Use</div>
          </a>
+         <ul class="menu-sub">
+           <li class="menu-item <?php if ($menuRoute === 'RegisterStaff') {
+                                  echo 'active';
+                                } ?>" data-permission="staff_registration_access,staff_registration_manage">
+             <a href="/RegisterStaff?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-id-card-line"></i>
+               <div data-i18n="Staff Registration">Staff Registration</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'NonRevenueTickets' || $menuSubCode == '3-5') {
+                                  echo 'active';
+                                } ?>" data-permission="staff_use_allocation_access">
+             <a href="/NonRevenueTickets?val=<?php echo $this->encryption->encrypt('3,3-5'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-user-shared-line"></i>
+               <div data-i18n="Staff Use Allocation">Staff Use Allocation</div>
+             </a>
+           </li>
+         </ul>
        </li>
 
        <!-- Reservation -->
@@ -271,7 +289,7 @@
         </li>
 
         <!-- Masters (Right-aligned before Send Contract) -->
-        <li class="menu-item ms-auto <?php if ((($decrypt[0] ?? '') == '2' && !in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest', 'VehicleInsurance'], true)) || $menuRoute === 'RegisterStaff') {
+        <li class="menu-item ms-auto <?php if (($decrypt[0] ?? '') == '2' && !in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest', 'VehicleInsurance', 'RegisterStaff'], true)) {
                                echo 'active';
                              } ?>">
           <a href="javascript:void(0)" class="menu-link menu-toggle">
@@ -310,14 +328,6 @@
               <a href="/RegisterDrivers?val=<?php echo $this->encryption->encrypt('2,2-3'); ?>" class="menu-link">
                 <i class="menu-icon icon-base ri ri-user-shared-line"></i>
                 <div data-i18n="Driver Registration">Driver Registration</div>
-              </a>
-            </li>
-            <li class="menu-item <?php if ($menuRoute === 'RegisterStaff') {
-                                   echo 'active';
-                                 } ?>" data-permission="staff_registration_access,staff_registration_manage">
-              <a href="/RegisterStaff?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
-                <i class="menu-icon icon-base ri ri-id-card-line"></i>
-                <div data-i18n="Staff Registration">Staff Registration</div>
               </a>
             </li>
             <li class="menu-item <?php if ($decrypt[0] == '2-8') {

@@ -244,7 +244,7 @@
            </li>
            <li class="menu-item <?php if (($decrypt[0] ?? '') == '2-6' || ($decrypt[1] ?? '') == '2-6') { echo 'active'; } ?>" data-permission="maintenance_request_access">
              <a href="/MaintenanceRequest?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
-               <i class="menu-icon icon-base ri ri-wrench-line"></i>
+               <i class="menu-icon icon-base ri ri-settings-4-line"></i>
                <div data-i18n="Maintenance Request">Maintenance Request</div>
              </a>
            </li>
@@ -412,7 +412,7 @@ if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
         'VehicleContract'             => ['Vehicle Contract Generation', 'Generate rental contracts from approved bookings and reservations.', 'ri-file-text-line'],
         'ContractGeneration'          => ['Contract Generation', 'Generate and manage customer vehicle hire agreements.', 'ri-file-text-line'],
         'ContractList'                => ['Vehicle Contracts List', 'Search, view, print, extend, replace, and return rental contracts.', 'ri-file-list-3-line'],
-        'MaintenanceRequest'          => ['Maintenance Requests', 'Log and track vehicle maintenance and garage jobs.', 'ri-wrench-line'],
+        'MaintenanceRequest'          => ['Maintenance Requests', 'Log and track vehicle maintenance and garage jobs.', 'ri-settings-4-line'],
         'NonRevenueTickets'           => ['Non-Revenue Tickets (Staff Use)', 'Manage internal staff vehicle usage tickets.', 'ri-coupon-3-line'],
         'Quotation'                   => ['Quotations', 'Create and manage customer rental quotations.', 'ri-file-paper-2-line'],
         'Invoice'                     => ['Invoices', 'Generate and manage customer tax invoices.', 'ri-bill-line'],

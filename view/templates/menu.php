@@ -43,6 +43,16 @@
          </a>
        </li>
 
+       <!-- Staff Use Allocation -->
+       <li class="menu-item <?php if (($decrypt[0] ?? '') == '3-5' || ($decrypt[1] ?? '') == '3-5') {
+                              echo 'active';
+                            } ?>" data-permission="staff_use_allocation_access">
+         <a href="/NonRevenueTickets?val=<?php echo $this->encryption->encrypt('3,3-5'); ?>" class="menu-link">
+           <i class="menu-icon icon-base ri ri-user-shared-line"></i>
+           <div data-i18n="Staff Use Allocation">Staff Use Allocation</div>
+         </a>
+       </li>
+
        <!-- Vehicle Insurance & Passings -->
        <li class="menu-item <?php if ($decrypt[0] == '9' || ($decrypt[1] ?? '') == '2-10') {
                               echo 'active';
@@ -218,15 +228,6 @@
              <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#sendContractModal" class="menu-link">
                <i class="menu-icon icon-base ri ri-send-plane-fill"></i>
                <div data-i18n="Send Contract">Send Contract</div>
-             </a>
-           </li>
-           <li class="menu-item <?php if ($decrypt[0] == '3-5') {
-                                  echo 'active';
-                                } ?>" data-permission="staff_use_allocation_access">
-             <a href="/NonRevenueTickets?val=<?php echo $this->encryption->encrypt('3,3-5'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
-               <div data-i18n="Staff Use Allocation">Staff Use Allocation</div>
              </a>
            </li>
          </ul>

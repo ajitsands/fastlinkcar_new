@@ -256,6 +256,7 @@ include ROOT_PATH . '/view/envinclude.php';
     </div>
     <div id="dropdownContent" style="text-align:center;"></div> 
      <?php include('templates/VehicleStatus/vehicleInfoModal.php'); ?>
+     <?php include ROOT_PATH . '/view/templates/vehicles/vehicle_profile_modal.php'; ?>
    
 
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
@@ -1604,12 +1605,145 @@ $(document).on('click', '.li_Vehicle_list', function () {
             }
         });
     });  
-    
 
-
-  
-  
+    $(document).off('click', '.btn_vehicle_view').on('click', '.btn_vehicle_view', function(e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        var vId = $(this).data('id');
+        if (vId) openVehicleProfile(vId);
+    });
 });
+
+function openVehicleProfile(vehicleId) {
+    $.ajax({
+        url: "/AddVehicles",
+        type: "POST",
+        dataType: "json",
+        data: JSON.stringify({ action: "get_vehicle_profile", vehicle_id: vehicleId }),
+        contentType: "application/json",
+        success: function(response) {
+            if (response.status && response.data) {
+                let v = response.data;
+                $("#vpVehicleNumber").text(v.vehicle_number || "N/A");
+                $("#vpVehicleNumBody").text(v.vehicle_number || "N/A");
+                $("#vpCategory").text(v.category_name || "N/A");
+                $("#vpBrand").text(v.brand_name || "N/A");
+                $("#vpModel").text(v.model_names || "N/A");
+                $("#vpChassis").text(v.chassis_number || "N/A");
+                $("#vpYear").text(v.vehicle_year || "N/A");
+                $("#vpColor").text(v.vehicle_color || "N/A");
+                $("#vpPurchaseDate").text(v.formatted_purchase_date || "Not Set");
+                $("#vpNextInsurance").text(v.formatted_insurance_date || "Not Set");
+                $("#vpNextPassing").text(v.formatted_passing_date || "Not Set");
+
+                $("#vpRentoutDiv").hide();
+                $("#vpStaffDiv").hide();
+                if (v.vehicle_status === 'Rentout' && v.current_user_name) {
+                    $("#vpRentoutDiv").show();
+                    $("#vpCurrentUserName").text(v.current_user_name);
+                    $("#vpCurrentUserContact").text(v.current_user_contact || "No Contact");
+                    $("#vpContractRef").text(v.contract_ref || "N/A");
+                    let expRet = v.expected_return_date ? (typeof dayjs !== 'undefined' ? dayjs(v.expected_return_date).format('DD-MMM-YYYY h:mm A') : new Date(v.expected_return_date).toLocaleString()) : "N/A";
+                    $("#vpReturnDate").text(expRet);
+                } else if (v.vehicle_status === 'Staff Use' && v.current_user_name) {
+                    $("#vpStaffDiv").show();
+                    $("#vpStaffName").text(v.current_user_name);
+                    $("#vpStaffContact").text(v.current_user_contact || "No Contact");
+                    $("#vpStaffRef").text(v.contract_ref || "N/A");
+                    let expRet = v.expected_return_date ? (typeof dayjs !== 'undefined' ? dayjs(v.expected_return_date).format('DD-MMM-YYYY h:mm A') : new Date(v.expected_return_date).toLocaleString()) : "N/A";
+                    $("#vpStaffReturnDate").text(expRet);
+                }
+
+                $("#vpRemarksDiv").hide();
+                if (v.vehicle_status_notes && v.vehicle_status_notes.trim() !== "") {
+                    if (v.vehicle_status === 'Parking' || v.vehicle_status === 'Blocked' || v.vehicle_status === 'Maintenance') {
+                        $("#vpRemarksDiv").show();
+                        $("#vpStatusRemarks").text(v.vehicle_status_notes);
+                    }
+                }
+
+                if (typeof window.applyVehicleStatusBadge === "function") {
+                    window.applyVehicleStatusBadge("#vpStatusBadge", v.vehicle_status);
+                } else {
+                    $("#vpStatusBadge").attr("class", "badge bg-label-primary").text(v.vehicle_status || "Unknown");
+                }
+
+                $("#vpRegCompany").text(v.ownership_company || "N/A");
+                if (v.is_outsourced === "Yes") {
+                    $("#vpOutsourceDiv").show();
+                    $("#vpOutsourceCompany").text(v.outsourcing_company_name || "N/A");
+                } else {
+                    $("#vpOutsourceDiv").hide();
+                }
+
+                let od = v.other_details || {};
+                $("#vpFuelType").text(od.vehicleFuelType || "N/A");
+                $("#vpGearType").text(od.vehicleGearType || "N/A");
+
+                $("#vpPricingList").empty();
+                if (v.model_price_json && v.model_price_json !== "") {
+                    try {
+                        let prices = JSON.parse(v.model_price_json);
+                        if (prices && prices.length > 0) {
+                            let groups = { Hour: [], Day: [], Week: [], Month: [], Year: [], Other: [] };
+                            prices.forEach(p => {
+                                if (p.amount && p.amount !== "") {
+                                    let itemLower = p.item.toLowerCase();
+                                    let groupName = 'Other';
+                                    if (itemLower.includes('hour')) groupName = 'Hour';
+                                    else if (itemLower.includes('day')) groupName = 'Day';
+                                    else if (itemLower.includes('week')) groupName = 'Week';
+                                    else if (itemLower.includes('month')) groupName = 'Month';
+                                    else if (itemLower.includes('year')) groupName = 'Year';
+                                    let displayName = p.item;
+                                    if (itemLower.includes('without driver')) displayName = 'W/O Driver';
+                                    else if (itemLower.includes('with driver')) displayName = 'With Driver';
+                                    groups[groupName].push({ name: displayName, amount: p.amount });
+                                }
+                            });
+                            let html = '<div class="row g-2 w-100">';
+                            for (const [gName, items] of Object.entries(groups)) {
+                                if (items.length > 0) {
+                                    html += `<div class="col-6"><div class="border rounded px-2 py-1 bg-lighter"><div class="text-center text-muted fw-bold border-bottom mb-1" style="font-size: 11px;">${gName}</div>`;
+                                    items.forEach(i => {
+                                        html += `<div class="d-flex justify-content-between align-items-center mb-1"><span class="text-muted" style="font-size: 11px;">${i.name}</span><strong class="text-success" style="font-size: 11px;">${i.amount} <?= defined('SYS_CURRENCY_CODE') ? SYS_CURRENCY_CODE : 'BHD' ?></strong></div>`;
+                                    });
+                                    html += `</div></div>`;
+                                }
+                            }
+                            html += '</div>';
+                            $("#vpPricingList").html(html);
+                        }
+                    } catch(e) {}
+                }
+                if ($("#vpPricingList").is(':empty')) {
+                    $("#vpPricingList").html('<span class="text-muted fst-italic">No pricing setup</span>');
+                }
+
+                let images = v.images || [];
+                let carouselInner = $("#vpCarouselInner");
+                carouselInner.empty();
+                if (images.length > 0) {
+                    $("#vpNoImagesMessage").hide();
+                    $("#vpImageCarousel").show();
+                    images.forEach((img, idx) => {
+                        let activeClass = idx === 0 ? "active" : "";
+                        let imgPath = img.includes("http") ? img : ("/uploads/vehicleImages/" + img);
+                        carouselInner.append(`<div class="carousel-item ${activeClass} h-100"><img src="${imgPath}" class="d-block w-100 h-100" style="object-fit: cover;" alt="Vehicle Image"></div>`);
+                    });
+                } else {
+                    $("#vpImageCarousel").hide();
+                    $("#vpNoImagesMessage").show();
+                }
+
+                if ($("#vehicleProfileModal").length) {
+                    $("#vehicleProfileModal").appendTo("body");
+                }
+                $("#vehicleProfileModal").modal("show");
+            }
+        }
+    });
+}
 </script>
 
 </body>

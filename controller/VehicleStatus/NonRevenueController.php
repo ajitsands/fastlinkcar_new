@@ -628,7 +628,7 @@ $this->params[2] = [
                         <div class="col-6">
                             <div class="card-body p-2 d-flex flex-column h-100">
                                 <div class="mb-2">
-                                    <h5 class="mb-0 fw-bold text-danger text-truncate veh_no" title="<?= htmlspecialchars($item['vehicle_number']) ?>"><?= htmlspecialchars($item['vehicle_number']) ?></h5>
+                                    <h5 class="mb-0 fw-bold text-primary text-truncate veh_no" title="<?= htmlspecialchars($item['vehicle_number']) ?>"><?= htmlspecialchars($item['vehicle_number']) ?></h5>
                                     <small class="text-body fw-semibold text-truncate d-block" title="<?= htmlspecialchars($item['model_names']) ?>" style="font-size: 1rem;"><?= htmlspecialchars($item['model_names']) ?></small>
                                 </div>
 
@@ -651,11 +651,11 @@ $this->params[2] = [
                                 </div>
 
                                 <div class="d-flex gap-1 border-top pt-2 mt-auto flex-wrap">
-                                    <button class="btn btn-sm btn-outline-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_view px-1"
+                                    <button class="btn btn-sm btn-outline-primary flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_view px-1"
                                         data-bs-toggle="tooltip" data-bs-trigger="hover" title="View Details" data-id="<?= $item['ids'] ?>" style="font-size: 1rem;">
                                         <i class="ri ri-information-2-line me-1"></i> Details
                                     </button>
-                                    <button class="btn btn-sm btn-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_select px-1"
+                                    <button class="btn btn-sm btn-primary flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_select px-1"
                                         data-bs-toggle="tooltip" data-bs-trigger="hover" title="Select"
                                         data-status="<?= ($item['vehicle_status'] == 'Staff Use') ? 'Staff Use' : 'Available' ?>"
                                         data-insurance="<?= $item['next_insurance_date'] ?>"

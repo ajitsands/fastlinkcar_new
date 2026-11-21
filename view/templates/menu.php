@@ -33,6 +33,16 @@
          </a>
        </li>
 
+       <!-- Contract List -->
+       <li class="menu-item <?php if (($decrypt[0] ?? '') == '3-4' || ($decrypt[1] ?? '') == '3-4') {
+                              echo 'active';
+                            } ?>" data-permission="contract_list_access">
+         <a href="/ContractList?val=<?php echo $this->encryption->encrypt('3,3-4'); ?>" class="menu-link">
+           <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
+           <div data-i18n="Contract List">Contract List</div>
+         </a>
+       </li>
+
        <!-- Vehicle Insurance & Passings -->
        <li class="menu-item <?php if ($decrypt[0] == '9' || ($decrypt[1] ?? '') == '2-10') {
                               echo 'active';
@@ -204,15 +214,6 @@
                 <div data-i18n="Reservation List">Reservation List</div>
               </a>
             </li>
-           <li class="menu-item <?php if ($decrypt[0] == '3-4') {
-                                  echo 'active';
-                                } ?>" data-permission="contract_list_access">
-             <a href="/ContractList?val=<?php echo $this->encryption->encrypt('3,3-4'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
-               <div data-i18n="Contract List">Contract List</div>
-             </a>
-           </li>
            <li class="menu-item" data-permission="send_contract_access">
              <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#sendContractModal" class="menu-link">
                <i class="menu-icon icon-base ri ri-send-plane-fill"></i>

@@ -101,19 +101,19 @@
        </li>
 
        <!-- Maintenance Request -->
-       <li class="menu-item <?php if (in_array($menuSubCode, ['2-6', '2-9'], true) || in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest'], true)) { echo 'active'; } ?>" data-permission="garage_and_service_access,maintenance_request_access">
+       <li class="menu-item <?php if (in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest'], true)) { echo 'active'; } ?>" data-permission="garage_and_service_access,maintenance_request_access">
          <a href="javascript:void(0)" class="menu-link menu-toggle">
            <i class="menu-icon icon-base ri ri-tools-line"></i>
            <div data-i18n="Maintenance Request">Maintenance Request</div>
          </a>
          <ul class="menu-sub">
-           <li class="menu-item <?php if (($decrypt[0] ?? '') == '2-9' || ($decrypt[1] ?? '') == '2-9') { echo 'active'; } ?>" data-permission="garage_and_service_access">
+           <li class="menu-item <?php if ($menuRoute === 'GarageAndServiceMaster') { echo 'active'; } ?>" data-permission="garage_and_service_access">
              <a href="/GarageAndServiceMaster?val=<?php echo $this->encryption->encrypt('2,2-9'); ?>" class="menu-link">
                <i class="menu-icon icon-base ri ri-tools-line"></i>
                <div data-i18n="Garage and Service Master">Garage and Service Master</div>
              </a>
            </li>
-           <li class="menu-item <?php if (($decrypt[0] ?? '') == '2-6' || ($decrypt[1] ?? '') == '2-6') { echo 'active'; } ?>" data-permission="maintenance_request_access">
+           <li class="menu-item <?php if ($menuRoute === 'MaintenanceRequest') { echo 'active'; } ?>" data-permission="maintenance_request_access">
              <a href="/MaintenanceRequest?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
                <i class="menu-icon icon-base ri ri-settings-4-line"></i>
                <div data-i18n="Maintenance Request">Maintenance Request</div>
@@ -271,7 +271,7 @@
         </li>
 
         <!-- Masters (Right-aligned before Send Contract) -->
-        <li class="menu-item ms-auto <?php if (($decrypt[0] ?? '') == '2' && !in_array($menuSubCode, ['2-6', '2-9', '2-10'], true) && !in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest', 'VehicleInsurance'], true)) {
+        <li class="menu-item ms-auto <?php if ((($decrypt[0] ?? '') == '2' && !in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest', 'VehicleInsurance'], true)) || $menuRoute === 'RegisterStaff') {
                                echo 'active';
                              } ?>">
           <a href="javascript:void(0)" class="menu-link menu-toggle">
@@ -312,7 +312,7 @@
                 <div data-i18n="Driver Registration">Driver Registration</div>
               </a>
             </li>
-            <li class="menu-item <?php if ($decrypt[0] == '2-6') {
+            <li class="menu-item <?php if ($menuRoute === 'RegisterStaff') {
                                    echo 'active';
                                  } ?>" data-permission="staff_registration_access,staff_registration_manage">
               <a href="/RegisterStaff?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">

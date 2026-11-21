@@ -445,7 +445,7 @@ if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
         'FundFlow'                    => ['Fund Flow', 'Track cash and bank fund inflows and outflows.', 'ri-exchange-dollar-line'],
         'UnbilledContracts'           => ['Unbilled Contracts', 'Review active or closed contracts pending billing.', 'ri-file-warning-line'],
         'RefundForm'                  => ['Customer Refunds', 'Process and track customer deposit and credit refunds.', 'ri-refund-2-line'],
-        'VehicleInsight'              => ['Vehicle Insights', 'Analyze vehicle utilization, revenue, and status history.', 'ri-bar-chart-grouped-line'],
+        'VehicleInsight'              => ['Vehicle Status', 'View live vehicle availability, status, and fleet details.', 'ri-car-line'],
         'VehicleMovementReport'       => ['Vehicle Movement Report', 'Track vehicle check-out, check-in, and status movements.', 'ri-route-line'],
         'VehicleUtilizationReport'    => ['Vehicle Utilization Report', 'Analyze fleet utilization rates across periods.', 'ri-pie-chart-2-line'],
         'ReturnReport'                => ['Vehicle Return Report', 'Review returned vehicles, mileage, and return dates.', 'ri-arrow-go-back-line'],

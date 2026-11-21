@@ -1,6 +1,5 @@
-<div class="container-fluid flex-grow-1 container-p-y" style="padding-top: 50px !important;">
- <div class="d-flex justify-content-between align-items-center py-3">
-    <h4 class="fw-bold mb-0">Vehicle Insights</h4>
+<div class="container-fluid flex-grow-1 container-p-y" style="padding-top: 20px !important;">
+ <div class="d-flex justify-content-end align-items-center py-2">
     <div class="d-flex align-items-center">
         <label for="filterCompany" class="form-label mb-0 me-2 fw-bold text-nowrap">Company:</label>
         <select id="filterCompany" class="form-select form-select-sm" style="width: 250px;">

@@ -55,6 +55,73 @@
          </a>
        </li>
 
+       <!-- Reservation -->
+       <li class="menu-item <?php if (($decrypt[0] ?? '') == '3' && !in_array($menuSubCode, ['3-4', '3-5', '3-11'], true) && !in_array($menuRoute, ['ContractList', 'NonRevenueTickets', 'DirectContract'], true)) {
+                              echo 'active';
+                            } ?>">
+         <a href="javascript:void(0)" class="menu-link menu-toggle">
+           <i class="menu-icon icon-base ri ri-layout-2-line"></i>
+           <div data-i18n="Reservation">Reservation</div>
+         </a>
+
+         <ul class="menu-sub">
+            <li style="display: none;" class="menu-item <?php if ($decrypt[0] == '3-2') {
+                                  echo 'active';
+                                } ?>" data-permission="vehicle_reservation_access">
+             <a href="/VehicleReservation?val=<?php echo $this->encryption->encrypt('3,3-2'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-pushpin-fill"></i>
+               <div data-i18n="Vehicle Reservation">Vehicle Reservation</div>
+             </a>
+           </li>
+             <li class="menu-item <?php if ($decrypt[0] == '3-10') {
+                                   echo 'active';
+                                 } ?>">
+            <a href="/Reservation?val=<?php echo $this->encryption->encrypt('3,3-10'); ?>" class="menu-link">
+              <i class="menu-icon icon-base ri ri-survey-line"></i>
+              <div data-i18n="Reservation">Reservation</div>
+            </a>
+          </li>
+            <li class="menu-item d-none <?php if ($decrypt[0] == '3-3') {
+                                  echo 'active';
+                                } ?>" data-permission="generate_contract_access">
+             <a href="/VehicleContract?val=<?php echo $this->encryption->encrypt('3,3-3'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-draft-line"></i>
+               <div data-i18n="Generate Contract">Generate Contract</div>
+             </a>
+           </li>
+            <li class="menu-item <?php if ($decrypt[0] == '3-10') {
+                                   echo 'active';
+                                 } ?>" data-permission="generate_contract_access">
+              <a href="/ContractGeneration?val=<?php echo $this->encryption->encrypt('3,3-10'); ?>" class="menu-link">
+                <i class="menu-icon icon-base ri ri-survey-line"></i>
+                <div data-i18n="Reservation List">Reservation List</div>
+              </a>
+            </li>
+         </ul>
+       </li>
+
+       <!-- Maintenance Request -->
+       <li class="menu-item <?php if (in_array($menuSubCode, ['2-6', '2-9'], true) || in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest'], true)) { echo 'active'; } ?>" data-permission="garage_and_service_access,maintenance_request_access">
+         <a href="javascript:void(0)" class="menu-link menu-toggle">
+           <i class="menu-icon icon-base ri ri-tools-line"></i>
+           <div data-i18n="Maintenance Request">Maintenance Request</div>
+         </a>
+         <ul class="menu-sub">
+           <li class="menu-item <?php if (($decrypt[0] ?? '') == '2-9' || ($decrypt[1] ?? '') == '2-9') { echo 'active'; } ?>" data-permission="garage_and_service_access">
+             <a href="/GarageAndServiceMaster?val=<?php echo $this->encryption->encrypt('2,2-9'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-tools-line"></i>
+               <div data-i18n="Garage and Service Master">Garage and Service Master</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if (($decrypt[0] ?? '') == '2-6' || ($decrypt[1] ?? '') == '2-6') { echo 'active'; } ?>" data-permission="maintenance_request_access">
+             <a href="/MaintenanceRequest?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-settings-4-line"></i>
+               <div data-i18n="Maintenance Request">Maintenance Request</div>
+             </a>
+           </li>
+         </ul>
+       </li>
+
        <!-- Vehicle Insurance & Passings -->
        <li class="menu-item <?php if ($decrypt[0] == '9' || ($decrypt[1] ?? '') == '2-10') {
                               echo 'active';
@@ -178,75 +245,6 @@
          </ul>
          
          
-       </li>
-     
-
-       <li class="menu-item <?php if (($decrypt[0] ?? '') == '3' && !in_array($menuSubCode, ['3-4', '3-5', '3-11'], true) && !in_array($menuRoute, ['ContractList', 'NonRevenueTickets', 'DirectContract'], true)) {
-                              echo 'active';
-                            } ?>">
-         <a href="javascript:void(0)" class="menu-link menu-toggle">
-           <i class="menu-icon icon-base ri ri-layout-2-line"></i>
-           <div data-i18n="Reservation">Reservation</div>
-         </a>
-
-         <ul class="menu-sub">
-         
-            <li style="display: none;" class="menu-item <?php if ($decrypt[0] == '3-2') {
-                                  echo 'active';
-                                } ?>" data-permission="vehicle_reservation_access">
-             <a href="/VehicleReservation?val=<?php echo $this->encryption->encrypt('3,3-2'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-pushpin-fill"></i>
-               <div data-i18n="Vehicle Reservation">Vehicle Reservation</div>
-             </a>
-           </li>
-             <li class="menu-item <?php if ($decrypt[0] == '3-10') {
-                                   echo 'active';
-                                 } ?>">
-            <a href="/Reservation?val=<?php echo $this->encryption->encrypt('3,3-10'); ?>" class="menu-link">
-
-              <i class="menu-icon icon-base ri ri-survey-line"></i>
-              <div data-i18n="Reservation">Reservation</div>
-            </a>
-          </li>
-            <li class="menu-item d-none <?php if ($decrypt[0] == '3-3') {
-                                  echo 'active';
-                                } ?>" data-permission="generate_contract_access">
-             <a href="/VehicleContract?val=<?php echo $this->encryption->encrypt('3,3-3'); ?>" class="menu-link">
-
-               <i class="menu-icon icon-base ri ri-draft-line"></i>
-               <div data-i18n="Generate Contract">Generate Contract</div>
-             </a>
-           </li>
-            <li class="menu-item <?php if ($decrypt[0] == '3-10') {
-                                   echo 'active';
-                                 } ?>" data-permission="generate_contract_access">
-              <a href="/ContractGeneration?val=<?php echo $this->encryption->encrypt('3,3-10'); ?>" class="menu-link">
-                <i class="menu-icon icon-base ri ri-survey-line"></i>
-                <div data-i18n="Reservation List">Reservation List</div>
-              </a>
-            </li>
-         </ul>
-       </li>
-        <li class="menu-item <?php if (in_array($menuSubCode, ['2-6', '2-9'], true) || in_array($menuRoute, ['GarageAndServiceMaster', 'MaintenanceRequest'], true)) { echo 'active'; } ?>" data-permission="garage_and_service_access,maintenance_request_access">
-         <a href="javascript:void(0)" class="menu-link menu-toggle">
-           <i class="menu-icon icon-base ri ri-tools-line"></i>
-           <div data-i18n="Maintenance Request">Maintenance Request</div>
-         </a>
-         <ul class="menu-sub">
-           <li class="menu-item <?php if (($decrypt[0] ?? '') == '2-9' || ($decrypt[1] ?? '') == '2-9') { echo 'active'; } ?>" data-permission="garage_and_service_access">
-             <a href="/GarageAndServiceMaster?val=<?php echo $this->encryption->encrypt('2,2-9'); ?>" class="menu-link">
-               <i class="menu-icon icon-base ri ri-tools-line"></i>
-               <div data-i18n="Garage and Service Master">Garage and Service Master</div>
-             </a>
-           </li>
-           <li class="menu-item <?php if (($decrypt[0] ?? '') == '2-6' || ($decrypt[1] ?? '') == '2-6') { echo 'active'; } ?>" data-permission="maintenance_request_access">
-             <a href="/MaintenanceRequest?val=<?php echo $this->encryption->encrypt('2,2-6'); ?>" class="menu-link">
-               <i class="menu-icon icon-base ri ri-settings-4-line"></i>
-               <div data-i18n="Maintenance Request">Maintenance Request</div>
-             </a>
-           </li>
-         </ul>
        </li>
         <li class="menu-item <?php if ($decrypt[0] == '5') { echo 'active'; } ?>">
          <a href="javascript:void(0)" class="menu-link menu-toggle">

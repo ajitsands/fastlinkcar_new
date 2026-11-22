@@ -29,6 +29,7 @@ try {
             c.booking_ids,
             c.service_start_date_time,
             c.service_end_date_time,
+            c.service_type,
             c.extend_date,
             c.company_id,
             tc.company_name,
@@ -42,7 +43,8 @@ try {
             v.vehicle_color AS v_color,
             v.model_names AS v_model_names,
             cat.category_name AS v_category,
-            modl.modal_name AS v_model_name
+            modl.modal_name AS v_model_name,
+            modl.price_json AS v_price_json
         FROM tbl_vehicle_rentout_contracts c
         LEFT JOIN tbl_company tc ON tc.ids = c.company_id
         LEFT JOIN customer_details cust ON (cust.customer_id = c.customer_code OR cust.ids = c.customer_code)
@@ -136,21 +138,8 @@ try {
         $baseAmount = (float)($cd['total_amt'] ?? ($cd['grand_total'] ?? 0));
         $unitPrice  = (float)($cd['unit_price'] ?? 0);
         $rateType   = strtolower($cd['rate_type'] ?? 'daily');
-
-        $dailyRate = 0.0;
-        if ($unitPrice > 0) {
-            if (strpos($rateType, 'hour') !== false) {
-                $dailyRate = $unitPrice * 24;
-            } elseif (strpos($rateType, 'month') !== false) {
-                $dailyRate = $unitPrice / 30;
-            } elseif (strpos($rateType, 'week') !== false) {
-                $dailyRate = $unitPrice / 7;
-            } else {
-                $dailyRate = $unitPrice;
-            }
-        } elseif ($baseAmount > 0 && $initialDuration > 0) {
-            $dailyRate = $baseAmount / $initialDuration;
-        }
+        $activeRateType  = $rateType;
+        $activeUnitPrice = $unitPrice;
 
         // Extensions analysis
         $extList = $extensionsByContract[$cId] ?? [];
@@ -167,20 +156,79 @@ try {
                 $latestExtEndTs = $extEndTs;
                 $latestExtEndStr = $extEnd;
                 $extUnit = (float)($extDet['unit_price'] ?? 0);
-                $extRType = strtolower($extDet['rate_type'] ?? 'daily');
+                $extRType = strtolower($extDet['rate_type'] ?? '');
                 if ($extUnit > 0) {
-                    if (strpos($extRType, 'hour') !== false) {
-                        $dailyRate = $extUnit * 24;
-                    } elseif (strpos($extRType, 'month') !== false) {
-                        $dailyRate = $extUnit / 30;
-                    } elseif (strpos($extRType, 'week') !== false) {
-                        $dailyRate = $extUnit / 7;
-                    } else {
-                        $dailyRate = $extUnit;
+                    $activeUnitPrice = $extUnit;
+                    if ($extRType !== '') {
+                        $activeRateType = $extRType;
                     }
                 }
             }
         }
+
+        // Extract model pricing configuration (With Driver vs Without Driver)
+        $svcStr = strtolower(trim((string)($row['service_type'] ?? ($cd['service'] ?? ($cd['service_type'] ?? '')))));
+        $wantsWithDriver = (strpos($svcStr, 'with driver') !== false && strpos($svcStr, 'without') === false);
+        $modelRates = ['hourly' => 0.0, 'daily' => 0.0, 'weekly' => 0.0, 'monthly' => 0.0];
+        $modelFallbackWo = ['hourly' => 0.0, 'daily' => 0.0, 'weekly' => 0.0, 'monthly' => 0.0];
+
+        $priceArr = json_decode($row['v_price_json'] ?? '[]', true);
+        if (is_array($priceArr)) {
+            foreach ($priceArr as $pItem) {
+                $itemName = strtolower((string)($pItem['item'] ?? ''));
+                $amt = (float)($pItem['amount'] ?? 0);
+                if ($amt <= 0 || $itemName === '') continue;
+
+                $isWith = (strpos($itemName, 'with driver') !== false && strpos($itemName, 'without') === false);
+                $isWithout = (strpos($itemName, 'without driver') !== false);
+
+                $bucket = null;
+                if (strpos($itemName, 'hour') !== false) $bucket = 'hourly';
+                elseif (strpos($itemName, 'day') !== false) $bucket = 'daily';
+                elseif (strpos($itemName, 'week') !== false) $bucket = 'weekly';
+                elseif (strpos($itemName, 'month') !== false) $bucket = 'monthly';
+                if ($bucket === null) continue;
+
+                if ($wantsWithDriver && $isWith) {
+                    $modelRates[$bucket] = $amt;
+                } elseif (!$wantsWithDriver && $isWithout) {
+                    $modelRates[$bucket] = $amt;
+                }
+                if ($isWithout) {
+                    $modelFallbackWo[$bucket] = $amt;
+                }
+            }
+            foreach ($modelRates as $k => $v) {
+                if ($v <= 0 && $modelFallbackWo[$k] > 0) {
+                    $modelRates[$k] = $modelFallbackWo[$k];
+                }
+            }
+        }
+
+        // Formula fallback rates when model pricing is not configured
+        $formulaDaily = 0.0;
+        if ($activeUnitPrice > 0) {
+            if (strpos($activeRateType, 'hour') !== false) {
+                $formulaDaily = $activeUnitPrice * 24;
+            } elseif (strpos($activeRateType, 'month') !== false) {
+                $formulaDaily = $activeUnitPrice / 30;
+            } elseif (strpos($activeRateType, 'week') !== false) {
+                $formulaDaily = $activeUnitPrice / 7;
+            } else {
+                $formulaDaily = $activeUnitPrice;
+            }
+        } elseif ($baseAmount > 0 && $initialDuration > 0) {
+            $formulaDaily = $baseAmount / $initialDuration;
+        }
+
+        $formulaHourly  = (strpos($activeRateType, 'hour') !== false && $activeUnitPrice > 0) ? $activeUnitPrice : ($formulaDaily / 24);
+        $formulaWeekly  = (strpos($activeRateType, 'week') !== false && $activeUnitPrice > 0) ? $activeUnitPrice : ($formulaDaily * 7);
+        $formulaMonthly = (strpos($activeRateType, 'month') !== false && $activeUnitPrice > 0) ? $activeUnitPrice : ($formulaDaily * 30);
+
+        $effHourly  = ($modelRates['hourly']  > 0) ? $modelRates['hourly']  : $formulaHourly;
+        $effDaily   = ($modelRates['daily']   > 0) ? $modelRates['daily']   : $formulaDaily;
+        $effWeekly  = ($modelRates['weekly']  > 0) ? $modelRates['weekly']  : $formulaWeekly;
+        $effMonthly = ($modelRates['monthly'] > 0) ? $modelRates['monthly'] : $formulaMonthly;
 
         $effectiveEndTs = $latestExtEndTs ?: $initialEndTs;
         $effectiveEndStr = $latestExtEndTs ? $latestExtEndStr : $initialEnd;
@@ -192,14 +240,31 @@ try {
         $overdueDays = 0;
         $overdueAmount = 0.0;
 
-        if ($effectiveEndTs && $nowTs > ($effectiveEndTs + 3600) && !$isDueToday) {
+        if ($effectiveEndTs && $nowTs > ($effectiveEndTs + 3600)) {
             $isOverdue = true;
-            $overdueDays = max(1, (int)ceil(($nowTs - $effectiveEndTs) / 86400));
-            $overdueAmount = round($overdueDays * $dailyRate, 3);
-        } elseif ($effectiveEndTs && $isDueToday && $nowTs > ($effectiveEndTs + 3600)) {
-            $isOverdue = true;
-            $overdueDays = 1;
-            $overdueAmount = round($dailyRate, 3);
+            $diffSec = $nowTs - $effectiveEndTs;
+            $overdueDays = $isDueToday ? 1 : max(1, (int)ceil($diffSec / 86400));
+
+            if (strpos($activeRateType, 'hour') !== false) {
+                $overdueHours = max(1, (int)ceil($diffSec / 3600));
+                $overdueAmount = round($overdueHours * $effHourly, 3);
+            } elseif (strpos($activeRateType, 'month') !== false) {
+                $dtStart = new DateTime('@' . $effectiveEndTs);
+                $dtNow   = new DateTime('@' . $nowTs);
+                $diffObj = $dtStart->diff($dtNow);
+                $completedMonths = ($diffObj->y * 12) + $diffObj->m;
+                $extraDays = $diffObj->d + (($diffObj->h > 0 || $diffObj->i > 0 || $diffObj->s > 0) ? 1 : 0);
+                if ($completedMonths === 0 && $extraDays === 0) {
+                    $extraDays = 1;
+                }
+                $overdueAmount = round(($completedMonths * $effMonthly) + ($extraDays * $effDaily), 3);
+            } elseif (strpos($activeRateType, 'week') !== false) {
+                $completedWeeks = intdiv($overdueDays, 7);
+                $extraDays = $overdueDays % 7;
+                $overdueAmount = round(($completedWeeks * $effWeekly) + ($extraDays * $effDaily), 3);
+            } else {
+                $overdueAmount = round($overdueDays * $effDaily, 3);
+            }
         }
 
         $contractTotalAmount   = round($baseAmount + $extensionAmt, 3);

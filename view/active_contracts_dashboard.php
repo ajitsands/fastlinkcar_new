@@ -182,14 +182,20 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                         <!-- Active Contracts Table -->
                         <div class="card">
                             <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
-                                <h5 class="mb-0 fw-semibold" style="color: #1b3d94;">Active Contracts List</h5>
+                                <h5 class="mb-0 fw-semibold" id="activeTableTitle" style="color: #1b3d94;">Active Contracts List</h5>
                                 <div class="d-flex flex-wrap align-items-center gap-2">
+                                    <select id="contractScopeFilter" class="form-select form-select-sm" style="width: 190px;">
+                                        <option value="active" selected>Active Contracts</option>
+                                        <option value="closed">Closed / Previous</option>
+                                        <option value="all">All Contracts</option>
+                                    </select>
                                     <select id="activeStatusFilter" class="form-select form-select-sm" style="width: 180px;">
-                                        <option value="all">All Active</option>
+                                        <option value="all">All Statuses</option>
                                         <option value="overdue">Overdue Only</option>
                                         <option value="due_today">Due Today</option>
                                         <option value="extended">Extended</option>
                                         <option value="rentout">Rentout</option>
+                                        <option value="closed">Closed / Returned</option>
                                     </select>
                                     <input type="text" id="activeSearchInput" class="form-control form-control-sm" style="width: 240px;" placeholder="Search agreement, customer, plate...">
                                 </div>
@@ -498,6 +504,53 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
     </iframe>
 
     <?php include ROOT_PATH . '/view/templates/VehicleContractList/return_receipt_modal.php'; ?>
+
+    <!-- Client Feedback Modal -->
+    <div class="modal fade" id="feedbackModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #1b3d94, #153075);">
+                    <h5 class="modal-title text-white">
+                        <i class="ri-chat-3-line me-2"></i>Client Feedback &mdash; <span id="fbModalAgreementNo"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-light border py-2 px-3 mb-3 d-flex justify-content-between align-items-center">
+                        <span><strong>Customer:</strong> <span id="fbModalCustomerName">-</span></span>
+                        <span class="text-muted small" id="fbModalVehicle">-</span>
+                    </div>
+                    <form id="feedbackForm" class="row g-3 mb-4">
+                        <input type="hidden" id="fbContractId">
+                        <input type="hidden" id="fbAgreementNoInput">
+                        <div class="col-md-5">
+                            <label class="form-label fw-semibold">Date of Feedback <span class="text-danger">*</span></label>
+                            <input type="date" id="fbDate" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label fw-semibold">Feedback Taken By <span class="text-danger">*</span></label>
+                            <input type="text" id="fbTakenBy" class="form-control form-control-sm" value="<?= htmlspecialchars($_SESSION['profile_name'] ?? ($_SESSION['user_name'] ?? '')) ?>" placeholder="Staff name" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Feedback Notes <span class="text-danger">*</span></label>
+                            <textarea id="fbNotes" class="form-control form-control-sm" rows="3" placeholder="Enter client feedback remarks..." required></textarea>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-primary btn-sm" id="btnSaveFeedback">
+                                <i class="ri-save-line me-1"></i> Save Feedback
+                            </button>
+                        </div>
+                    </form>
+
+                    <h6 class="fw-bold mb-2" style="color: #1b3d94;"><i class="ri-history-line me-1"></i>Feedback History</h6>
+                    <div id="fbHistoryList" class="border rounded p-2 bg-light" style="max-height: 220px; overflow-y: auto;">
+                        <div class="text-center text-muted small py-2">No feedback recorded yet.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>httpdocs/user_js/car_survey_widget.js?v=<?= time() ?>"></script>
@@ -531,10 +584,12 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             const search = ($('#activeSearchInput').val() || '').trim().toLowerCase();
 
             const filtered = allContracts.filter(c => {
+                const st = (c.status || '').toLowerCase();
                 if (filter === 'overdue' && !c.is_overdue) return false;
                 if (filter === 'due_today' && !c.is_due_today) return false;
-                if (filter === 'extended' && c.status.toLowerCase() !== 'extended') return false;
-                if (filter === 'rentout' && c.status.toLowerCase() !== 'rentout') return false;
+                if (filter === 'extended' && st !== 'extended') return false;
+                if (filter === 'rentout' && st !== 'rentout') return false;
+                if (filter === 'closed' && st !== 'closed' && st !== 'returned') return false;
 
                 if (search) {
                     const hay = [
@@ -643,19 +698,32 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                             data: 'id',
                             className: 'text-center text-nowrap',
                             orderable: false,
-                            render: (id, t, row) => `
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-outline-primary qv-trigger" data-id="${id}" title="View Full Contract Details">
-                                        <i class="ri-eye-line me-1"></i> View
-                                    </button>
-                                    <button type="button" class="btn btn-outline-dark ac-print-btn" data-agreement="${escapeHtml(row.agreement_no || '')}" title="Print Agreement">
-                                        <i class="ri-printer-line"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-outline-success btn-return-modal" data-id="${id}" title="Return Vehicle">
-                                        <i class="ri-roadster-line me-1"></i> Return
-                                    </button>
-                                </div>
-                            `
+                            render: (id, t, row) => {
+                                const stLow = (row.status || '').toLowerCase();
+                                const isActiveRow = (stLow === 'rentout' || stLow === 'extended');
+                                const fbCount = parseInt(row.feedback_count || 0, 10);
+                                const fbBadge = fbCount > 0 ? `<span class="badge rounded-pill bg-info ms-1" style="font-size:0.65rem;">${fbCount}</span>` : '';
+                                const returnBtn = isActiveRow
+                                    ? `<button type="button" class="btn btn-outline-success btn-return-modal" data-id="${id}" title="Return Vehicle"><i class="ri-roadster-line me-1"></i> Return</button>`
+                                    : '';
+                                return `
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn btn-outline-primary qv-trigger" data-id="${id}" title="View Full Contract Details">
+                                            <i class="ri-eye-line me-1"></i> View
+                                        </button>
+                                        <button type="button" class="btn btn-outline-info btn-feedback-modal" data-id="${id}" title="Collect / View Client Feedback">
+                                            <i class="ri-chat-3-line"></i>${fbBadge}
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-receipt-modal" data-id="${id}" title="Create / Print Receipt">
+                                            <i class="ri-receipt-line"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-dark ac-print-btn" data-agreement="${escapeHtml(row.agreement_no || '')}" title="Print Agreement">
+                                            <i class="ri-printer-line"></i>
+                                        </button>
+                                        ${returnBtn}
+                                    </div>
+                                `;
+                            }
                         }
                     ]
                 });
@@ -680,7 +748,15 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
         }
 
         function loadActiveContracts() {
-            fetch('/ActiveContractsDashboardController')
+            const scope = $('#contractScopeFilter').val() || 'active';
+            const titleMap = {
+                active: 'Active Contracts List',
+                closed: 'Closed & Previous Contracts',
+                all: 'All Contracts List'
+            };
+            $('#activeTableTitle').text(titleMap[scope] || 'Active Contracts List');
+
+            fetch('/ActiveContractsDashboardController?scope=' + encodeURIComponent(scope))
                 .then(r => r.json())
                 .then(res => {
                     if (res.status !== 'success') {
@@ -717,6 +793,118 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
 
         $('#activeSearchInput').on('input', renderFilteredTable);
         $('#btnRefreshActive').on('click', loadActiveContracts);
+        $('#contractScopeFilter').on('change', function() {
+            $('#activeStatusFilter').val('all');
+            $('.kpi-card').removeClass('active-filter');
+            loadActiveContracts();
+        });
+
+        $(document).on('click', '.btn-receipt-modal', function() {
+            const id = parseInt($(this).data('id'), 10);
+            const row = allContracts.find(c => c.id === id);
+            if (!row) return;
+            if (window.ReturnReceiptModal) {
+                window.ReturnReceiptModal.open({
+                    contract_id: row.id,
+                    customer_code: row.customer_code || '',
+                    agreement_no: row.agreement_no || ''
+                });
+            }
+        });
+
+        function renderFeedbackHistory(items) {
+            if (!Array.isArray(items) || items.length === 0) {
+                $('#fbHistoryList').html('<div class="text-center text-muted small py-2">No feedback recorded yet.</div>');
+                return;
+            }
+            const html = items.map(fb => `
+                <div class="border-bottom pb-2 mb-2 last-child-no-border">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="badge bg-label-primary">${escapeHtml(fb.feedback_date || '-')}</span>
+                        <small class="text-muted"><i class="ri-user-line me-1"></i>Taken by: <strong>${escapeHtml(fb.taken_by || '-')}</strong></small>
+                    </div>
+                    <div class="small text-dark">${escapeHtml(fb.feedback_notes || '')}</div>
+                </div>
+            `).join('');
+            $('#fbHistoryList').html(html);
+        }
+
+        $(document).on('click', '.btn-feedback-modal', function() {
+            const id = parseInt($(this).data('id'), 10);
+            const row = allContracts.find(c => c.id === id);
+            if (!row) return;
+
+            $('#fbContractId').val(row.id);
+            $('#fbAgreementNoInput').val(row.agreement_no || '');
+            $('#fbModalAgreementNo').text(row.agreement_no || '');
+            $('#fbModalCustomerName').text(row.customer_name || '-');
+            $('#fbModalVehicle').text((row.vehicle_no || '') + ' ' + (row.vehicle_model || ''));
+            $('#fbDate').val(new Date().toISOString().split('T')[0]);
+            $('#fbNotes').val('');
+            $('#fbHistoryList').html('<div class="text-center text-muted small py-2">Loading feedback...</div>');
+
+            new bootstrap.Modal(document.getElementById('feedbackModal')).show();
+
+            fetch('/ActiveContractsDashboardController', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get_feedback', contract_id: row.id })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res && res.status === 'success') {
+                    if (res.default_taken_by && !$('#fbTakenBy').val()) {
+                        $('#fbTakenBy').val(res.default_taken_by);
+                    }
+                    renderFeedbackHistory(res.data || []);
+                } else {
+                    renderFeedbackHistory([]);
+                }
+            })
+            .catch(() => renderFeedbackHistory([]));
+        });
+
+        $('#feedbackForm').on('submit', function(e) {
+            e.preventDefault();
+            const cid = parseInt($('#fbContractId').val(), 10);
+            const btn = $('#btnSaveFeedback');
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
+
+            fetch('/ActiveContractsDashboardController', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'save_feedback',
+                    contract_id: cid,
+                    agreement_no: $('#fbAgreementNoInput').val(),
+                    feedback_date: $('#fbDate').val(),
+                    taken_by: $('#fbTakenBy').val(),
+                    feedback_notes: $('#fbNotes').val()
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save Feedback');
+                if (res && res.status === 'success') {
+                    $('#fbNotes').val('');
+                    renderFeedbackHistory(res.data || []);
+                    const cRow = allContracts.find(c => c.id === cid);
+                    if (cRow) {
+                        cRow.feedback_count = (res.data || []).length;
+                        renderFilteredTable();
+                    }
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'success', title: 'Saved', text: 'Client feedback saved.', timer: 1500, showConfirmButton: false });
+                    }
+                } else {
+                    alert((res && res.message) || 'Failed to save feedback.');
+                }
+            })
+            .catch(() => {
+                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save Feedback');
+                alert('Error saving feedback.');
+            });
+        });
 
         $(document).on('click', '.qv-trigger', function() {
             const id = parseInt($(this).data('id'), 10);

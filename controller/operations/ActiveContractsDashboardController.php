@@ -9,7 +9,80 @@ require_once ROOT_PATH . '/__db.php';
 
 try {
     $pdo = getPDO();
+
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `tbl_contract_feedback` (
+          `ids` int(11) NOT NULL AUTO_INCREMENT,
+          `contract_id` int(11) NOT NULL,
+          `agreement_no` varchar(100) DEFAULT NULL,
+          `feedback_date` date NOT NULL,
+          `feedback_notes` text NOT NULL,
+          `taken_by` varchar(150) NOT NULL,
+          `created_by` int(11) DEFAULT NULL,
+          `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (`ids`),
+          KEY `idx_contract_feedback_cid` (`contract_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $rawBody = file_get_contents('php://input');
+        $postInput = json_decode($rawBody, true);
+        if (!is_array($postInput) || empty($postInput)) {
+            $postInput = $_POST;
+        }
+        $postAction = $postInput['action'] ?? '';
+
+        if ($postAction === 'get_feedback') {
+            $cid = (int)($postInput['contract_id'] ?? 0);
+            if ($cid <= 0) {
+                echo json_encode(['status' => 'error', 'message' => 'Invalid contract ID']);
+                exit;
+            }
+            $stFb = $pdo->prepare("SELECT ids, contract_id, agreement_no, feedback_date, feedback_notes, taken_by, created_at FROM tbl_contract_feedback WHERE contract_id = ? ORDER BY feedback_date DESC, ids DESC");
+            $stFb->execute([$cid]);
+            echo json_encode([
+                'status' => 'success',
+                'data' => $stFb->fetchAll(PDO::FETCH_ASSOC),
+                'default_taken_by' => $_SESSION['profile_name'] ?? ($_SESSION['user_name'] ?? '')
+            ]);
+            exit;
+        }
+
+        if ($postAction === 'save_feedback') {
+            $cid = (int)($postInput['contract_id'] ?? 0);
+            $agrNo = trim((string)($postInput['agreement_no'] ?? ''));
+            $fbDate = trim((string)($postInput['feedback_date'] ?? date('Y-m-d')));
+            $fbNotes = trim((string)($postInput['feedback_notes'] ?? ''));
+            $takenBy = trim((string)($postInput['taken_by'] ?? ($_SESSION['profile_name'] ?? ($_SESSION['user_name'] ?? ''))));
+
+            if ($cid <= 0 || $fbNotes === '' || $fbDate === '' || $takenBy === '') {
+                echo json_encode(['status' => 'error', 'message' => 'Feedback date, taken by, and notes are required.']);
+                exit;
+            }
+
+            $stIns = $pdo->prepare("INSERT INTO tbl_contract_feedback (contract_id, agreement_no, feedback_date, feedback_notes, taken_by, created_by) VALUES (?, ?, ?, ?, ?, ?)");
+            $stIns->execute([$cid, $agrNo, $fbDate, $fbNotes, $takenBy, $_SESSION['user_id'] ?? null]);
+
+            $stFb = $pdo->prepare("SELECT ids, contract_id, agreement_no, feedback_date, feedback_notes, taken_by, created_at FROM tbl_contract_feedback WHERE contract_id = ? ORDER BY feedback_date DESC, ids DESC");
+            $stFb->execute([$cid]);
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Feedback saved successfully.',
+                'data' => $stFb->fetchAll(PDO::FETCH_ASSOC)
+            ]);
+            exit;
+        }
+    }
+
     $companyId = $_GET['company_id'] ?? ($_SESSION['company_id'] ?? 'all');
+    $scope = strtolower(trim((string)($_GET['scope'] ?? 'active')));
+    $statusIn = "'Rentout', 'Extended'";
+    if ($scope === 'closed') {
+        $statusIn = "'Closed', 'Returned'";
+    } elseif ($scope === 'all') {
+        $statusIn = "'Rentout', 'Extended', 'Closed', 'Returned'";
+    }
 
     $sql = "
         SELECT
@@ -51,7 +124,7 @@ try {
         LEFT JOIN tbl_vehicles v ON v.ids = c.vehicle_id
         LEFT JOIN tbl_vehicle_category cat ON cat.ids = COALESCE(v.category_id, c.vehicle_category_id)
         LEFT JOIN tbl_vehicle_model modl ON modl.ids = COALESCE(v.model_id, c.vehicle_model_id)
-        WHERE c.agreement_status IN ('Rentout', 'Extended')
+        WHERE c.agreement_status IN ({$statusIn})
     ";
 
     $params = [];
@@ -69,9 +142,18 @@ try {
     $contractIds = array_map('intval', array_column($rows, 'ids'));
     $extensionsByContract = [];
     $receivedByContract = [];
+    $feedbackCountByContract = [];
 
     if (!empty($contractIds)) {
         $inClause = implode(',', $contractIds);
+
+        // Batch fetch feedback counts
+        $fbStmt = $pdo->query("SELECT contract_id, COUNT(*) AS cnt FROM tbl_contract_feedback WHERE contract_id IN ({$inClause}) GROUP BY contract_id");
+        if ($fbStmt) {
+            while ($fbRow = $fbStmt->fetch(PDO::FETCH_ASSOC)) {
+                $feedbackCountByContract[(int)$fbRow['contract_id']] = (int)$fbRow['cnt'];
+            }
+        }
 
         // Batch fetch extensions
         $extStmt = $pdo->query("SELECT * FROM tbl_vehicle_contract_extensions WHERE agreement_ids IN ({$inClause}) ORDER BY extend_end_date ASC, ids ASC");
@@ -234,13 +316,14 @@ try {
         $effectiveEndStr = $latestExtEndTs ? $latestExtEndStr : $initialEnd;
         $endDateOnly = $effectiveEndTs ? date('Y-m-d', $effectiveEndTs) : '';
 
-        // Overdue status & amount as per today (with 1hr grace period)
+        // Overdue status & amount as per today (with 1hr grace period, only for active contracts)
+        $isActiveStatus = in_array(strtolower(trim((string)($row['agreement_status'] ?? ''))), ['rentout', 'extended'], true);
         $isOverdue = false;
-        $isDueToday = ($endDateOnly === $todayStr);
+        $isDueToday = ($isActiveStatus && $endDateOnly === $todayStr);
         $overdueDays = 0;
         $overdueAmount = 0.0;
 
-        if ($effectiveEndTs && $nowTs > ($effectiveEndTs + 3600)) {
+        if ($isActiveStatus && $effectiveEndTs && $nowTs > ($effectiveEndTs + 3600)) {
             $isOverdue = true;
             $diffSec = $nowTs - $effectiveEndTs;
             $overdueDays = $isDueToday ? 1 : max(1, (int)ceil($diffSec / 86400));
@@ -313,6 +396,7 @@ try {
             'is_overdue'            => $isOverdue,
             'is_due_today'          => $isDueToday,
             'overdue_days'          => $overdueDays,
+            'feedback_count'        => $feedbackCountByContract[$cId] ?? 0,
             'received_amount'          => $receivedAmount,
             'contract_total_amount'    => $contractTotalAmount,
             'overdue_amount'           => $overdueAmount,

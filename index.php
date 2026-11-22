@@ -452,6 +452,8 @@ class RoutingClass
             'ActiveContractsDashboard/' => 'ActiveContractsDashboard',
             'ActiveContractsDashboardController' => 'ActiveContractsDashboardController',
             'ActiveContractsDashboardController/' => 'ActiveContractsDashboardController',
+            'OverdueRules' => 'OverdueRules',
+            'OverdueRules/' => 'OverdueRules',
             'ContratcList' => 'ContractList',
             'ContratcList/' => 'ContractList',
             
@@ -1092,6 +1094,10 @@ class RoutingClass
     private function ActiveContractsDashboard(...$params)
     {
         $this->includeWithParams("view/active_contracts_dashboard.php", $_GET);
+    }
+    private function OverdueRules(...$params)
+    {
+        $this->includeWithParams("view/overdue_rules.php", $_GET);
     }
     private function ActiveContractsDashboardController(...$params)
     {

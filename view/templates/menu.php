@@ -46,7 +46,7 @@
        </li>
 
        <!-- Contracts -->
-       <li class="menu-item <?php if (in_array($menuRoute, ['ContractList', 'ReturnReport', 'ContractHistoryReport', 'ContractReturnOverdueReport'], true) || in_array($menuSubCode, ['3-4', '6-2', '6-7', '6-10'], true)) {
+       <li class="menu-item <?php if (in_array($menuRoute, ['ContractList', 'ReturnReport', 'ContractHistoryReport', 'ContractReturnOverdueReport', 'OverdueRules'], true) || in_array($menuSubCode, ['3-4', '6-2', '6-7', '6-10', '3-12'], true)) {
                               echo 'active';
                             } ?>" data-permission="contract_list_access,expected_returns_access,contract_history_report_access">
          <a href="javascript:void(0)" class="menu-link menu-toggle">
@@ -78,6 +78,12 @@
              <a href="/ContractReturnOverdueReport?val=<?php echo $this->encryption->encrypt('6,6-10'); ?>" class="menu-link">
                <i class="menu-icon icon-base ri ri-time-line"></i>
                <div data-i18n="Contract Return & Overdue Report">Contract Return & Overdue Report</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'OverdueRules' || $menuSubCode == '3-12') { echo 'active'; } ?>">
+             <a href="/OverdueRules?val=<?php echo $this->encryption->encrypt('3,3-12'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-calculator-line"></i>
+               <div data-i18n="Overdue Calculation Rules">Overdue Calculation Rules</div>
              </a>
            </li>
          </ul>
@@ -455,6 +461,7 @@ if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
         'NonRevenueTicketReport'      => ['Staff Use Report', 'Summary of non-revenue staff vehicle usage.', 'ri-coupon-3-line'],
         'ContractHistoryReport'       => ['Contract & Replacement History', 'Audit trail of contracts and vehicle replacements.', 'ri-history-line'],
         'ContractReturnOverdueReport' => ['Contract Return & Overdue Report', 'Track contract returns and overdue charges.', 'ri-time-line'],
+        'OverdueRules'                => ['Overdue Calculation Rules', 'Reference guide for grace periods, model pricing, and overdue formulas.', 'ri-calculator-line'],
     ];
     if (isset($routeHeaderMap[$reqPath])) {
         [$pTitle, $pDesc, $pIcon] = $routeHeaderMap[$reqPath];

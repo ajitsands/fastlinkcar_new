@@ -505,7 +505,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
 
     <!-- Client Feedback Modal -->
     <div class="modal fade" id="feedbackModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header" style="background: linear-gradient(135deg, #1b3d94, #153075);">
                     <h5 class="modal-title text-white">
@@ -518,31 +518,43 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                         <span><strong>Customer:</strong> <span id="fbModalCustomerName">-</span></span>
                         <span class="text-muted small" id="fbModalVehicle">-</span>
                     </div>
-                    <form id="feedbackForm" class="row g-3 mb-4">
-                        <input type="hidden" id="fbContractId">
-                        <input type="hidden" id="fbAgreementNoInput">
-                        <div class="col-md-5">
-                            <label class="form-label fw-semibold">Date of Feedback <span class="text-danger">*</span></label>
-                            <input type="date" id="fbDate" class="form-control form-control-sm" required>
+                    <div class="row g-4">
+                        <!-- Left Column: Add Feedback Form -->
+                        <div class="col-md-5 border-end">
+                            <h6 class="fw-bold mb-3" style="color: #1b3d94;"><i class="ri-add-circle-line me-1"></i>Add Feedback</h6>
+                            <form id="feedbackForm" class="row g-3">
+                                <input type="hidden" id="fbContractId">
+                                <input type="hidden" id="fbAgreementNoInput">
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">Date of Feedback <span class="text-danger">*</span></label>
+                                    <input type="date" id="fbDate" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">Feedback Taken By <span class="text-danger">*</span></label>
+                                    <input type="text" id="fbTakenBy" class="form-control form-control-sm" value="<?= htmlspecialchars($_SESSION['profile_name'] ?? ($_SESSION['user_name'] ?? '')) ?>" placeholder="Staff name" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">Feedback Notes <span class="text-danger">*</span></label>
+                                    <textarea id="fbNotes" class="form-control form-control-sm" rows="5" placeholder="Enter client feedback remarks..." required></textarea>
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="submit" class="btn btn-primary btn-sm" id="btnSaveFeedback">
+                                        <i class="ri-save-line me-1"></i> Save Feedback
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="col-md-7">
-                            <label class="form-label fw-semibold">Feedback Taken By <span class="text-danger">*</span></label>
-                            <input type="text" id="fbTakenBy" class="form-control form-control-sm" value="<?= htmlspecialchars($_SESSION['profile_name'] ?? ($_SESSION['user_name'] ?? '')) ?>" placeholder="Staff name" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Feedback Notes <span class="text-danger">*</span></label>
-                            <textarea id="fbNotes" class="form-control form-control-sm" rows="3" placeholder="Enter client feedback remarks..." required></textarea>
-                        </div>
-                        <div class="col-12 text-end">
-                            <button type="submit" class="btn btn-primary btn-sm" id="btnSaveFeedback">
-                                <i class="ri-save-line me-1"></i> Save Feedback
-                            </button>
-                        </div>
-                    </form>
 
-                    <h6 class="fw-bold mb-2" style="color: #1b3d94;"><i class="ri-history-line me-1"></i>Feedback History</h6>
-                    <div id="fbHistoryList" class="border rounded p-2 bg-light" style="max-height: 220px; overflow-y: auto;">
-                        <div class="text-center text-muted small py-2">No feedback recorded yet.</div>
+                        <!-- Right Column: Scrollable Feedback Timeline -->
+                        <div class="col-md-7">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-bold mb-0" style="color: #1b3d94;"><i class="ri-history-line me-1"></i>Feedback Timeline</h6>
+                                <span class="badge bg-label-primary" id="fbTotalCountBadge">0 Entries</span>
+                            </div>
+                            <div id="fbHistoryList" class="border rounded p-3 bg-light" style="height: 330px; overflow-y: auto;">
+                                <div class="text-center text-muted small py-4">No feedback recorded yet.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -912,20 +924,35 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             }
         });
 
+        function fmtReadableDate(dateStr) {
+            if (!dateStr) return '-';
+            const clean = String(dateStr).trim().substring(0, 10);
+            const parts = clean.split('-');
+            if (parts.length === 3 && parts[0].length === 4) {
+                const ms = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const mi = parseInt(parts[1], 10) - 1;
+                if (mi >= 0 && mi < 12) return `${parts[2]}-${ms[mi]}-${parts[0]}`;
+            }
+            return dateStr;
+        }
+
         function renderFeedbackHistory(items) {
-            if (!Array.isArray(items) || items.length === 0) {
-                $('#fbHistoryList').html('<div class="text-center text-muted small py-2">No feedback recorded yet.</div>');
+            const list = Array.isArray(items) ? items : [];
+            $('#fbTotalCountBadge').text(list.length + (list.length === 1 ? ' Entry' : ' Entries'));
+            if (list.length === 0) {
+                $('#fbHistoryList').html('<div class="text-center text-muted small py-4">No feedback recorded yet.</div>');
                 return;
             }
-            const html = items.map(fb => `
-                <div class="border-bottom pb-2 mb-2 last-child-no-border">
+            const html = '<div class="ps-3 border-start border-2 border-primary">' + list.map(fb => `
+                <div class="position-relative mb-3 bg-white border rounded p-2 shadow-xs">
+                    <span class="position-absolute rounded-circle bg-primary" style="width: 10px; height: 10px; left: -22px; top: 12px; border: 2px solid #fff;"></span>
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="badge bg-label-primary">${escapeHtml(fb.feedback_date || '-')}</span>
-                        <small class="text-muted"><i class="ri-user-line me-1"></i>Taken by: <strong>${escapeHtml(fb.taken_by || '-')}</strong></small>
+                        <span class="badge bg-label-primary">${escapeHtml(fmtReadableDate(fb.feedback_date))}</span>
+                        <small class="text-muted"><i class="ri-user-line me-1"></i>By: <strong>${escapeHtml(fb.taken_by || '-')}</strong></small>
                     </div>
-                    <div class="small text-dark">${escapeHtml(fb.feedback_notes || '')}</div>
+                    <div class="small text-dark" style="white-space: pre-wrap;">${escapeHtml(fb.feedback_notes || '')}</div>
                 </div>
-            `).join('');
+            `).join('') + '</div>';
             $('#fbHistoryList').html(html);
         }
 

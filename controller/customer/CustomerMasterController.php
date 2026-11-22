@@ -155,6 +155,27 @@ class CustomerMasterController
 			
 
 			case 'AddCustomerInformationnew':
+			    $missingCust = [];
+			    if (trim((string)$this->custType) === '') $missingCust[] = 'Customer Type';
+			    if (trim((string)$this->customerName) === '') $missingCust[] = 'Customer Name';
+			    if (trim((string)$this->ContactNumber) === '') $missingCust[] = 'Contact Number';
+			    if (trim((string)$this->cprno) === '') $missingCust[] = 'ID Number (CR/CPR No.)';
+			    if (trim((string)$this->customer_account_id) === '') $missingCust[] = 'Customer Account';
+			    if (trim((string)$this->nationality) === '') $missingCust[] = 'Nationality';
+			    if (!empty($missingCust)) {
+			        echo json_encode([
+			            'status' => false,
+			            'message' => 'Required fields missing: ' . implode(', ', $missingCust)
+			        ]);
+			        break;
+			    }
+			    if (trim((string)$this->emailId) !== '' && !filter_var(trim((string)$this->emailId), FILTER_VALIDATE_EMAIL)) {
+			        echo json_encode([
+			            'status' => false,
+			            'message' => 'Please enter a valid Email address.'
+			        ]);
+			        break;
+			    }
 			    
 			     $sql = "
                     SELECT CONCAT(

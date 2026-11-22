@@ -116,7 +116,10 @@
                 });
             })
             .catch(() => {});
-        jQuery.ajaxPrefilter(function(options) {
+        jQuery(document).on('input change', '#QtnAddNewCustomerModal input, #QtnAddNewCustomerModal select, #QtnAddNewCustomerModal textarea', function() {
+            jQuery(this).removeClass('is-invalid');
+        });
+        jQuery.ajaxPrefilter(function(options, originalOptions, jqXHR) {
             if (options.url && options.url.indexOf('/SaveCustomerDetails') !== -1 && typeof options.data === 'string') {
                 try {
                     const parsed = JSON.parse(options.data);
@@ -133,6 +136,48 @@
                         parsed.vat_reg_no            = jQuery('#vat_reg_no_onmodal').val() || '';
                         parsed.is_blacklisted        = jQuery('#is_blacklisted_onmodal').is(':checked') ? 1 : 0;
                         parsed.blacklist_description = jQuery('#blacklist_description_onmodal').val() || '';
+
+                        const missing = [];
+                        let firstBadEl = null;
+                        const checkReq = (val, selector, label) => {
+                            const $el = jQuery(selector);
+                            if ($el.length && !String(val || '').trim()) {
+                                $el.addClass('is-invalid');
+                                missing.push(label);
+                                if (!firstBadEl) firstBadEl = $el;
+                            } else if ($el.length) {
+                                $el.removeClass('is-invalid');
+                            }
+                        };
+
+                        checkReq(parsed.customer_type, '#customer_type_onmodal', 'Customer Type');
+                        checkReq(parsed.customer_name, '#bookingCustomerName_onmodal', 'Customer Name');
+                        checkReq(parsed.telephone, '#customerMobile_onmodal', 'Contact Number');
+                        checkReq(parsed.cprcr, '#customerCprCr_onmodal', 'ID Number (CR/CPR No.)');
+                        checkReq(parsed.customer_account_id, '#customer_account_id_onmodal', 'Customer Account');
+                        checkReq(parsed.nationality, '#nationality_onmodal', 'Nationality');
+
+                        const emailVal = String(parsed.email || '').trim();
+                        if (emailVal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+                            jQuery('#customerEmail_onmodal').addClass('is-invalid');
+                            missing.push('Valid Email Address');
+                            if (!firstBadEl) firstBadEl = jQuery('#customerEmail_onmodal');
+                        }
+
+                        if (missing.length > 0) {
+                            jqXHR.abort();
+                            if (firstBadEl) firstBadEl.focus();
+                            const msg = 'Please fill in the required fields: ' + missing.join(', ');
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: 'warning', title: 'Validation Required', text: msg, confirmButtonColor: '#1b3d94' });
+                            } else if (typeof setupDropdown === 'function') {
+                                setupDropdown('dropdownContent', 'danger', (typeof svgDanger !== 'undefined' ? svgDanger : '') + msg, 'click');
+                            } else {
+                                alert(msg);
+                            }
+                            return;
+                        }
+
                         options.data = JSON.stringify(parsed);
                     }
                 } catch (e) {}

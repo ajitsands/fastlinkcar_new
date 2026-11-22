@@ -103,6 +103,25 @@ class CustomerController
         $var = $this->SQLArray();
         switch ($action) {
             case 'AddNewCustomer':
+                $missing = [];
+                if (trim((string)$this->customer_type) === '') $missing[] = 'Customer Type';
+                if (trim((string)$this->customer_name) === '') $missing[] = 'Customer Name';
+                if (trim((string)$this->telephone) === '') $missing[] = 'Contact Number';
+                if (trim((string)$this->cprcr) === '') $missing[] = 'ID Number (CR/CPR No.)';
+                if (!empty($missing)) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'Required fields missing: ' . implode(', ', $missing)
+                    ]);
+                    break;
+                }
+                if (trim((string)$this->email) !== '' && !filter_var(trim((string)$this->email), FILTER_VALIDATE_EMAIL)) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'Please enter a valid Email address.'
+                    ]);
+                    break;
+                }
                 if (count($this->params[0]) !== 23) {
                     throw new Exception("Parameter count mismatch: " . count($this->params[0]));
                 }

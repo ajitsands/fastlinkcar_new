@@ -152,10 +152,11 @@
                   <th class="text-end">Debit</th>
                   <th class="text-end">Credit</th>
                   <th class="text-end">Balance</th>
+                  <th class="text-center">Print</th>
                 </tr>
               </thead>
               <tbody id="rr_ledger_tbody">
-                <tr><td colspan="7" class="text-center text-muted py-2">Loading ledger...</td></tr>
+                <tr><td colspan="8" class="text-center text-muted py-2">Loading ledger...</td></tr>
               </tbody>
             </table>
           </div>

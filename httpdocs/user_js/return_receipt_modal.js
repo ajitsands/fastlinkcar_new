@@ -18,7 +18,7 @@ window.ReturnReceiptModal = (function () {
     }
 
     function loadLedger(contractId) {
-        $('#rr_ledger_tbody').html('<tr><td colspan="7" class="text-center text-muted py-2">Loading ledger...</td></tr>');
+        $('#rr_ledger_tbody').html('<tr><td colspan="8" class="text-center text-muted py-2">Loading ledger...</td></tr>');
         $.getJSON('/CustomerLedgerController', {
             action: 'GetContractLedgerData',
             contract_id: contractId
@@ -29,7 +29,7 @@ window.ReturnReceiptModal = (function () {
             let totalCredit = 0;
             let running = 0;
             if (!rows.length) {
-                $('#rr_ledger_tbody').html('<tr><td colspan="7" class="text-center text-muted py-2">No ledger entries found</td></tr>');
+                $('#rr_ledger_tbody').html('<tr><td colspan="8" class="text-center text-muted py-2">No ledger entries found</td></tr>');
                 $('#rr_led_total_debit, #rr_led_total_credit, #rr_led_balance').text('0.000');
                 return;
             }
@@ -42,6 +42,11 @@ window.ReturnReceiptModal = (function () {
                 const dt = fmtDisplayDate(r.trans_date || r.created_at);
                 const desc = r.description || r.remarks || r.notes || '-';
                 const methodBadge = (r.payment_method && r.payment_method !== 'N/A') ? ` <span class="badge bg-label-info">${esc(r.payment_method)}</span>` : '';
+                const candRef = String(r.receipt_no || r.voucher_no || r.ref_no || r.trans_type || '').trim();
+                const isReceiptRow = cred > 0 && /\/CM\/|CM\//i.test(candRef);
+                const printCell = isReceiptRow
+                    ? `<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 rr-print-ledger-receipt" data-receipt="${esc(candRef)}" title="Print Receipt ${esc(candRef)}"><i class="ri-printer-line"></i></button>`
+                    : '-';
                 return `
                     <tr>
                         <td>${idx + 1}</td>
@@ -51,6 +56,7 @@ window.ReturnReceiptModal = (function () {
                         <td class="text-end">${deb > 0 ? deb.toFixed(3) : '-'}</td>
                         <td class="text-end text-success">${cred > 0 ? cred.toFixed(3) : '-'}</td>
                         <td class="text-end fw-semibold">${running.toFixed(3)}</td>
+                        <td class="text-center">${printCell}</td>
                     </tr>
                 `;
             }).join('');
@@ -141,15 +147,23 @@ window.ReturnReceiptModal = (function () {
         loadLedger(contractId);
     }
 
-    function printReceipt() {
-        const recNo = $.trim($('#rr_generated_receipt_no').val());
-        if (!recNo) return;
-        fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(recNo))
+    function printReceiptByNo(recNo) {
+        const cleanNo = $.trim(recNo || '');
+        if (!cleanNo) return;
+        fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(cleanNo))
             .then(r => r.text())
             .then(token => {
                 if (token) window.open('/CashMemoPrint?token=' + encodeURIComponent(token.trim()), '_blank');
             });
     }
+
+    function printReceipt() {
+        printReceiptByNo($('#rr_generated_receipt_no').val());
+    }
+
+    $(document).on('click', '.rr-print-ledger-receipt', function () {
+        printReceiptByNo($(this).data('receipt'));
+    });
 
     function sendWhatsApp() {
         const recNo = $.trim($('#rr_generated_receipt_no').val());

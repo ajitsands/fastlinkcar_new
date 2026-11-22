@@ -189,15 +189,13 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                         <option value="closed">Closed / Previous</option>
                                         <option value="all">All Contracts</option>
                                     </select>
-                                    <select id="activeStatusFilter" class="form-select form-select-sm" style="width: 180px;">
-                                        <option value="all">All Statuses</option>
-                                        <option value="overdue">Overdue Only</option>
-                                        <option value="due_today">Due Today</option>
-                                        <option value="extended">Extended</option>
-                                        <option value="rentout">Rentout</option>
-                                        <option value="closed">Closed / Returned</option>
-                                    </select>
                                     <input type="text" id="activeSearchInput" class="form-control form-control-sm" style="width: 240px;" placeholder="Search agreement, customer, plate...">
+                                    <button type="button" id="btnExportActiveExcel" class="btn btn-sm btn-outline-success" title="Export to Excel">
+                                        <i class="ri-file-excel-2-line me-1"></i> Excel
+                                    </button>
+                                    <button type="button" id="btnExportActivePdf" class="btn btn-sm btn-outline-danger" title="Export to PDF">
+                                        <i class="ri-file-pdf-2-line me-1"></i> PDF
+                                    </button>
                                 </div>
                             </div>
                             <div class="card-body">
@@ -562,6 +560,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
         let allContracts = [];
         let dt = null;
         let currentAgreementNo = '';
+        let currentKpiFilter = 'all';
 
         function formatDateTime(val) {
             if (!val) return '-';
@@ -579,11 +578,11 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             }[s]));
         }
 
-        function renderFilteredTable() {
-            const filter = $('#activeStatusFilter').val();
+        function getFilteredContracts() {
+            const filter = currentKpiFilter || 'all';
             const search = ($('#activeSearchInput').val() || '').trim().toLowerCase();
 
-            const filtered = allContracts.filter(c => {
+            return allContracts.filter(c => {
                 const st = (c.status || '').toLowerCase();
                 if (filter === 'overdue' && !c.is_overdue) return false;
                 if (filter === 'due_today' && !c.is_due_today) return false;
@@ -600,6 +599,10 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                 }
                 return true;
             });
+        }
+
+        function renderFilteredTable() {
+            const filtered = getFilteredContracts();
 
             if (!dt) {
                 dt = $('#activeContractsTable').DataTable({
@@ -777,26 +780,123 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
         }
 
         $(document).on('click', '.kpi-card', function() {
-            const filter = $(this).data('filter');
+            const filter = $(this).data('filter') || 'all';
+            currentKpiFilter = filter;
             $('.kpi-card').removeClass('active-filter');
             $(this).addClass('active-filter');
-            $('#activeStatusFilter').val(filter);
-            renderFilteredTable();
-        });
-
-        $('#activeStatusFilter').on('change', function() {
-            const val = $(this).val();
-            $('.kpi-card').removeClass('active-filter');
-            $(`.kpi-card[data-filter="${val}"]`).addClass('active-filter');
             renderFilteredTable();
         });
 
         $('#activeSearchInput').on('input', renderFilteredTable);
         $('#btnRefreshActive').on('click', loadActiveContracts);
         $('#contractScopeFilter').on('change', function() {
-            $('#activeStatusFilter').val('all');
+            currentKpiFilter = 'all';
             $('.kpi-card').removeClass('active-filter');
             loadActiveContracts();
+        });
+
+        $('#btnExportActiveExcel').on('click', function() {
+            const rows = getFilteredContracts();
+            if (!rows.length) {
+                alert('No contracts to export.');
+                return;
+            }
+            const headers = [
+                'Agreement No', 'Status', 'Customer Name', 'Phone',
+                'Vehicle No', 'Vehicle Model', 'From Date', 'To Date',
+                'Overdue Days', 'Received (BHD)', 'Contract Total (BHD)',
+                'Overdue Amt (BHD)', 'Total Value (BHD)'
+            ];
+            const csvEscape = (val) => '"' + String(val ?? '').replace(/"/g, '""') + '"';
+            const lines = [headers.map(csvEscape).join(',')];
+            rows.forEach(r => {
+                lines.push([
+                    r.agreement_no || '',
+                    r.status || '',
+                    r.customer_name || '',
+                    r.customer_phone || '',
+                    r.vehicle_no || '',
+                    r.vehicle_model || '',
+                    formatDateTime(r.start_date),
+                    formatDateTime(r.end_date),
+                    r.is_overdue ? (r.overdue_days || 0) : 0,
+                    Number(r.received_amount || 0).toFixed(3),
+                    Number(r.contract_total_amount || 0).toFixed(3),
+                    Number(r.overdue_amount || 0).toFixed(3),
+                    Number(r.total_contract_value || 0).toFixed(3)
+                ].map(csvEscape).join(','));
+            });
+            const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'contracts_' + ($('#contractScopeFilter').val() || 'active') + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        $('#btnExportActivePdf').on('click', function() {
+            const rows = getFilteredContracts();
+            if (!rows.length) {
+                alert('No contracts to export.');
+                return;
+            }
+            const title = $('#activeTableTitle').text() || 'Contracts List';
+            let totRec = 0, totBase = 0, totOv = 0, totVal = 0;
+            const trs = rows.map((r, idx) => {
+                const rec = Number(r.received_amount || 0);
+                const base = Number(r.contract_total_amount || 0);
+                const ov = Number(r.overdue_amount || 0);
+                const val = Number(r.total_contract_value || 0);
+                totRec += rec; totBase += base; totOv += ov; totVal += val;
+                return `<tr>
+                    <td>${idx + 1}</td>
+                    <td><b>${escapeHtml(r.agreement_no || '')}</b><br><small>${escapeHtml(r.status || '')}</small></td>
+                    <td>${escapeHtml(r.customer_name || '')}<br><small>${escapeHtml(r.customer_phone || '')}</small></td>
+                    <td><b>${escapeHtml(r.vehicle_no || '')}</b><br><small>${escapeHtml(r.vehicle_model || '')}</small></td>
+                    <td>${escapeHtml(formatDateTime(r.start_date))}<br>to ${escapeHtml(formatDateTime(r.end_date))}${r.is_overdue ? '<br><b style="color:#dc2626">Overdue ' + (r.overdue_days || 0) + 'd</b>' : ''}</td>
+                    <td style="text-align:right">${rec.toFixed(3)}</td>
+                    <td style="text-align:right">${base.toFixed(3)}</td>
+                    <td style="text-align:right;color:${ov > 0 ? '#dc2626' : '#64748b'}">${ov.toFixed(3)}</td>
+                    <td style="text-align:right;font-weight:bold">${val.toFixed(3)}</td>
+                </tr>`;
+            }).join('');
+
+            const w = window.open('', '_blank');
+            if (!w) return;
+            w.document.write(`<!doctype html><html><head><title>${escapeHtml(title)}</title>
+                <style>
+                    @page { size: A4 landscape; margin: 10mm; }
+                    body { font-family: Arial, sans-serif; font-size: 11px; color: #1e293b; }
+                    h2 { color: #1b3d94; margin: 0 0 4px 0; }
+                    .meta { color: #64748b; margin-bottom: 10px; font-size: 10px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #cbd5e1; padding: 5px 6px; vertical-align: top; }
+                    th { background: #1b3d94; color: #fff; text-align: left; }
+                    tfoot td { background: #f1f5f9; font-weight: bold; }
+                </style></head><body>
+                <h2>${escapeHtml(title)}</h2>
+                <div class="meta">Generated on: ${new Date().toLocaleString()} | Total Records: ${rows.length}</div>
+                <table>
+                    <thead><tr>
+                        <th>#</th><th>Agreement</th><th>Customer</th><th>Vehicle</th><th>Period</th>
+                        <th style="text-align:right">Received</th><th style="text-align:right">Contract Total</th>
+                        <th style="text-align:right">Overdue Amt</th><th style="text-align:right">Total Value</th>
+                    </tr></thead>
+                    <tbody>${trs}</tbody>
+                    <tfoot><tr>
+                        <td colspan="5" style="text-align:right">Totals (BHD):</td>
+                        <td style="text-align:right">${totRec.toFixed(3)}</td>
+                        <td style="text-align:right">${totBase.toFixed(3)}</td>
+                        <td style="text-align:right">${totOv.toFixed(3)}</td>
+                        <td style="text-align:right">${totVal.toFixed(3)}</td>
+                    </tr></tfoot>
+                </table>
+                <script>window.onload = function(){ window.print(); };<\/script>
+                </body></html>`);
+            w.document.close();
         });
 
         $(document).on('click', '.btn-receipt-modal', function() {

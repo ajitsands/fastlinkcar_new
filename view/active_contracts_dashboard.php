@@ -705,7 +705,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                 const stLow = (row.status || '').toLowerCase();
                                 const isActiveRow = (stLow === 'rentout' || stLow === 'extended');
                                 const fbCount = parseInt(row.feedback_count || 0, 10);
-                                const fbBadge = fbCount > 0 ? `<span class="badge rounded-pill bg-info ms-1" style="font-size:0.65rem;">${fbCount}</span>` : '';
+                                const fbBadge = fbCount > 0 ? `<span class="badge rounded-pill bg-primary ms-1" style="font-size:0.65rem; color:#ffffff !important;">${fbCount}</span>` : '';
                                 const returnBtn = isActiveRow
                                     ? `<button type="button" class="btn btn-outline-success btn-return-modal" data-id="${id}" title="Return Vehicle"><i class="ri-roadster-line me-1"></i> Return</button>`
                                     : '';

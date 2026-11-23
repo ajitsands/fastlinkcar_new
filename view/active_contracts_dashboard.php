@@ -761,23 +761,27 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                     ? `<button type="button" class="btn btn-outline-success btn-return-modal" data-id="${id}" title="Return Vehicle"><i class="ri-roadster-line me-1"></i> Return</button>`
                                     : '';
                                 return `
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <button type="button" class="btn btn-outline-primary qv-trigger" data-id="${id}" title="View Full Contract Details">
-                                            <i class="ri-eye-line me-1"></i> View
-                                        </button>
-                                        <button type="button" class="btn btn-outline-warning btn-contract-ledger" data-id="${id}" title="Contract Ledger &amp; Receipts">
-                                            <i class="ri-book-2-line me-1"></i> Ledger
-                                        </button>
-                                        <button type="button" class="btn btn-outline-info btn-feedback-modal" data-id="${id}" title="Collect / View Client Feedback">
-                                            <i class="ri-chat-3-line"></i>${fbBadge}
-                                        </button>
-                                        <button type="button" class="btn btn-outline-secondary btn-receipt-modal" data-id="${id}" title="Create / Print Receipt">
-                                            <i class="ri-receipt-line"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-outline-dark ac-print-btn" data-agreement="${escapeHtml(row.agreement_no || '')}" title="Print Agreement">
-                                            <i class="ri-printer-line"></i>
-                                        </button>
-                                        ${returnBtn}
+                                    <div class="d-flex flex-column align-items-center gap-1">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-primary qv-trigger" data-id="${id}" title="View Full Contract Details">
+                                                <i class="ri-eye-line me-1"></i> View
+                                            </button>
+                                            <button type="button" class="btn btn-outline-warning btn-contract-ledger" data-id="${id}" title="Contract Ledger &amp; Receipts">
+                                                <i class="ri-book-2-line me-1"></i> Ledger
+                                            </button>
+                                            <button type="button" class="btn btn-outline-info btn-feedback-modal" data-id="${id}" title="Collect / View Client Feedback">
+                                                <i class="ri-chat-3-line"></i>${fbBadge}
+                                            </button>
+                                        </div>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-secondary btn-receipt-modal" data-id="${id}" title="Create / Print Receipt">
+                                                <i class="ri-receipt-line"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-dark ac-print-btn" data-agreement="${escapeHtml(row.agreement_no || '')}" title="Print Agreement">
+                                                <i class="ri-printer-line"></i>
+                                            </button>
+                                            ${returnBtn}
+                                        </div>
                                     </div>
                                 `;
                             }

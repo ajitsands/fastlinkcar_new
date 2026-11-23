@@ -41,7 +41,7 @@
                             <div class="form-floating form-floating-outline mb-3">
                               <select id="belongsToCompanyID" name="belongsToCompanyID" class="form-select">
                               </select>
-                              <label for="belongsToCompanyID">Registration Company</label>
+                              <label for="belongsToCompanyID">Registration Company <span class="text-danger">*</span></label>
                             </div>
                           </div>
 
@@ -62,7 +62,7 @@
                               <select id="outsourcingCompanyId" name="outsourcing_company_id" class="form-select">
                                 <option value="" disabled selected>Select Outsourcing Company</option>
                               </select>
-                              <label for="outsourcingCompanyId">Outsourcing Company</label>
+                              <label for="outsourcingCompanyId">Outsourcing Company <span class="text-danger">*</span></label>
                             </div>
                           </div>
 
@@ -79,7 +79,7 @@
                           <div class="col-12 col-md-6 col-lg-3">
                             <div class="form-floating form-floating-outline mb-5">
                               <input type="text" class="form-control" id="vehicleNumber" placeholder="Vehicle Number" name="vehicleNumber">
-                              <label for="vehicleNumber">Vehicle Number</label>
+                              <label for="vehicleNumber">Vehicle Number <span class="text-danger">*</span></label>
                             </div>
                           </div>
                         
@@ -95,7 +95,7 @@
                           <div class="col-12 col-md-6 col-lg-3">
                             <div class="form-floating form-floating-outline mb-5">
                               <input type="number" class="form-control" id="vehicleYear" name="vehicleYear" placeholder="Vehicle Year">
-                              <label for="vehicleYear">Year</label>
+                              <label for="vehicleYear">Year <span class="text-danger">*</span></label>
                             </div>
                           </div>
                         
@@ -106,7 +106,7 @@
                                 <select id="vehicleColor" name="vehicleColor" class="form-select">
                                   <option value="">Select a Color</option>
                                 </select>
-                                <label for="vehicleColor">Car Color *</label>
+                                <label for="vehicleColor">Car Color <span class="text-danger">*</span></label>
                               </div>
                               <button type="button" class="btn btn-outline-primary btn-add-lookup" data-lookup-type="color" data-lookup-label="Car Color" title="Add New Color">+</button>
                             </div>
@@ -225,7 +225,7 @@
                                 <select id="vehicleEngineType" name="vehicleEngineType" class="form-select">
                                   <option value="NA">NA</option>
                                 </select>
-                                <label for="vehicleEngineType">Engine Type</label>
+                                <label for="vehicleEngineType">Engine Type <span class="text-danger">*</span></label>
                               </div>
                               <button type="button" class="btn btn-outline-primary btn-add-lookup" data-lookup-type="engine_type" data-lookup-label="Engine Type" title="Add Engine Type">+</button>
                             </div>
@@ -249,7 +249,7 @@
                                 <select id="vehicleTransmission" name="vehicleTransmission" class="form-select">
                                   <option value="NA">NA</option>
                                 </select>
-                                <label for="vehicleTransmission">Transmission</label>
+                                <label for="vehicleTransmission">Transmission <span class="text-danger">*</span></label>
                               </div>
                               <button type="button" class="btn btn-outline-primary btn-add-lookup" data-lookup-type="transmission" data-lookup-label="Transmission" title="Add Transmission">+</button>
                             </div>

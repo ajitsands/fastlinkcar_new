@@ -993,52 +993,58 @@ function resetVehicleForm() {
         }
         });
     }
+       $(document).on('input change', '#VehicleDetailsForm input, #VehicleDetailsForm select, #VehicleDetailsForm textarea', function () {
+            $(this).removeClass('is-invalid');
+       });
+
        $('#saveVehicleData').on('click', function (e) {
             e.preventDefault();
 
+            function failVehValidation(selector, msg) {
+                const $el = $(selector);
+                $el.addClass('is-invalid').focus();
+                setupDropdown('dropdownContent', 'error', svgError + msg, 'click');
+                return false;
+            }
+
             let belongsToCompanyID = $('#belongsToCompanyID').val();
             if (!belongsToCompanyID) {
-                setupDropdown('dropdownContent', 'error', svgError + "Please select a registration company", 'click');
-                return false;
+                return failVehValidation('#belongsToCompanyID', 'Please select Registration Company');
             }
 
             let isOutsourced = $('#isOutsourced').val();
             let outsourcingCompanyId = (isOutsourced === 'Yes') ? $('#outsourcingCompanyId').val() : 0;
 
             if (isOutsourced === 'Yes' && (!outsourcingCompanyId || outsourcingCompanyId === '0' || outsourcingCompanyId === null)) {
-                setupDropdown('dropdownContent', 'error', svgError + "Please select an outsourcing company", 'click');
-                return false;
+                return failVehValidation('#outsourcingCompanyId', 'Please select Outsourcing Company');
             }
 
             let modelVal = $('#vehicleModel').val();
             let modelName = $.trim($('#vehicleModel option:selected').text());
 
             if (!modelVal || modelVal === "0" || modelVal === "null") {
-                setupDropdown('dropdownContent', 'error', svgError + "Please select a model", 'click');
-                return false;
+                return failVehValidation('#vehicleModel', 'Please select Vehicle Model');
             }
-        
-            if (!$('#vehicleNumber').val()) {
-                setupDropdown('dropdownContent', 'error', svgError + "Please provide vehicle number", 'click');
-                return false;
+
+            if (!$.trim($('#vehicleNumber').val())) {
+                return failVehValidation('#vehicleNumber', 'Please enter Vehicle Number');
             }
-            if (!$('#vehicleYear').val()) {
-                setupDropdown('dropdownContent', 'error', svgError + "Please provide year", 'click');
-                return false;
+
+            let vehYear = parseInt($.trim($('#vehicleYear').val()), 10);
+            if (!$.trim($('#vehicleYear').val()) || isNaN(vehYear) || vehYear < 1950 || vehYear > 2100) {
+                return failVehValidation('#vehicleYear', 'Please enter a valid Year');
             }
-            if (!$('#vehicleColor').val()) {
-                setupDropdown('dropdownContent', 'error', svgError + "Please provide color", 'click');
-                return false;
+
+            if (!$.trim($('#vehicleColor').val())) {
+                return failVehValidation('#vehicleColor', 'Please select Car Color');
             }
-            
-            if (!$('#vehicleFuelType').val()) {
-                setupDropdown('dropdownContent', 'error', svgError + "Please select fuel type", 'click');
-                return false;
+
+            if (!$.trim($('#vehicleEngineType').val())) {
+                return failVehValidation('#vehicleEngineType', 'Please select Engine Type');
             }
-            
-            if (!$('#vehicleGearType').val()) {
-                setupDropdown('dropdownContent', 'error', svgError + "Please provide gear type", 'click');
-                return false;
+
+            if (!$.trim($('#vehicleTransmission').val())) {
+                return failVehValidation('#vehicleTransmission', 'Please select Transmission');
             }
             let selectedOption = $('#vehicleModel').find('option:selected');
 

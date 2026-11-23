@@ -947,7 +947,7 @@ function resetVehicleForm() {
     $('#saveVehicleData').html('<i class="ri-save-line me-1"></i> Save Vehicle');
 
     $('#vehicleStatusBadge').attr('class', 'badge bg-label-success').text('New Entry');
-    $('#toggleStatusBtn').addClass('d-none');
+    $('#toggleStatusBtn, #btnViewVehicleProfile, #btnOpenInsPassModal').addClass('d-none');
     $('#chassisNumber').val('');
 
     populateCompanyOptions();

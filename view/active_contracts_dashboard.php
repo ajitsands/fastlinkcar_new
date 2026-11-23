@@ -9,6 +9,7 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
 }
 
 include ROOT_PATH . '/view/envinclude.php';
+$isContractListMode = !empty($isContractListMode);
 $contractListVal = $this->encryption->encrypt('3,3-4');
 ?>
 <!doctype html>
@@ -76,17 +77,28 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
                             <div>
                                 <h4 class="fw-bold mb-1" style="color: #1b3d94;">
-                                    <i class="ri-dashboard-3-line me-1"></i> Active Contracts Dashboard
+                                    <i class="ri-<?= $isContractListMode ? 'file-list-3-line' : 'dashboard-3-line' ?> me-1"></i>
+                                    <?= $isContractListMode ? 'Contracts List' : 'Active Contracts Dashboard' ?>
                                 </h4>
-                                <p class="text-muted mb-0">Monitor all currently rented &amp; extended contracts and extend, return, or view them directly.</p>
+                                <p class="text-muted mb-0">
+                                    <?= $isContractListMode
+                                        ? 'View and manage all rental contracts across every status — active, returned, closed, or generated.'
+                                        : 'Monitor all currently rented &amp; extended contracts and extend, return, or view them directly.' ?>
+                                </p>
                             </div>
                             <div class="d-flex gap-2">
                                 <button type="button" id="btnRefreshActive" class="btn btn-outline-primary btn-sm">
                                     <i class="ri-refresh-line me-1"></i> Refresh
                                 </button>
+                                <?php if ($isContractListMode): ?>
+                                <a href="/ActiveContractsDashboard" class="btn btn-primary btn-sm">
+                                    <i class="ri-dashboard-3-line me-1"></i> Active Contracts Dashboard
+                                </a>
+                                <?php else: ?>
                                 <a href="/ContractList?val=<?= urlencode($contractListVal) ?>" class="btn btn-primary btn-sm">
                                     <i class="ri-file-list-3-line me-1"></i> All Contracts
                                 </a>
+                                <?php endif; ?>
                             </div>
                         </div>
 
@@ -182,12 +194,13 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                         <!-- Active Contracts Table -->
                         <div class="card">
                             <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
-                                <h5 class="mb-0 fw-semibold" id="activeTableTitle" style="color: #1b3d94;">Active Contracts List</h5>
+                                <h5 class="mb-0 fw-semibold" id="activeTableTitle" style="color: #1b3d94;"><?= $isContractListMode ? 'All Contracts List' : 'Active Contracts List' ?></h5>
                                 <div class="d-flex flex-wrap align-items-center gap-2">
                                     <select id="contractScopeFilter" class="form-select form-select-sm" style="width: 190px;">
-                                        <option value="active" selected>Active Contracts</option>
+                                        <option value="all" <?= $isContractListMode ? 'selected' : '' ?>>All Contracts</option>
+                                        <option value="active" <?= !$isContractListMode ? 'selected' : '' ?>>Active Contracts</option>
                                         <option value="closed">Closed / Previous</option>
-                                        <option value="all">All Contracts</option>
+                                        <option value="generated">Generated</option>
                                     </select>
                                     <input type="text" id="activeSearchInput" class="form-control form-control-sm" style="width: 240px;" placeholder="Search agreement, customer, plate...">
                                     <button type="button" id="btnExportActiveExcel" class="btn btn-sm btn-outline-success" title="Export to Excel">
@@ -767,6 +780,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             const titleMap = {
                 active: 'Active Contracts List',
                 closed: 'Closed & Previous Contracts',
+                generated: 'Generated Contracts List',
                 all: 'All Contracts List'
             };
             $('#activeTableTitle').text(titleMap[scope] || 'Active Contracts List');

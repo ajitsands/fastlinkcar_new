@@ -10,6 +10,12 @@ function checkLogin()
 }
 
 checkLogin();
+
+if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
+    $isContractListMode = true;
+    include __DIR__ . '/active_contracts_dashboard.php';
+    exit();
+}
 ?>
 <?php
 include('envinclude.php');

@@ -80,8 +80,10 @@ try {
     $statusIn = "'Rentout', 'Extended'";
     if ($scope === 'closed') {
         $statusIn = "'Closed', 'Returned'";
+    } elseif ($scope === 'generated') {
+        $statusIn = "'Generated'";
     } elseif ($scope === 'all') {
-        $statusIn = "'Rentout', 'Extended', 'Closed', 'Returned'";
+        $statusIn = "";
     }
 
     $sql = "
@@ -124,8 +126,12 @@ try {
         LEFT JOIN tbl_vehicles v ON v.ids = c.vehicle_id
         LEFT JOIN tbl_vehicle_category cat ON cat.ids = COALESCE(v.category_id, c.vehicle_category_id)
         LEFT JOIN tbl_vehicle_model modl ON modl.ids = COALESCE(v.model_id, c.vehicle_model_id)
-        WHERE c.agreement_status IN ({$statusIn})
+        WHERE 1=1
     ";
+
+    if ($statusIn !== '') {
+        $sql .= " AND c.agreement_status IN ({$statusIn}) ";
+    }
 
     $params = [];
     if (!empty($companyId) && $companyId !== 'all') {

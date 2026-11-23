@@ -1377,14 +1377,14 @@ function loadVehicleForEdit(data) {
     $('#vehicleNumber').val(data.vehicle_number);
     $('#chassisNumber').val(data.chassis_number);
     $('#vehicleYear').val(data.vehicle_year);
-    $('#vehicleColor').val(data.vehicle_color || '');
+    $('#vehicleColor').val(data.vehicle_color || '').trigger('change');
     $('#vehicleStatus').val(data.vehicle_status || 'Available');
     $('#vehicleIsActive').prop('checked', data.is_active === undefined || data.is_active == 1 || data.is_active === '1');
     $('#vehicleMileageKm').val(data.mileage_km ?? '');
-    $('#vehicleBodyType').val(data.body_type || 'NA');
-    $('#vehicleEngineType').val(data.engine_type || 'NA');
-    $('#vehicleCapacityCc').val(data.capacity_cc || 'NA');
-    $('#vehicleTransmission').val(data.transmission || 'NA');
+    $('#vehicleBodyType').val(data.body_type || '').trigger('change');
+    $('#vehicleEngineType').val(data.engine_type || '').trigger('change');
+    $('#vehicleCapacityCc').val(data.capacity_cc || '').trigger('change');
+    $('#vehicleTransmission').val(data.transmission || '').trigger('change');
     $('#vehiclePurchaseDate').val(data.vehicle_purchase_date);
     $('#vehiclePassingDate').val(data.next_passing_date || '');
     $('#vehicleInsuranceExpDate').val(data.next_insurance_date || '');
@@ -1394,8 +1394,8 @@ function loadVehicleForEdit(data) {
     let details = {};
     try { details = JSON.parse(data.other_details_json || '{}') || {}; } catch (e) { details = {}; }
 
-    $('#vehicleEngineType').val(data.engine_type || details.vehicleFuelType || 'NA');
-    $('#vehicleTransmission').val(data.transmission || details.vehicleGearType || 'NA');
+    $('#vehicleEngineType').val(data.engine_type || details.vehicleFuelType || '').trigger('change');
+    $('#vehicleTransmission').val(data.transmission || details.vehicleGearType || '').trigger('change');
     $('#vehicleDescription').val(details.vehicleDescription || '');
     $('#pricePerHour').val(details.vehiclePricePerHour);
     $('#pricePerDay').val(details.vehiclePricePerDay);
@@ -1603,6 +1603,26 @@ console.log("Loaded bookingMaster:", bookingMaster);
         transmission: '#vehicleTransmission'
     };
 
+    function initLookupSelect2($sel, type) {
+        if (!$.fn.select2) return;
+        const placeholderMap = {
+            color: 'Select a Color',
+            body_type: 'Select Body Type',
+            engine_type: 'Select Engine Type',
+            capacity_cc: 'Select Capacity (cc)',
+            transmission: 'Select Transmission'
+        };
+        if ($sel.hasClass('select2-hidden-accessible')) {
+            $sel.select2('destroy');
+        }
+        $sel.select2({
+            placeholder: placeholderMap[type] || 'Select...',
+            allowClear: true,
+            width: '100%'
+        });
+        $sel.next('.select2-container').css({ 'flex': '1 1 auto', 'min-width': '0' });
+    }
+
     function loadVehicleLookupDropdowns(selectedOverrides = {}) {
         fetch('/VehicleLookupController?action=list')
             .then(r => r.json())
@@ -1612,12 +1632,21 @@ console.log("Loaded bookingMaster:", bookingMaster);
                     const $sel = $(lookupSelectMap[type]);
                     if (!$sel.length) return;
                     const prevVal = selectedOverrides[type] !== undefined ? selectedOverrides[type] : $sel.val();
-                    const firstOpt = type === 'color' ? '<option value="">Select a Color</option>' : '';
+                    const firstOpt = type === 'color' ? '<option value="">Select a Color</option>' : '<option value="">Select...</option>';
                     $sel.html(firstOpt);
                     (res.data[type] || []).forEach(val => {
                         $sel.append($('<option>', { value: val, text: val }));
                     });
-                    if (prevVal) $sel.val(prevVal);
+                    if (prevVal && prevVal !== 'NA') {
+                        if ($sel.find('option[value="' + String(prevVal).replace(/"/g, '\\"') + '"]').length === 0) {
+                            $sel.append($('<option>', { value: prevVal, text: prevVal }));
+                        }
+                        $sel.val(prevVal);
+                    } else {
+                        $sel.val('');
+                    }
+                    initLookupSelect2($sel, type);
+                    $sel.trigger('change');
                 });
             });
     }

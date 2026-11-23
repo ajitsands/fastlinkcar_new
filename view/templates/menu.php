@@ -441,7 +441,6 @@ if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
         'Reservation'                 => ['Reservations List', 'View, filter, and convert vehicle reservations.', 'ri-survey-line'],
         'VehicleContract'             => ['Vehicle Contract Generation', 'Generate rental contracts from approved bookings and reservations.', 'ri-file-text-line'],
         'ContractGeneration'          => ['Contract Generation', 'Generate and manage customer vehicle hire agreements.', 'ri-file-text-line'],
-        'ContractList'                => ['Vehicle Contracts List', 'Search, view, print, extend, replace, and return rental contracts.', 'ri-file-list-3-line'],
         'MaintenanceRequest'          => ['Maintenance Requests', 'Log and track vehicle maintenance and garage jobs.', 'ri-settings-4-line'],
         'NonRevenueTickets'           => ['Non-Revenue Tickets (Staff Use)', 'Manage internal staff vehicle usage tickets.', 'ri-coupon-3-line'],
         'Quotation'                   => ['Quotations', 'Create and manage customer rental quotations.', 'ri-file-paper-2-line'],

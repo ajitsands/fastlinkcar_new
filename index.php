@@ -462,6 +462,8 @@ class RoutingClass
             
             'CustomerLedger' => 'CustomerLedger',
             'CustomerLedger/' => 'CustomerLedger',
+            'ChequeCollection' => 'ChequeCollection',
+            'ChequeCollection/' => 'ChequeCollection',
             
             'PrintAgreement' => 'PrintAgreement',
             'PrintAgreement/' => 'PrintAgreement',
@@ -1110,6 +1112,10 @@ class RoutingClass
     private function CustomerLedger(...$params)
     {
         $this->includeWithParams("view/customer_ledger_new.php", $_GET);
+    }
+    private function ChequeCollection(...$params)
+    {
+        $this->includeWithParams("view/cheque_collection.php", $_GET);
     }
     private function CustomerLedgerController(...$params)
     {

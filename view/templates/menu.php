@@ -282,6 +282,12 @@
                <div data-i18n="Customer Ledger">Customer Ledger</div>
              </a>
            </li>
+           <li class="menu-item <?php if ($menuRoute === 'ChequeCollection' || ($decrypt[0] ?? '') == '5-9') { echo 'active'; } ?>" data-permission="customer_ledger_access">
+             <a href="/ChequeCollection?val=<?php echo $this->encryption->encrypt('5,5-9'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-bank-card-line"></i>
+               <div data-i18n="Cheques Collection">Cheques Collection</div>
+             </a>
+           </li>
            <li class="menu-item <?php if ($decrypt[0] == '5-2') { echo 'active'; } ?>" data-permission="fund_flow_report_access">
              <a href="/FundFlow?val=<?php echo $this->encryption->encrypt('5,5-2'); ?>" class="menu-link">
                <i class="menu-icon icon-base ri ri-line-chart-line"></i>
@@ -448,6 +454,7 @@ if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
         'CashMemo'                    => ['Cash Memo', 'Record and print customer cash memos.', 'ri-receipt-line'],
         'ExpenseVoucher'              => ['Expense Vouchers', 'Record and track operational expense vouchers.', 'ri-money-dollar-box-line'],
         'CustomerLedger'              => ['Customer Ledger', 'View customer debits, credits, payments, and running balances.', 'ri-book-open-line'],
+        'ChequeCollection'            => ['Cheques Collection', 'Monitor pending, due, overdue, collected, and bounced cheques.', 'ri-bank-card-line'],
         'FundFlow'                    => ['Fund Flow', 'Track cash and bank fund inflows and outflows.', 'ri-exchange-dollar-line'],
         'UnbilledContracts'           => ['Unbilled Contracts', 'Review active or closed contracts pending billing.', 'ri-file-warning-line'],
         'RefundForm'                  => ['Customer Refunds', 'Process and track customer deposit and credit refunds.', 'ri-refund-2-line'],

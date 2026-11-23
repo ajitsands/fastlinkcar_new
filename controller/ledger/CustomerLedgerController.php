@@ -87,6 +87,9 @@ class CustomerLedgerController
             case 'GetChequesByDateContract':
                 $this->handleGetChequesByDateContract();
                 break;
+            case 'GetChequesCollection':
+                $this->handleGetChequesCollection();
+                break;
             case 'UpdateChequeStatus':
                 $this->handleUpdateChequeStatus();
                 break;
@@ -348,6 +351,80 @@ class CustomerLedgerController
             $params[] = $contract_id;
         }
         echo $this->varPDOModelObj->ListFromTable($sql, $params);
+    }
+
+    private function handleGetChequesCollection()
+    {
+        $sql = "
+            SELECT
+                l.ids,
+                l.trans_date,
+                l.cheque_date,
+                COALESCE(NULLIF(l.cheque_status, ''), 'Pending') AS cheque_status,
+                l.collected_at,
+                l.credit,
+                l.debit,
+                l.ref_no,
+                l.trans_type,
+                l.description,
+                l.customer_code,
+                l.contract_ids,
+                COALESCE(NULLIF(l.agreement_no, ''), vc.agreement_no, '') AS agreement_no,
+                c.customer_name,
+                c.customer_mobile,
+                b.bank_name,
+                b.account_no,
+                cb.bank_name AS company_bank_name,
+                cb.account_no AS company_account_no,
+                CASE
+                    WHEN COALESCE(NULLIF(l.cheque_status, ''), 'Pending') = 'Collected' THEN 'collected'
+                    WHEN COALESCE(NULLIF(l.cheque_status, ''), 'Pending') = 'Bounced' THEN 'bounced'
+                    WHEN l.cheque_date IS NOT NULL AND l.cheque_date < CURDATE() THEN 'overdue'
+                    WHEN l.cheque_date IS NOT NULL AND l.cheque_date = CURDATE() THEN 'due_today'
+                    ELSE 'upcoming'
+                END AS due_state
+            FROM tbl_customer_ledger l
+            LEFT JOIN customer_details c ON (c.customer_id = l.customer_code OR c.ids = l.customer_code)
+            LEFT JOIN tbl_banks b ON b.ids = l.bank_id
+            LEFT JOIN tbl_banks cb ON cb.ids = l.company_bank_id
+            LEFT JOIN tbl_vehicle_rentout_contracts vc ON vc.ids = l.contract_ids
+            WHERE l.payment_method = 'Cheque'
+            ORDER BY
+                CASE
+                    WHEN COALESCE(NULLIF(l.cheque_status, ''), 'Pending') = 'Pending' AND l.cheque_date < CURDATE() THEN 1
+                    WHEN COALESCE(NULLIF(l.cheque_status, ''), 'Pending') = 'Pending' AND l.cheque_date = CURDATE() THEN 2
+                    WHEN COALESCE(NULLIF(l.cheque_status, ''), 'Pending') = 'Pending' THEN 3
+                    WHEN COALESCE(NULLIF(l.cheque_status, ''), 'Pending') = 'Collected' THEN 4
+                    ELSE 5
+                END ASC,
+                l.cheque_date ASC,
+                l.ids DESC
+        ";
+        $stmt = $this->varPDOModelObj->varDBPDO->prepare($sql);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $summary = [
+            'overdue_count' => 0, 'overdue_amount' => 0.0,
+            'due_today_count' => 0, 'due_today_amount' => 0.0,
+            'upcoming_count' => 0, 'upcoming_amount' => 0.0,
+            'collected_count' => 0, 'collected_amount' => 0.0,
+            'bounced_count' => 0, 'bounced_amount' => 0.0
+        ];
+        foreach ($rows as $r) {
+            $amt = (float)($r['credit'] > 0 ? $r['credit'] : $r['debit']);
+            $st = $r['due_state'] ?? 'upcoming';
+            if (isset($summary[$st . '_count'])) {
+                $summary[$st . '_count']++;
+                $summary[$st . '_amount'] += $amt;
+            }
+        }
+
+        echo json_encode([
+            'status' => true,
+            'data' => $rows,
+            'summary' => $summary
+        ]);
     }
 
     private function handleUpdateChequeStatus()

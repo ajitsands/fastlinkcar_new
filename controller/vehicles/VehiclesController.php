@@ -411,11 +411,89 @@ break;
                 $stmt->execute($params);
                 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+                $vehIds = array_values(array_filter(array_map('intval', array_column($results, 'ids'))));
+                $txMap = [];
+                if (!empty($vehIds)) {
+                    $inVeh = implode(',', $vehIds);
+                    $txQueries = [
+                        'Contracts'             => "SELECT vehicle_id AS vid, COUNT(*) AS cnt FROM tbl_vehicle_rentout_contracts WHERE vehicle_id IN ({$inVeh}) GROUP BY vehicle_id",
+                        'Bookings'              => "SELECT vehicle_id AS vid, COUNT(*) AS cnt FROM tbl_vehicle_bookings WHERE vehicle_id IN ({$inVeh}) GROUP BY vehicle_id",
+                        'Maintenance Requests'  => "SELECT vehicle_id AS vid, COUNT(*) AS cnt FROM tbl_maintenance_requests WHERE vehicle_id IN ({$inVeh}) GROUP BY vehicle_id",
+                        'Staff Use'             => "SELECT vehicle_id AS vid, COUNT(*) AS cnt FROM tbl_vehicle_non_revenue_ticket WHERE vehicle_id IN ({$inVeh}) GROUP BY vehicle_id",
+                        'Movement Logs'         => "SELECT vehicle_ids AS vid, COUNT(*) AS cnt FROM tbl_vehicle_log_movement WHERE vehicle_ids IN ({$inVeh}) GROUP BY vehicle_ids",
+                    ];
+                    foreach ($txQueries as $label => $qSql) {
+                        try {
+                            $qStmt = $this->varPDOModelObj->varDBPDO->query($qSql);
+                            if ($qStmt) {
+                                while ($qRow = $qStmt->fetch(PDO::FETCH_ASSOC)) {
+                                    $vid = (int)$qRow['vid'];
+                                    $cnt = (int)$qRow['cnt'];
+                                    if ($vid > 0 && $cnt > 0) {
+                                        $txMap[$vid][] = "{$label} ({$cnt})";
+                                    }
+                                }
+                            }
+                        } catch (Exception $eTx) {}
+                    }
+                }
+
+                foreach ($results as &$r) {
+                    $vid = (int)($r['ids'] ?? 0);
+                    $sources = $txMap[$vid] ?? [];
+                    $r['has_transactions'] = !empty($sources) ? 1 : 0;
+                    $r['transaction_sources'] = implode(', ', $sources);
+                }
+                unset($r);
+
                 echo json_encode([
                     "status" => "success",
                     "data" => $results
                 ]);
-            break;	
+            break;
+
+            case 'delete_vehicle':
+                $inputData = json_decode($this->json, true);
+                $vehicleId = (int)($inputData['vehicle_id'] ?? 0);
+                if ($vehicleId <= 0) {
+                    echo json_encode(['status' => false, 'message' => 'Invalid vehicle ID.']);
+                    break;
+                }
+
+                $txChecks = [
+                    'Contracts'            => "SELECT COUNT(*) FROM tbl_vehicle_rentout_contracts WHERE vehicle_id = ?",
+                    'Bookings'             => "SELECT COUNT(*) FROM tbl_vehicle_bookings WHERE vehicle_id = ?",
+                    'Maintenance Requests' => "SELECT COUNT(*) FROM tbl_maintenance_requests WHERE vehicle_id = ?",
+                    'Staff Use'            => "SELECT COUNT(*) FROM tbl_vehicle_non_revenue_ticket WHERE vehicle_id = ?",
+                    'Movement Logs'        => "SELECT COUNT(*) FROM tbl_vehicle_log_movement WHERE vehicle_ids = ?",
+                ];
+                $foundSources = [];
+                foreach ($txChecks as $label => $cSql) {
+                    try {
+                        $cStmt = $this->varPDOModelObj->varDBPDO->prepare($cSql);
+                        $cStmt->execute([$vehicleId]);
+                        $cnt = (int)$cStmt->fetchColumn();
+                        if ($cnt > 0) {
+                            $foundSources[] = "{$label} ({$cnt})";
+                        }
+                    } catch (Exception $eChk) {}
+                }
+
+                if (!empty($foundSources)) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'Cannot delete this vehicle because transactions exist in: ' . implode(', ', $foundSources)
+                    ]);
+                    break;
+                }
+
+                $delStmt = $this->varPDOModelObj->varDBPDO->prepare("DELETE FROM tbl_vehicles WHERE ids = ?");
+                $ok = $delStmt->execute([$vehicleId]);
+                echo json_encode([
+                    'status' => (bool)$ok,
+                    'message' => $ok ? 'Vehicle deleted successfully.' : 'Failed to delete vehicle.'
+                ]);
+            break;
              case 'vehicle_calendar':
                   $sql = "
                 SELECT 

@@ -396,6 +396,7 @@
                                   <th>Reg/Chasis</th>
                                   <th>Year</th>
                                   <th>Status</th>
+                                  <th class="text-center">Action</th>
                                 </tr>
                               </thead>
                               <tbody>

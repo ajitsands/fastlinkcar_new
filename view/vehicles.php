@@ -1229,6 +1229,20 @@ function resetVehicleForm() {
                     }
                     return data;
                 }
+            },
+            {
+                data: 'ids',
+                orderable: false,
+                className: 'text-center',
+                render: function (id, type, row) {
+                    const hasTx = parseInt(row.has_transactions || 0, 10) === 1;
+                    const escAttr = (s) => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                    if (hasTx) {
+                        const src = escAttr(row.transaction_sources || 'other tables');
+                        return `<span class="d-inline-block btn-delete-vehicle-wrap" data-sources="${src}" title="Cannot delete: transactions exist in ${src}" style="cursor: not-allowed;"><button type="button" class="btn btn-sm btn-outline-secondary" disabled style="pointer-events:none;"><i class="ri-delete-bin-line"></i></button></span>`;
+                    }
+                    return `<button type="button" class="btn btn-sm btn-outline-danger btn-delete-vehicle" data-id="${id}" data-veh="${escAttr(row.vehicle_number || '')}" title="Delete Vehicle"><i class="ri-delete-bin-line"></i></button>`;
+                }
             }
         ]
   });
@@ -1242,7 +1256,72 @@ function resetVehicleForm() {
   });
 }
 
-$('#vehicleTable tbody').on('click', 'tr', function () {
+$(document).on('click', '.btn-delete-vehicle-wrap', function (e) {
+    e.stopPropagation();
+    const sources = $(this).data('sources') || 'other tables';
+    const msg = 'This vehicle cannot be deleted because transactions exist in: ' + sources;
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({ icon: 'info', title: 'Cannot Delete Vehicle', text: msg, confirmButtonColor: '#1b3d94' });
+    } else {
+        setupDropdown('dropdownContent', 'warning', svgError + msg, 'click');
+    }
+});
+
+$(document).on('click', '.btn-delete-vehicle', function (e) {
+    e.stopPropagation();
+    const id = $(this).data('id');
+    const vehNo = $(this).data('veh') || '';
+    if (!id) return;
+
+    const doDelete = () => {
+        fetch('/AddVehicles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete_vehicle', vehicle_id: id })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res && res.status) {
+                if (selectedVehicleData && String(selectedVehicleData.ids) === String(id)) {
+                    resetVehicleForm();
+                }
+                load_master_vehicle_list();
+                setupDropdown('dropdownContent', 'success', svgSuccess + (res.message || 'Vehicle deleted successfully.'), 'click');
+            } else {
+                const errMsg = (res && res.message) || 'Cannot delete this vehicle.';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'warning', title: 'Cannot Delete Vehicle', text: errMsg, confirmButtonColor: '#1b3d94' });
+                } else {
+                    setupDropdown('dropdownContent', 'danger', svgError + errMsg, 'click');
+                }
+            }
+        })
+        .catch(() => {
+            setupDropdown('dropdownContent', 'danger', svgError + 'Error deleting vehicle.', 'click');
+        });
+    };
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Delete Vehicle ' + vehNo + '?',
+            text: 'This vehicle has no transactions and will be permanently removed.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete'
+        }).then((result) => {
+            if (result.isConfirmed) doDelete();
+        });
+    } else if (confirm('Delete vehicle ' + vehNo + '?')) {
+        doDelete();
+    }
+});
+
+$('#vehicleTable tbody').on('click', 'tr', function (e) {
+    if ($(e.target).closest('.btn-delete-vehicle, .btn-delete-vehicle-wrap').length) {
+        return;
+    }
 
     let table = $('#vehicleTable').DataTable();
 

@@ -136,16 +136,16 @@
                             </div>
                           </div>
 
-                          <!-- Next Passing Date -->
-                          <div class="col-12 col-md-6 col-lg-3">
+                          <!-- Next Passing Date (hidden on registration; managed via Insurance & Passings) -->
+                          <div class="col-12 col-md-6 col-lg-3 d-none">
                             <div class="form-floating form-floating-outline mb-3">
                               <input type="date" class="form-control" id="vehiclePassingDate" name="vehiclePassingDate">
                               <label for="vehiclePassingDate">Next Passing Date</label>
                             </div>
                           </div>
 
-                          <!-- Next Insurance Date -->
-                          <div class="col-12 col-md-6 col-lg-3">
+                          <!-- Next Insurance Date (hidden on registration; managed via Insurance & Passings) -->
+                          <div class="col-12 col-md-6 col-lg-3 d-none">
                             <div class="form-floating form-floating-outline mb-3">
                               <input type="date" class="form-control" id="vehicleInsuranceExpDate" name="vehicleInsuranceExpDate">
                               <label for="vehicleInsuranceExpDate">Next Insurance Date</label>

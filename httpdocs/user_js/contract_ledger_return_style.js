@@ -230,13 +230,61 @@
             },
             columns: [
                 { data: 'trans_date', className: 'text-nowrap', render: v => fmtLedgerDate(v) },
-                { data: null, render: r => `<div class="fw-semibold">${escHtml(r.trans_type || '')}</div><small class="text-muted">${escHtml(r.payment_method || '')}</small>` },
                 {
                     data: null,
                     render: r => {
-                        let out = `<div class="fw-semibold">${escHtml(r.ref_no || '-')}${r.cheque_date ? `<span class="text-info fw-normal ms-2" style="font-size:11px">(${fmtLedgerDate(r.cheque_date)})</span>` : ''}</div>`;
-                        if (r.description) out += `<div style="font-size:11px" class="text-muted">${escHtml(r.description)}</div>`;
-                        return out;
+                        const tt = String(r.trans_type || '').trim();
+                        const descStr = String(r.description || '');
+                        const isReceipt = /\/CM\/|CM\//i.test(tt) || /\/CM\/|CM\//i.test(String(r.ref_no || ''));
+                        const isVat = /vat/i.test(descStr);
+                        let badge = '';
+                        if (isReceipt) {
+                            badge = isVat
+                                ? '<span class="badge bg-label-secondary ms-1" style="font-size:10px;">Receipt VAT</span>'
+                                : '<span class="badge bg-label-success ms-1" style="font-size:10px;">Receipt</span>';
+                        }
+                        const method = (r.payment_method && r.payment_method !== 'N/A')
+                            ? `<span class="badge bg-label-info" style="font-size:10px;">${escHtml(r.payment_method)}</span>`
+                            : '<small class="text-muted">Charge / Debit</small>';
+                        let chqBadge = '';
+                        if (r.payment_method === 'Cheque' && r.cheque_status) {
+                            const cs = r.cheque_status;
+                            const cls = cs === 'Collected' ? 'bg-label-success' : (cs === 'Bounced' ? 'bg-label-danger' : 'bg-label-warning');
+                            chqBadge = ` <span class="badge ${cls}" style="font-size:10px;">${escHtml(cs)}</span>`;
+                        }
+                        return `<div class="fw-semibold">${escHtml(tt)}${badge}</div><div class="mt-1">${method}${chqBadge}</div>`;
+                    }
+                },
+                {
+                    data: null,
+                    render: r => {
+                        const lines = [];
+                        const tt = String(r.trans_type || '').trim();
+                        const ref = String(r.ref_no || '').trim();
+                        const isReceipt = /\/CM\/|CM\//i.test(tt) || /\/CM\/|CM\//i.test(ref);
+                        const recNo = /\/CM\/|CM\//i.test(tt) ? tt : (/\/CM\/|CM\//i.test(ref) ? ref : '');
+
+                        if (isReceipt && recNo) {
+                            lines.push(`<div class="fw-semibold text-primary"><i class="ri-receipt-line me-1"></i>Receipt: ${escHtml(recNo)}</div>`);
+                        }
+                        if (r.payment_method === 'Cheque' && (ref || r.cheque_date)) {
+                            lines.push(`<div class="small"><span class="text-muted">Cheque No:</span> <strong>${escHtml(ref || '-')}</strong>${r.cheque_date ? ` <span class="text-info">(Date: ${fmtLedgerDate(r.cheque_date)})</span>` : ''}</div>`);
+                        } else if (ref && ref !== '-' && ref !== recNo && ref !== $('#txt_ledger_modal_agreement_no').val()) {
+                            lines.push(`<div class="small fw-semibold"><span class="text-muted">Ref:</span> ${escHtml(ref)}</div>`);
+                        }
+                        if (r.bank_name) {
+                            lines.push(`<div style="font-size:11px" class="text-primary"><i class="ri-bank-line me-1"></i>From: ${escHtml(r.bank_name)}${r.account_no ? ' (' + escHtml(r.account_no) + ')' : ''}</div>`);
+                        }
+                        if (r.company_bank_name) {
+                            lines.push(`<div style="font-size:11px" class="text-success"><i class="ri-bank-fill me-1"></i>To: ${escHtml(r.company_bank_name)}${r.company_account_no ? ' (' + escHtml(r.company_account_no) + ')' : ''}</div>`);
+                        }
+                        if (r.cheque_status === 'Collected' && r.collected_at) {
+                            lines.push(`<div style="font-size:11px" class="text-success fw-medium"><i class="ri-checkbox-circle-line me-1"></i>Collected: ${fmtLedgerDate(r.collected_at)}</div>`);
+                        }
+                        if (r.description) {
+                            lines.push(`<div style="font-size:11px" class="text-muted">${escHtml(r.description)}</div>`);
+                        }
+                        return lines.length ? lines.join('') : '<span class="text-muted">-</span>';
                     }
                 },
                 { data: 'debit', className: 'text-end text-danger text-nowrap', render: v => Number(v) > 0 ? parseFloat(v).toFixed(3) : '-' },
@@ -246,15 +294,31 @@
                     data: 'ids',
                     className: 'text-center text-nowrap',
                     render: (id, type, r) => {
-                        const candRef = String(r.receipt_no || r.voucher_no || r.ref_no || r.trans_type || '').trim();
-                        const isReceipt = parseFloat(r.credit || 0) > 0 && /\/CM\/|CM\//i.test(candRef);
-                        const printBtn = isReceipt
-                            ? `<button type="button" class="btn btn-sm btn-icon text-primary cl-print-receipt-row" data-receipt="${escHtml(candRef)}" title="Print Receipt ${escHtml(candRef)}"><span class="ri-printer-line"></span></button>`
-                            : '';
-                        return `${printBtn}<button type="button" class="btn btn-sm btn-icon text-danger btn-ledger-delete" data-id="${id}" title="Delete Entry"><span class="ri-delete-bin-line"></span></button>`;
+                        const recMatch = [r.receipt_no, r.voucher_no, r.trans_type, r.ref_no]
+                            .map(x => String(x || '').trim())
+                            .find(x => /\/CM\/|CM\//i.test(x)) || '';
+                        const isReceipt = parseFloat(r.credit || 0) > 0 && recMatch !== '';
+                        let btns = '';
+                        if (isReceipt) {
+                            btns += `<button type="button" class="btn btn-sm btn-icon text-primary cl-print-receipt-row" data-receipt="${escHtml(recMatch)}" title="Print Receipt ${escHtml(recMatch)}"><span class="ri-printer-line"></span></button>`;
+                        }
+                        if (r.payment_method === 'Cheque') {
+                            if (r.cheque_status === 'Pending') {
+                                btns += `<button type="button" class="btn btn-sm btn-icon text-success btn-cl-cheque-status" data-id="${id}" data-status="Collected" title="Mark Cheque Collected"><span class="ri-check-line"></span></button>`;
+                                btns += `<button type="button" class="btn btn-sm btn-icon text-warning btn-cl-cheque-status" data-id="${id}" data-status="Bounced" title="Mark Cheque Bounced"><span class="ri-close-line"></span></button>`;
+                            } else {
+                                btns += `<button type="button" class="btn btn-sm btn-icon text-secondary btn-cl-cheque-status" data-id="${id}" data-status="Pending" title="Revoke Cheque Status"><span class="ri-refresh-line"></span></button>`;
+                            }
+                        }
+                        btns += `<button type="button" class="btn btn-sm btn-icon text-danger btn-ledger-delete" data-id="${id}" title="Delete Entry"><span class="ri-delete-bin-line"></span></button>`;
+                        return btns;
                     }
                 }
             ],
+            createdRow: function(row, data) {
+                if (data.cheque_status === 'Collected') $(row).addClass('row-collected');
+                else if (data.cheque_status === 'Bounced') $(row).addClass('row-bounced');
+            },
             order: [[0, 'asc']],
             pageLength: 25
         });
@@ -725,6 +789,29 @@
                 $btn.prop('disabled', false).html('<i class="ri-check-double-line me-1"></i> Generate Receipt');
                 notifyLedger('Network error generating receipt.', 'error');
             });
+    });
+
+    $(document).on('click', '.btn-cl-cheque-status', function() {
+        const id = $(this).data('id');
+        const status = $(this).data('status');
+        const msg = status === 'Pending' ? 'Revoke cheque status back to Pending?' : `Mark cheque as ${status}?`;
+        const doUpdate = () => {
+            $.post('/CustomerLedgerController', { action: 'UpdateChequeStatus', ids: id, status: status }, function(res) {
+                if (res && res.status) {
+                    if (ledgerTable) ledgerTable.ajax.reload(null, false);
+                    $('#btnRefreshActive').trigger('click');
+                    notifyLedger('Cheque status updated.', 'success');
+                } else {
+                    notifyLedger((res && res.message) || 'Failed to update cheque status.', 'error');
+                }
+            }, 'json');
+        };
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ title: 'Update Cheque Status?', text: msg, icon: 'question', showCancelButton: true, confirmButtonText: 'Yes, proceed' })
+                .then(r => { if (r.isConfirmed) doUpdate(); });
+        } else if (confirm(msg)) {
+            doUpdate();
+        }
     });
 
     $(document).on('click', '.cl-print-receipt-row', function() {

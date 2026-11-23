@@ -42,7 +42,7 @@ class CustomerMasterController
         $this->ContactNumber = $data['ContactNumber'] ?? null;
         $this->emailId = $data['emailId'] ?? null;
         $this->cprno = $data['cprno'] ?? null;
-        $this->cprexpiryDate = $data['cprexpiryDate'] ?? null;
+        $this->cprexpiryDate = !empty($data['cprexpiryDate']) ? $data['cprexpiryDate'] : null;
         $this->custAttn = $data['custAttn'] ?? null;
         $this->custType = $data['custType'] ?? null;
         $this->customerAddress = $data['customerAddress'] ?? null;

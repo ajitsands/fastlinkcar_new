@@ -41,11 +41,11 @@ class DriverController
         $this->ContactNumber = $data['ContactNumber'] ?? null;
         $this->emailId = $data['emailId'] ?? null;
         $this->cprno = $data['cprno'] ?? null;
-        $this->cprexpiryDate = $data['cprexpiryDate'] ?? null;
+        $this->cprexpiryDate = !empty($data['cprexpiryDate']) ? $data['cprexpiryDate'] : null;
         $this->drivinglicenseno = $data['drivinglicenseno'] ?? null;
         $this->licenseissueplace = $data['licenseissueplace'] ?? null;
-        $this->licenseissueDate = $data['licenseissueDate'] ?? null;
-        $this->licenseexpiryDate = $data['licenseexpiryDate'] ?? null;
+        $this->licenseissueDate = !empty($data['licenseissueDate']) ? $data['licenseissueDate'] : null;
+        $this->licenseexpiryDate = !empty($data['licenseexpiryDate']) ? $data['licenseexpiryDate'] : null;
         $this->driverAddress = $data['driverAddress'] ?? null;
         $this->driverDocObj = json_encode($data['driverDocObj']) ?? [];
         

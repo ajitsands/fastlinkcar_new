@@ -53,17 +53,17 @@ class QuoationController
         $this->customer_email = $_POST['customer_email'] ?? null;
         $this->customer_cpr_cr = $_POST['customer_cpr_cr'] ?? null;
         $this->customer_address = $_POST['customer_address'] ?? null;
-        $this->quotation_date = $_POST['quotation_date'] ?? null;
+        $this->quotation_date = !empty($_POST['quotation_date']) ? $_POST['quotation_date'] : null;
         $this->quotation_prefix = $_POST['quotation_prefix'] ?? null;
        
         $this->items = $_POST['items'] ?? [];
-        $this->subtotal = $_POST['subtotal'] ?? 0;
-        $this->vat_total = $_POST['vat_total'] ?? 0;
-        $this->grand_total = $_POST['grand_total'] ?? 0; 
+        $this->subtotal = isset($_POST['subtotal']) && $_POST['subtotal'] !== '' ? floatval($_POST['subtotal']) : 0;
+        $this->vat_total = isset($_POST['vat_total']) && $_POST['vat_total'] !== '' ? floatval($_POST['vat_total']) : 0;
+        $this->grand_total = isset($_POST['grand_total']) && $_POST['grand_total'] !== '' ? floatval($_POST['grand_total']) : 0; 
         
-        $this->total_discount = $_POST['total_discount'] ?? null;
-        $this->total_discount_amount = $_POST['total_discount_amount'] ?? null;
-        $this->after_discount_amount = $_POST['after_discount_amount'] ?? null;
+        $this->total_discount = isset($_POST['total_discount']) && $_POST['total_discount'] !== '' ? floatval($_POST['total_discount']) : 0;
+        $this->total_discount_amount = isset($_POST['total_discount_amount']) && $_POST['total_discount_amount'] !== '' ? floatval($_POST['total_discount_amount']) : 0;
+        $this->after_discount_amount = isset($_POST['after_discount_amount']) && $_POST['after_discount_amount'] !== '' ? floatval($_POST['after_discount_amount']) : 0;
         $this->storage_company_id = $_POST['company_id'] ?? $_SESSION['company_id'] ?? 1;
         $this->storage_company_name = $_SESSION['company_name'] ?? null;
         $this->storage_username = $_SESSION['user_name'] ?? null;

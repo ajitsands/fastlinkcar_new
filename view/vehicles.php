@@ -1626,9 +1626,19 @@ console.log("Loaded bookingMaster:", bookingMaster);
         }
         $('#vpRegCompany').text(v.reg_company_name || '-');
         $('#vpOutsourceCompany').text(v.is_outsourced === 'Yes' ? (v.outsourcing_company_name || 'Yes') : 'Own Fleet');
-        $('#vpPurchaseDate').text(v.vehicle_purchase_date || 'Not Set');
-        $('#vpNextInsurance').text(v.next_insurance_date || 'Not Set');
-        $('#vpNextPassing').text(v.next_passing_date || 'Not Set');
+        function fmtVpDate(dStr) {
+            if (!dStr || dStr === '0000-00-00') return 'Not Set';
+            const p = String(dStr).substring(0, 10).split('-');
+            if (p.length === 3 && p[0].length === 4) {
+                const ms = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                const mi = parseInt(p[1], 10) - 1;
+                if (mi >= 0 && mi < 12) return `${p[2]}-${ms[mi]}-${p[0]}`;
+            }
+            return dStr;
+        }
+        $('#vpPurchaseDate').text(fmtVpDate(v.vehicle_purchase_date));
+        $('#vpNextInsurance').text(fmtVpDate(v.next_insurance_date));
+        $('#vpNextPassing').text(fmtVpDate(v.next_passing_date));
 
         // Images
         let imgs = [];

@@ -28,67 +28,7 @@
       </div>
 
       <div class="modal-body p-3">
-        <!-- SECTION 1: DASHBOARD -->
-        <div class="card border shadow-none bg-light mb-2">
-          <div class="card-body py-2 px-3">
-            <div class="row g-2 align-items-center small">
-              <div class="col-sm-6 col-lg-4">
-                <span class="text-muted">Customer:</span>
-                <strong class="ms-1 text-dark" id="display_customer_name">-</strong>
-              </div>
-              <div class="col-sm-6 col-lg-2">
-                <span class="text-muted">Mobile:</span>
-                <strong class="ms-1 text-dark" id="display_mobile">-</strong>
-              </div>
-              <div class="col-sm-6 col-lg-3">
-                <span class="text-muted">Booking Ref:</span>
-                <strong class="ms-1 text-dark" id="display_booking_ref">-</strong>
-              </div>
-              <div class="col-sm-6 col-lg-3">
-                <span class="text-muted">Quotation No:</span>
-                <strong class="ms-1 text-dark" id="display_quotation_no">-</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="row mb-3 g-3">
-          <div class="col-md-4">
-            <div class="card summary-card card-total-debit shadow-sm h-100">
-              <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
-                <div>
-                  <span class="text-muted small d-block">Total Debit (Charged)</span>
-                  <h4 class="mb-0 fw-bold text-danger" id="lblTotalDebit">0.000</h4>
-                </div>
-                <i class="ri-arrow-up-circle-line ri-24px text-danger opacity-50"></i>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card summary-card card-total-credit shadow-sm h-100">
-              <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
-                <div>
-                  <span class="text-muted small d-block">Total Credit (Received)</span>
-                  <h4 class="mb-0 fw-bold text-success" id="lblTotalCredit">0.000</h4>
-                </div>
-                <i class="ri-arrow-down-circle-line ri-24px text-success opacity-50"></i>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card summary-card card-balance shadow-sm h-100">
-              <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
-                <div>
-                  <span class="text-muted small d-block">Current Balance</span>
-                  <h4 class="mb-0 fw-bold text-primary" id="lblBalance">0.000</h4>
-                </div>
-                <i class="ri-scales-3-line ri-24px text-primary opacity-50"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECTION 2: TWO TABS (PAYMENTS & RECEIPTS) -->
+        <!-- TWO TABS (PAYMENTS & RECEIPTS) -->
         <div class="card shadow-sm border mb-3">
           <div class="card-header bg-white pb-0 pt-2 px-3 border-bottom">
             <ul class="nav nav-tabs card-header-tabs" id="clSectionTabs" role="tablist">

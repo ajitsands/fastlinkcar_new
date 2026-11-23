@@ -219,13 +219,12 @@
                         totDebit += parseFloat(r.debit || 0);
                         totCredit += parseFloat(r.credit || 0);
                     });
-                    $('#lblTotalDebit').text(totDebit.toFixed(3));
-                    $('#lblTotalCredit').text(totCredit.toFixed(3));
-                    const bal = totDebit - totCredit;
-                    $('#lblBalance').text(bal.toFixed(3));
-                    $('#clTabTotalReceived').text(totCredit.toFixed(3) + ' BHD');
-                    $('#clTabBalanceDue').text(Math.max(0, bal).toFixed(3) + ' BHD');
-                    renderReceiptsTab(rows);
+                    const bal = Math.max(0, totDebit - totCredit);
+                    $('#cl_rr_advance').val(totCredit.toFixed(3));
+                    $('#cl_rr_balance').val(bal.toFixed(3));
+                    if (!$('#cl_rr_generated_receipt_no').val()) {
+                        $('#cl_rr_amount').val(bal.toFixed(3));
+                    }
                     return rows;
                 }
             },
@@ -245,8 +244,15 @@
                 { data: 'running_balance', className: 'text-end fw-bold text-nowrap', render: v => `<span class="${Number(v) >= 0 ? 'text-primary' : 'text-danger'}">${Number(v || 0).toFixed(3)}</span>` },
                 {
                     data: 'ids',
-                    className: 'text-center',
-                    render: id => `<button type="button" class="btn btn-sm btn-icon text-danger btn-ledger-delete" data-id="${id}" title="Delete Entry"><span class="ri-delete-bin-line"></span></button>`
+                    className: 'text-center text-nowrap',
+                    render: (id, type, r) => {
+                        const candRef = String(r.receipt_no || r.voucher_no || r.ref_no || r.trans_type || '').trim();
+                        const isReceipt = parseFloat(r.credit || 0) > 0 && /\/CM\/|CM\//i.test(candRef);
+                        const printBtn = isReceipt
+                            ? `<button type="button" class="btn btn-sm btn-icon text-primary cl-print-receipt-row" data-receipt="${escHtml(candRef)}" title="Print Receipt ${escHtml(candRef)}"><span class="ri-printer-line"></span></button>`
+                            : '';
+                        return `${printBtn}<button type="button" class="btn btn-sm btn-icon text-danger btn-ledger-delete" data-id="${id}" title="Delete Entry"><span class="ri-delete-bin-line"></span></button>`;
+                    }
                 }
             ],
             order: [[0, 'asc']],
@@ -254,40 +260,27 @@
         });
     }
 
-    function renderReceiptsTab(rows) {
-        const credits = (rows || []).filter(r => parseFloat(r.credit || 0) > 0);
-        if (!credits.length) {
-            $('#cl_receipts_tbody').html('<tr><td colspan="6" class="text-center text-muted py-3">No receipts recorded yet.</td></tr>');
-            return;
-        }
-        const html = credits.map(r => {
-            const refCand = String(r.receipt_no || r.voucher_no || r.ref_no || r.trans_type || '').trim();
-            const hasPrint = /\/CM\/|CM\//i.test(refCand);
-            const printBtn = hasPrint
-                ? `<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 cl-print-receipt-row" data-receipt="${escHtml(refCand)}" title="Print ${escHtml(refCand)}"><i class="ri-printer-line"></i></button>`
-                : '<span class="text-muted small">-</span>';
-            return `
-                <tr>
-                    <td class="text-nowrap">${fmtLedgerDate(r.trans_date)}</td>
-                    <td class="fw-semibold">${escHtml(refCand || '-')}</td>
-                    <td><span class="badge bg-label-info">${escHtml(r.payment_method || '-')}</span></td>
-                    <td class="small text-muted">${escHtml(r.description || '-')}</td>
-                    <td class="text-end fw-semibold text-success">${Number(r.credit || 0).toFixed(3)}</td>
-                    <td class="text-center">${printBtn}</td>
-                </tr>
-            `;
-        }).join('');
-        $('#cl_receipts_tbody').html(html);
+    function resetInlineReceiptForm() {
+        $('#cl_rr_receipt_no').val('Auto (Sequential)');
+        $('#cl_rr_generated_receipt_no').val('');
+        $('#cl_rr_receipt_date').val(new Date().toISOString().slice(0, 10));
+        $('#cl_rr_tax_amount').val('0.000');
+        $('#cl_rr_note').val('');
+        $('#cl_rr_cheque_no, #cl_rr_cheque_date, #cl_rr_cheque_bank').val('');
+        $('#cl_rr_payment_type').val('FULL SETTLEMENT');
+        $('#cl_rr_payment_mode').val('Cash').trigger('change');
+        $('#cl_rr_success_banner').addClass('d-none').removeClass('d-flex');
+        $('#cl_rr_btn_generate').prop('disabled', false).show().html('<i class="ri-check-double-line me-1"></i> Generate Receipt');
     }
 
-    function openReceiptFromLedger() {
-        const cid = parseInt($('#txt_ledger_modal_agreement_id').val(), 10);
-        if (!cid || !window.ReturnReceiptModal) return;
-        window.ReturnReceiptModal.open({
-            contract_id: cid,
-            customer_code: $('#txt_ledger_modal_customer_code').val() || '',
-            agreement_no: $('#txt_ledger_modal_agreement_no').val() || ''
-        });
+    function printInlineReceiptByNo(recNo) {
+        const cleanNo = $.trim(recNo || '');
+        if (!cleanNo) return;
+        fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(cleanNo))
+            .then(r => r.text())
+            .then(token => {
+                if (token) window.open('/CashMemoPrint?token=' + encodeURIComponent(token.trim()), '_blank');
+            });
     }
 
     $(document).on('click', '.btn-contract-ledger', function() {
@@ -308,8 +301,10 @@
                 const data = (typeof res === 'string') ? JSON.parse(res) : res;
                 const cust = data.customer || {};
                 const contract = data.contract || {};
+                const veh = data.vehicle || {};
                 const agreeNo = contract.agreement_no || '';
 
+                resetInlineReceiptForm();
                 $('#ledger_agreement_ref').text(agreeNo || ('#' + id));
                 $('#txt_ledger_modal_agreement_id').val(contract.ids || id);
                 $('#txt_ledger_modal_agreement_no').val(agreeNo);
@@ -318,12 +313,21 @@
                 $('#txt_ledger_modal_booking_ref').val(contract.agreement_group_ref_no || '');
                 $('#txt_ledger_modal_vehicle_ids').val(contract.vehicle_id || '');
                 $('#txt_ledger_modal_model_ids').val(contract.vehicle_model_id || '');
-                $('#txt_ledger_modal_customer_code').val(contract.customer_code || '');
+                $('#txt_ledger_modal_customer_code').val(cust.customer_id || contract.customer_code || '');
 
-                $('#display_customer_name').text((cust.customer_name || '-') + (cust.customer_id ? ' | ' + cust.customer_id : ''));
-                $('#display_mobile').text(cust.customer_mobile || '-');
-                $('#display_booking_ref').text(contract.agreement_group_ref_no || '-');
-                $('#display_quotation_no').text(contract.quotation_number || '-');
+                $('#cl_rr_customer_name').val(cust.customer_name || contract.customer_name || '');
+                $('#cl_rr_customer_phone').val(cust.customer_mobile || '');
+                $('#cl_rr_customer_email').val(cust.customer_email || '');
+                $('#cl_rr_customer_cpr').val(cust.customer_cr_cpr || '');
+                $('#cl_rr_customer_address').val(cust.customer_addr || cust.customer_address || '');
+                $('#cl_rr_company_id').val(contract.company_id || 1);
+                $('#cl_rr_vehicle_no').val(contract.vehicle_no || veh.vehicle_number || '');
+                $('#cl_rr_vehicle_color').val(veh.vehicle_color || '');
+                $('#cl_rr_car_type').val([veh.model_names || '', contract.vehicle_no || veh.vehicle_number || ''].filter(Boolean).join(' - '));
+                if (contract.service_start_date_time) $('#cl_rr_from_date').val(String(contract.service_start_date_time).substring(0, 10));
+                if (contract.return_date || contract.service_end_date_time) {
+                    $('#cl_rr_to_date').val(String(contract.return_date || contract.service_end_date_time).substring(0, 10));
+                }
 
                 clAddViolationRow();
                 clAddOtherFeeRow();
@@ -598,12 +602,133 @@
         }
     });
 
-    $(document).on('click', '#btnLedgerGenerateReceipt, #btnLedgerGenerateReceiptFooter, #btnLedgerTabGenerateReceipt', openReceiptFromLedger);
+    $(document).on('change', '#cl_rr_payment_mode', function() {
+        if ($(this).val() === 'Cheque') {
+            $('.cl-rr-cheque-field').removeClass('d-none');
+        } else {
+            $('.cl-rr-cheque-field').addClass('d-none');
+        }
+    });
+
+    $(document).on('click', '#cl_rr_new_btn', function() {
+        resetInlineReceiptForm();
+        const bal = parseFloat($('#cl_rr_balance').val() || '0') || 0;
+        $('#cl_rr_amount').val(bal.toFixed(3));
+    });
+
+    $(document).on('click', '#cl_rr_banner_print_btn', function() {
+        printInlineReceiptByNo($('#cl_rr_generated_receipt_no').val());
+    });
+
+    $(document).on('click', '#cl_rr_banner_wa_btn', function() {
+        const recNo = $.trim($('#cl_rr_generated_receipt_no').val());
+        if (!recNo) return;
+        const phoneRaw = ($('#cl_rr_customer_phone').val() || '').replace(/[^0-9]/g, '');
+        const phone = phoneRaw.length === 8 ? ('973' + phoneRaw) : phoneRaw;
+        const msg = [
+            '*FAST LINK CAR RENTAL - RECEIPT VOUCHER*',
+            'Receipt No: ' + recNo,
+            'Date: ' + ($('#cl_rr_receipt_date').val() || ''),
+            'Agreement No: ' + ($('#txt_ledger_modal_agreement_no').val() || ''),
+            'Customer: ' + ($('#cl_rr_customer_name').val() || ''),
+            'Vehicle: ' + ($('#cl_rr_car_type').val() || ''),
+            'Payment Type: ' + ($('#cl_rr_payment_type').val() || ''),
+            'Payment Mode: ' + ($('#cl_rr_payment_mode').val() || ''),
+            'Amount Paid: ' + (parseFloat($('#cl_rr_amount').val()) || 0).toFixed(3) + ' BHD',
+            'Remaining Balance: ' + ($('#cl_rr_balance').val() || '0.000') + ' BHD'
+        ].join('\n');
+        const url = phone ? ('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg)) : ('https://wa.me/?text=' + encodeURIComponent(msg));
+        window.open(url, '_blank');
+    });
+
+    $(document).on('click', '#cl_rr_btn_generate', function() {
+        const amt = parseFloat($('#cl_rr_amount').val()) || 0;
+        const tax = parseFloat($('#cl_rr_tax_amount').val()) || 0;
+        if (amt <= 0) {
+            notifyLedger('Please enter a receipt amount greater than 0.', 'error');
+            return;
+        }
+        const totalAmt = amt + tax;
+        const payMode = $('#cl_rr_payment_mode').val() || 'Cash';
+        const payType = $('#cl_rr_payment_type').val() || 'RENT';
+        const agreeNo = $('#txt_ledger_modal_agreement_no').val() || '';
+        const cid = parseInt($('#txt_ledger_modal_agreement_id').val(), 10) || 0;
+        const noteParts = [payType];
+        if ($('#cl_rr_note').val()) noteParts.push($('#cl_rr_note').val().trim());
+        if (payMode === 'Cheque' && $('#cl_rr_cheque_bank').val()) noteParts.push('Bank: ' + $('#cl_rr_cheque_bank').val().trim());
+
+        const $btn = $('#cl_rr_btn_generate');
+        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Generating...');
+
+        const payload = {
+            company_id: $('#cl_rr_company_id').val() || 1,
+            cashmemo_id: '',
+            cashmemo_number: '',
+            original_draft: 'No',
+            action_type: 'new',
+            save_type: 'confirm',
+            customer_name: $('#cl_rr_customer_name').val(),
+            customer_code: $('#txt_ledger_modal_customer_code').val(),
+            customer_phone: $('#cl_rr_customer_phone').val(),
+            customer_email: $('#cl_rr_customer_email').val(),
+            customer_cpr_cr: $('#cl_rr_customer_cpr').val(),
+            customer_address: $('#cl_rr_customer_address').val(),
+            cashmemo_date: $('#cl_rr_receipt_date').val(),
+            cashmemo_notes: noteParts.join(' - '),
+            cashmemo_payment_type: payMode,
+            cashmemo_cheque_date: $('#cl_rr_cheque_date').val() || '',
+            cashmemo_cheque_ref_no: $('#cl_rr_cheque_no').val() || '',
+            contract_id: cid,
+            agreement_no: agreeNo,
+            vehicle_id: $('#txt_ledger_modal_model_ids').val(),
+            booking_ids: $('#txt_ledger_modal_booking_ids').val() || 0,
+            vehicle_model_id: $('#txt_ledger_modal_vehicle_ids').val(),
+            model_name: $('#cl_rr_car_type').val(),
+            vehicleno: $('#cl_rr_vehicle_no').val(),
+            vehiclecolor: $('#cl_rr_vehicle_color').val(),
+            items: [{
+                item_name: payType + ' (' + agreeNo + ')',
+                qty: 1,
+                price: amt.toFixed(3),
+                vat: tax > 0 && amt > 0 ? ((tax / amt) * 100).toFixed(2) : 0,
+                total: totalAmt.toFixed(3)
+            }],
+            subtotal: amt,
+            vat_total: tax,
+            grand_total: totalAmt,
+            total_discount: 0,
+            total_discount_amount: 0,
+            after_discount_amount: totalAmt,
+            allItemSubtotal: amt,
+            action: 'SaveCashMemo'
+        };
+
+        $.post('/CashMemoController', payload)
+            .done(function(res) {
+                const d = (typeof res === 'string') ? JSON.parse(res) : res;
+                if (d && String(d.status).toLowerCase() === 'success') {
+                    const recNo = d.message || '';
+                    $('#cl_rr_generated_receipt_no').val(recNo);
+                    $('#cl_rr_receipt_no').val(recNo);
+                    $('#cl_rr_generated_no_badge').text(recNo);
+                    $('#cl_rr_success_banner').removeClass('d-none').addClass('d-flex');
+                    $btn.hide();
+                    refreshContractLedger(cid);
+                    $('#btnRefreshActive').trigger('click');
+                    notifyLedger('Receipt ' + recNo + ' generated.', 'success');
+                } else {
+                    $btn.prop('disabled', false).html('<i class="ri-check-double-line me-1"></i> Generate Receipt');
+                    notifyLedger((d && d.message) || 'Failed to generate receipt.', 'error');
+                }
+            })
+            .fail(function() {
+                $btn.prop('disabled', false).html('<i class="ri-check-double-line me-1"></i> Generate Receipt');
+                notifyLedger('Network error generating receipt.', 'error');
+            });
+    });
 
     $(document).on('click', '.cl-print-receipt-row', function() {
-        const recNo = $(this).data('receipt');
-        if (!recNo) return;
-        window.open('/CashMemo?print_cm=' + encodeURIComponent(recNo), '_blank');
+        printInlineReceiptByNo($(this).data('receipt'));
     });
 
     // Ensure nested modals (Receipt Voucher, Add Violation Head, Add Fee Head) always stack above #contractLedgerModal

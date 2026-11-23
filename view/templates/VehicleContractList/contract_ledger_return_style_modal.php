@@ -11,9 +11,6 @@
           <span class="badge bg-white text-primary fw-bold px-2 py-1" id="ledger_agreement_ref">-</span>
         </div>
         <div class="d-flex align-items-center gap-2 ms-auto">
-          <button type="button" class="btn btn-light btn-sm fw-semibold text-primary" id="btnLedgerGenerateReceipt">
-            <i class="ri-receipt-line me-1"></i> Generate Receipt
-          </button>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
@@ -137,36 +134,118 @@
                 </div>
               </div>
 
-              <!-- TAB 2: RECEIPTS -->
+              <!-- TAB 2: RECEIPTS (INLINE GENERATE RECEIPT FORM) -->
               <div class="tab-pane fade" id="clTabReceipts" role="tabpanel" aria-labelledby="cl-tab-receipts-btn">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 p-2 rounded border bg-light">
-                  <div class="small">
-                    <span class="text-muted">Total Received:</span>
-                    <strong class="text-success ms-1 me-3" id="clTabTotalReceived">0.000 BHD</strong>
-                    <span class="text-muted">Balance Due:</span>
-                    <strong class="text-danger ms-1" id="clTabBalanceDue">0.000 BHD</strong>
+                <input type="hidden" id="cl_rr_customer_phone">
+                <input type="hidden" id="cl_rr_customer_email">
+                <input type="hidden" id="cl_rr_customer_cpr">
+                <input type="hidden" id="cl_rr_customer_address">
+                <input type="hidden" id="cl_rr_company_id">
+                <input type="hidden" id="cl_rr_car_type">
+                <input type="hidden" id="cl_rr_vehicle_no">
+                <input type="hidden" id="cl_rr_vehicle_color">
+                <input type="hidden" id="cl_rr_customer_name">
+                <input type="hidden" id="cl_rr_generated_receipt_no">
+
+                <div id="cl_rr_success_banner" class="alert alert-success d-none align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                  <div>
+                    <i class="ri-checkbox-circle-fill me-1"></i>
+                    <strong>Receipt Generated:</strong> <span id="cl_rr_generated_no_badge" class="badge bg-success ms-1"></span>
                   </div>
-                  <button type="button" class="btn btn-primary btn-sm" id="btnLedgerTabGenerateReceipt">
-                    <i class="ri-receipt-line me-1"></i> Generate New Receipt
-                  </button>
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-primary" id="cl_rr_banner_print_btn">
+                      <i class="ri-printer-line me-1"></i> Print / Export PDF
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success" id="cl_rr_banner_wa_btn">
+                      <i class="ri-whatsapp-line me-1"></i> Send to WhatsApp
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="cl_rr_new_btn">
+                      <i class="ri-add-line me-1"></i> New Receipt
+                    </button>
+                  </div>
                 </div>
 
-                <div class="table-responsive">
-                  <table class="table table-bordered table-hover table-sm align-middle mb-0">
-                    <thead class="table-light">
-                      <tr>
-                        <th style="width:110px;">Date</th>
-                        <th style="width:180px;">Receipt / Ref No</th>
-                        <th style="width:130px;">Method</th>
-                        <th>Description</th>
-                        <th style="width:130px;" class="text-end">Amount (BHD)</th>
-                        <th style="width:90px;" class="text-center">Print</th>
-                      </tr>
-                    </thead>
-                    <tbody id="cl_receipts_tbody">
-                      <tr><td colspan="6" class="text-center text-muted py-3">No receipts recorded yet.</td></tr>
-                    </tbody>
-                  </table>
+                <div class="p-3 rounded border mb-2" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                  <div class="row g-2">
+                    <div class="col-md-3">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">Receipt No.</label>
+                      <input type="text" id="cl_rr_receipt_no" class="form-control form-control-sm bg-white fw-bold text-primary" value="Auto (Sequential)" readonly>
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">Receipt Date</label>
+                      <input type="date" id="cl_rr_receipt_date" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>">
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">From Date</label>
+                      <input type="date" id="cl_rr_from_date" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">To Date</label>
+                      <input type="date" id="cl_rr_to_date" class="form-control form-control-sm">
+                    </div>
+
+                    <div class="col-md-3">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">Payment Type</label>
+                      <select id="cl_rr_payment_type" class="form-select form-select-sm">
+                        <option value="RENT">RENT</option>
+                        <option value="FULL SETTLEMENT" selected>FULL SETTLEMENT</option>
+                        <option value="OVERDUE CHARGES">OVERDUE CHARGES</option>
+                        <option value="VIOLATION / FINE">VIOLATION / FINE</option>
+                        <option value="OTHER FEES">OTHER FEES</option>
+                        <option value="ADVANCE / DEPOSIT">ADVANCE / DEPOSIT</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">Payment Mode</label>
+                      <select id="cl_rr_payment_mode" class="form-select form-select-sm">
+                        <option value="Cash" selected>CASH</option>
+                        <option value="Card">CARD</option>
+                        <option value="Bank Transfer">BANK TRANSFER</option>
+                        <option value="Benefit Pay">BENEFIT PAY</option>
+                        <option value="Cheque">CHEQUE</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">Paid (Advance)</label>
+                      <input type="text" id="cl_rr_advance" class="form-control form-control-sm bg-white fw-semibold text-success text-end" readonly>
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">Balance Due</label>
+                      <input type="text" id="cl_rr_balance" class="form-control form-control-sm bg-white fw-bold text-danger text-end" readonly>
+                    </div>
+
+                    <div class="col-md-3">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">Amount <span class="text-danger">*</span></label>
+                      <input type="number" step="0.001" min="0" id="cl_rr_amount" class="form-control form-control-sm fw-bold text-end" style="background-color: #e6f2ff; border-color: #60a5fa;">
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">Tax Amount (Incl./Extra)</label>
+                      <input type="number" step="0.001" min="0" id="cl_rr_tax_amount" class="form-control form-control-sm fw-bold text-end" value="0.000" style="background-color: #e6f9ed; border-color: #4ade80;">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">Note / Remarks</label>
+                      <input type="text" id="cl_rr_note" class="form-control form-control-sm" placeholder="Receipt remarks...">
+                    </div>
+
+                    <div class="col-md-4 cl-rr-cheque-field d-none">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">Cheque No.</label>
+                      <input type="text" id="cl_rr_cheque_no" class="form-control form-control-sm" placeholder="Cheque No.">
+                    </div>
+                    <div class="col-md-4 cl-rr-cheque-field d-none">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">Cheque Date</label>
+                      <input type="date" id="cl_rr_cheque_date" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-4 cl-rr-cheque-field d-none">
+                      <label class="form-label form-label-sm mb-1 fw-semibold">Cheque Bank</label>
+                      <input type="text" id="cl_rr_cheque_bank" class="form-control form-control-sm" placeholder="Bank Name">
+                    </div>
+                  </div>
+
+                  <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
+                    <button type="button" class="btn btn-primary btn-sm px-3" id="cl_rr_btn_generate">
+                      <i class="ri-check-double-line me-1"></i> Generate Receipt
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -203,10 +282,7 @@
       </div>
 
       <!-- FOOTER -->
-      <div class="modal-footer justify-content-between py-2 px-3 bg-light">
-        <button type="button" class="btn btn-primary btn-sm" id="btnLedgerGenerateReceiptFooter">
-          <i class="ri-receipt-line me-1"></i> Generate Receipt
-        </button>
+      <div class="modal-footer justify-content-end py-2 px-3 bg-light">
         <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
       </div>
     </div>

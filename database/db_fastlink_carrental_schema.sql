@@ -1310,7 +1310,7 @@ CREATE TABLE `tbl_vehicles` (
   `outsourcing_company_id` int(11) DEFAULT '0',
   `created_on` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `created_by` int(11) NOT NULL,
-  `vehicle_purchase_date` date NOT NULL,
+  `vehicle_purchase_date` date DEFAULT NULL,
   `next_passing_date` date DEFAULT NULL,
   `passing_histroy` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
   `next_insurance_date` date DEFAULT NULL,

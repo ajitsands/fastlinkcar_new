@@ -153,6 +153,114 @@ try {
             ]);
             exit;
         }
+
+        if ($postAction === 'get_other_fee_heads' || $postAction === 'save_other_fee_head' || $postAction === 'delete_other_fee_head') {
+            $colCheck = $pdo->query("SHOW COLUMNS FROM tbl_ledger_heads LIKE 'standard_price'");
+            if (!$colCheck || $colCheck->rowCount() === 0) {
+                $pdo->exec("ALTER TABLE tbl_ledger_heads ADD COLUMN standard_price DECIMAL(10,3) NOT NULL DEFAULT 0.000");
+            }
+        }
+
+        if ($postAction === 'get_other_fee_heads') {
+            $modelId = (int)($postInput['model_id'] ?? 0);
+            $heads = [];
+
+            $stHeads = $pdo->query("
+                SELECT ids, head_name, COALESCE(standard_price, 0.000) AS standard_price, COALESCE(is_locked, 0) AS is_locked
+                FROM tbl_ledger_heads
+                WHERE head_type = 'Debit' AND COALESCE(violation_fine_type, 'No') <> 'Yes'
+                ORDER BY head_name ASC
+            ");
+            if ($stHeads) {
+                while ($r = $stHeads->fetch(PDO::FETCH_ASSOC)) {
+                    $heads[] = [
+                        'ids' => (int)$r['ids'],
+                        'head_name' => $r['head_name'],
+                        'standard_price' => number_format((float)$r['standard_price'], 3, '.', ''),
+                        'is_locked' => (int)$r['is_locked'],
+                        'source' => 'Ledger Master'
+                    ];
+                }
+            }
+
+            $modelPrices = [];
+            if ($modelId > 0) {
+                $stMod = $pdo->prepare("SELECT price_json FROM tbl_vehicle_model WHERE ids = ? LIMIT 1");
+                $stMod->execute([$modelId]);
+                $mRow = $stMod->fetch(PDO::FETCH_ASSOC);
+                if ($mRow && !empty($mRow['price_json'])) {
+                    $pArr = json_decode($mRow['price_json'], true);
+                    if (is_array($pArr)) {
+                        foreach ($pArr as $p) {
+                            if (isset($p['ids'])) {
+                                $modelPrices[(string)$p['ids']] = (float)($p['amount'] ?? 0);
+                            }
+                        }
+                    }
+                }
+            }
+
+            $existingNames = array_map(function($h) { return strtolower(trim($h['head_name'])); }, $heads);
+            $stPm = $pdo->query("SELECT ids, price_item FROM tbl_vehicle_pricing_master WHERE ledger_status = 'Yes' ORDER BY price_item ASC");
+            if ($stPm) {
+                while ($pm = $stPm->fetch(PDO::FETCH_ASSOC)) {
+                    $pmName = trim((string)$pm['price_item']);
+                    if ($pmName !== '' && !in_array(strtolower($pmName), $existingNames, true)) {
+                        $stdAmt = $modelPrices[(string)$pm['ids']] ?? 0;
+                        $heads[] = [
+                            'ids' => 0,
+                            'pm_id' => (int)$pm['ids'],
+                            'head_name' => $pmName,
+                            'standard_price' => number_format((float)$stdAmt, 3, '.', ''),
+                            'is_locked' => 1,
+                            'source' => 'Pricing Master'
+                        ];
+                    }
+                }
+            }
+
+            echo json_encode(['status' => 'success', 'data' => $heads]);
+            exit;
+        }
+
+        if ($postAction === 'save_other_fee_head') {
+            $headId = (int)($postInput['ids'] ?? 0);
+            $headName = trim((string)($postInput['head_name'] ?? ''));
+            $stdPrice = round((float)($postInput['standard_price'] ?? 0), 3);
+            $companyId = (int)($_SESSION['company_id'] ?? 1);
+
+            if ($headName === '') {
+                echo json_encode(['status' => 'error', 'message' => 'Fee head name is required.']);
+                exit;
+            }
+
+            if ($headId > 0) {
+                $stUpd = $pdo->prepare("UPDATE tbl_ledger_heads SET head_name = ?, standard_price = ? WHERE ids = ?");
+                $stUpd->execute([$headName, $stdPrice, $headId]);
+            } else {
+                $stIns = $pdo->prepare("
+                    INSERT INTO tbl_ledger_heads (head_name, head_type, violation_fine_type, is_locked, company_id, standard_price)
+                    VALUES (?, 'Debit', 'No', 0, ?, ?)
+                    ON DUPLICATE KEY UPDATE standard_price = VALUES(standard_price)
+                ");
+                $stIns->execute([$headName, $companyId, $stdPrice]);
+            }
+
+            echo json_encode(['status' => 'success', 'message' => 'Other fee head saved successfully.']);
+            exit;
+        }
+
+        if ($postAction === 'delete_other_fee_head') {
+            $headId = (int)($postInput['ids'] ?? 0);
+            if ($headId <= 0) {
+                echo json_encode(['status' => 'error', 'message' => 'Invalid fee head ID.']);
+                exit;
+            }
+            $stDel = $pdo->prepare("DELETE FROM tbl_ledger_heads WHERE ids = ? AND COALESCE(is_locked, 0) = 0");
+            $stDel->execute([$headId]);
+            echo json_encode(['status' => 'success', 'message' => 'Fee head deleted.']);
+            exit;
+        }
     }
 
     $companyId = $_GET['company_id'] ?? ($_SESSION['company_id'] ?? 'all');

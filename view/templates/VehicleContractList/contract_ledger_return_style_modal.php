@@ -242,23 +242,57 @@
   </div>
 </div>
 
-<!-- Modal: Add New Other Fee Head Master -->
+<!-- Modal: Add / Manage Other Fee Heads Master -->
 <div class="modal fade" id="clModalAddFeeHead" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-  <div class="modal-dialog modal-sm modal-dialog-centered">
-    <div class="modal-content">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-lg">
       <div class="modal-header custom-modal-header py-2">
-        <h6 class="modal-title text-white mb-0">Add Other Fee Head</h6>
+        <h6 class="modal-title text-white mb-0">
+          <i class="ri-price-tag-3-line me-1"></i> Other Fee Heads Master &amp; Standard Pricing
+        </h6>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <div class="form-floating form-floating-outline">
-          <input type="text" class="form-control" id="cl_new_fee_head_name" placeholder="e.g. Salik / Fuel / Cleaning">
-          <label for="cl_new_fee_head_name">Fee Head Name</label>
+      <div class="modal-body p-3">
+        <input type="hidden" id="cl_edit_fee_head_id" value="0">
+        <div class="row g-2 align-items-end mb-3 p-2 rounded border bg-light">
+          <div class="col-md-5">
+            <label class="form-label small fw-semibold mb-1" for="cl_new_fee_head_name">Fee Head Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="cl_new_fee_head_name" placeholder="e.g. Salik, Fuel, Cleaning, Key Loss">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1" for="cl_new_fee_head_price">Standard Price (BHD)</label>
+            <input type="text" inputmode="decimal" class="form-control form-control-sm text-end" id="cl_new_fee_head_price" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="0.000">
+          </div>
+          <div class="col-md-3 d-flex gap-1">
+            <button type="button" class="btn btn-sm btn-primary flex-grow-1" id="cl_btn_save_fee_head">
+              <i class="ri-save-line me-1"></i> Save
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="cl_btn_cancel_edit_fee_head">
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <h6 class="fw-bold small text-uppercase text-muted mb-2">Existing Other Fee Heads &amp; Standard Pricing</h6>
+        <div class="table-responsive" style="max-height: 320px;">
+          <table class="table table-bordered table-hover table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:45px;" class="text-center">#</th>
+                <th>Fee Head Name</th>
+                <th style="width:140px;" class="text-end">Standard Price</th>
+                <th style="width:120px;" class="text-center">Source</th>
+                <th style="width:95px;" class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="cl_fee_master_tbody">
+              <tr><td colspan="5" class="text-center text-muted py-3">Loading...</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-sm btn-primary" id="cl_btn_save_fee_head">Save Fee Head</button>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>

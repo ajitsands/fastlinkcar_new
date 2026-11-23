@@ -68,22 +68,53 @@
     }
 
     function clLoadOtherFeeHeads() {
-        $.get('/CustomerLedgerController', { action: 'GetLedgerHeadsContract' }, function(res) {
-            clOtherFeeHeadsMap = {};
-            let opts = '';
-            if (res && res.status && Array.isArray(res.data)) {
-                res.data.forEach(function(head) {
-                    if (String(head.head_type || '').toLowerCase() === 'debit') {
-                        clOtherFeeHeadsMap[String(head.text || '').trim()] = {
-                            id: head.id,
-                            ledger_type: head.ledger_type || 'No'
-                        };
-                        opts += `<option value="${escHtml(head.text)}">`;
-                    }
+        const modelId = parseInt($('#txt_ledger_modal_model_ids').val() || '0', 10) || 0;
+        $.ajax({
+            url: '/ActiveContractsDashboardController',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ action: 'get_other_fee_heads', model_id: modelId }),
+            success: function(res) {
+                clOtherFeeHeadsMap = {};
+                let opts = '';
+                const rows = (res && res.status === 'success' && Array.isArray(res.data)) ? res.data : [];
+                rows.forEach(function(head) {
+                    const name = String(head.head_name || '').trim();
+                    if (!name) return;
+                    clOtherFeeHeadsMap[name] = head;
+                    opts += `<option value="${escHtml(name)}">`;
                 });
+                $('#cl_other_fee_heads_list').html(opts);
+                renderFeeMasterTable(rows);
             }
-            $('#cl_other_fee_heads_list').html(opts);
-        }, 'json');
+        });
+    }
+
+    function renderFeeMasterTable(rows) {
+        if (!Array.isArray(rows) || rows.length === 0) {
+            $('#cl_fee_master_tbody').html('<tr><td colspan="5" class="text-center text-muted py-3">No fee heads configured yet.</td></tr>');
+            return;
+        }
+        const html = rows.map(function(h, idx) {
+            const isLedgerMaster = h.source === 'Ledger Master' && parseInt(h.ids, 10) > 0;
+            const editBtn = isLedgerMaster
+                ? `<button type="button" class="btn btn-sm btn-icon text-primary cl-btn-edit-fee-head" data-id="${h.ids}" data-name="${escHtml(h.head_name)}" data-price="${escHtml(h.standard_price)}" title="Edit Price"><i class="ri-edit-line"></i></button>`
+                : '';
+            const delBtn = (isLedgerMaster && parseInt(h.is_locked, 10) === 0)
+                ? `<button type="button" class="btn btn-sm btn-icon text-danger cl-btn-del-fee-head" data-id="${h.ids}" title="Delete"><i class="ri-delete-bin-line"></i></button>`
+                : '';
+            const badgeCls = h.source === 'Pricing Master' ? 'bg-label-info' : 'bg-label-primary';
+            return `
+                <tr>
+                    <td class="text-center">${idx + 1}</td>
+                    <td class="fw-semibold">${escHtml(h.head_name)}</td>
+                    <td class="text-end fw-semibold">${Number(h.standard_price || 0).toFixed(3)} BHD</td>
+                    <td class="text-center"><span class="badge ${badgeCls}">${escHtml(h.source)}</span></td>
+                    <td class="text-center">${editBtn}${delBtn || (editBtn ? '' : '<span class="text-muted small">-</span>')}</td>
+                </tr>
+            `;
+        }).join('');
+        $('#cl_fee_master_tbody').html(html);
     }
 
     function clRenumberViolations() {
@@ -237,29 +268,25 @@
 
                 clAddViolationRow();
                 clAddOtherFeeRow();
+                clLoadOtherFeeHeads();
                 refreshContractLedger(contract.ids || id);
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('contractLedgerModal')).show();
             }
         });
     });
 
-    // Auto-fill standard price when selecting a pricing master fee item
-    $(document).on('change', '.cl-f-item', function() {
+    // Auto-fill standard price when selecting a fee item from Master
+    $(document).on('change input', '.cl-f-item', function() {
         const $row = $(this).closest('tr');
         const itemName = $.trim($(this).val());
         const meta = clOtherFeeHeadsMap[itemName];
-        const modelId = $('#txt_ledger_modal_model_ids').val();
-        if (meta && meta.ledger_type === 'Yes' && modelId) {
-            $.post('/CustomerLedgerController', { action: 'getmodel_price', model_ids: modelId, head_ids: meta.id }, function(res) {
-                if (res && res.status && res.data && res.data.length > 0) {
-                    const amt = parseFloat(res.data[0].amount || 0).toFixed(3);
-                    $row.find('.cl-f-price').val(amt);
-                    if (!$row.find('.cl-f-actual').val()) {
-                        $row.find('.cl-f-actual').val(amt);
-                    }
-                    updatePendingTotals();
-                }
-            }, 'json');
+        if (meta && meta.standard_price !== undefined) {
+            const amt = parseFloat(meta.standard_price || 0).toFixed(3);
+            $row.find('.cl-f-price').val(amt);
+            if (!$row.find('.cl-f-actual').val() || parseFloat($row.find('.cl-f-actual').val()) === 0) {
+                $row.find('.cl-f-actual').val(amt);
+            }
+            updatePendingTotals();
         }
     });
 
@@ -298,27 +325,79 @@
         });
     });
 
-    $(document).on('click', '#cl_btn_add_other_fee_head', function() {
+    function resetFeeHeadForm() {
+        $('#cl_edit_fee_head_id').val('0');
         $('#cl_new_fee_head_name').val('');
+        $('#cl_new_fee_head_price').val('');
+        $('#cl_btn_save_fee_head').html('<i class="ri-save-line me-1"></i> Save');
+        $('#cl_btn_cancel_edit_fee_head').addClass('d-none');
+    }
+
+    $(document).on('click', '#cl_btn_add_other_fee_head', function() {
+        resetFeeHeadForm();
+        clLoadOtherFeeHeads();
         bootstrap.Modal.getOrCreateInstance(document.getElementById('clModalAddFeeHead')).show();
         setTimeout(() => $('#cl_new_fee_head_name').focus(), 250);
     });
 
+    $(document).on('click', '#cl_btn_cancel_edit_fee_head', resetFeeHeadForm);
+
+    $(document).on('click', '.cl-btn-edit-fee-head', function() {
+        $('#cl_edit_fee_head_id').val($(this).data('id'));
+        $('#cl_new_fee_head_name').val($(this).data('name'));
+        $('#cl_new_fee_head_price').val(Number($(this).data('price') || 0).toFixed(3));
+        $('#cl_btn_save_fee_head').html('<i class="ri-save-line me-1"></i> Update');
+        $('#cl_btn_cancel_edit_fee_head').removeClass('d-none');
+        $('#cl_new_fee_head_price').focus();
+    });
+
+    $(document).on('click', '.cl-btn-del-fee-head', function() {
+        const id = parseInt($(this).data('id'), 10);
+        if (!id) return;
+        $.ajax({
+            url: '/ActiveContractsDashboardController',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ action: 'delete_other_fee_head', ids: id }),
+            success: function(res) {
+                if (res && res.status === 'success') {
+                    clLoadOtherFeeHeads();
+                    notifyLedger('Fee head deleted.', 'success');
+                } else {
+                    notifyLedger((res && res.message) || 'Failed to delete fee head.', 'error');
+                }
+            }
+        });
+    });
+
     $(document).on('click', '#cl_btn_save_fee_head', function() {
+        const headId = parseInt($('#cl_edit_fee_head_id').val() || '0', 10) || 0;
         const headName = $.trim($('#cl_new_fee_head_name').val());
+        const stdPrice = parseFloat($('#cl_new_fee_head_price').val() || '0') || 0;
         if (!headName) {
             notifyLedger('Please enter a fee head name.', 'error');
             return;
         }
-        $.post('/CustomerLedgerController', { action: 'SaveLedgerHead', head_name: headName, head_type: 'Debit' }, function(res) {
-            if (res && res.status) {
-                bootstrap.Modal.getOrCreateInstance(document.getElementById('clModalAddFeeHead')).hide();
-                clLoadOtherFeeHeads();
-                notifyLedger('Other fee head saved.', 'success');
-            } else {
-                notifyLedger((res && res.message) || 'Failed to save fee head.', 'error');
+        $.ajax({
+            url: '/ActiveContractsDashboardController',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                action: 'save_other_fee_head',
+                ids: headId,
+                head_name: headName,
+                standard_price: stdPrice
+            }),
+            success: function(res) {
+                if (res && res.status === 'success') {
+                    resetFeeHeadForm();
+                    clLoadOtherFeeHeads();
+                    notifyLedger(res.message || 'Other fee head saved.', 'success');
+                } else {
+                    notifyLedger((res && res.message) || 'Failed to save fee head.', 'error');
+                }
             }
-        }, 'json');
+        });
     });
 
     $(document).on('click', '#btnPostLedgerCharges', function() {

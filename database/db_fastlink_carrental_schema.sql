@@ -599,6 +599,7 @@ CREATE TABLE `tbl_ledger_heads` (
   `company_id` int(11) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `violation_fine_type` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'No',
+  `standard_price` decimal(10,3) NOT NULL DEFAULT '0.000',
   PRIMARY KEY (`ids`),
   UNIQUE KEY `head_name` (`head_name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

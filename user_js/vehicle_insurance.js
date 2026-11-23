@@ -368,32 +368,49 @@ function editViLastEntry(vehicleId, type, idx) {
 }
 
 function deleteViLastEntry(vehicleId, type, entryId) {
-    if (!confirm('Delete this last renewal entry?')) return;
-    const fd = new FormData();
-    fd.append('vehicle_id', vehicleId);
-    fd.append('entry_id', entryId);
-    fd.append('type', type);
-    fetch('/VehicleInsuranceController?action=deleteEntry', { method: 'POST', body: fd })
-        .then(r => r.json())
-        .then(res => {
-            if (res.status) {
-                const row = getVehicleRowById(vehicleId);
-                if (row) {
-                    if (type === 'passing') {
-                        row.passing_histroy = JSON.stringify(res.history || []);
-                        row.next_passing_date = res.next_date || '';
-                    } else {
-                        row.insurance_histroy = JSON.stringify(res.history || []);
-                        row.next_insurance_date = res.next_date || '';
+    const runDelete = () => {
+        const fd = new FormData();
+        fd.append('vehicle_id', vehicleId);
+        fd.append('entry_id', entryId);
+        fd.append('type', type);
+        fetch('/VehicleInsuranceController?action=deleteEntry', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status) {
+                    const row = getVehicleRowById(vehicleId);
+                    if (row) {
+                        if (type === 'passing') {
+                            row.passing_histroy = JSON.stringify(res.history || []);
+                            row.next_passing_date = res.next_date || '';
+                        } else {
+                            row.insurance_histroy = JSON.stringify(res.history || []);
+                            row.next_insurance_date = res.next_date || '';
+                        }
                     }
+                    openAddEntryModal(vehicleId, type);
+                    dataTable.ajax.reload(null, false);
+                    Swal.fire('Success', res.message || 'Deleted successfully', 'success');
+                } else {
+                    Swal.fire('Error', res.message || 'Failed to delete', 'error');
                 }
-                openAddEntryModal(vehicleId, type);
-                dataTable.ajax.reload(null, false);
-                Swal.fire('Success', res.message || 'Deleted successfully', 'success');
-            } else {
-                Swal.fire('Error', res.message || 'Failed to delete', 'error');
-            }
+            });
+    };
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Delete Renewal Entry?',
+            text: 'Are you sure you want to delete this last renewal entry?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete'
+        }).then((result) => {
+            if (result.isConfirmed) runDelete();
         });
+    } else if (confirm('Delete this last renewal entry?')) {
+        runDelete();
+    }
 }
 
 $(document).on('click', '#viCancelEditBtn', function() {

@@ -345,6 +345,7 @@ try {
 
     <?php include ROOT_PATH . '/view/templates/vehicles/vehicle_profile_modal.php'; ?>
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
@@ -1883,34 +1884,51 @@ console.log("Loaded bookingMaster:", bookingMaster);
         const idx = parseInt($(this).data('idx'), 10);
         const item = getVipHistoryArray(type)[idx];
         if (!item || !item.id) return;
-        if (!confirm('Delete this last renewal entry?')) return;
 
-        const fd = new FormData();
-        fd.append('vehicle_id', selectedVehicleData.ids);
-        fd.append('entry_id', item.id);
-        fd.append('type', type);
+        const runDelete = () => {
+            const fd = new FormData();
+            fd.append('vehicle_id', selectedVehicleData.ids);
+            fd.append('entry_id', item.id);
+            fd.append('type', type);
 
-        fetch('/VehicleInsuranceController?action=deleteEntry', { method: 'POST', body: fd })
-            .then(r => r.json())
-            .then(res => {
-                if (res.status) {
-                    if (type === 'passing') {
-                        selectedVehicleData.passing_histroy = JSON.stringify(res.history || []);
-                        selectedVehicleData.next_passing_date = res.next_date || '';
-                        $('#vehiclePassingDate').val(res.next_date || '');
+            fetch('/VehicleInsuranceController?action=deleteEntry', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.status) {
+                        if (type === 'passing') {
+                            selectedVehicleData.passing_histroy = JSON.stringify(res.history || []);
+                            selectedVehicleData.next_passing_date = res.next_date || '';
+                            $('#vehiclePassingDate').val(res.next_date || '');
+                        } else {
+                            selectedVehicleData.insurance_histroy = JSON.stringify(res.history || []);
+                            selectedVehicleData.next_insurance_date = res.next_date || '';
+                            $('#vehicleInsuranceExpDate').val(res.next_date || '');
+                        }
+                        prefillVipFromLatest(type);
+                        renderVipHistory(type);
+                        load_master_vehicle_list();
+                        setupDropdown('dropdownContent', 'success', svgSuccess + (res.message || 'Deleted successfully'), 'click');
                     } else {
-                        selectedVehicleData.insurance_histroy = JSON.stringify(res.history || []);
-                        selectedVehicleData.next_insurance_date = res.next_date || '';
-                        $('#vehicleInsuranceExpDate').val(res.next_date || '');
+                        setupDropdown('dropdownContent', 'danger', svgError + (res.message || 'Failed to delete'), 'click');
                     }
-                    prefillVipFromLatest(type);
-                    renderVipHistory(type);
-                    load_master_vehicle_list();
-                    setupDropdown('dropdownContent', 'success', svgSuccess + (res.message || 'Deleted successfully'), 'click');
-                } else {
-                    setupDropdown('dropdownContent', 'danger', svgError + (res.message || 'Failed to delete'), 'click');
-                }
+                });
+        };
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Delete Renewal Entry?',
+                text: 'Are you sure you want to delete this last renewal entry?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Delete'
+            }).then((result) => {
+                if (result.isConfirmed) runDelete();
             });
+        } else if (confirm('Delete this last renewal entry?')) {
+            runDelete();
+        }
     });
 
     $(document).on('click', '#btnOpenInsPassModal', function() {

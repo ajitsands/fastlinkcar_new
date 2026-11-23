@@ -294,13 +294,17 @@
                     data: 'ids',
                     className: 'text-center text-nowrap',
                     render: (id, type, r) => {
-                        const recMatch = [r.receipt_no, r.voucher_no, r.trans_type, r.ref_no]
+                        let recMatch = [r.receipt_no, r.voucher_no, r.trans_type, r.ref_no]
                             .map(x => String(x || '').trim())
-                            .find(x => /\/CM\/|CM\//i.test(x)) || '';
+                            .find(x => /\/CM\/|CM\/|\/REC\/|REC\/|\/RV\/|RV\//i.test(x)) || '';
+                        if (!recMatch && r.description) {
+                            const m = String(r.description).match(/([A-Z]{1,6}\/\d{4}\/[A-Z]{2,6}\/\d+)/i);
+                            if (m) recMatch = m[1];
+                        }
                         const isReceipt = parseFloat(r.credit || 0) > 0 && recMatch !== '';
-                        let btns = '';
+                        let btns = '<div class="d-inline-flex align-items-center gap-1">';
                         if (isReceipt) {
-                            btns += `<button type="button" class="btn btn-sm btn-icon text-primary cl-print-receipt-row" data-receipt="${escHtml(recMatch)}" title="Print Receipt ${escHtml(recMatch)}"><span class="ri-printer-line"></span></button>`;
+                            btns += `<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 cl-print-receipt-row" data-receipt="${escHtml(recMatch)}" title="Print Receipt ${escHtml(recMatch)}"><i class="ri-printer-line me-1"></i>Print</button>`;
                         }
                         if (r.payment_method === 'Cheque') {
                             if (r.cheque_status === 'Pending') {
@@ -311,6 +315,7 @@
                             }
                         }
                         btns += `<button type="button" class="btn btn-sm btn-icon text-danger btn-ledger-delete" data-id="${id}" title="Delete Entry"><span class="ri-delete-bin-line"></span></button>`;
+                        btns += '</div>';
                         return btns;
                     }
                 }

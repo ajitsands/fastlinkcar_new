@@ -52,14 +52,14 @@ class VehiclesController
         $this->filter_date = $data['filter_date'] ?? null;
         $this->vehicle_model  = $data['vehicle_model'] ?? null;
         // Access values
-        $this->vehicleYear = $data['vehicleYear'] ?? null;
-        $this->vehicleColor = $data['vehicleColor'] ?? null;
+        $this->vehicleYear = !empty($data['vehicleYear']) ? intval($data['vehicleYear']) : null;
+        $this->vehicleColor = isset($data['vehicleColor']) && $data['vehicleColor'] !== '' ? $data['vehicleColor'] : null;
         $this->vehicleRegNumber = $data['vehicleNumber'] ?? null;
-        $this->chassisNumber = $data['chassisNumber'] ?? null;
-        $this->vehicleModal = $data['vehicleModel'] ?? null;
-        $this->vehiclePurchaseDate = $data['vehiclePurchaseDate'] ?? null;
-        $this->brand_id = $data['brand_id'] ?? null;
-        $this->category_id = $data['category_id'] ?? null;
+        $this->chassisNumber = isset($data['chassisNumber']) && $data['chassisNumber'] !== '' ? $data['chassisNumber'] : null;
+        $this->vehicleModal = !empty($data['vehicleModel']) ? intval($data['vehicleModel']) : null;
+        $this->vehiclePurchaseDate = !empty($data['vehiclePurchaseDate']) ? $data['vehiclePurchaseDate'] : null;
+        $this->brand_id = !empty($data['brand_id']) ? intval($data['brand_id']) : null;
+        $this->category_id = !empty($data['category_id']) ? intval($data['category_id']) : null;
         $this->modelName = $data['modelName'] ?? null;
         
         $this->vehicle_ids = $data['ids'] ?? null;
@@ -72,10 +72,10 @@ class VehiclesController
         $this->weekly_rent = isset($data['weekly_rent']) && $data['weekly_rent'] !== '' ? floatval($data['weekly_rent']) : 0.000;
         $this->monthly_rent = isset($data['monthly_rent']) && $data['monthly_rent'] !== '' ? floatval($data['monthly_rent']) : 0.000;
         $this->mileage_km = isset($data['mileage_km']) && $data['mileage_km'] !== '' ? intval($data['mileage_km']) : null;
-        $this->body_type = $data['body_type'] ?? null;
-        $this->engine_type = $data['engine_type'] ?? null;
-        $this->capacity_cc = $data['capacity_cc'] ?? null;
-        $this->transmission = $data['transmission'] ?? null;
+        $this->body_type = isset($data['body_type']) && $data['body_type'] !== '' ? $data['body_type'] : null;
+        $this->engine_type = isset($data['engine_type']) && $data['engine_type'] !== '' ? $data['engine_type'] : null;
+        $this->capacity_cc = isset($data['capacity_cc']) && $data['capacity_cc'] !== '' ? $data['capacity_cc'] : null;
+        $this->transmission = isset($data['transmission']) && $data['transmission'] !== '' ? $data['transmission'] : null;
         $this->category = $data['category'] ?? null;
         $this->belongsToCompanyID = !empty($data['belongsToCompanyID']) ? intval($data['belongsToCompanyID']) : ($_SESSION['company_id'] ?? 1);
         $this->belongsToCompanyName = $data['belongsToCompanyName'] ?? null;
@@ -307,11 +307,12 @@ case 'AddVehicleInformationnew':
 
         ]);
     }
+    $errMsg = !empty($response['message']) ? $response['message'] : 'Failed to retrieve vehicle ID';
     echo json_encode([
         'status'     => $Vehicle_id ? true : false,
         'message'    => $Vehicle_id
             ? 'Successfully Added!'
-            : 'Failed to retrieve vehicle ID',
+            : $errMsg,
         'vehicle_id' => $Vehicle_id
     ]);
 

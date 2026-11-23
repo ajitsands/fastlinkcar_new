@@ -192,7 +192,11 @@
                     });
                     $('#lblTotalDebit').text(totDebit.toFixed(3));
                     $('#lblTotalCredit').text(totCredit.toFixed(3));
-                    $('#lblBalance').text((totDebit - totCredit).toFixed(3));
+                    const bal = totDebit - totCredit;
+                    $('#lblBalance').text(bal.toFixed(3));
+                    $('#clTabTotalReceived').text(totCredit.toFixed(3) + ' BHD');
+                    $('#clTabBalanceDue').text(Math.max(0, bal).toFixed(3) + ' BHD');
+                    renderReceiptsTab(rows);
                     return rows;
                 }
             },
@@ -219,6 +223,32 @@
             order: [[0, 'asc']],
             pageLength: 25
         });
+    }
+
+    function renderReceiptsTab(rows) {
+        const credits = (rows || []).filter(r => parseFloat(r.credit || 0) > 0);
+        if (!credits.length) {
+            $('#cl_receipts_tbody').html('<tr><td colspan="6" class="text-center text-muted py-3">No receipts recorded yet.</td></tr>');
+            return;
+        }
+        const html = credits.map(r => {
+            const refCand = String(r.receipt_no || r.voucher_no || r.ref_no || r.trans_type || '').trim();
+            const hasPrint = /\/CM\/|CM\//i.test(refCand);
+            const printBtn = hasPrint
+                ? `<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 cl-print-receipt-row" data-receipt="${escHtml(refCand)}" title="Print ${escHtml(refCand)}"><i class="ri-printer-line"></i></button>`
+                : '<span class="text-muted small">-</span>';
+            return `
+                <tr>
+                    <td class="text-nowrap">${fmtLedgerDate(r.trans_date)}</td>
+                    <td class="fw-semibold">${escHtml(refCand || '-')}</td>
+                    <td><span class="badge bg-label-info">${escHtml(r.payment_method || '-')}</span></td>
+                    <td class="small text-muted">${escHtml(r.description || '-')}</td>
+                    <td class="text-end fw-semibold text-success">${Number(r.credit || 0).toFixed(3)}</td>
+                    <td class="text-center">${printBtn}</td>
+                </tr>
+            `;
+        }).join('');
+        $('#cl_receipts_tbody').html(html);
     }
 
     function openReceiptFromLedger() {
@@ -488,7 +518,13 @@
         }
     });
 
-    $(document).on('click', '#btnLedgerGenerateReceipt, #btnLedgerGenerateReceiptFooter', openReceiptFromLedger);
+    $(document).on('click', '#btnLedgerGenerateReceipt, #btnLedgerGenerateReceiptFooter, #btnLedgerTabGenerateReceipt', openReceiptFromLedger);
+
+    $(document).on('click', '.cl-print-receipt-row', function() {
+        const recNo = $(this).data('receipt');
+        if (!recNo) return;
+        window.open('/CashMemo?print_cm=' + encodeURIComponent(recNo), '_blank');
+    });
 
     // Ensure nested modals (Receipt Voucher, Add Violation Head, Add Fee Head) always stack above #contractLedgerModal
     $(document).on('show.bs.modal', '.modal', function() {

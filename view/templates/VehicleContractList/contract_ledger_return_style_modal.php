@@ -1,16 +1,16 @@
 <div class="modal fade" id="contractLedgerModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:95%;">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:94%;">
     <div class="modal-content border-0 shadow-lg">
 
       <!-- HEADER -->
-      <div class="modal-header custom-modal-header">
+      <div class="modal-header custom-modal-header py-3">
         <div class="d-flex align-items-center flex-wrap gap-2">
           <h5 class="mb-0 text-white fw-bold">
             <i class="ri-book-2-line me-1"></i> Contract Ledger &mdash; Violations &amp; Other Fees
           </h5>
-          <span class="badge bg-white text-primary fw-bold" id="ledger_agreement_ref">-</span>
+          <span class="badge bg-white text-primary fw-bold px-2 py-1" id="ledger_agreement_ref">-</span>
         </div>
-        <div class="d-flex align-items-center gap-2 ms-auto me-2">
+        <div class="d-flex align-items-center gap-2 ms-auto">
           <button type="button" class="btn btn-light btn-sm fw-semibold text-primary" id="btnLedgerGenerateReceipt">
             <i class="ri-receipt-line me-1"></i> Generate Receipt
           </button>
@@ -27,87 +27,100 @@
         <input type="hidden" value="" id="txt_ledger_modal_customer_code">
       </div>
 
-      <div class="modal-body">
+      <div class="modal-body p-3">
         <!-- Contract & Customer Summary Strip -->
-        <div class="row g-2 p-3 mb-3 rounded border bg-light align-items-center small">
-          <div class="col-md-4">
-            <span class="text-muted">Customer:</span>
-            <strong class="ms-1" id="display_customer_name">-</strong>
-          </div>
-          <div class="col-md-2">
-            <span class="text-muted">Mobile:</span>
-            <strong class="ms-1" id="display_mobile">-</strong>
-          </div>
-          <div class="col-md-3">
-            <span class="text-muted">Booking Ref:</span>
-            <strong class="ms-1" id="display_booking_ref">-</strong>
-          </div>
-          <div class="col-md-3">
-            <span class="text-muted">Quotation No:</span>
-            <strong class="ms-1" id="display_quotation_no">-</strong>
+        <div class="card border shadow-none bg-light mb-3">
+          <div class="card-body py-2 px-3">
+            <div class="row g-2 align-items-center small">
+              <div class="col-sm-6 col-lg-4">
+                <span class="text-muted">Customer:</span>
+                <strong class="ms-1 text-dark" id="display_customer_name">-</strong>
+              </div>
+              <div class="col-sm-6 col-lg-2">
+                <span class="text-muted">Mobile:</span>
+                <strong class="ms-1 text-dark" id="display_mobile">-</strong>
+              </div>
+              <div class="col-sm-6 col-lg-3">
+                <span class="text-muted">Booking Ref:</span>
+                <strong class="ms-1 text-dark" id="display_booking_ref">-</strong>
+              </div>
+              <div class="col-sm-6 col-lg-3">
+                <span class="text-muted">Quotation No:</span>
+                <strong class="ms-1 text-dark" id="display_quotation_no">-</strong>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Totals Strip -->
         <div class="row mb-3 g-3">
           <div class="col-md-4">
-            <div class="card summary-card card-total-debit shadow-sm">
-              <div class="card-body py-2 px-3">
-                <span class="text-muted small">Total Debit (Charged)</span>
-                <h4 class="mb-0 fw-bold text-danger" id="lblTotalDebit">0.000</h4>
+            <div class="card summary-card card-total-debit shadow-sm h-100">
+              <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
+                <div>
+                  <span class="text-muted small d-block">Total Debit (Charged)</span>
+                  <h4 class="mb-0 fw-bold text-danger" id="lblTotalDebit">0.000</h4>
+                </div>
+                <i class="ri-arrow-up-circle-line ri-24px text-danger opacity-50"></i>
               </div>
             </div>
           </div>
           <div class="col-md-4">
-            <div class="card summary-card card-total-credit shadow-sm">
-              <div class="card-body py-2 px-3">
-                <span class="text-muted small">Total Credit (Received)</span>
-                <h4 class="mb-0 fw-bold text-success" id="lblTotalCredit">0.000</h4>
+            <div class="card summary-card card-total-credit shadow-sm h-100">
+              <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
+                <div>
+                  <span class="text-muted small d-block">Total Credit (Received)</span>
+                  <h4 class="mb-0 fw-bold text-success" id="lblTotalCredit">0.000</h4>
+                </div>
+                <i class="ri-arrow-down-circle-line ri-24px text-success opacity-50"></i>
               </div>
             </div>
           </div>
           <div class="col-md-4">
-            <div class="card summary-card card-balance shadow-sm">
-              <div class="card-body py-2 px-3">
-                <span class="text-muted small">Current Balance</span>
-                <h4 class="mb-0 fw-bold text-primary" id="lblBalance">0.000</h4>
+            <div class="card summary-card card-balance shadow-sm h-100">
+              <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
+                <div>
+                  <span class="text-muted small d-block">Current Balance</span>
+                  <h4 class="mb-0 fw-bold text-primary" id="lblBalance">0.000</h4>
+                </div>
+                <i class="ri-scales-3-line ri-24px text-primary opacity-50"></i>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Vehicle Violations (Same as Return Modal) -->
+        <!-- Vehicle Violations -->
         <div class="card shadow-sm border mb-3">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-              <div class="d-flex align-items-center gap-3 flex-wrap">
-                <h5 class="mb-0 fw-bold text-danger">Vehicle Violations</h5>
-                <a href="https://services.bahrain.bh" target="_blank" rel="noopener noreferrer" class="text-primary fw-semibold small text-decoration-underline d-inline-flex align-items-center gap-1">
-                  Check Traffic Violations on services.bahrain.bh <i class="ri ri-external-link-line"></i>
-                </a>
-              </div>
-              <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-outline-primary" id="cl_btn_add_violation_head_master">
-                  <i class="ri-add-line me-1"></i> Add Master
-                </button>
-                <button type="button" class="btn btn-sm btn-primary" id="cl_btn_add_violation_row">
-                  <i class="ri-add-line me-1"></i> Add Violation
-                </button>
-              </div>
+          <div class="card-header py-2 px-3 bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <h6 class="mb-0 fw-bold text-danger">
+                <i class="ri-alarm-warning-line me-1"></i> Vehicle Violations
+              </h6>
+              <a href="https://services.bahrain.bh" target="_blank" rel="noopener noreferrer" class="text-primary fw-medium small text-decoration-underline d-inline-flex align-items-center gap-1">
+                Check on services.bahrain.bh <i class="ri-external-link-line"></i>
+              </a>
             </div>
-
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-sm btn-outline-primary" id="cl_btn_add_violation_head_master">
+                <i class="ri-add-line me-1"></i> Add Violation Head
+              </button>
+              <button type="button" class="btn btn-sm btn-primary" id="cl_btn_add_violation_row">
+                <i class="ri-add-line me-1"></i> Add Row
+              </button>
+            </div>
+          </div>
+          <div class="card-body p-3">
             <datalist id="cl_violation_heads_list"></datalist>
-
             <div class="table-responsive">
               <table class="table table-bordered align-middle table-sm mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th width="5%">#</th>
-                    <th width="18%">Violation Date</th>
-                    <th width="30%">Violation Title</th>
-                    <th width="15%">Fees</th>
-                    <th width="24%">Remarks</th>
-                    <th width="8%" class="text-center">Action</th>
+                    <th style="width:45px;" class="text-center">#</th>
+                    <th style="width:150px;">Violation Date</th>
+                    <th style="min-width:220px;">Violation Title</th>
+                    <th style="width:140px;" class="text-end">Fee (BHD)</th>
+                    <th style="min-width:200px;">Remarks</th>
+                    <th style="width:65px;" class="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody id="cl_violations_tbody"></tbody>
@@ -116,34 +129,51 @@
           </div>
         </div>
 
-        <!-- Other Fees Entries (Same as Return Modal) -->
+        <!-- Other Fees Entries -->
         <div class="card shadow-sm border mb-3">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="mb-0 fw-bold" style="color: #1b3d94;">Other Fees Entries</h5>
+          <div class="card-header py-2 px-3 bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <h6 class="mb-0 fw-bold" style="color: #1b3d94;">
+                <i class="ri-price-tag-3-line me-1"></i> Other Fees Entries
+              </h6>
+              <small class="text-muted">Select from Ledger/Pricing Master or type a custom fee. <strong>Charged Amount</strong> is posted to the ledger.</small>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-sm btn-outline-primary" id="cl_btn_add_other_fee_head">
+                <i class="ri-add-line me-1"></i> Add Fee Head
+              </button>
               <button type="button" class="btn btn-sm btn-primary" id="cl_add_other_fee_row">
-                <i class="ri-add-line me-1"></i> Add New
+                <i class="ri-add-line me-1"></i> Add Row
               </button>
             </div>
-
+          </div>
+          <div class="card-body p-3">
+            <datalist id="cl_other_fee_heads_list"></datalist>
             <div class="table-responsive">
               <table class="table table-bordered align-middle table-sm mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th width="5%">#</th>
-                    <th width="30%">Fee Item</th>
-                    <th width="15%">Price</th>
-                    <th width="15%">Actual Amount</th>
-                    <th width="27%">Remarks</th>
-                    <th width="8%" class="text-center">Action</th>
+                    <th style="width:45px;" class="text-center">#</th>
+                    <th style="min-width:220px;">Fee Item (Master / Custom)</th>
+                    <th style="width:140px;" class="text-end">Standard Price</th>
+                    <th style="width:150px;" class="text-end">Charged Amount</th>
+                    <th style="min-width:200px;">Remarks</th>
+                    <th style="width:65px;" class="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody id="cl_other_fee_tbody"></tbody>
               </table>
             </div>
 
-            <div class="d-flex justify-content-end mt-3">
-              <button type="button" class="btn btn-success" id="btnPostLedgerCharges">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-2 border-top">
+              <div class="small text-muted">
+                Pending Violations: <strong class="text-danger" id="clPendingViolationsTotal">0.000</strong> BHD
+                &nbsp;&bull;&nbsp;
+                Pending Other Fees: <strong class="text-primary" id="clPendingFeesTotal">0.000</strong> BHD
+                &nbsp;&bull;&nbsp;
+                Total to Post: <strong class="text-dark" id="clPendingGrandTotal">0.000</strong> BHD
+              </div>
+              <button type="button" class="btn btn-success btn-sm px-3" id="btnPostLedgerCharges">
                 <i class="ri-check-double-line me-1"></i> Post Violations &amp; Other Fees to Ledger
               </button>
             </div>
@@ -151,27 +181,25 @@
         </div>
 
         <!-- Posted Ledger Statement -->
-        <div class="card shadow-sm border">
-          <div class="card-header py-2 d-flex justify-content-between align-items-center bg-light">
+        <div class="card shadow-sm border mb-0">
+          <div class="card-header py-2 px-3 bg-light d-flex justify-content-between align-items-center">
             <h6 class="mb-0 fw-bold" style="color: #1b3d94;">
               <i class="ri-list-check-2 me-1"></i> Posted Ledger Statement
             </h6>
-            <button type="button" class="btn btn-outline-primary btn-sm" id="btnLedgerGenerateReceipt2">
-              <i class="ri-receipt-line me-1"></i> Generate Receipt
-            </button>
+            <span class="text-muted small">All posted debits &amp; receipt credits for this contract</span>
           </div>
-          <div class="card-body p-2">
+          <div class="card-body p-3">
             <div class="table-responsive">
               <table id="tblLedger" class="table table-hover table-sm align-middle mb-0 w-100">
                 <thead class="table-light">
                   <tr>
-                    <th>Date</th>
-                    <th>Type / Method</th>
+                    <th style="width:105px;">Date</th>
+                    <th style="width:190px;">Type / Method</th>
                     <th>Ref / Description</th>
-                    <th class="text-end">Debit</th>
-                    <th class="text-end">Credit</th>
-                    <th class="text-end">Balance</th>
-                    <th class="text-center">Action</th>
+                    <th style="width:110px;" class="text-end">Debit</th>
+                    <th style="width:110px;" class="text-end">Credit</th>
+                    <th style="width:115px;" class="text-end">Balance</th>
+                    <th style="width:65px;" class="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -182,11 +210,11 @@
       </div>
 
       <!-- FOOTER -->
-      <div class="modal-footer justify-content-between">
-        <button type="button" class="btn btn-primary" id="btnLedgerGenerateReceiptFooter">
+      <div class="modal-footer justify-content-between py-2 px-3 bg-light">
+        <button type="button" class="btn btn-primary btn-sm" id="btnLedgerGenerateReceiptFooter">
           <i class="ri-receipt-line me-1"></i> Generate Receipt
         </button>
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -209,6 +237,28 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-sm btn-primary" id="cl_btn_save_violation_head">Save Head</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add New Other Fee Head Master -->
+<div class="modal fade" id="clModalAddFeeHead" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header custom-modal-header py-2">
+        <h6 class="modal-title text-white mb-0">Add Other Fee Head</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="cl_new_fee_head_name" placeholder="e.g. Salik / Fuel / Cleaning">
+          <label for="cl_new_fee_head_name">Fee Head Name</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-sm btn-primary" id="cl_btn_save_fee_head">Save Fee Head</button>
       </div>
     </div>
   </div>

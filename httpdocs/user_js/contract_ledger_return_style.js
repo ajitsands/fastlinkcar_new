@@ -1,6 +1,6 @@
 (function() {
     let ledgerTable = null;
-    let clViolationHeadsMap = {};
+    let clOtherFeeHeadsMap = {};
 
     function escHtml(str) {
         return String(str || '').replace(/[&<>"']/g, s => ({
@@ -33,6 +33,22 @@
         }
     }
 
+    function updatePendingTotals() {
+        let vTot = 0;
+        $('#cl_violations_tbody .cl-v-fee').each(function() {
+            vTot += parseFloat($(this).val() || '0') || 0;
+        });
+        let fTot = 0;
+        $('#cl_other_fee_tbody tr').each(function() {
+            const actual = parseFloat($(this).find('.cl-f-actual').val() || '0') || 0;
+            const price = parseFloat($(this).find('.cl-f-price').val() || '0') || 0;
+            fTot += (actual > 0 ? actual : price);
+        });
+        $('#clPendingViolationsTotal').text(vTot.toFixed(3));
+        $('#clPendingFeesTotal').text(fTot.toFixed(3));
+        $('#clPendingGrandTotal').text((vTot + fTot).toFixed(3));
+    }
+
     function clLoadViolationHeads() {
         $.ajax({
             url: '/ContractListController',
@@ -41,10 +57,8 @@
             data: JSON.stringify({ action: 'getViolationHeads' }),
             success: function(res) {
                 if (res && res.status && Array.isArray(res.data)) {
-                    clViolationHeadsMap = {};
                     let opts = '';
                     res.data.forEach(function(item) {
-                        clViolationHeadsMap[item.head_name] = item.ids;
                         opts += `<option value="${escHtml(item.head_name)}">`;
                     });
                     $('#cl_violation_heads_list').html(opts);
@@ -53,10 +67,30 @@
         });
     }
 
+    function clLoadOtherFeeHeads() {
+        $.get('/CustomerLedgerController', { action: 'GetLedgerHeadsContract' }, function(res) {
+            clOtherFeeHeadsMap = {};
+            let opts = '';
+            if (res && res.status && Array.isArray(res.data)) {
+                res.data.forEach(function(head) {
+                    if (String(head.head_type || '').toLowerCase() === 'debit') {
+                        clOtherFeeHeadsMap[String(head.text || '').trim()] = {
+                            id: head.id,
+                            ledger_type: head.ledger_type || 'No'
+                        };
+                        opts += `<option value="${escHtml(head.text)}">`;
+                    }
+                });
+            }
+            $('#cl_other_fee_heads_list').html(opts);
+        }, 'json');
+    }
+
     function clRenumberViolations() {
         $('#cl_violations_tbody tr').each(function(idx) {
             $(this).find('.cl-v-num').text(idx + 1);
         });
+        updatePendingTotals();
     }
 
     function clAddViolationRow(vdate = '', title = '', fee = '', remarks = '') {
@@ -64,12 +98,12 @@
         const rowCount = $('#cl_violations_tbody tr').length + 1;
         const $row = $(`
             <tr>
-                <td class="text-center cl-v-num">${rowCount}</td>
-                <td><input type="date" class="form-control form-control-sm cl-v-date" value="${escHtml(dVal)}"></td>
-                <td><input type="text" list="cl_violation_heads_list" class="form-control form-control-sm cl-v-title" placeholder="Search / select violation title" value="${escHtml(title)}"></td>
-                <td><input type="text" inputmode="decimal" class="form-control form-control-sm cl-v-fee" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="0.000" value="${escHtml(fee)}"></td>
-                <td><textarea class="form-control form-control-sm cl-v-remarks" rows="1" placeholder="Enter remarks">${escHtml(remarks)}</textarea></td>
-                <td class="text-center">
+                <td class="text-center align-middle cl-v-num">${rowCount}</td>
+                <td class="align-middle"><input type="date" class="form-control form-control-sm cl-v-date" value="${escHtml(dVal)}"></td>
+                <td class="align-middle"><input type="text" list="cl_violation_heads_list" class="form-control form-control-sm cl-v-title" placeholder="Search / select violation" value="${escHtml(title)}"></td>
+                <td class="align-middle"><input type="text" inputmode="decimal" class="form-control form-control-sm text-end cl-v-fee" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="0.000" value="${escHtml(fee)}"></td>
+                <td class="align-middle"><input type="text" class="form-control form-control-sm cl-v-remarks" placeholder="Enter remarks" value="${escHtml(remarks)}"></td>
+                <td class="text-center align-middle">
                     <button type="button" class="btn btn-sm btn-outline-danger cl-btn-remove-v px-2 py-1" title="Remove">
                         <i class="ri-delete-bin-line"></i>
                     </button>
@@ -85,18 +119,19 @@
         $('#cl_other_fee_tbody tr').each(function(idx) {
             $(this).find('.cl-f-num').text(idx + 1);
         });
+        updatePendingTotals();
     }
 
     function clAddOtherFeeRow(item = '', price = '', actualAmount = '', remarks = '') {
         const rowCount = $('#cl_other_fee_tbody tr').length + 1;
         const $row = $(`
             <tr>
-                <td class="text-center cl-f-num">${rowCount}</td>
-                <td><input type="text" class="form-control form-control-sm cl-f-item" placeholder="Fee Item" value="${escHtml(item)}"></td>
-                <td><input type="text" inputmode="decimal" class="form-control form-control-sm cl-f-price" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="0.000" value="${escHtml(price)}"></td>
-                <td><input type="text" inputmode="decimal" class="form-control form-control-sm cl-f-actual" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="0.000" value="${escHtml(actualAmount)}"></td>
-                <td><textarea class="form-control form-control-sm cl-f-remarks" rows="1" placeholder="Enter remarks">${escHtml(remarks)}</textarea></td>
-                <td class="text-center">
+                <td class="text-center align-middle cl-f-num">${rowCount}</td>
+                <td class="align-middle"><input type="text" list="cl_other_fee_heads_list" class="form-control form-control-sm cl-f-item" placeholder="Select or type fee item" value="${escHtml(item)}"></td>
+                <td class="align-middle"><input type="text" inputmode="decimal" class="form-control form-control-sm text-end cl-f-price" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="0.000" value="${escHtml(price)}"></td>
+                <td class="align-middle"><input type="text" inputmode="decimal" class="form-control form-control-sm text-end cl-f-actual" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="0.000" value="${escHtml(actualAmount)}"></td>
+                <td class="align-middle"><input type="text" class="form-control form-control-sm cl-f-remarks" placeholder="Enter remarks" value="${escHtml(remarks)}"></td>
+                <td class="text-center align-middle">
                     <button type="button" class="btn btn-sm btn-outline-danger cl-btn-remove-f px-2 py-1" title="Remove">
                         <i class="ri-delete-bin-line"></i>
                     </button>
@@ -131,19 +166,19 @@
                 }
             },
             columns: [
-                { data: 'trans_date', render: v => fmtLedgerDate(v) },
-                { data: null, render: r => `<div class="fw-bold">${escHtml(r.trans_type || '')}</div><small class="text-muted">${escHtml(r.payment_method || '')}</small>` },
+                { data: 'trans_date', className: 'text-nowrap', render: v => fmtLedgerDate(v) },
+                { data: null, render: r => `<div class="fw-semibold">${escHtml(r.trans_type || '')}</div><small class="text-muted">${escHtml(r.payment_method || '')}</small>` },
                 {
                     data: null,
                     render: r => {
-                        let out = `<div class="fw-bold">${escHtml(r.ref_no || '-')}${r.cheque_date ? `<span class="text-info fw-normal ms-2" style="font-size:11px">(${fmtLedgerDate(r.cheque_date)})</span>` : ''}</div>`;
+                        let out = `<div class="fw-semibold">${escHtml(r.ref_no || '-')}${r.cheque_date ? `<span class="text-info fw-normal ms-2" style="font-size:11px">(${fmtLedgerDate(r.cheque_date)})</span>` : ''}</div>`;
                         if (r.description) out += `<div style="font-size:11px" class="text-muted">${escHtml(r.description)}</div>`;
                         return out;
                     }
                 },
-                { data: 'debit', className: 'text-end text-danger', render: v => Number(v) > 0 ? parseFloat(v).toFixed(3) : '-' },
-                { data: 'credit', className: 'text-end text-success', render: v => Number(v) > 0 ? parseFloat(v).toFixed(3) : '-' },
-                { data: 'running_balance', className: 'text-end fw-bold', render: v => `<span class="${Number(v) >= 0 ? 'text-primary' : 'text-danger'}">${Number(v || 0).toFixed(3)}</span>` },
+                { data: 'debit', className: 'text-end text-danger text-nowrap', render: v => Number(v) > 0 ? parseFloat(v).toFixed(3) : '-' },
+                { data: 'credit', className: 'text-end text-success text-nowrap', render: v => Number(v) > 0 ? parseFloat(v).toFixed(3) : '-' },
+                { data: 'running_balance', className: 'text-end fw-bold text-nowrap', render: v => `<span class="${Number(v) >= 0 ? 'text-primary' : 'text-danger'}">${Number(v || 0).toFixed(3)}</span>` },
                 {
                     data: 'ids',
                     className: 'text-center',
@@ -172,6 +207,7 @@
         $('#cl_violations_tbody').empty();
         $('#cl_other_fee_tbody').empty();
         clLoadViolationHeads();
+        clLoadOtherFeeHeads();
 
         $.ajax({
             url: '/ContractListController',
@@ -207,6 +243,27 @@
         });
     });
 
+    // Auto-fill standard price when selecting a pricing master fee item
+    $(document).on('change', '.cl-f-item', function() {
+        const $row = $(this).closest('tr');
+        const itemName = $.trim($(this).val());
+        const meta = clOtherFeeHeadsMap[itemName];
+        const modelId = $('#txt_ledger_modal_model_ids').val();
+        if (meta && meta.ledger_type === 'Yes' && modelId) {
+            $.post('/CustomerLedgerController', { action: 'getmodel_price', model_ids: modelId, head_ids: meta.id }, function(res) {
+                if (res && res.status && res.data && res.data.length > 0) {
+                    const amt = parseFloat(res.data[0].amount || 0).toFixed(3);
+                    $row.find('.cl-f-price').val(amt);
+                    if (!$row.find('.cl-f-actual').val()) {
+                        $row.find('.cl-f-actual').val(amt);
+                    }
+                    updatePendingTotals();
+                }
+            }, 'json');
+        }
+    });
+
+    $(document).on('input', '.cl-v-fee, .cl-f-price, .cl-f-actual', updatePendingTotals);
     $(document).on('click', '#cl_btn_add_violation_row', function() { clAddViolationRow(); });
     $(document).on('click', '.cl-btn-remove-v', function() { $(this).closest('tr').remove(); clRenumberViolations(); });
     $(document).on('click', '#cl_add_other_fee_row', function() { clAddOtherFeeRow(); });
@@ -239,6 +296,29 @@
                 }
             }
         });
+    });
+
+    $(document).on('click', '#cl_btn_add_other_fee_head', function() {
+        $('#cl_new_fee_head_name').val('');
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('clModalAddFeeHead')).show();
+        setTimeout(() => $('#cl_new_fee_head_name').focus(), 250);
+    });
+
+    $(document).on('click', '#cl_btn_save_fee_head', function() {
+        const headName = $.trim($('#cl_new_fee_head_name').val());
+        if (!headName) {
+            notifyLedger('Please enter a fee head name.', 'error');
+            return;
+        }
+        $.post('/CustomerLedgerController', { action: 'SaveLedgerHead', head_name: headName, head_type: 'Debit' }, function(res) {
+            if (res && res.status) {
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('clModalAddFeeHead')).hide();
+                clLoadOtherFeeHeads();
+                notifyLedger('Other fee head saved.', 'success');
+            } else {
+                notifyLedger((res && res.message) || 'Failed to save fee head.', 'error');
+            }
+        }, 'json');
     });
 
     $(document).on('click', '#btnPostLedgerCharges', function() {
@@ -288,6 +368,7 @@
                 if (res && res.status === 'success') {
                     $('#cl_violations_tbody').empty();
                     $('#cl_other_fee_tbody').empty();
+                    updatePendingTotals();
                     refreshContractLedger(cid);
                     $('#btnRefreshActive').trigger('click');
                     notifyLedger(res.message || 'Posted to Contract Ledger.', 'success');
@@ -328,9 +409,9 @@
         }
     });
 
-    $(document).on('click', '#btnLedgerGenerateReceipt, #btnLedgerGenerateReceipt2, #btnLedgerGenerateReceiptFooter', openReceiptFromLedger);
+    $(document).on('click', '#btnLedgerGenerateReceipt, #btnLedgerGenerateReceiptFooter', openReceiptFromLedger);
 
-    // Ensure nested modals (Receipt Voucher, Add Violation Head) always stack above #contractLedgerModal
+    // Ensure nested modals (Receipt Voucher, Add Violation Head, Add Fee Head) always stack above #contractLedgerModal
     $(document).on('show.bs.modal', '.modal', function() {
         let maxZ = 1090;
         document.querySelectorAll('.modal.show').forEach(function(el) {
@@ -347,7 +428,7 @@
         }, 0);
     });
 
-    $(document).on('hidden.bs.modal', '#returnReceiptVoucherModal, #clModalAddViolationHead', function() {
+    $(document).on('hidden.bs.modal', '#returnReceiptVoucherModal, #clModalAddViolationHead, #clModalAddFeeHead', function() {
         if ($('#contractLedgerModal').hasClass('show')) {
             document.body.classList.add('modal-open');
             if (this.id === 'returnReceiptVoucherModal') {

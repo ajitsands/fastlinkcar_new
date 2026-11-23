@@ -56,21 +56,13 @@
               <input type="text" id="rr_car_type" class="form-control form-control-sm bg-white" readonly>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-6">
               <label class="form-label form-label-sm mb-1 fw-semibold">Receipt No.</label>
               <input type="text" id="rr_receipt_no" class="form-control form-control-sm bg-white fw-bold text-primary" value="Auto (Sequential)" readonly>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-6">
               <label class="form-label form-label-sm mb-1 fw-semibold">Receipt Date</label>
               <input type="date" id="rr_receipt_date" class="form-control form-control-sm" value="<?php echo date('Y-m-d'); ?>">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label form-label-sm mb-1 fw-semibold">From Date</label>
-              <input type="date" id="rr_from_date" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label form-label-sm mb-1 fw-semibold">To Date</label>
-              <input type="date" id="rr_to_date" class="form-control form-control-sm">
             </div>
 
             <div class="col-md-3">

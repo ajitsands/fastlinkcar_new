@@ -136,11 +136,6 @@ window.ReturnReceiptModal = (function () {
                 $('#rr_vehicle_no').val(c.vehicle_no || veh.vehicle_number || '');
                 $('#rr_vehicle_color').val(veh.vehicle_color || '');
                 $('#rr_car_type').val([veh.model_names || '', c.vehicle_no || veh.vehicle_number || ''].filter(Boolean).join(' - '));
-
-                if (c.service_start_date_time) $('#rr_from_date').val(String(c.service_start_date_time).substring(0, 10));
-                if (c.return_date || c.service_end_date_time) {
-                    $('#rr_to_date').val(String(c.return_date || c.service_end_date_time).substring(0, 10));
-                }
             }
         });
 

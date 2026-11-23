@@ -167,21 +167,13 @@
 
                 <div class="p-3 rounded border mb-2" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
                   <div class="row g-2">
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                       <label class="form-label form-label-sm mb-1 fw-semibold">Receipt No.</label>
                       <input type="text" id="cl_rr_receipt_no" class="form-control form-control-sm bg-white fw-bold text-primary" value="Auto (Sequential)" readonly>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                       <label class="form-label form-label-sm mb-1 fw-semibold">Receipt Date</label>
                       <input type="date" id="cl_rr_receipt_date" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>">
-                    </div>
-                    <div class="col-md-3">
-                      <label class="form-label form-label-sm mb-1 fw-semibold">From Date</label>
-                      <input type="date" id="cl_rr_from_date" class="form-control form-control-sm">
-                    </div>
-                    <div class="col-md-3">
-                      <label class="form-label form-label-sm mb-1 fw-semibold">To Date</label>
-                      <input type="date" id="cl_rr_to_date" class="form-control form-control-sm">
                     </div>
 
                     <div class="col-md-3">

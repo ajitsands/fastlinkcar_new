@@ -393,10 +393,6 @@
                 $('#cl_rr_vehicle_no').val(contract.vehicle_no || veh.vehicle_number || '');
                 $('#cl_rr_vehicle_color').val(veh.vehicle_color || '');
                 $('#cl_rr_car_type').val([veh.model_names || '', contract.vehicle_no || veh.vehicle_number || ''].filter(Boolean).join(' - '));
-                if (contract.service_start_date_time) $('#cl_rr_from_date').val(String(contract.service_start_date_time).substring(0, 10));
-                if (contract.return_date || contract.service_end_date_time) {
-                    $('#cl_rr_to_date').val(String(contract.return_date || contract.service_end_date_time).substring(0, 10));
-                }
 
                 clAddViolationRow();
                 clAddOtherFeeRow();

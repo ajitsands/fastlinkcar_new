@@ -1968,10 +1968,11 @@ console.log("Loaded bookingMaster:", bookingMaster);
                         if (res.history) selectedVehicleData.insurance_histroy = JSON.stringify(res.history);
                         $('#vehicleInsuranceExpDate').val(dateVal);
                     }
+                    prefillVipFromLatest(type);
+                    $('#vip_attachment').val('');
                     renderVipHistory(type);
                     load_master_vehicle_list();
                     setupDropdown('dropdownContent', 'success', svgSuccess + (res.message || 'Saved successfully'), 'click');
-                    bootstrap.Modal.getInstance(document.getElementById('vehicleInsPassModal')).hide();
                 } else {
                     setupDropdown('dropdownContent', 'danger', svgError + (res.message || 'Failed to save'), 'click');
                 }

@@ -450,9 +450,12 @@ function submitAddEntry() {
         contentType: false,
         success: function(response) {
             if (response.status) {
-                $('#addEntryModal').modal('hide');
-                Swal.fire('Success', response.message, 'success');
+                const vehicleId = $('#entryVehicleId').val();
                 dataTable.ajax.reload(null, false); // reload without resetting pagination
+                if (vehicleId) {
+                    openAddEntryModal(vehicleId, type);
+                }
+                Swal.fire({ icon: 'success', title: 'Success', text: response.message, timer: 1500, showConfirmButton: false });
             } else {
                 Swal.fire('Error', response.message, 'error');
             }

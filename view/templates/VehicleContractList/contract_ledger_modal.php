@@ -192,11 +192,16 @@
                             <!-- Ledger Table Card -->
                             <div class="col-lg-8">
                                 <div class="card ledger-card shadow-sm">
-                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                                         <h5 class="mb-0">Ledger Statement</h5>
-                                        <button type="button" class="btn btn-outline-primary" id="btnOpenCalendar">
-                                            <span class="ri-calendar-line me-1"></span> Cheque Calendar
-                                        </button>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-primary btn-sm" id="btnLedgerGenerateReceipt">
+                                                <i class="ri-receipt-line me-1"></i> Generate Receipt
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnOpenCalendar">
+                                                <span class="ri-calendar-line me-1"></span> Cheque Calendar
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="card-body">
                                         <div class="table-responsive">

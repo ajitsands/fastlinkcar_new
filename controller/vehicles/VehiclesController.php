@@ -420,7 +420,7 @@ break;
                         'Bookings'              => "SELECT vehicle_id AS vid, COUNT(*) AS cnt FROM tbl_vehicle_bookings WHERE vehicle_id IN ({$inVeh}) GROUP BY vehicle_id",
                         'Maintenance Requests'  => "SELECT vehicle_id AS vid, COUNT(*) AS cnt FROM tbl_maintenance_requests WHERE vehicle_id IN ({$inVeh}) GROUP BY vehicle_id",
                         'Staff Use'             => "SELECT vehicle_id AS vid, COUNT(*) AS cnt FROM tbl_vehicle_non_revenue_ticket WHERE vehicle_id IN ({$inVeh}) GROUP BY vehicle_id",
-                        'Movement Logs'         => "SELECT vehicle_ids AS vid, COUNT(*) AS cnt FROM tbl_vehicle_log_movement WHERE vehicle_ids IN ({$inVeh}) GROUP BY vehicle_ids",
+                        'Movement Logs'         => "SELECT vehicle_ids AS vid, COUNT(*) AS cnt FROM tbl_vehicle_log_movement WHERE vehicle_ids IN ({$inVeh}) AND (action_type IS NULL OR action_type != 'Vehicle Added') GROUP BY vehicle_ids",
                     ];
                     foreach ($txQueries as $label => $qSql) {
                         try {
@@ -465,7 +465,7 @@ break;
                     'Bookings'             => "SELECT COUNT(*) FROM tbl_vehicle_bookings WHERE vehicle_id = ?",
                     'Maintenance Requests' => "SELECT COUNT(*) FROM tbl_maintenance_requests WHERE vehicle_id = ?",
                     'Staff Use'            => "SELECT COUNT(*) FROM tbl_vehicle_non_revenue_ticket WHERE vehicle_id = ?",
-                    'Movement Logs'        => "SELECT COUNT(*) FROM tbl_vehicle_log_movement WHERE vehicle_ids = ?",
+                    'Movement Logs'        => "SELECT COUNT(*) FROM tbl_vehicle_log_movement WHERE vehicle_ids = ? AND (action_type IS NULL OR action_type != 'Vehicle Added')",
                 ];
                 $foundSources = [];
                 foreach ($txChecks as $label => $cSql) {
@@ -489,6 +489,12 @@ break;
 
                 $delStmt = $this->varPDOModelObj->varDBPDO->prepare("DELETE FROM tbl_vehicles WHERE ids = ?");
                 $ok = $delStmt->execute([$vehicleId]);
+                if ($ok) {
+                    try {
+                        $delLog = $this->varPDOModelObj->varDBPDO->prepare("DELETE FROM tbl_vehicle_log_movement WHERE vehicle_ids = ? AND action_type = 'Vehicle Added'");
+                        $delLog->execute([$vehicleId]);
+                    } catch (Exception $eDelLog) {}
+                }
                 echo json_encode([
                     'status' => (bool)$ok,
                     'message' => $ok ? 'Vehicle deleted successfully.' : 'Failed to delete vehicle.'

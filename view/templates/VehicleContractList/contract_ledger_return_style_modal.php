@@ -33,12 +33,12 @@
           <div class="card-header bg-white pb-0 pt-2 px-3 border-bottom">
             <ul class="nav nav-tabs card-header-tabs" id="clSectionTabs" role="tablist">
               <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-semibold" id="cl-tab-payments-btn" data-bs-toggle="tab" data-bs-target="#clTabPayments" type="button" role="tab" aria-controls="clTabPayments" aria-selected="true">
+                <button class="nav-link active fw-bold fs-5 py-2 px-3" id="cl-tab-payments-btn" data-bs-toggle="tab" data-bs-target="#clTabPayments" type="button" role="tab" aria-controls="clTabPayments" aria-selected="true">
                   <i class="ri-money-dollar-circle-line me-1"></i> Payments (Violations &amp; Other Fees)
                 </button>
               </li>
               <li class="nav-item" role="presentation">
-                <button class="nav-link fw-semibold" id="cl-tab-receipts-btn" data-bs-toggle="tab" data-bs-target="#clTabReceipts" type="button" role="tab" aria-controls="clTabReceipts" aria-selected="false">
+                <button class="nav-link fw-bold fs-5 py-2 px-3" id="cl-tab-receipts-btn" data-bs-toggle="tab" data-bs-target="#clTabReceipts" type="button" role="tab" aria-controls="clTabReceipts" aria-selected="false">
                   <i class="ri-receipt-line me-1"></i> Receipts
                 </button>
               </li>
@@ -176,9 +176,9 @@
         <!-- SECTION 3 (COMMON): CONTRACT LEDGER POSTINGS -->
         <div class="card shadow-sm border mb-0">
           <div class="card-header py-2 px-3 bg-light d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-bold" style="color: #1b3d94;">
+            <h5 class="mb-0 fw-bold fs-5" style="color: #1b3d94;">
               <i class="ri-list-check-2 me-1"></i> Contract Ledger Postings
-            </h6>
+            </h5>
             <span class="text-muted small">All posted debits &amp; receipt credits for this contract</span>
           </div>
           <div class="card-body p-3">

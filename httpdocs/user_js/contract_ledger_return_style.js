@@ -51,20 +51,49 @@
 
     function clLoadViolationHeads() {
         $.ajax({
-            url: '/ContractListController',
+            url: '/ActiveContractsDashboardController',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ action: 'getViolationHeads' }),
+            data: JSON.stringify({ action: 'get_violation_heads' }),
             success: function(res) {
-                if (res && res.status && Array.isArray(res.data)) {
-                    let opts = '';
-                    res.data.forEach(function(item) {
-                        opts += `<option value="${escHtml(item.head_name)}">`;
-                    });
-                    $('#cl_violation_heads_list').html(opts);
-                }
+                const rows = (res && res.status === 'success' && Array.isArray(res.data)) ? res.data : [];
+                let opts = '';
+                rows.forEach(function(item) {
+                    opts += `<option value="${escHtml(item.head_name)}">`;
+                });
+                $('#cl_violation_heads_list').html(opts);
+                renderViolationMasterTable(rows);
             }
         });
+    }
+
+    function renderViolationMasterTable(rows) {
+        if (!Array.isArray(rows) || rows.length === 0) {
+            $('#cl_violation_master_tbody').html('<tr><td colspan="4" class="text-center text-muted py-3">No violation heads configured yet.</td></tr>');
+            return;
+        }
+        const html = rows.map(function(h, idx) {
+            const txCount = parseInt(h.tx_count || 0, 10);
+            const canDelete = (parseInt(h.is_locked || 0, 10) === 0 && txCount === 0);
+            const txBadge = txCount > 0
+                ? `<span class="badge bg-label-warning">${txCount} used</span>`
+                : `<span class="badge bg-label-success">0</span>`;
+            const delBtn = canDelete
+                ? `<button type="button" class="btn btn-sm btn-icon text-danger cl-btn-del-violation-head" data-id="${h.ids}" title="Delete"><i class="ri-delete-bin-line"></i></button>`
+                : `<button type="button" class="btn btn-sm btn-icon text-muted" disabled title="Cannot delete: transactions exist"><i class="ri-delete-bin-line"></i></button>`;
+            return `
+                <tr>
+                    <td class="text-center">${idx + 1}</td>
+                    <td class="fw-semibold">${escHtml(h.head_name)}</td>
+                    <td class="text-center">${txBadge}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-icon text-primary cl-btn-edit-violation-head" data-id="${h.ids}" data-name="${escHtml(h.head_name)}" title="Edit"><i class="ri-edit-line"></i></button>
+                        ${delBtn}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        $('#cl_violation_master_tbody').html(html);
     }
 
     function clLoadOtherFeeHeads() {
@@ -100,9 +129,9 @@
             const editBtn = isLedgerMaster
                 ? `<button type="button" class="btn btn-sm btn-icon text-primary cl-btn-edit-fee-head" data-id="${h.ids}" data-name="${escHtml(h.head_name)}" data-price="${escHtml(h.standard_price)}" title="Edit Price"><i class="ri-edit-line"></i></button>`
                 : '';
-            const delBtn = (isLedgerMaster && parseInt(h.is_locked, 10) === 0)
+            const delBtn = (isLedgerMaster && parseInt(h.is_locked, 10) === 0 && parseInt(h.tx_count || 0, 10) === 0)
                 ? `<button type="button" class="btn btn-sm btn-icon text-danger cl-btn-del-fee-head" data-id="${h.ids}" title="Delete"><i class="ri-delete-bin-line"></i></button>`
-                : '';
+                : (isLedgerMaster ? `<button type="button" class="btn btn-sm btn-icon text-muted" disabled title="Cannot delete: transactions exist"><i class="ri-delete-bin-line"></i></button>` : '');
             const badgeCls = h.source === 'Pricing Master' ? 'bg-label-info' : 'bg-label-primary';
             return `
                 <tr>
@@ -326,28 +355,79 @@
     $(document).on('click', '#cl_add_other_fee_row', function() { clAddOtherFeeRow(); });
     $(document).on('click', '.cl-btn-remove-f', function() { $(this).closest('tr').remove(); clRenumberFees(); });
 
-    $(document).on('click', '#cl_btn_add_violation_head_master', function() {
+    function resetViolationHeadForm() {
+        $('#cl_edit_violation_head_id').val('0');
         $('#cl_new_violation_head_name').val('');
+        $('#cl_btn_save_violation_head').html('<i class="ri-save-line me-1"></i> Save');
+        $('#cl_btn_cancel_edit_violation_head').addClass('d-none');
+    }
+
+    $(document).on('click', '#cl_btn_add_violation_head_master', function() {
+        resetViolationHeadForm();
+        clLoadViolationHeads();
         bootstrap.Modal.getOrCreateInstance(document.getElementById('clModalAddViolationHead')).show();
         setTimeout(() => $('#cl_new_violation_head_name').focus(), 250);
     });
 
+    $(document).on('click', '#cl_btn_cancel_edit_violation_head', resetViolationHeadForm);
+
+    $(document).on('click', '.cl-btn-edit-violation-head', function() {
+        $('#cl_edit_violation_head_id').val($(this).data('id'));
+        $('#cl_new_violation_head_name').val($(this).data('name'));
+        $('#cl_btn_save_violation_head').html('<i class="ri-save-line me-1"></i> Update');
+        $('#cl_btn_cancel_edit_violation_head').removeClass('d-none');
+        $('#cl_new_violation_head_name').focus();
+    });
+
+    $(document).on('click', '.cl-btn-del-violation-head', function() {
+        const id = parseInt($(this).data('id'), 10);
+        if (!id) return;
+        const doDel = () => {
+            $.ajax({
+                url: '/ActiveContractsDashboardController',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ action: 'delete_violation_head', ids: id }),
+                success: function(res) {
+                    if (res && res.status === 'success') {
+                        clLoadViolationHeads();
+                        notifyLedger('Violation head deleted.', 'success');
+                    } else {
+                        notifyLedger((res && res.message) || 'Failed to delete violation head.', 'error');
+                    }
+                }
+            });
+        };
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Delete Violation Head?',
+                text: 'This violation head has no transactions and will be permanently removed.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete'
+            }).then(r => { if (r.isConfirmed) doDel(); });
+        } else if (confirm('Delete this violation head?')) {
+            doDel();
+        }
+    });
+
     $(document).on('click', '#cl_btn_save_violation_head', function() {
+        const headId = parseInt($('#cl_edit_violation_head_id').val() || '0', 10) || 0;
         const headName = $.trim($('#cl_new_violation_head_name').val());
         if (!headName) {
             notifyLedger('Please enter a violation head name.', 'error');
             return;
         }
         $.ajax({
-            url: '/ContractListController',
+            url: '/ActiveContractsDashboardController',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ action: 'saveViolationHead', head_name: headName }),
+            data: JSON.stringify({ action: 'save_violation_head', ids: headId, head_name: headName }),
             success: function(res) {
-                if (res && res.status) {
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById('clModalAddViolationHead')).hide();
+                if (res && res.status === 'success') {
+                    resetViolationHeadForm();
                     clLoadViolationHeads();
-                    notifyLedger('Violation head saved.', 'success');
+                    notifyLedger(res.message || 'Violation head saved.', 'success');
                 } else {
                     notifyLedger((res && res.message) || 'Failed to save violation head.', 'error');
                 }

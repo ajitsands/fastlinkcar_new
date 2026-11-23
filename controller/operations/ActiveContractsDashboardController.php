@@ -166,10 +166,11 @@ try {
             $heads = [];
 
             $stHeads = $pdo->query("
-                SELECT ids, head_name, COALESCE(standard_price, 0.000) AS standard_price, COALESCE(is_locked, 0) AS is_locked
-                FROM tbl_ledger_heads
-                WHERE head_type = 'Debit' AND COALESCE(violation_fine_type, 'No') <> 'Yes'
-                ORDER BY head_name ASC
+                SELECT h.ids, h.head_name, COALESCE(h.standard_price, 0.000) AS standard_price, COALESCE(h.is_locked, 0) AS is_locked,
+                       (SELECT COUNT(*) FROM tbl_customer_ledger l WHERE l.trans_type = h.head_name OR l.trans_type = CONCAT('Other Fee: ', h.head_name)) AS tx_count
+                FROM tbl_ledger_heads h
+                WHERE h.head_type = 'Debit' AND COALESCE(h.violation_fine_type, 'No') <> 'Yes'
+                ORDER BY h.head_name ASC
             ");
             if ($stHeads) {
                 while ($r = $stHeads->fetch(PDO::FETCH_ASSOC)) {
@@ -178,6 +179,7 @@ try {
                         'head_name' => $r['head_name'],
                         'standard_price' => number_format((float)$r['standard_price'], 3, '.', ''),
                         'is_locked' => (int)$r['is_locked'],
+                        'tx_count' => (int)$r['tx_count'],
                         'source' => 'Ledger Master'
                     ];
                 }
@@ -256,9 +258,102 @@ try {
                 echo json_encode(['status' => 'error', 'message' => 'Invalid fee head ID.']);
                 exit;
             }
+            $stChk = $pdo->prepare("
+                SELECT h.head_name, COALESCE(h.is_locked, 0) AS is_locked,
+                       (SELECT COUNT(*) FROM tbl_customer_ledger l WHERE l.trans_type = h.head_name OR l.trans_type = CONCAT('Other Fee: ', h.head_name)) AS tx_count
+                FROM tbl_ledger_heads h WHERE h.ids = ? LIMIT 1
+            ");
+            $stChk->execute([$headId]);
+            $hRow = $stChk->fetch(PDO::FETCH_ASSOC);
+            if (!$hRow) {
+                echo json_encode(['status' => 'error', 'message' => 'Fee head not found.']);
+                exit;
+            }
+            if ((int)$hRow['is_locked'] === 1 || (int)$hRow['tx_count'] > 0) {
+                echo json_encode(['status' => 'error', 'message' => 'Cannot delete: transactions exist for this fee head.']);
+                exit;
+            }
             $stDel = $pdo->prepare("DELETE FROM tbl_ledger_heads WHERE ids = ? AND COALESCE(is_locked, 0) = 0");
             $stDel->execute([$headId]);
             echo json_encode(['status' => 'success', 'message' => 'Fee head deleted.']);
+            exit;
+        }
+
+        if ($postAction === 'get_violation_heads') {
+            $stVh = $pdo->query("
+                SELECT h.ids, h.head_name, COALESCE(h.is_locked, 0) AS is_locked,
+                       (SELECT COUNT(*) FROM tbl_customer_ledger l WHERE l.trans_type = h.head_name OR l.trans_type = CONCAT('Traffic Violation: ', h.head_name)) AS ledger_cnt,
+                       (SELECT COUNT(*) FROM tbl_vehicle_rentout_contracts c WHERE c.violations_json IS NOT NULL AND c.violations_json LIKE CONCAT('%', h.head_name, '%')) AS contract_cnt
+                FROM tbl_ledger_heads h
+                WHERE h.violation_fine_type = 'Yes'
+                ORDER BY h.head_name ASC
+            ");
+            $rows = [];
+            if ($stVh) {
+                while ($r = $stVh->fetch(PDO::FETCH_ASSOC)) {
+                    $txCount = (int)$r['ledger_cnt'] + (int)$r['contract_cnt'];
+                    $rows[] = [
+                        'ids' => (int)$r['ids'],
+                        'head_name' => $r['head_name'],
+                        'is_locked' => (int)$r['is_locked'],
+                        'tx_count' => $txCount
+                    ];
+                }
+            }
+            echo json_encode(['status' => 'success', 'data' => $rows]);
+            exit;
+        }
+
+        if ($postAction === 'save_violation_head') {
+            $headId = (int)($postInput['ids'] ?? 0);
+            $headName = trim((string)($postInput['head_name'] ?? ''));
+            $companyId = (int)($_SESSION['company_id'] ?? 1);
+            if ($headName === '') {
+                echo json_encode(['status' => 'error', 'message' => 'Violation head name is required.']);
+                exit;
+            }
+            if ($headId > 0) {
+                $stUpd = $pdo->prepare("UPDATE tbl_ledger_heads SET head_name = ? WHERE ids = ? AND violation_fine_type = 'Yes'");
+                $stUpd->execute([$headName, $headId]);
+            } else {
+                $stIns = $pdo->prepare("
+                    INSERT INTO tbl_ledger_heads (head_name, head_type, violation_fine_type, is_locked, company_id)
+                    VALUES (?, 'Debit', 'Yes', 0, ?)
+                    ON DUPLICATE KEY UPDATE violation_fine_type = 'Yes'
+                ");
+                $stIns->execute([$headName, $companyId]);
+            }
+            echo json_encode(['status' => 'success', 'message' => 'Violation head saved successfully.']);
+            exit;
+        }
+
+        if ($postAction === 'delete_violation_head') {
+            $headId = (int)($postInput['ids'] ?? 0);
+            if ($headId <= 0) {
+                echo json_encode(['status' => 'error', 'message' => 'Invalid violation head ID.']);
+                exit;
+            }
+            $stChk = $pdo->prepare("
+                SELECT h.head_name, COALESCE(h.is_locked, 0) AS is_locked,
+                       (SELECT COUNT(*) FROM tbl_customer_ledger l WHERE l.trans_type = h.head_name OR l.trans_type = CONCAT('Traffic Violation: ', h.head_name)) AS ledger_cnt,
+                       (SELECT COUNT(*) FROM tbl_vehicle_rentout_contracts c WHERE c.violations_json IS NOT NULL AND c.violations_json LIKE CONCAT('%', h.head_name, '%')) AS contract_cnt
+                FROM tbl_ledger_heads h
+                WHERE h.ids = ? AND h.violation_fine_type = 'Yes'
+                LIMIT 1
+            ");
+            $stChk->execute([$headId]);
+            $hRow = $stChk->fetch(PDO::FETCH_ASSOC);
+            if (!$hRow) {
+                echo json_encode(['status' => 'error', 'message' => 'Violation head not found.']);
+                exit;
+            }
+            if ((int)$hRow['is_locked'] === 1 || ((int)$hRow['ledger_cnt'] + (int)$hRow['contract_cnt']) > 0) {
+                echo json_encode(['status' => 'error', 'message' => 'Cannot delete: transactions exist for this violation head.']);
+                exit;
+            }
+            $stDel = $pdo->prepare("DELETE FROM tbl_ledger_heads WHERE ids = ? AND violation_fine_type = 'Yes' AND COALESCE(is_locked, 0) = 0");
+            $stDel->execute([$headId]);
+            echo json_encode(['status' => 'success', 'message' => 'Violation head deleted.']);
             exit;
         }
     }

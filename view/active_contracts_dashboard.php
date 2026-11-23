@@ -81,8 +81,8 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
         .card-balance { border-left-color: #26c6f9; }
         .row-collected { background-color: #e8fadf !important; }
         .row-bounced { background-color: #ffe5e5 !important; }
-        #returnReceiptModal, #modalAddHead, #modalAddBank, #modalChequeCalendar, #modalChequeDetails {
-            z-index: 1065;
+        #returnReceiptVoucherModal, #modalAddHead, #modalAddBank, #modalChequeCalendar, #modalChequeDetails {
+            z-index: 1075 !important;
         }
     </style>
 </head>
@@ -1576,7 +1576,16 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             });
         });
 
-        $('#returnReceiptModal').on('hidden.bs.modal', function() {
+        $('#returnReceiptVoucherModal, #modalAddHead, #modalAddBank, #modalChequeCalendar, #modalChequeDetails').on('show.bs.modal', function() {
+            setTimeout(function() {
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                if (backdrops.length > 1) {
+                    backdrops[backdrops.length - 1].style.zIndex = '1070';
+                }
+            }, 0);
+        });
+
+        $('#returnReceiptVoucherModal').on('hidden.bs.modal', function() {
             if ($('#contractLedgerModal').hasClass('show')) {
                 document.body.classList.add('modal-open');
                 const cid = parseInt($('#txt_ledger_modal_agreement_id').val(), 10);

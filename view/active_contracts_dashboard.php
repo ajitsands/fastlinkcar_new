@@ -81,8 +81,11 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
         .card-balance { border-left-color: #26c6f9; }
         .row-collected { background-color: #e8fadf !important; }
         .row-bounced { background-color: #ffe5e5 !important; }
-        #returnReceiptVoucherModal, #modalAddHead, #modalAddBank, #modalChequeCalendar, #modalChequeDetails {
-            z-index: 1075 !important;
+        .swal2-container {
+            z-index: 2000 !important;
+        }
+        .select2-container--open {
+            z-index: 1200 !important;
         }
     </style>
 </head>
@@ -537,9 +540,9 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             style="display:none; position:fixed; inset:0; width:100vw; height:100vh; border:0; z-index:99999 !important; background:transparent;">
     </iframe>
 
-    <?php include ROOT_PATH . '/view/templates/VehicleContractList/return_receipt_modal.php'; ?>
     <?php include ROOT_PATH . '/view/templates/VehicleContractList/contract_ledger_modal.php'; ?>
     <?php include ROOT_PATH . '/view/templates/VehicleContractList/contract_ledger_supporting_modals.php'; ?>
+    <?php include ROOT_PATH . '/view/templates/VehicleContractList/return_receipt_modal.php'; ?>
 
     <!-- Client Feedback Modal -->
     <div class="modal fade" id="feedbackModal" tabindex="-1" aria-hidden="true">
@@ -1576,11 +1579,18 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             });
         });
 
-        $('#returnReceiptVoucherModal, #modalAddHead, #modalAddBank, #modalChequeCalendar, #modalChequeDetails').on('show.bs.modal', function() {
+        $(document).on('show.bs.modal', '.modal', function() {
+            let maxZ = 1090;
+            document.querySelectorAll('.modal.show').forEach(function(el) {
+                const z = parseInt(window.getComputedStyle(el).zIndex, 10);
+                if (!isNaN(z) && z >= maxZ) maxZ = z;
+            });
+            const nextZ = maxZ + 20;
+            this.style.setProperty('z-index', String(nextZ), 'important');
             setTimeout(function() {
                 const backdrops = document.querySelectorAll('.modal-backdrop');
-                if (backdrops.length > 1) {
-                    backdrops[backdrops.length - 1].style.zIndex = '1070';
+                if (backdrops.length > 0) {
+                    backdrops[backdrops.length - 1].style.setProperty('z-index', String(nextZ - 10), 'important');
                 }
             }, 0);
         });

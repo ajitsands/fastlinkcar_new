@@ -73,6 +73,86 @@ try {
             ]);
             exit;
         }
+
+        if ($postAction === 'post_ledger_charges') {
+            $cid = (int)($postInput['contract_id'] ?? 0);
+            $violations = is_array($postInput['violations'] ?? null) ? $postInput['violations'] : [];
+            $otherFees = is_array($postInput['other_fees'] ?? null) ? $postInput['other_fees'] : [];
+
+            if ($cid <= 0) {
+                echo json_encode(['status' => 'error', 'message' => 'Invalid contract ID.']);
+                exit;
+            }
+            if (empty($violations) && empty($otherFees)) {
+                echo json_encode(['status' => 'error', 'message' => 'Please add at least one violation or other fee entry.']);
+                exit;
+            }
+
+            $stC = $pdo->prepare("
+                SELECT c.ids, c.agreement_no, c.quotation_number, c.booking_ids, c.customer_code, c.company_id,
+                       b.booking_no AS booking_no_str, b.quotation_number AS booking_qtn_str
+                FROM tbl_vehicle_rentout_contracts c
+                LEFT JOIN tbl_vehicle_bookings b ON b.ids = c.booking_ids
+                WHERE c.ids = ?
+                LIMIT 1
+            ");
+            $stC->execute([$cid]);
+            $cRow = $stC->fetch(PDO::FETCH_ASSOC);
+            if (!$cRow) {
+                echo json_encode(['status' => 'error', 'message' => 'Contract not found.']);
+                exit;
+            }
+
+            $agreeNo  = $cRow['agreement_no'] ?? '';
+            $qtnNo    = !empty($cRow['quotation_number']) ? $cRow['quotation_number'] : (!empty($cRow['booking_qtn_str']) ? $cRow['booking_qtn_str'] : $agreeNo);
+            $bookNo   = !empty($cRow['booking_no_str']) ? $cRow['booking_no_str'] : (string)($cRow['booking_ids'] ?? '');
+            $custCode = $cRow['customer_code'] ?? '';
+            $compId   = (int)($cRow['company_id'] ?? ($_SESSION['company_id'] ?? 1));
+            $userId   = (int)($_SESSION['user_id'] ?? 1);
+            $bookIds  = (int)($cRow['booking_ids'] ?? 0);
+            $nowStr   = date('Y-m-d H:i:s');
+
+            $insSql = "
+                INSERT INTO tbl_customer_ledger
+                (customer_code, quotation_no, booking_no, trans_date, trans_type, payment_method, debit, credit, ref_no, description, user_id, company_id, created_at, booking_ids, contract_ids, agreement_no)
+                VALUES
+                (?, ?, ?, ?, ?, 'N/A', ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)
+            ";
+            $stIns = $pdo->prepare($insSql);
+            $inserted = 0;
+
+            foreach ($violations as $v) {
+                $vTitle = trim((string)($v['title'] ?? ''));
+                $vFee   = (float)($v['fee'] ?? 0);
+                $vDate  = !empty($v['violation_date']) ? trim((string)$v['violation_date']) : date('Y-m-d');
+                $vRem   = trim((string)($v['remarks'] ?? ''));
+                if ($vFee > 0 || $vTitle !== '') {
+                    $transType = $vTitle !== '' ? ('Traffic Violation: ' . $vTitle) : 'Traffic Violation';
+                    $desc = $transType . ($vRem !== '' ? " (Remarks: {$vRem})" : '') . " (Agreement No: {$agreeNo})";
+                    $stIns->execute([$custCode, $qtnNo, $bookNo, $vDate, $transType, $vFee, $agreeNo, $desc, $userId, $compId, $nowStr, $bookIds, $cid, $agreeNo]);
+                    $inserted++;
+                }
+            }
+
+            foreach ($otherFees as $f) {
+                $fItem = trim((string)($f['item'] ?? ''));
+                $fAmt  = (float)($f['actual_amount'] ?? ($f['price'] ?? 0));
+                $fRem  = trim((string)($f['remarks'] ?? ''));
+                if ($fAmt > 0 || $fItem !== '') {
+                    $transType = $fItem !== '' ? ('Other Fee: ' . $fItem) : 'Other Fee';
+                    $desc = $transType . ($fRem !== '' ? " (Remarks: {$fRem})" : '') . " (Agreement No: {$agreeNo})";
+                    $stIns->execute([$custCode, $qtnNo, $bookNo, date('Y-m-d'), $transType, $fAmt, $agreeNo, $desc, $userId, $compId, $nowStr, $bookIds, $cid, $agreeNo]);
+                    $inserted++;
+                }
+            }
+
+            echo json_encode([
+                'status' => 'success',
+                'message' => $inserted . ' entry(s) posted to Contract Ledger.',
+                'inserted' => $inserted
+            ]);
+            exit;
+        }
     }
 
     $companyId = $_GET['company_id'] ?? ($_SESSION['company_id'] ?? 'all');

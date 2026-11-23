@@ -1853,7 +1853,7 @@ console.log("Loaded bookingMaster:", bookingMaster);
         $('#vip_entry_detail_box').html(`
             <div class="d-flex justify-content-between align-items-center mb-1">
                 <strong style="color:#1b3d94;">Entry Details (${type.toUpperCase()})</strong>
-                <button type="button" class="btn-close btn-sm" onclick="$('#vip_entry_detail_box').hide();"></button>
+                <button type="button" class="btn-close btn-sm" onclick="event.preventDefault(); event.stopPropagation(); $('#vip_entry_detail_box').hide(); return false;" title="Close Details"></button>
             </div>
             <div><strong>Next Expiry:</strong> ${formatVipDate(item.date)} &nbsp;|&nbsp; <strong>Amount:</strong> ${parseFloat(item.amount || 0).toFixed(3)} BHD</div>
             ${extra}

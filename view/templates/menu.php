@@ -492,6 +492,13 @@ if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
                     </h4>
                     <p class="text-muted mb-0"><?= htmlspecialchars($pDesc) ?></p>
                 </div>
+                <?php if ($reqPath === 'RegisterVehicles'): ?>
+                <div>
+                    <a href="/VehicleInsurance?val=<?= urlencode($this->encryption->encrypt('9,9-1')) ?>" class="btn btn-sm btn-primary">
+                        <i class="ri-shield-check-line me-1"></i> Go To Vehicle Insurance &amp; Passing
+                    </a>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
         <script>

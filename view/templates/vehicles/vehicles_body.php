@@ -23,9 +23,6 @@
                               <button type="button" id="btnOpenInsPassModal" class="btn btn-sm btn-outline-success d-none">
                                   <i class="ri-add-circle-line me-1"></i> Insurance / Passing
                               </button>
-                              <a href="/VehicleInsurance?val=<?= urlencode($this->encryption->encrypt('2,2-10')) ?>" class="btn btn-sm btn-outline-primary">
-                                  <i class="ri-shield-check-line me-1"></i> Vehicle Insurance
-                              </a>
                               <div id="statusBadgeContainer">
                                   <span class="badge bg-label-success" id="vehicleStatusBadge">New Entry</span>
                               </div>

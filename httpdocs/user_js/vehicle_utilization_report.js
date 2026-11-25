@@ -3,6 +3,7 @@
 
     let highResLogoBase64 = null;
     let highResLogoRatio = 1;
+    let utilizationDT = null;
 
     $(document).ready(function () {
         // Preload high-res logo for PDF
@@ -102,10 +103,27 @@
                 to_date: to_date
             },
             beforeSend: function () {
+                if ($.fn.DataTable.isDataTable('#utilizationReportTable')) {
+                    $('#utilizationReportTable').DataTable().destroy();
+                    utilizationDT = null;
+                }
                 $('#utilizationReportTable tbody').html('<tr><td colspan="6" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>');
             },
             success: function (data) {
+                if ($.fn.DataTable.isDataTable('#utilizationReportTable')) {
+                    $('#utilizationReportTable').DataTable().destroy();
+                    utilizationDT = null;
+                }
                 $('#utilizationReportTable tbody').html(data);
+                if (!data.includes('No vehicles found') && !data.includes('No active vehicles found')) {
+                    utilizationDT = $('#utilizationReportTable').DataTable({
+                        pageLength: 20,
+                        lengthMenu: [10, 20, 50, 100],
+                        ordering: false,
+                        autoWidth: false,
+                        dom: '<"row align-items-center mb-2"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-md-end"f>>t<"row align-items-center mt-2"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>'
+                    });
+                }
             },
             error: function () {
                 $('#utilizationReportTable tbody').html('<tr><td colspan="6" class="text-center text-danger">Error loading report</td></tr>');
@@ -215,7 +233,8 @@
 
         // Prepare table data
         let rows = [];
-        $('#utilizationReportTable tbody tr').each(function () {
+        const rowNodes = utilizationDT ? utilizationDT.rows({ search: 'applied' }).nodes().toArray() : Array.from(document.querySelectorAll('#utilizationReportTable tbody tr'));
+        $(rowNodes).each(function () {
             let row = [];
             let $tds = $(this).find('td');
 

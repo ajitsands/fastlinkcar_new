@@ -47,25 +47,27 @@
                 </button>
             </div>
         </div>
-        <div class="card-datatable table-responsive">
-            <table class="table table-hover table-bordered" id="utilizationReportTable">
-                <thead class="table-light">
-                    <tr>
-                        <th>Vehicle Details</th>
-                        <th>Total Days in Period</th>
-                        <th>Days Rented Out</th>
-                        <th>Days Maintenance</th>
-                        <th>Days Idle</th>
-                        <th style="width: 200px;">Utilization %</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Populated via JS -->
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">Please select a date range and click Search.</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="card-body p-3">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle text-start mb-0" id="utilizationReportTable" style="font-size: 13px; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Vehicle Details</th>
+                            <th>Total Days in Period</th>
+                            <th>Days Rented Out</th>
+                            <th>Days Maintenance</th>
+                            <th>Days Idle</th>
+                            <th style="width: 200px;">Utilization %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated via JS -->
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Please select a date range and click Search.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

@@ -188,6 +188,31 @@
         filterParts.push(`Period: ${dateFrom} to ${dateTo}`);
         let filterString = filterParts.join('  |  ');
 
+        function formatVehicleCellForPdf(td) {
+            const divs = td.querySelectorAll(':scope > div');
+            if (!divs.length) {
+                return $(td).text().replace(/\s+/g, ' ').trim();
+            }
+            const lines = [];
+            divs.forEach(function (div, divIdx) {
+                const spans = div.querySelectorAll(':scope > span');
+                const parts = [];
+                if (spans.length) {
+                    spans.forEach(function (sp) {
+                        const txt = $(sp).text().replace(/\s+/g, ' ').trim();
+                        if (txt) parts.push(txt);
+                    });
+                } else {
+                    const txt = $(div).text().replace(/\s+/g, ' ').trim();
+                    if (txt) parts.push(txt);
+                }
+                if (parts.length) {
+                    lines.push(parts.join(divIdx === 0 ? '  ' : ' | '));
+                }
+            });
+            return lines.join('\n');
+        }
+
         // Prepare table data
         let rows = [];
         $('#utilizationReportTable tbody tr').each(function () {
@@ -201,8 +226,7 @@
                     if (index === 5) {
                         row.push($(this).text().trim());
                     } else if (index === 0) {
-                        let text = $(this).text().replace(/\s+/g, ' ').trim();
-                        row.push(text);
+                        row.push(formatVehicleCellForPdf(this));
                     } else {
                         row.push($(this).text().trim());
                     }

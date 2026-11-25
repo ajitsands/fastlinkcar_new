@@ -157,7 +157,7 @@
                               aria-controls="navs-justified-sold"
                               aria-selected="false">
                               <span class="d-none d-sm-inline-flex align-items-center"
-                                ><i class="icon-base ri ri-price-tag-3-line icon-sm me-2"></i>Sold Vehicles</span
+                                ><i class="icon-base ri ri-price-tag-3-line icon-sm me-2"></i>Sale Out</span
                               >
                             </button>
                           </li>

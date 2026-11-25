@@ -13,6 +13,9 @@ checkLogin();
 ?>
 <?php
 include ROOT_PATH . '/view/envinclude.php';
+require_once ROOT_PATH . '/pdf/print_settings_helper.php';
+$vmCompanyId = !empty($_SESSION['company_id']) ? (int)$_SESSION['company_id'] : 1;
+$vmPrintSettings = getPrintSettings(null, $vmCompanyId);
 ?>
 <!doctype html>
 
@@ -52,6 +55,30 @@ include ROOT_PATH . '/view/envinclude.php';
         
         .dt-buttons .btn {
             margin-right: 5px;
+        }
+        #movementReportTable thead th {
+            background-color: #1b3d94 !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-color: #16337d !important;
+            padding: 0.65rem 0.75rem;
+            white-space: nowrap;
+        }
+        #movementReportTable tbody td {
+            padding: 0.6rem 0.75rem;
+            vertical-align: middle;
+            border-color: #e6ebf5;
+        }
+        #movementReportTable tbody tr:hover {
+            background-color: #f6f8fd !important;
+        }
+        .dataTables_wrapper .dataTables_filter input,
+        .dataTables_wrapper .dataTables_length select {
+            border-radius: 0.375rem;
+            border: 1px solid #d5dce8;
         }
     </style>
 </head>
@@ -106,7 +133,10 @@ include ROOT_PATH . '/view/envinclude.php';
     <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/settings.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>alertmessage/js/sandsalert.js"></script>
-    <script src="../httpdocs/user_js/vehicle_movement_report.js"></script>
+    <script>
+        window.MOVEMENT_PRINT_SETTINGS = <?= json_encode($vmPrintSettings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    </script>
+    <script src="../httpdocs/user_js/vehicle_movement_report.js?v=<?= time() ?>"></script>
     
 </body>
 </html>

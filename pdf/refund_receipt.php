@@ -34,7 +34,7 @@ $db = new ClassDatabaseConnection();
 $pdo = $db->pdo;
 
 $stmt = $pdo->prepare("
-    SELECT r.*, c.customer_name, c.customer_mobile, c.customer_cr_cpr, comp.company_name, comp.company_logo 
+    SELECT r.*, c.customer_name, c.customer_mobile, c.customer_cr_cpr, c.customer_addr, comp.company_name, comp.company_logo, comp.ids AS resolved_company_id
     FROM tbl_refund_requests r
     LEFT JOIN customer_details c ON r.customer_code = c.customer_id
     LEFT JOIN tbl_company comp ON SUBSTRING_INDEX(r.refund_no, '/', 1) = comp.company_code
@@ -49,7 +49,7 @@ if (!$refund) {
 
 $agreement_no = $refund['agreement_no'];
 
-$stmtContract = $pdo->prepare("SELECT service_start_date_time, return_date, km_used, vechile_details, vehicle_no FROM tbl_vehicle_rentout_contracts WHERE agreement_no = ?");
+$stmtContract = $pdo->prepare("SELECT service_start_date_time, return_date, km_used, vechile_details, vehicle_no, company_id FROM tbl_vehicle_rentout_contracts WHERE agreement_no = ?");
 $stmtContract->execute([$agreement_no]);
 $contract = $stmtContract->fetch(PDO::FETCH_ASSOC);
 if ($contract) {
@@ -66,45 +66,81 @@ $balance = $totalPaid - $totalCharged;
 
 $make = '';
 $model = '';
+$vehicleColor = 'N/A';
 $chassisNo = 'N/A';
 if ($contract && isset($contract['vechile_details'])) {
-    $make = $contract['vechile_details']['make'] ?? $contract['vechile_details']['brand'] ?? '';
+    $make = $contract['vechile_details']['make'] ?? $contract['vechile_details']['brand'] ?? $contract['vechile_details']['brand_name'] ?? '';
     $model = $contract['vechile_details']['model_name'] ?? $contract['vechile_details']['model'] ?? '';
+    $vehicleColor = $contract['vechile_details']['vehicle_color'] ?? $contract['vechile_details']['color'] ?? 'N/A';
     $chassisNo = $contract['vechile_details']['chassis_number'] ?? $contract['vechile_details']['chassis_no'] ?? 'N/A';
 }
 $vehicleName = trim($make . ' ' . $model) ?: 'N/A';
 
-$pdf = new TCPDF('P', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+class AA_RefundReceipt_PDF extends TCPDF {
+    public $company_label = 'For FAST LINK';
+    public function Header() {}
+    public function Footer() {
+        $this->SetY(-45);
+        $footerY = $this->GetY();
+        $this->SetFont('dejavusans', '', 8);
+
+        $this->Rect(10, $footerY, 190, 30);
+        $this->Line(105, $footerY, 105, $footerY + 30);
+
+        $this->SetXY(10, $footerY + 15);
+        $this->Cell(95, 5, '________________________________________', 0, 2, 'C');
+        $this->SetX(10);
+        $this->Cell(95, 5, $this->company_label, 0, 2, 'C');
+
+        $this->SetXY(105, $footerY + 15);
+        $this->Cell(95, 5, '________________________________________', 0, 2, 'C');
+        $this->SetX(105);
+        $this->Cell(95, 5, 'Customer Acceptance / قبول الزبون', 0, 2, 'C');
+
+        $this->SetY(-10);
+        $this->SetFont('dejavusans', 'I', 8);
+        $this->Cell(0, 5, 'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages(), 0, 0, 'R');
+    }
+}
+
+$pdf = new AA_RefundReceipt_PDF('P', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 $pdf->SetCreator(PDF_CREATOR);
 $pdf->SetTitle('Refund Receipt ' . $refund['refund_no']);
-$pdf->SetMargins(15, 15, 15);
-$pdf->SetAutoPageBreak(TRUE, 15);
+$pdf->SetMargins(10, 10, 10);
+$pdf->SetAutoPageBreak(TRUE, 10);
 $pdf->AddPage();
-$pdf->SetFont('dejavusans', '', 10);
+$pdf->SetFont('dejavusans', '', 8);
+$pdf->setCellPaddings(0, 0, 0, 0);
 
 require_once __DIR__ . '/print_settings_helper.php';
-$printSettings = getPrintSettings(null, $refund['company_id'] ?? null);
+$resolvedCompanyId = $refund['resolved_company_id'] ?? ($contract['company_id'] ?? null);
+$printSettings = getPrintSettings(null, $resolvedCompanyId);
 $logo_base64 = !empty($printSettings['show_logo']) ? ($printSettings['logo_base64'] ?? '') : '';
 $logo_width = (int)($printSettings['logo_width'] ?? 150);
 $printAccent = $printSettings['accent_color'] ?? '#1b3d94';
+if (!empty($printSettings['company_name'])) {
+    $pdf->company_label = 'For ' . strtoupper($printSettings['company_name']);
+}
 
 $fmtRefundDate = !empty($refund['date']) ? date('d M Y', strtotime($refund['date'])) : 'N/A';
-$fmtStartDate = !empty($contract['service_start_date_time']) ? date('d M Y, h:i A', strtotime($contract['service_start_date_time'])) : 'N/A';
-$fmtReturnDate = (!empty($contract['return_date']) && $contract['return_date'] !== '0000-00-00 00:00:00') ? date('d M Y, h:i A', strtotime($contract['return_date'])) : 'N/A';
+$fmtStartDate = !empty($contract['service_start_date_time']) ? date('d M Y', strtotime($contract['service_start_date_time'])) : 'N/A';
+$fmtReturnDate = (!empty($contract['return_date']) && $contract['return_date'] !== '0000-00-00 00:00:00') ? date('d M Y', strtotime($contract['return_date'])) : 'N/A';
+$custContact = trim(($refund['customer_addr'] ?? '') . (!empty($refund['customer_mobile']) ? ' | Tel: ' . $refund['customer_mobile'] : ''), ' |');
+$custContact = $custContact ?: 'N/A';
 
 $html = '
 <style>
     table { width: 100%; border-collapse: collapse; }
-    td, th { padding: 6px; }
-    .bold { font-weight: bold; }
+    td, th { vertical-align: middle; }
     .text-center { text-align: center; }
     .text-right { text-align: right; }
-    .header-bg { background-color: ' . $printAccent . '; color: #ffffff; }
-    .bordered td, .bordered th { border: 1px solid #dddddd; }
+    .text-left { text-align: left; }
+    .bold { font-weight: bold; }
+    .bordered td, .bordered th { border: 1px solid #000; }
 </style>
 
 <!-- MAIN HEADER -->
-<table cellpadding="1" border="0" width="100%" style="border-bottom: 2px solid ' . $printAccent . '; padding-bottom: 6px;">
+<table cellpadding="1" border="0" width="100%">
     <tr>
         <td width="55%" style="vertical-align: middle;">
             ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="' . $logo_width . '">' : '<b style="font-size: 15pt; color:' . $printAccent . ';">' . htmlspecialchars(strtoupper($printSettings['company_name'] ?? 'FAST LINK')) . '</b>') . '
@@ -118,108 +154,129 @@ $html = '
         </td>
     </tr>
 </table>
+
 <br>
-<table cellpadding="4" cellspacing="0" width="100%">
-    <tr class="header-bg">
-        <td class="text-center bold" style="font-size: 11pt; letter-spacing: 1px;">REFUND REQUEST / RECEIPT</td>
+
+<!-- REFUND RECEIPT BANNER -->
+<table cellpadding="3" cellspacing="0" width="100%">
+    <tr style="background-color: ' . $printAccent . '; color: #ffffff;">
+        <td class="text-center bold" style="font-size:9pt; letter-spacing:2px; line-height:1;">
+            REFUND RECEIPT / سند استرداد
+        </td>
     </tr>
 </table>
+
 <br>
-<table class="bordered" cellpadding="5">
-    <tr class="header-bg">
-        <th colspan="2" class="bold">REFUND INFORMATION</th>
-    </tr>
+
+<!-- METADATA BOXES -->
+<table cellpadding="4" style="border: 1px solid #000; width: 100%; border-collapse: collapse; margin: 0px;">
     <tr>
-        <td width="30%"><strong>Refund No:</strong></td>
-        <td width="70%">' . htmlspecialchars($refund['refund_no']) . '</td>
-    </tr>
-    <tr>
-        <td><strong>Date:</strong></td>
-        <td>' . htmlspecialchars($fmtRefundDate) . '</td>
-    </tr>
-    <tr>
-        <td><strong>Status:</strong></td>
-        <td>' . htmlspecialchars($refund['status']) . '</td>
-    </tr>
-    <tr>
-        <td><strong>Refund Mode:</strong></td>
-        <td>' . htmlspecialchars($refund['refund_mode'] ?? 'Cash') . '</td>
-    </tr>
-    <tr>
-        <td><strong>Amount:</strong></td>
-        <td>' . number_format($refund['amount'], 3) . '</td>
-    </tr>
-</table>
-<br><br>
-<table class="bordered" cellpadding="5">
-    <tr class="header-bg">
-        <th colspan="2" class="bold">CUSTOMER DETAILS</th>
-    </tr>
-    <tr>
-        <td width="30%"><strong>Customer Name:</strong></td>
-        <td width="70%">' . htmlspecialchars($refund['customer_name'] ?? 'N/A') . '</td>
-    </tr>
-    <tr>
-        <td><strong>Customer Code:</strong></td>
-        <td>' . htmlspecialchars($refund['customer_code'] ?? 'N/A') . '</td>
-    </tr>
-    <tr>
-        <td><strong>Agreement No:</strong></td>
-        <td>' . htmlspecialchars($refund['agreement_no'] ?? 'N/A') . '</td>
-    </tr>
-</table>
-<br><br>
-<table class="bordered" cellpadding="5">
-    <tr class="header-bg">
-        <th colspan="2" class="bold">AGREEMENT SUMMARY</th>
-    </tr>
-    <tr>
-        <td width="50%">
-            <strong>Vehicle:</strong> ' . htmlspecialchars($vehicleName) . ' (' . htmlspecialchars($contract['vehicle_no'] ?? 'N/A') . ')<br>
-            <strong>Chassis No:</strong> ' . htmlspecialchars($chassisNo) . '<br>
-            <strong>Rentout Date:</strong> ' . htmlspecialchars($fmtStartDate) . '<br>
-            <strong>Return Date:</strong> ' . htmlspecialchars($fmtReturnDate) . '<br>
-            <strong>KM Used:</strong> ' . htmlspecialchars($contract['km_used'] ?? '0') . '
-        </td>
-        <td width="50%">
-            <strong>Total Payable:</strong> ' . number_format($totalCharged, 3) . '<br>
-            <strong>Total Paid:</strong> ' . number_format($totalPaid, 3) . '<br>
-            <strong>Balance:</strong> ' . number_format($balance, 3) . '
+        <td width="18%" style="border-right: 1px solid #000; border-bottom: 1px solid #000; vertical-align: middle;">Agreement No.</td>
+        <td width="30%" style="border-right: 1px solid #000; border-bottom: 1px solid #000; vertical-align: middle;" class="bold">' . htmlspecialchars($refund['agreement_no'] ?? 'N/A') . '</td>
+        <td width="17%" align="right" style="border-right: 1px solid #000; border-bottom: 1px solid #000; vertical-align: middle; font-family:dejavusans; font-size: 7.5pt;">رقم الاتفاقية</td>
+        <td width="35%" rowspan="4" style="vertical-align: top; padding: 8px; line-height: 1.4;">
+            <span style="font-size: 9.5pt;"><b>Date :</b> ' . htmlspecialchars($fmtRefundDate) . '</span><br>
+            <span style="font-size: 8.5pt;"><b>Status :</b> ' . htmlspecialchars($refund['status']) . ' &nbsp;|&nbsp; <b>Mode :</b> ' . htmlspecialchars($refund['refund_mode'] ?? 'Cash') . '</span><br><br>
+            <span style="font-size: 10pt; font-weight: bold;">No.</span>
+            <span style="color:' . $printAccent . '; font-size:14pt; font-weight:bold; font-family:courier;">' . htmlspecialchars($refund['refund_no']) . '</span>
         </td>
     </tr>
-</table>
-<br><br>
-<table class="bordered" cellpadding="5">
-    <tr class="header-bg">
-        <th class="bold">REASON / REMARKS</th>
+    <tr>
+        <td style="border-right: 1px solid #000; border-bottom: 1px solid #000; vertical-align: middle;">Car No.</td>
+        <td style="border-right: 1px solid #000; border-bottom: 1px solid #000; vertical-align: middle;" class="bold">' . htmlspecialchars($contract['vehicle_no'] ?? 'N/A') . '</td>
+        <td align="right" style="border-right: 1px solid #000; border-bottom: 1px solid #000; vertical-align: middle; font-family:dejavusans; font-size: 7.5pt;">رقم السيارة</td>
     </tr>
     <tr>
-        <td>' . nl2br(htmlspecialchars($refund['reason'] ?: 'No reason provided.')) . '</td>
+        <td style="border-right: 1px solid #000; border-bottom: 1px solid #000; vertical-align: middle;">Type of Car</td>
+        <td style="border-right: 1px solid #000; border-bottom: 1px solid #000; vertical-align: middle;" class="bold">' . htmlspecialchars($vehicleName) . '</td>
+        <td align="right" style="border-right: 1px solid #000; border-bottom: 1px solid #000; vertical-align: middle; font-family:dejavusans; font-size: 7.5pt;">نوع السيارة</td>
+    </tr>
+    <tr>
+        <td style="border-right: 1px solid #000; vertical-align: middle;">Colour</td>
+        <td style="border-right: 1px solid #000; vertical-align: middle;" class="bold">' . htmlspecialchars($vehicleColor) . '</td>
+        <td align="right" style="border-right: 1px solid #000; vertical-align: middle; font-family:dejavusans; font-size: 7.5pt;">اللون</td>
     </tr>
 </table>
-<br><br><br><br>
-<table>
+
+<br>
+
+<!-- CUSTOMER NAME & ADDRESS -->
+<table cellpadding="4" style="border: 1px solid #000; width: 100%;">
     <tr>
-        <td width="50%" class="text-center">
-            ________________________<br><br>
-            <strong>Prepared By</strong>
+        <td width="18%">Customer Name :</td>
+        <td width="64%" class="bold">' . htmlspecialchars($refund['customer_name'] ?? 'N/A') . ' (' . htmlspecialchars($refund['customer_code'] ?? '-') . ')</td>
+        <td width="18%" align="right" style="font-family:dejavusans; font-size: 7.5pt;">اسم الزبون :</td>
+    </tr>
+    <tr>
+        <td style="border-top: 1px solid #000;">Address / Tel :</td>
+        <td style="border-top: 1px solid #000;">' . htmlspecialchars($custContact) . '</td>
+        <td align="right" style="border-top: 1px solid #000; font-family:dejavusans; font-size: 7.5pt;">العنوان / الهاتف :</td>
+    </tr>
+</table>
+
+<br>
+
+<!-- REFUND DETAILS TABLE -->
+<table class="bordered" cellpadding="5" width="100%">
+    <thead>
+        <tr style="background-color:' . $printAccent . '; color:#ffffff; font-weight:bold;">
+            <th width="6%" class="text-center" style="font-size: 7.5pt;">No.</th>
+            <th width="40%" class="text-center" style="font-size: 7.5pt;">Description</th>
+            <th width="22%" class="text-center" style="font-size: 7.5pt;">Rentout / Return</th>
+            <th width="10%" class="text-center" style="font-size: 7.5pt;">KM Used</th>
+            <th width="10%" class="text-center" style="font-size: 7.5pt;">Mode</th>
+            <th width="12%" class="text-center" style="font-size: 7.5pt;">Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr height="28">
+            <td width="6%" class="text-center">1</td>
+            <td width="40%" class="bold">Refund Voucher - ' . htmlspecialchars($refund['agreement_no'] ?? '') . ($chassisNo !== 'N/A' ? '<br><span style="font-weight:normal; font-size:7pt;">Chassis: ' . htmlspecialchars($chassisNo) . '</span>' : '') . '</td>
+            <td width="22%" class="text-center">' . htmlspecialchars($fmtStartDate) . ' to ' . htmlspecialchars($fmtReturnDate) . '</td>
+            <td width="10%" class="text-center">' . htmlspecialchars($contract['km_used'] ?? '0') . '</td>
+            <td width="10%" class="text-center">' . htmlspecialchars($refund['refund_mode'] ?? 'Cash') . '</td>
+            <td width="12%" class="text-right bold">' . number_format($refund['amount'], 3) . '</td>
+        </tr>
+    </tbody>
+</table>
+
+<br>
+
+<!-- REASON / NOTE AND FINANCIAL SUMMARY -->
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 0px; padding: 0px; border-collapse: collapse;">
+    <tr>
+        <td width="61%" height="70" style="border: 1px solid #000; padding: 6px;" valign="top">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td width="22%" valign="top" style="line-height: 1.5; font-weight: bold;">Remarks :</td>
+                    <td width="78%" valign="top" style="font-size: 8pt; line-height: 1.4; text-align: left;">' . nl2br(htmlspecialchars($refund['reason'] ?: 'No reason provided.')) . '</td>
+                </tr>
+            </table>
         </td>
-        <td width="50%" class="text-center">
-            ________________________<br><br>
-            <strong>Approved By</strong>
+        <td width="2%">&nbsp;</td>
+        <td width="37%" style="padding: 0px; margin: 0px; vertical-align: top;">
+            <table cellpadding="4.5" style="border: 1px solid #000; width: 100%; border-collapse: collapse; margin: 0px;">
+                <tr>
+                    <td width="55%" style="border-right: 1px solid #000; border-bottom: 1px solid #000; background-color: #f5f5f5;" align="center">Total Payable</td>
+                    <td width="45%" style="border-bottom: 1px solid #000;" align="right" class="bold">' . number_format($totalCharged, 3) . '</td>
+                </tr>
+                <tr>
+                    <td width="55%" style="border-right: 1px solid #000; border-bottom: 1px solid #000; background-color: #f5f5f5;" align="center">Total Paid</td>
+                    <td width="45%" style="border-bottom: 1px solid #000;" align="right" class="bold">' . number_format($totalPaid, 3) . '</td>
+                </tr>
+                <tr>
+                    <td width="55%" style="border-right: 1px solid #000; border-bottom: 1px solid #000; background-color: #f5f5f5;" align="center">Agreement Balance</td>
+                    <td width="45%" style="border-bottom: 1px solid #000;" align="right" class="bold">' . number_format($balance, 3) . '</td>
+                </tr>
+                <tr style="background-color: ' . $printAccent . '; color: #ffffff;">
+                    <td width="55%" style="border-right: 1px solid #000;" align="center" class="bold">Refund Amount</td>
+                    <td width="45%" align="right" class="bold">' . number_format($refund['amount'], 3) . ' BHD</td>
+                </tr>
+            </table>
         </td>
     </tr>
 </table>
 ';
-
-if (!empty($printSettings['show_footer'])) {
-    $html .= '<br><br><table border="0" cellpadding="3" style="border-top: 1px solid #cbd5e1; font-size: 7.5pt; color: #475569;">
-        <tr>
-            <td width="75%">' . htmlspecialchars($printSettings['footer_text'] ?? '') . (!empty($printSettings['footer_note']) ? '<br><span style="color:#788291;">' . htmlspecialchars($printSettings['footer_note']) . '</span>' : '') . '</td>
-            <td width="25%" align="right">Generated: ' . date('d M Y') . '</td>
-        </tr>
-    </table>';
-}
 
 $pdf->writeHTML($html, true, false, true, false, '');
 $pdf->Output('Refund_Receipt_' . $refund['refund_no'] . '.pdf', 'I');

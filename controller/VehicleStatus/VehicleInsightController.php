@@ -1770,10 +1770,14 @@ $this->params[15] = [
                                             <strong class="text-danger">Exp Return:</strong><br>
                                             <?= !empty($exp_return_date) ? $exp_return_date : '' ?>
                                         </div>
-                                    <?php } else if ($item['vehicle_status'] == 'Sale Out' || $item['vehicle_status'] == 'Sold') { ?>
+                                    <?php } else if ($item['vehicle_status'] == 'Sale Out' || $item['vehicle_status'] == 'Sold') {
+                                        $saleNoteDisplay = !empty($item['vehicle_status_notes'])
+                                            ? preg_replace_callback('/\b(\d{4}-\d{2}-\d{2})\b/', function ($m) { return date('d M Y', strtotime($m[1])); }, $item['vehicle_status_notes'])
+                                            : '';
+                                    ?>
                                         <div class="small w-100 mt-2 border-top pt-1">
                                             <strong class="text-primary">Status:</strong> Sale Out<br>
-                                            <?= !empty($item['vehicle_status_notes']) ? htmlspecialchars($item['vehicle_status_notes']) : '<span class="text-muted">Vehicle sold out</span>' ?>
+                                            <?= $saleNoteDisplay !== '' ? htmlspecialchars($saleNoteDisplay) : '<span class="text-muted">Vehicle sold out</span>' ?>
                                         </div>
                                     <?php } else { ?>
                                         <button class="btn btn-sm btn-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_select px-1" 
@@ -2020,10 +2024,14 @@ $this->params[15] = [
                                             <strong class="text-danger">Status:</strong> <?= htmlspecialchars($reqStatus) ?><br>
                                             <strong class="text-danger">Next Maintenance:</strong> <?= $nextMaintenance ?>
                                         </div>
-                                    <?php } else if ($item['vehicle_status'] == 'Sale Out' || $item['vehicle_status'] == 'Sold') { ?>
+                                    <?php } else if ($item['vehicle_status'] == 'Sale Out' || $item['vehicle_status'] == 'Sold') {
+                                        $saleNoteDisplay = !empty($item['vehicle_status_notes'])
+                                            ? preg_replace_callback('/\b(\d{4}-\d{2}-\d{2})\b/', function ($m) { return date('d M Y', strtotime($m[1])); }, $item['vehicle_status_notes'])
+                                            : '';
+                                    ?>
                                         <div class="small w-100 mt-2 border-top pt-1">
                                             <strong class="text-primary">Status:</strong> Sale Out<br>
-                                            <?= !empty($item['vehicle_status_notes']) ? htmlspecialchars($item['vehicle_status_notes']) : '<span class="text-muted">Vehicle sold out</span>' ?>
+                                            <?= $saleNoteDisplay !== '' ? htmlspecialchars($saleNoteDisplay) : '<span class="text-muted">Vehicle sold out</span>' ?>
                                         </div>
                                     <?php } else { ?>
                                         <button class="btn btn-sm btn-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_select px-1" 

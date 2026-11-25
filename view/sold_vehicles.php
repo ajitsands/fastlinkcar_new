@@ -213,7 +213,12 @@ include ROOT_PATH . '/view/envinclude.php';
             if (!val) return '-';
             const s = String(val).substring(0, 10);
             const p = s.split('-');
-            return (p.length === 3 && p[0].length === 4) ? `${p[2]}-${p[1]}-${p[0]}` : s;
+            if (p.length === 3 && p[0].length === 4) {
+                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                const mIdx = parseInt(p[1], 10) - 1;
+                if (mIdx >= 0 && mIdx < 12) return `${p[2]} ${months[mIdx]} ${p[0]}`;
+            }
+            return s;
         }
 
         function notify(msg, type = 'success') {

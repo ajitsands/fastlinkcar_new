@@ -208,7 +208,8 @@ class SoldVehicleController
             }
 
             // Automatically convert vehicle status to Sale Out
-            $statusNote = "Sale Out to {$buyerName} on {$saleDate} for " . number_format($saleAmount, 3) . " BHD" . ($note !== '' ? " ({$note})" : '');
+            $formattedSaleDate = date('d M Y', strtotime($saleDate));
+            $statusNote = "Sold to {$buyerName} on {$formattedSaleDate} for " . number_format($saleAmount, 3) . " BHD" . ($note !== '' ? " ({$note})" : '');
             $stUpdVeh = $this->pdo->prepare("
                 UPDATE tbl_vehicles
                 SET vehicle_status = 'Sale Out',

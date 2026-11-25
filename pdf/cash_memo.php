@@ -259,7 +259,7 @@ $html = '
 </style>
 
 <!-- MAIN HEADER -->
-<table cellpadding="1" border="0" width="100%">
+<table cellpadding="1" border="0" width="100%" style="border-bottom: 2px solid ' . $printAccent . '; padding-bottom: 6px;">
     <tr>
         <td width="55%" style="vertical-align: middle;">
             ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="' . $logo_width . '">' : '<b style="font-size: 15pt; color:' . $printAccent . ';">' . htmlspecialchars($companyLabel) . '</b>') . '
@@ -434,14 +434,12 @@ $html = '
     </tr>
 </table>
 <br>
-<table cellpadding="2" border="0" width="100%" style="font-size: 7.5pt; color: #444444;">
+' . (!empty($printSettings['show_footer']) ? '<table cellpadding="3" border="0" width="100%" style="border-top: 1px solid #cbd5e1; font-size: 7.5pt; color: #475569;">
     <tr>
-        <td class="text-center">'
-            . (!empty($printSettings['header_phone']) ? 'Tel : ' . htmlspecialchars($printSettings['header_phone']) . '<br>' : '')
-            . (!empty($printSettings['header_address']) ? htmlspecialchars(str_replace(["\r", "\n"], ' ', $printSettings['header_address'])) : '')
-        . '</td>
+        <td width="75%">' . htmlspecialchars($printSettings['footer_text'] ?? '') . (!empty($printSettings['footer_note']) ? '<br><span style="color:#788291;">' . htmlspecialchars($printSettings['footer_note']) . '</span>' : '') . '</td>
+        <td width="25%" align="right">Generated: ' . date('d M Y') . '</td>
     </tr>
-</table>
+</table>' : '') . '
 ';
 
 $pdf->writeHTML($html, true, false, true, false, '');

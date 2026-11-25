@@ -1298,7 +1298,14 @@ function(response) {
 
     $('#cashmemoNumber').text(q.cashmemo_no);
     $('#cashmemo_date').val(q.cashmemo_date);
-   
+
+    if (q.company_id) {
+        $('#company_id').val(String(q.company_id));
+        const $compOpt = $('#company_id').find('option:selected');
+        $('#company_code').val($compOpt.data('code') || '');
+        $('#company_name').val($compOpt.data('name') || q.company_name || '');
+    }
+
     let option = new Option(q.customer_name, q.customer_name, true, true);
     $('#selectCustomerFromSelect2').append(option).trigger('change');
 

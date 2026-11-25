@@ -4,9 +4,17 @@ if (!isset($_SESSION['user_name'])) {
     header("Location: /");
     exit();
 }
+include ROOT_PATH . '/view/envinclude.php';
 ?>
 <!DOCTYPE html>
-<html lang="en" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/" data-template="horizontal-menu-template">
+<html
+    lang="en"
+    class="layout-navbar-fixed layout-menu-fixed layout-wide"
+    dir="ltr"
+    data-skin="default"
+    data-bs-theme="light"
+    data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/"
+    data-template="horizontal-menu-template-no-customizer">
 
 <head>
     <?php include ROOT_PATH . '/view/templates/head.php'; ?>
@@ -15,7 +23,6 @@ if (!isset($_SESSION['user_name'])) {
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.css" />
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.css" />
     <link rel="stylesheet" href="<?= $_ENV['BASE_URL'] ?>alertmessage/css/sands_alert_style.css">
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/jquery/jquery.js"></script>
 </head>
 
 <body>
@@ -190,8 +197,7 @@ if (!isset($_SESSION['user_name'])) {
     </div>
 
     <!-- Scripts -->
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/popper/popper.js"></script>
-    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/js/bootstrap.js"></script>
+    <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/settings.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.js"></script>

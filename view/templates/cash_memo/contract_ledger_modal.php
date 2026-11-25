@@ -215,12 +215,13 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="table-responsive">
-                                            <table id="tblLedger" class="table table-hover border-top">
+                                            <table id="tblLedger" class="table table-hover border-top align-middle" style="font-size: 13px; width: 100%;">
                                                 <thead>
                                                     <tr>
                                                         <th>Date</th>
                                                         <th>Type / Method</th>
-                                                        <th>Ref</th>
+                                                        <th>Reference &amp; Details</th>
+                                                        <th class="text-center">Flag</th>
                                                         <th class="text-end">Debit</th>
                                                         <th class="text-end">Credit</th>
                                                         <th class="text-end">Balance</th>

@@ -15,6 +15,9 @@ checkLogin();
 <?php
 include('envinclude.php');
 $decimals = !empty($_ENV['DECIMALS']) ? (int)$_ENV['DECIMALS'] : 3;
+require_once ROOT_PATH . '/pdf/print_settings_helper.php';
+$cmCompanyId = !empty($_SESSION['company_id']) ? (int)$_SESSION['company_id'] : 1;
+$cmPrintSettings = getPrintSettings(null, $cmCompanyId);
 
 $db = new ClassDatabaseConnection();
 $pdo = $db->pdo;
@@ -393,6 +396,11 @@ div.dt-container div.dt-search input {
     <script src="../assets/sands/settings.js"></script>
     <script src="../assets/sands/sands_popup.js"></script>
     <script src="../alertmessage/js/sandsalert.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        window.LEDGER_PRINT_SETTINGS = <?= json_encode($cmPrintSettings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    </script>
         <!-- Ladda & Spin.js JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda.min.js"></script>
@@ -1827,6 +1835,80 @@ function loadHeads(selectedName = null) {
         'json'
     );
 }
+function escLedgerHtml(s) {
+    return $('<div>').text(s == null ? '' : String(s)).html();
+}
+
+function getLedgerFlagObj(r) {
+    const deb = parseFloat(r.debit || 0);
+    const cred = parseFloat(r.credit || 0);
+    if (r.payment_method === 'Cheque') {
+        const st = r.cheque_status || 'Pending';
+        if (st === 'Collected') return { label: 'Collected', cls: 'bg-success' };
+        if (st === 'Bounced') return { label: 'Bounced', cls: 'bg-danger' };
+        return { label: 'Pending Cheque', cls: 'bg-warning' };
+    }
+    if (cred > 0) return { label: 'Paid', cls: 'bg-label-success' };
+    if (deb > 0) return { label: 'Charge', cls: 'bg-label-danger' };
+    return { label: 'Info', cls: 'bg-label-secondary' };
+}
+
+function renderLedgerRefDetails(r) {
+    const refNo = $.trim(r.ref_no || '');
+    const agreeNo = $.trim(r.agreement_no || '');
+    const bkgNo = $.trim(r.booking_no || '');
+    const quotNo = $.trim(r.quotation_no || '');
+    const primaryRef = refNo || agreeNo || bkgNo || quotNo || '-';
+
+    let out = `<div class="fw-semibold text-dark">${escLedgerHtml(primaryRef)}`;
+    if (r.cheque_date) {
+        out += ` <span class="badge bg-label-warning ms-1"><i class="ri-calendar-line me-1"></i>Chq: ${moment(r.cheque_date).format('DD MMM YYYY')}</span>`;
+    }
+    out += `</div>`;
+
+    if (r.description) {
+        out += `<div class="small text-muted mt-1"><i class="ri-chat-3-line me-1"></i>${escLedgerHtml(r.description)}</div>`;
+    }
+
+    let metaBadges = [];
+    if (agreeNo && agreeNo !== primaryRef) {
+        metaBadges.push(`<span class="badge bg-label-primary"><i class="ri-file-text-line me-1"></i>Agr: ${escLedgerHtml(agreeNo)}</span>`);
+    }
+    if (bkgNo && bkgNo !== primaryRef) {
+        metaBadges.push(`<span class="badge bg-label-info"><i class="ri-bookmark-line me-1"></i>Bkg: ${escLedgerHtml(bkgNo)}</span>`);
+    }
+    if (quotNo && quotNo !== primaryRef) {
+        metaBadges.push(`<span class="badge bg-label-secondary"><i class="ri-file-list-line me-1"></i>Quot: ${escLedgerHtml(quotNo)}</span>`);
+    }
+    if (r.bank_name) {
+        metaBadges.push(`<span class="badge bg-label-primary"><i class="ri-bank-line me-1"></i>From: ${escLedgerHtml(r.bank_name)}${r.account_no ? ' (' + escLedgerHtml(r.account_no) + ')' : ''}</span>`);
+    }
+    if (r.company_bank_name) {
+        metaBadges.push(`<span class="badge bg-label-success"><i class="ri-bank-fill me-1"></i>To: ${escLedgerHtml(r.company_bank_name)}${r.company_account_no ? ' (' + escLedgerHtml(r.company_account_no) + ')' : ''}</span>`);
+    }
+    if (r.cheque_status === 'Collected' && r.collected_at) {
+        metaBadges.push(`<span class="badge bg-label-success"><i class="ri-checkbox-circle-line me-1"></i>Collected: ${moment(r.collected_at).format('DD MMM YYYY')}</span>`);
+    }
+    if (metaBadges.length) {
+        out += `<div class="d-flex flex-wrap gap-1 mt-1">${metaBadges.join('')}</div>`;
+    }
+    return out;
+}
+
+function openEncryptedLedgerPrint(urlPath, docNo) {
+    const cleanNo = $.trim(docNo || '');
+    if (!cleanNo) return;
+    fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(cleanNo))
+        .then(res => res.text())
+        .then(token => {
+            if (!token || !token.trim()) {
+                Swal.fire('Error', 'Encryption failed.', 'error');
+                return;
+            }
+            window.open(urlPath + '?token=' + encodeURIComponent(token.trim()), '_blank');
+        });
+}
+
 function refreshLedger(code) {
             if ($.fn.DataTable.isDataTable('#tblLedger')) {
                 $('#tblLedger').DataTable().destroy();
@@ -1837,107 +1919,75 @@ function refreshLedger(code) {
                     url: '/CustomerLedgerController',
                     data: { action: 'GetContractLedgerData', contract_id: code },
                     dataSrc: function(json) {
+                        const rows = (json && Array.isArray(json.data)) ? json.data : [];
                         let totDebit = 0, totCredit = 0;
-                        json.data.forEach(r => {
-                            totDebit += parseFloat(r.debit);
-                            totCredit += parseFloat(r.credit);
+                        rows.forEach(r => {
+                            totDebit += parseFloat(r.debit || 0);
+                            totCredit += parseFloat(r.credit || 0);
                         });
                         $('#lblTotalDebit').text(totDebit.toFixed(3));
                         $('#lblTotalCredit').text(totCredit.toFixed(3));
                         $('#lblBalance').text((totDebit - totCredit).toFixed(3));
-                        return json.data;
+                        return rows;
                     }
                 },
                 columns: [
                     { 
                         data: 'trans_date',
-                        render: v => moment(v).format('DD-MM-YYYY')
-                    },
-                    { 
-                        data: null, 
-                        render: r => `<div class="fw-bold">${r.trans_type}</div><small class="text-muted">${r.payment_method}</small>`
+                        className: 'text-nowrap',
+                        render: v => v ? moment(v).format('DD MMM YYYY') : '-'
                     },
                     { 
                         data: null, 
                         render: r => {
-                            let out = '';
-                            
-                            // Top Line: Ref / Check No and Cheque Date
-                            out += `<div class="fw-bold">
-                                ${r.ref_no || '-'}
-                                ${r.cheque_date ? `<span class="text-info fw-normal ms-2" style="font-size:11px">(${moment(r.cheque_date).format('DD-MM-YYYY')})</span>` : ''}
-                            </div>`;
-
-                            // Bank Details
-                            if(r.bank_name) {
-                                out += `<div style="font-size:10px" class="text-primary"><i class="ri-bank-line me-1"></i>From: ${r.bank_name} ${r.account_no ? '('+r.account_no+')' : ''}</div>`;
-                            }
-                            if(r.company_bank_name) {
-                                out += `<div style="font-size:10px" class="text-success"><i class="ri-bank-fill me-1"></i>To: ${r.company_bank_name} ${r.company_account_no ? '('+r.company_account_no+')' : ''}</div>`;
-                            }
-                            
-                            // Collection Details
-                            if(r.cheque_status === 'Collected' && r.collected_at) {
-                                out += `<div style="font-size:10px" class="text-success fw-medium"><i class="ri-checkbox-circle-line me-1"></i>Collected: ${moment(r.collected_at).format('DD-MM-YYYY')}</div>`;
-                            }
-
-                            // References (Quotation/Booking)
-                            if(r.quotation_no || r.booking_no || r.agreement_no) {
-                               
-                                out += `<div style="font-size:10px" class="text-muted">`;
-
-                                    if (r.agreement_no) {
-                                        out += `<div><i class="ri-links-line me-1"></i>Agreement No.: ${r.agreement_no}</div>`;
-                                    }
-                                    
-                                    if (r.booking_no) {
-                                        out += `<div><i class="ri-bookmark-line me-1"></i>Booking Ref: ${r.booking_no}</div>`;
-                                    }
-                                    
-                                    if (r.quotation_no) {
-                                        out += `<div><i class="ri-file-list-line me-1"></i>Qtn Ref No: ${r.quotation_no}</div>`;
-                                    }
-                                    if (r.description) {
-                                        out += `<div><i class="ri-file-list-line me-1"></i>Des: ${r.description}</div>`;
-                                    }
-                                    
-                                    out += `</div>`;
-                            }
-                            
-                            return out;
+                            const method = (r.payment_method && r.payment_method !== 'N/A') ? `<span class="badge bg-label-info mt-1">${escLedgerHtml(r.payment_method)}</span>` : '<small class="text-muted">N/A</small>';
+                            return `<div class="fw-semibold">${escLedgerHtml(r.trans_type || '-')}</div>${method}`;
                         }
                     },
-                    { data: 'debit', className: 'text-end text-danger', render: v => v > 0 ? parseFloat(v).toFixed(3) : '-' },
-                    { data: 'credit', className: 'text-end text-success', render: v => v > 0 ? parseFloat(v).toFixed(3) : '-' },
+                    { 
+                        data: null, 
+                        render: r => renderLedgerRefDetails(r)
+                    },
+                    {
+                        data: null,
+                        className: 'text-center text-nowrap',
+                        render: r => {
+                            const f = getLedgerFlagObj(r);
+                            return `<span class="badge ${f.cls}">${escLedgerHtml(f.label)}</span>`;
+                        }
+                    },
+                    { data: 'debit', className: 'text-end text-danger text-nowrap', render: v => parseFloat(v || 0) > 0 ? parseFloat(v).toFixed(3) : '-' },
+                    { data: 'credit', className: 'text-end text-success text-nowrap', render: v => parseFloat(v || 0) > 0 ? parseFloat(v).toFixed(3) : '-' },
                     { 
                         data: 'running_balance', 
-                        className: 'text-end fw-bold', 
-                        render: v => `<span class="${v >= 0 ? 'text-primary' : 'text-danger'}">${v.toFixed(3)}</span>`
+                        className: 'text-end fw-bold text-nowrap', 
+                        render: v => {
+                            const val = parseFloat(v || 0);
+                            return `<span class="${val >= 0 ? 'text-primary' : 'text-danger'}">${val.toFixed(3)}</span>`;
+                        }
                     },
                     {
                         data: 'ids',
+                        className: 'text-nowrap',
                         render: (id, type, row) => {
-                            const isAdmin = userRole.toLowerCase().includes('admin');
-                            const isToday = moment(row.created_at).format('YYYY-MM-DD') === todayStr;
-                            const canModify = true; // Enabled for all users as requested
-                            
-                            if(!canModify) return '';
-
                             let btns = `<div class="d-flex gap-1">
-                                <button type="button" class="btn btn-icon-square  btn-icon text-primary btn-edit" data-id="${id}" title="Edit"><span class="ri ri-edit-line ri-xl"></span></button>
-                                <button type="button" class="btn btn-icon-square  btn-icon text-danger btn-delete" data-id="${id}" title="Delete"><span class="ri ri-delete-bin-line ri-xl"></span></button>`;
-                            
+                                <button type="button" class="btn btn-icon-square btn-icon text-primary btn-edit" data-id="${id}" title="Edit"><span class="ri ri-edit-line ri-xl"></span></button>
+                                <button type="button" class="btn btn-icon-square btn-icon text-danger btn-delete" data-id="${id}" title="Delete"><span class="ri ri-delete-bin-line ri-xl"></span></button>`;
+
+                            const candReceipt = $.trim(row.matched_cashmemo_no || (parseFloat(row.credit || 0) > 0 && /\/CM\/|CM\//i.test(String(row.ref_no || '')) ? row.ref_no : ''));
+                            if (candReceipt) {
+                                btns += `<button type="button" class="btn btn-icon-square btn-icon text-success btn-modal-print-receipt" data-receipt="${escLedgerHtml(candReceipt)}" title="Print Receipt ${escLedgerHtml(candReceipt)}"><span class="ri-printer-line ri-xl"></span></button>`;
+                            }
                             if (row.payment_method === 'Cheque') {
                                 if (row.cheque_status === 'Pending') {
                                     btns += `
-                                        <button class="btn btn-icon-square  btn-icon text-success btn-status-main" data-id="${id}" data-status="Collected" title="Collect Cheque"><span class="ri ri-check-line ri-xl"></span></button>
-                                        <button class="btn btn-icon-square  btn-icon text-warning btn-status-main" data-id="${id}" data-status="Bounced" title="Bounce Cheque"><span class="ri ri-close-line ri-xl"></span></button>
+                                        <button class="btn btn-icon-square btn-icon text-success btn-status-main" data-id="${id}" data-status="Collected" title="Collect Cheque"><span class="ri ri-check-line ri-xl"></span></button>
+                                        <button class="btn btn-icon-square btn-icon text-warning btn-status-main" data-id="${id}" data-status="Bounced" title="Bounce Cheque"><span class="ri ri-close-line ri-xl"></span></button>
                                     `;
                                 } else {
-                                    btns += `<button class="btn btn-icon-square  btn-icon text-secondary btn-status-main" data-id="${id}" data-status="Pending" title="Revoke Status"><span class="ri ri-refresh-line ri-xl"></span></button>`;
+                                    btns += `<button class="btn btn-icon-square btn-icon text-secondary btn-status-main" data-id="${id}" data-status="Pending" title="Revoke Status"><span class="ri ri-refresh-line ri-xl"></span></button>`;
                                 }
                             }
-                            
                             btns += `</div>`;
                             return btns;
                         }
@@ -1947,7 +1997,7 @@ function refreshLedger(code) {
                     if (data.cheque_status === 'Collected') $(row).addClass('row-collected');
                     else if (data.cheque_status === 'Bounced') $(row).addClass('row-bounced');
                 },
-                order: [[0, 'asc'], [5, 'asc']], // Sort by date then by id
+                order: [],
                 dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>>t<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
                 pageLength: 25
             });
@@ -2488,24 +2538,88 @@ function opencustomerLedgerModal(customer_code) {
         }
     });
 }
-function populatecustomerLedgerModal(d) {
+let modalCustomerInfo = null;
+let modalCustomerLedgerRows = [];
+let modalCustomerCodeCurrent = '';
 
+function populatecustomerLedgerModal(d) {
     let data = (typeof d === "string") ? JSON.parse(d) : d;
- 
-        $('#customer_ledger_customer_name').text(data.customer.customer_name || '');
-        $('#customer_display_customer_name').text(data.customer.customer_name +' | '+data.customer.customer_id || '');
-        $('#txt_customer_ledger_modal_customer_code').val(data.customer.customer_id || '');
-        $('#customer_display_mobile').text(data.customer.customer_mobile || '');
-        $('#customer_display_email').text(data.customer.customer_email || '');
-          $('#customer_display_cprcr').text(data.customer.customer_cr_cpr || '');
-      //  loadHeads();
-        refreshCustomerLedger(data.customer.customer_id);
-        
-       
-   
+    modalCustomerInfo = data.customer || {};
+    modalCustomerCodeCurrent = modalCustomerInfo.customer_id || '';
+
+    $('#customer_ledger_customer_name').text(modalCustomerInfo.customer_name || '');
+    $('#customer_display_customer_name').text((modalCustomerInfo.customer_name || '') + (modalCustomerInfo.customer_id ? ' | ' + modalCustomerInfo.customer_id : ''));
+    $('#txt_customer_ledger_modal_customer_code').val(modalCustomerCodeCurrent);
+    $('#customer_display_mobile').text(modalCustomerInfo.customer_mobile || '');
+    $('#customer_display_email').text(modalCustomerInfo.customer_email || '');
+    $('#customer_display_cprcr').text(modalCustomerInfo.customer_cr_cpr || '');
+
+    loadModalCustomerContracts(modalCustomerCodeCurrent);
+    refreshCustomerLedger(modalCustomerCodeCurrent, 'All');
 }
 
-function refreshCustomerLedger(code) {
+function loadModalCustomerContracts(code) {
+    $('#modalCustomerContractsList').html('<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>');
+    $.get('/CustomerLedgerController', { action: 'GetCustomerContractsSummary', customer_code: code }, function(res) {
+        const contracts = (res && res.data) ? res.data : [];
+        $('#lblModalContractCount').text(contracts.length);
+        if (!contracts.length) {
+            $('#modalCustomerContractsList').html('<div class="text-muted small text-center py-3">No agreements found.</div>');
+            return;
+        }
+        let html = `<button type="button" class="btn btn-sm btn-outline-primary w-100 mb-1 btn-modal-filter-contract" data-id="All">Show All Agreements</button>`;
+        html += contracts.map(c => {
+            const statusBadge = c.is_returned ? '<span class="badge bg-label-secondary">Returned</span>' : '<span class="badge bg-label-success">Active</span>';
+            const deb = parseFloat(c.total_debit || 0).toFixed(3);
+            const cred = parseFloat(c.total_credit || 0).toFixed(3);
+            const bal = parseFloat(c.balance || 0).toFixed(3);
+            const balCls = parseFloat(c.balance || 0) > 0 ? 'text-danger' : 'text-success';
+            const receipts = Array.isArray(c.receipts) ? c.receipts : [];
+            let receiptBtnHtml = '';
+            if (receipts.length === 1) {
+                receiptBtnHtml = `<button type="button" class="btn btn-xs btn-outline-success btn-modal-print-receipt" data-receipt="${escLedgerHtml(receipts[0].cashmemo_no)}"><i class="ri-receipt-line me-1"></i>Receipt</button>`;
+            } else if (receipts.length > 1) {
+                const items = receipts.map(rc => `<li><a class="dropdown-item btn-modal-print-receipt" href="javascript:void(0)" data-receipt="${escLedgerHtml(rc.cashmemo_no)}">${escLedgerHtml(rc.cashmemo_no)} (${parseFloat(rc.net_total || 0).toFixed(3)})</a></li>`).join('');
+                receiptBtnHtml = `<div class="btn-group">
+                    <button type="button" class="btn btn-xs btn-outline-success dropdown-toggle" data-bs-toggle="dropdown"><i class="ri-receipt-line me-1"></i>Receipts (${receipts.length})</button>
+                    <ul class="dropdown-menu dropdown-menu-end">${items}</ul>
+                </div>`;
+            }
+            return `<div class="border rounded p-2 bg-light-subtle">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <a href="javascript:void(0)" class="fw-bold text-primary btn-modal-view-agreement" data-contract="${escLedgerHtml(c.agreement_no)}">${escLedgerHtml(c.agreement_no)}</a>
+                        <div class="small text-muted">${escLedgerHtml(c.vehicle_no || '-')} ${c.model_name ? '· ' + escLedgerHtml(c.model_name) : ''}</div>
+                    </div>
+                    ${statusBadge}
+                </div>
+                <div class="d-flex justify-content-between small mt-2 pt-1 border-top">
+                    <span>Debit: <strong>${deb}</strong></span>
+                    <span>Paid: <strong class="text-success">${cred}</strong></span>
+                    <span>Bal: <strong class="${balCls}">${bal}</strong></span>
+                </div>
+                <div class="d-flex flex-wrap gap-1 mt-2">
+                    <button type="button" class="btn btn-xs btn-outline-primary btn-modal-filter-contract" data-id="${c.contract_id}"><i class="ri-list-check me-1"></i>Ledger</button>
+                    <button type="button" class="btn btn-xs btn-outline-secondary btn-modal-view-agreement" data-contract="${escLedgerHtml(c.agreement_no)}"><i class="ri-file-text-line me-1"></i>Agreement</button>
+                    ${receiptBtnHtml}
+                </div>
+            </div>`;
+        }).join('');
+        $('#modalCustomerContractsList').html(html);
+    }, 'json');
+}
+
+$(document).on('click', '.btn-modal-filter-contract', function() {
+    refreshCustomerLedger(modalCustomerCodeCurrent, $(this).data('id'));
+});
+$(document).on('click', '.btn-modal-view-agreement', function() {
+    openEncryptedLedgerPrint('/PrintAgreement', $(this).data('contract'));
+});
+$(document).on('click', '.btn-modal-print-receipt', function() {
+    openEncryptedLedgerPrint('/CashMemoPrint', $(this).data('receipt'));
+});
+
+function refreshCustomerLedger(code, contractId = 'All') {
             if ($.fn.DataTable.isDataTable('#tblCustomerLedger')) {
                 $('#tblCustomerLedger').DataTable().destroy();
             }
@@ -2513,99 +2627,215 @@ function refreshCustomerLedger(code) {
             CustomerledgerTable = $('#tblCustomerLedger').DataTable({
                 ajax: {
                     url: '/CustomerLedgerController',
-                    data: { action: 'GetLedgerData', customer_code: code },
+                    data: { action: 'GetCustomerContractLedgerData', customer_code: code, contract_id: contractId },
                     dataSrc: function(json) {
+                        const rows = (json && Array.isArray(json.data)) ? json.data : [];
+                        modalCustomerLedgerRows = rows;
                         let totDebit = 0, totCredit = 0;
-                        json.data.forEach(r => {
-                            totDebit += parseFloat(r.debit);
-                            totCredit += parseFloat(r.credit);
+                        rows.forEach(r => {
+                            totDebit += parseFloat(r.debit || 0);
+                            totCredit += parseFloat(r.credit || 0);
                         });
                         $('#customer_lblTotalDebit').text(totDebit.toFixed(3));
                         $('#customer_lblTotalCredit').text(totCredit.toFixed(3));
                         $('#customer_lblBalance').text((totDebit - totCredit).toFixed(3));
-                        return json.data;
+                        return rows;
                     }
                 },
                 columns: [
                     { 
                         data: 'trans_date',
-                        render: v => moment(v).format('DD-MM-YYYY')
-                    },
-                     { 
-                        data: 'agreement_no',
-                        
-                    },
-                    { 
-                        data: null, 
-                        render: r => `<div class="fw-bold">${r.trans_type}</div><small class="text-muted">${r.payment_method}</small>`
+                        className: 'text-nowrap',
+                        render: v => v ? moment(v).format('DD MMM YYYY') : '-'
                     },
                     { 
                         data: null, 
                         render: r => {
-                            let out = '';
-                            
-                            // Top Line: Ref / Check No and Cheque Date
-                            out += `<div class="fw-bold">
-                                ${r.ref_no || '-'}
-                                ${r.cheque_date ? `<span class="text-info fw-normal ms-2" style="font-size:11px">(${moment(r.cheque_date).format('DD-MM-YYYY')})</span>` : ''}
-                            </div>`;
-
-                            // Bank Details
-                            if(r.bank_name) {
-                                out += `<div style="font-size:10px" class="text-primary"><i class="ri-bank-line me-1"></i>From: ${r.bank_name} ${r.account_no ? '('+r.account_no+')' : ''}</div>`;
-                            }
-                            if(r.company_bank_name) {
-                                out += `<div style="font-size:10px" class="text-success"><i class="ri-bank-fill me-1"></i>To: ${r.company_bank_name} ${r.company_account_no ? '('+r.company_account_no+')' : ''}</div>`;
-                            }
-                            
-                            // Collection Details
-                            if(r.cheque_status === 'Collected' && r.collected_at) {
-                                out += `<div style="font-size:10px" class="text-success fw-medium"><i class="ri-checkbox-circle-line me-1"></i>Collected: ${moment(r.collected_at).format('DD-MM-YYYY')}</div>`;
-                            }
-
-                            // References (Quotation/Booking)
-                            if(r.quotation_no || r.booking_no || r.agreement_no) {
-                               
-                                out += `<div style="font-size:10px" class="text-muted">`;
-
-                                    if (r.agreement_no) {
-                                        out += `<div><i class="ri-links-line me-1"></i>Agreement No.: ${r.agreement_no}</div>`;
-                                    }
-                                    
-                                    if (r.booking_no) {
-                                        out += `<div><i class="ri-bookmark-line me-1"></i>Booking Ref: ${r.booking_no}</div>`;
-                                    }
-                                    
-                                    if (r.quotation_no) {
-                                        out += `<div><i class="ri-file-list-line me-1"></i>Qtn Ref No: ${r.quotation_no}</div>`;
-                                    }
-                                    if (r.description) {
-                                        out += `<div><i class="ri-file-list-line me-1"></i>Des: ${r.description}</div>`;
-                                    }
-                                    
-                                    out += `</div>`;
-                            }
-                            
-                            return out;
+                            const method = (r.payment_method && r.payment_method !== 'N/A') ? `<span class="badge bg-label-info mt-1">${escLedgerHtml(r.payment_method)}</span>` : '<small class="text-muted">N/A</small>';
+                            return `<div class="fw-semibold">${escLedgerHtml(r.trans_type || '-')}</div>${method}`;
                         }
                     },
-                    { data: 'debit', className: 'text-end text-danger', render: v => v > 0 ? parseFloat(v).toFixed(3) : '-' },
-                    { data: 'credit', className: 'text-end text-success', render: v => v > 0 ? parseFloat(v).toFixed(3) : '-' },
+                    { 
+                        data: null, 
+                        render: r => renderLedgerRefDetails(r)
+                    },
+                    {
+                        data: null,
+                        className: 'text-center text-nowrap',
+                        render: r => {
+                            const f = getLedgerFlagObj(r);
+                            return `<span class="badge ${f.cls}">${escLedgerHtml(f.label)}</span>`;
+                        }
+                    },
+                    { data: 'debit', className: 'text-end text-danger text-nowrap', render: v => parseFloat(v || 0) > 0 ? parseFloat(v).toFixed(3) : '-' },
+                    { data: 'credit', className: 'text-end text-success text-nowrap', render: v => parseFloat(v || 0) > 0 ? parseFloat(v).toFixed(3) : '-' },
                     { 
                         data: 'running_balance', 
-                        className: 'text-end fw-bold', 
-                        render: v => `<span class="${v >= 0 ? 'text-primary' : 'text-danger'}">${v.toFixed(3)}</span>`
+                        className: 'text-end fw-bold text-nowrap', 
+                        render: v => {
+                            const val = parseFloat(v || 0);
+                            return `<span class="${val >= 0 ? 'text-primary' : 'text-danger'}">${val.toFixed(3)}</span>`;
+                        }
+                    },
+                    {
+                        data: null,
+                        className: 'text-nowrap',
+                        render: r => {
+                            const agreeNo = $.trim(r.agreement_no || '');
+                            let html = agreeNo
+                                ? `<div><a href="javascript:void(0)" class="btn-modal-view-agreement fw-bold small text-primary text-decoration-underline" data-contract="${escLedgerHtml(agreeNo)}">${escLedgerHtml(agreeNo)}</a></div>`
+                                : '<span class="text-muted small">-</span>';
+                            const candReceipt = $.trim(r.matched_cashmemo_no || (parseFloat(r.credit || 0) > 0 && /\/CM\/|CM\//i.test(String(r.ref_no || '')) ? r.ref_no : ''));
+                            if (candReceipt) {
+                                html += `<button type="button" class="btn btn-xs btn-outline-primary mt-1 btn-modal-print-receipt" data-receipt="${escLedgerHtml(candReceipt)}"><i class="ri-printer-line me-1"></i>Receipt</button>`;
+                            }
+                            return html;
+                        }
                     }
                 ],
                 createdRow: function(row, data) {
                     if (data.cheque_status === 'Collected') $(row).addClass('row-collected');
                     else if (data.cheque_status === 'Bounced') $(row).addClass('row-bounced');
                 },
-                order: [[0, 'asc'], [6, 'asc']], // Sort by date then by id
+                order: [],
                 dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>>t<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
                 pageLength: 25
             });
         }
+
+$(document).on('click', '#btnModalPrintSOA', function() {
+    if (!modalCustomerInfo || !modalCustomerCodeCurrent) return;
+    if (typeof window.jspdf === 'undefined') {
+        alert('PDF library not loaded yet.');
+        return;
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('l', 'pt', 'a4');
+    const ps = window.LEDGER_PRINT_SETTINGS || {};
+    const cleanHex = String(ps.accent_color || '').replace('#', '').trim();
+    const accentRgb = /^[0-9a-fA-F]{6}$/.test(cleanHex)
+        ? [parseInt(cleanHex.substring(0, 2), 16), parseInt(cleanHex.substring(2, 4), 16), parseInt(cleanHex.substring(4, 6), 16)]
+        : [27, 61, 148];
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const marginX = 32;
+    const imgData = ps.logo_base64 || '';
+    const showLogo = Number(ps.show_logo !== undefined ? ps.show_logo : 1) === 1;
+    const logoW = Math.min(130, Math.max(70, Number(ps.logo_width || 120) * 0.8));
+    const logoH = logoW / 2.8;
+
+    const totDebit = $('#customer_lblTotalDebit').text() || '0.000';
+    const totCredit = $('#customer_lblTotalCredit').text() || '0.000';
+    const totBalance = $('#customer_lblBalance').text() || '0.000';
+
+    const bodyRows = modalCustomerLedgerRows.length
+        ? modalCustomerLedgerRows.map(r => {
+            const f = getLedgerFlagObj(r);
+            const dt = r.trans_date ? moment(r.trans_date).format('DD MMM YYYY') : '-';
+            const primaryRef = $.trim(r.ref_no || '') || $.trim(r.agreement_no || '') || $.trim(r.booking_no || '') || $.trim(r.quotation_no || '') || '-';
+            const descParts = [primaryRef];
+            if (r.description) descParts.push(r.description);
+            if (r.bank_name) descParts.push('Bank: ' + r.bank_name);
+            return [
+                dt,
+                r.agreement_no || '-',
+                `${r.trans_type || '-'}${r.payment_method && r.payment_method !== 'N/A' ? ' (' + r.payment_method + ')' : ''}`,
+                descParts.join(' | '),
+                f.label,
+                parseFloat(r.debit || 0) > 0 ? parseFloat(r.debit).toFixed(3) : '-',
+                parseFloat(r.credit || 0) > 0 ? parseFloat(r.credit).toFixed(3) : '-',
+                parseFloat(r.running_balance || 0).toFixed(3)
+            ];
+        })
+        : [[{ content: 'No ledger transactions found.', colSpan: 8, styles: { halign: 'center' } }]];
+
+    doc.autoTable({
+        head: [['Date', 'Agreement', 'Type / Method', 'Reference & Details', 'Flag', 'Debit', 'Credit', 'Balance']],
+        body: bodyRows,
+        startY: 128,
+        theme: 'grid',
+        styles: { fontSize: 8.5, font: 'helvetica', cellPadding: 5, valign: 'middle', lineColor: [215, 222, 235], lineWidth: 0.4 },
+        headStyles: { fillColor: accentRgb, textColor: 255, fontStyle: 'bold' },
+        columnStyles: {
+            0: { cellWidth: 70 },
+            1: { cellWidth: 95 },
+            4: { cellWidth: 72, halign: 'center' },
+            5: { cellWidth: 62, halign: 'right' },
+            6: { cellWidth: 62, halign: 'right' },
+            7: { cellWidth: 66, halign: 'right', fontStyle: 'bold' }
+        },
+        alternateRowStyles: { fillColor: [248, 250, 253] },
+        margin: { top: 96, left: marginX, right: marginX, bottom: 50 },
+        didDrawPage: function (data) {
+            if (showLogo && imgData) {
+                try { doc.addImage(imgData, 'PNG', marginX, 18, logoW, logoH); } catch (e) {}
+            }
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(15);
+            doc.setTextColor(accentRgb[0], accentRgb[1], accentRgb[2]);
+            doc.text(String(ps.company_name || 'FAST LINK CAR RENTAL'), pageWidth / 2, 30, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(80, 90, 105);
+            if (ps.header_subtitle) doc.text(String(ps.header_subtitle), pageWidth / 2, 43, { align: 'center' });
+            if (ps.header_address) doc.text(String(ps.header_address), pageWidth / 2, 55, { align: 'center' });
+
+            let rightX = pageWidth - marginX;
+            let rightY = 26;
+            doc.setFontSize(8);
+            if (ps.header_phone) { doc.text('Tel: ' + String(ps.header_phone), rightX, rightY, { align: 'right' }); rightY += 11; }
+            if (ps.header_email) { doc.text(String(ps.header_email), rightX, rightY, { align: 'right' }); rightY += 11; }
+            if (ps.header_website) { doc.text(String(ps.header_website), rightX, rightY, { align: 'right' }); }
+
+            doc.setDrawColor(accentRgb[0], accentRgb[1], accentRgb[2]);
+            doc.setLineWidth(1.2);
+            doc.line(marginX, 68, pageWidth - marginX, 68);
+
+            if (data.pageNumber === 1) {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.setTextColor(30, 41, 59);
+                doc.text('STATEMENT OF ACCOUNT (SOA)', marginX, 86);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8.5);
+                doc.setTextColor(71, 85, 105);
+                doc.text(`Customer: ${modalCustomerInfo.customer_name || ''} (${modalCustomerCodeCurrent})  |  Mobile: ${modalCustomerInfo.customer_mobile || '-'}`, marginX, 102);
+                doc.text(`Statement Date: ${moment().format('DD MMM YYYY')}`, rightX, 86, { align: 'right' });
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Total Debit: ${totDebit}   |   Total Credit: ${totCredit}   |   Balance: ${totBalance} BHD`, rightX, 114, { align: 'right' });
+            } else {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10);
+                doc.setTextColor(71, 85, 105);
+                doc.text(`Statement of Account - ${modalCustomerInfo.customer_name || ''} (Cont.)`, marginX, 84);
+            }
+
+            let footerY = pageHeight - 28;
+            doc.setDrawColor(203, 213, 225);
+            doc.setLineWidth(0.6);
+            doc.line(marginX, footerY - 10, pageWidth - marginX, footerY - 10);
+            if (Number(ps.show_footer !== undefined ? ps.show_footer : 1) === 1) {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                doc.setTextColor(71, 85, 105);
+                if (ps.footer_text) doc.text(String(ps.footer_text), marginX, footerY);
+                if (ps.footer_note) {
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(120, 130, 145);
+                    doc.text(String(ps.footer_note), marginX, footerY + 11);
+                }
+            }
+            let pageStr = 'Page ' + doc.internal.getNumberOfPages();
+            if (typeof doc.putTotalPages === 'function') pageStr += ' of totalPages';
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(71, 85, 105);
+            doc.text(pageStr, rightX, footerY, { align: 'right' });
+        }
+    });
+    if (typeof doc.putTotalPages === 'function') doc.putTotalPages('totalPages');
+    window.open(doc.output('bloburl'), '_blank');
+});
 let hirerPad;
 let deliveryPad;
 $(document).on('click', '.btnOpenSignature', function () {

@@ -76,27 +76,43 @@
                             </div>
                         </div>
                  <div class="row g-4">
-                            
+                            <!-- Customer Agreements Card -->
+                            <div class="col-lg-4">
+                                <div class="card ledger-card shadow-sm">
+                                    <div class="card-header border-bottom py-2 d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold" style="color:#1b3d94;">Customer Agreements</h6>
+                                        <span class="badge bg-label-primary" id="lblModalContractCount">0</span>
+                                    </div>
+                                    <div class="card-body p-2">
+                                        <div id="modalCustomerContractsList" class="d-flex flex-column gap-2" style="max-height: 460px; overflow-y: auto;">
+                                            <div class="text-muted small text-center py-3">Loading agreements...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- Ledger Table Card -->
-                            <div class="col-lg-12">
+                            <div class="col-lg-8">
                                 <div class="card ledger-card shadow-sm">
-                                    <div class="card-header d-flex justify-content-between align-items-center">
-                                        <h5 class="mb-0">Ledger Statement</h5>
-                                        
+                                    <div class="card-header border-bottom py-2 d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0 fw-bold" style="color:#1b3d94;">Ledger Statement</h5>
+                                        <button type="button" class="btn btn-sm btn-primary" id="btnModalPrintSOA">
+                                            <i class="ri-printer-line me-1"></i> Print SOA
+                                        </button>
                                     </div>
                                     <div class="card-body">
                                         <div class="table-responsive">
-                                            <table id="tblCustomerLedger" class="table table-hover border-top">
+                                            <table id="tblCustomerLedger" class="table table-hover border-top align-middle" style="font-size: 13px; width: 100%;">
                                                 <thead>
                                                     <tr>
                                                         <th>Date</th>
-                                                        <th>Agreement No.</th>
                                                         <th>Type / Method</th>
-                                                        <th>Ref</th>
+                                                        <th>Reference &amp; Details</th>
+                                                        <th class="text-center">Flag</th>
                                                         <th class="text-end">Debit</th>
                                                         <th class="text-end">Credit</th>
                                                         <th class="text-end">Balance</th>
+                                                        <th>Agreement / Receipt</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody></tbody>

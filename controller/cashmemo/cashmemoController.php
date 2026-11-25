@@ -157,11 +157,14 @@ class cashmemoController
 
             case 'GetSignDetails':
                     $result_sign = $this->varPDOModelObj->selectexecuteQuery(
-                            "SELECT company_signature,company_sign_date_time, DATE_FORMAT(company_sign_date_time, '%d-%m-%Y %h:%i %p') AS company_sign_date_time_format,customer_signature,customer_sign_datetime,company_sign_name,customer_sign_name,DATE_FORMAT(customer_sign_datetime, '%d-%m-%Y %h:%i %p') AS customer_sign_datetime_format FROM   cashmemo WHERE id = :cashmemo_id",
+                            "SELECT company_signature,company_sign_date_time, DATE_FORMAT(company_sign_date_time, '%d-%m-%Y %h:%i %p') AS company_sign_date_time_format,customer_signature,customer_sign_datetime,company_sign_name,customer_sign_name,customer_name,user_name,DATE_FORMAT(customer_sign_datetime, '%d-%m-%Y %h:%i %p') AS customer_sign_datetime_format FROM cashmemo WHERE id = :cashmemo_id",
                             [':cashmemo_id' => $this->cashmemo_id]
                         );
                 
                 $sign_details = $result_sign->fetchAll(PDO::FETCH_ASSOC);
+                if (!empty($sign_details[0])) {
+                    $sign_details[0]['logged_user_name'] = $_SESSION['full_name'] ?? $_SESSION['username'] ?? '';
+                }
                  $response = [
                         'data' => $sign_details ?: []
                     ];

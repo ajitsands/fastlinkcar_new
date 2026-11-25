@@ -3103,10 +3103,11 @@ $(document).on('click', '.btnOpenSignature', function () {
 
         }
 
+        const defaultLoggedUser = <?= json_encode($_SESSION['full_name'] ?? $_SESSION['username'] ?? '') ?>;
         $('#hirer_name')
             .val(row.company_sign_name
-                ?  row.company_sign_name
-                : '');
+                ? row.company_sign_name
+                : (row.logged_user_name || defaultLoggedUser || row.user_name || ''));
 
        
         $('#hirer_signed_date')
@@ -3146,8 +3147,8 @@ $(document).on('click', '.btnOpenSignature', function () {
         }
          $('#delivery_name')
             .val(row.customer_sign_name
-                ?  row.customer_sign_name
-                : '');
+                ? row.customer_sign_name
+                : (row.customer_name || ''));
 
        
         $('#delivery_signed_date')

@@ -478,22 +478,20 @@ class CustomerLedgerController
                        vc.service_end_date_time,
                        vc.return_date,
                        vc.vechile_details,
-                       COALESCE(SUM(l.debit), 0) AS total_debit,
-                       COALESCE(SUM(CASE WHEN COALESCE(l.cheque_status, '') = 'Bounced' THEN 0 ELSE l.credit END), 0) AS total_credit
+                       COALESCE((SELECT SUM(l.debit) FROM tbl_customer_ledger l WHERE l.contract_ids = vc.ids), 0) AS total_debit,
+                       COALESCE((SELECT SUM(CASE WHEN COALESCE(l.cheque_status, '') = 'Bounced' THEN 0 ELSE l.credit END) FROM tbl_customer_ledger l WHERE l.contract_ids = vc.ids), 0) AS total_credit
                 FROM tbl_vehicle_rentout_contracts vc
-                LEFT JOIN tbl_customer_ledger l ON l.contract_ids = vc.ids
                 WHERE vc.customer_code = ?
-                GROUP BY vc.ids
                 ORDER BY vc.ids DESC";
         $stmt = $this->varPDOModelObj->varDBPDO->prepare($sql);
         $stmt->execute([$customer_code]);
         $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $stmtCm = $this->varPDOModelObj->varDBPDO->prepare(
-            "SELECT cashmemo_no, cashmemo_date, net_total, cashmemo_payment_type
+            "SELECT cashmemo_no, cashmemo_date, grand_total AS net_total, cashmemo_payment_type
              FROM cashmemo
-             WHERE contract_id = ? OR agreement_no = ?
-             ORDER BY ids DESC"
+             WHERE contract_ids = ? OR agreement_no = ?
+             ORDER BY id DESC"
         );
 
         foreach ($contracts as &$c) {

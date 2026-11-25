@@ -69,6 +69,8 @@ $(document).ready(function () {
         loadReport();
     });
 
+    let movementDT = null;
+
     // Load report data
     function loadReport() {
         let company_id = $('#filter_company').val();
@@ -87,10 +89,26 @@ $(document).ready(function () {
                 to_date: to_date
             },
             beforeSend: function () {
+                if ($.fn.DataTable.isDataTable('#movementReportTable')) {
+                    $('#movementReportTable').DataTable().destroy();
+                    movementDT = null;
+                }
                 $('#movementReportTable tbody').html('<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>');
             },
             success: function (data) {
+                if ($.fn.DataTable.isDataTable('#movementReportTable')) {
+                    $('#movementReportTable').DataTable().destroy();
+                }
                 $('#movementReportTable tbody').html(data);
+                if (!String(data).includes('No movement logs found')) {
+                    movementDT = $('#movementReportTable').DataTable({
+                        pageLength: 20,
+                        lengthMenu: [10, 20, 50, 100],
+                        ordering: false,
+                        autoWidth: false,
+                        dom: '<"row align-items-center mb-2"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-md-end"f>>t<"row align-items-center mt-2"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>'
+                    });
+                }
             },
             error: function () {
                 $('#movementReportTable tbody').html('<tr><td colspan="7" class="text-center text-danger">Error loading report</td></tr>');

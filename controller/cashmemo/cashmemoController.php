@@ -427,52 +427,78 @@ class cashmemoController
             if (!empty($result['data'])) {
                 foreach ($result['data'] as $row) {
         
-                    $date = date("d-m-Y", strtotime($row['cashmemo_date']));
+                    $date = !empty($row['cashmemo_date']) ? date("d M Y", strtotime($row['cashmemo_date'])) : '-';
                     $subtotal = number_format((float)$row['subtotal'], $decimals);
                     $vat      = number_format((float)$row['vat_total'], $decimals);
                     $grand    = number_format((float)$row['grand_total'], $decimals);
         
                     $id = (int)$row['id'];
-                    $cashmemo_no = htmlspecialchars($row['cashmemo_no']);
+                    $rawCashmemoNo = htmlspecialchars($row['cashmemo_no'], ENT_QUOTES);
+                    $cashmemoNoHtml = "<div class='fw-bold' style='color:#1b3d94;'>{$rawCashmemoNo}</div>";
                     
                     $cmpName = !empty($row['c_company_name']) ? htmlspecialchars($row['c_company_name']) : htmlspecialchars($row['company_name']);
+                    $payMode = htmlspecialchars($row['cashmemo_payment_type'] ?? '');
+                    $badges = '';
                     if (!empty($cmpName)) {
-                        $cashmemo_no .= "<br><span class='badge' style='background-color:#ED1C24; color:#fff;'>{$cmpName}</span>";
+                        $badges .= "<span class='badge bg-label-primary me-1'>{$cmpName}</span>";
+                    }
+                    if (!empty($payMode)) {
+                        $badges .= "<span class='badge bg-label-info'>{$payMode}</span>";
+                    }
+                    if ($badges !== '') {
+                        $cashmemoNoHtml .= "<div class='mt-1'>{$badges}</div>";
                     }
                     
-                    $customer_name = htmlspecialchars($row['customer_name']);
-                    $customer_phone = htmlspecialchars($row['customer_phone']);
-                    $customer_cpr_cr = htmlspecialchars($row['customer_cpr_cr']);
-                    $agreement_no = htmlspecialchars($row['agreement_no']);
-                    $vehicle_no = htmlspecialchars($row['vehicle_no']);
-                    $model_names = htmlspecialchars($row['model_names']);
-                    $custom_val=$agreement_no.' | '.$model_names.' | '.$vehicle_no;
-                    $customer_val=$customer_name.' | '.$customer_phone.' | '.$customer_cpr_cr;
-                    $display = "
-                            <div>
-                                <div>{$custom_val}</div>
-                                <div style='font-size:11px; color:#6c757d;'>{$customer_val}</div>
-                            </div>
-                        ";
+                    $customer_name = htmlspecialchars($row['customer_name'] ?? '');
+                    $customer_phone = htmlspecialchars($row['customer_phone'] ?? '');
+                    $customer_cpr_cr = htmlspecialchars($row['customer_cpr_cr'] ?? '');
+                    $agreement_no = htmlspecialchars($row['agreement_no'] ?? '');
+                    $vehicle_no = htmlspecialchars($row['vehicle_no'] ?? '');
+                    $model_names = htmlspecialchars($row['model_names'] ?? '');
+                    $notes = htmlspecialchars($row['cashmemo_notes'] ?? '');
+
+                    $topParts = [];
+                    if ($agreement_no !== '') $topParts[] = "<span class='fw-semibold text-primary'>{$agreement_no}</span>";
+                    if ($vehicle_no !== '') $topParts[] = "<span class='badge bg-label-secondary'>{$vehicle_no}</span>";
+                    if ($model_names !== '') $topParts[] = "<span class='small fw-medium'>{$model_names}</span>";
+
+                    $custParts = [];
+                    if ($customer_name !== '') $custParts[] = "<strong>{$customer_name}</strong>";
+                    if ($customer_phone !== '') $custParts[] = "<i class='ri-phone-line me-1'></i>{$customer_phone}";
+                    if ($customer_cpr_cr !== '') $custParts[] = "CPR: {$customer_cpr_cr}";
+
+                    $display = "<div>";
+                    if (!empty($topParts)) {
+                        $display .= "<div class='d-flex align-items-center flex-wrap gap-1'>" . implode(' ', $topParts) . "</div>";
+                    }
+                    if (!empty($custParts)) {
+                        $display .= "<div class='small text-muted mt-1'>" . implode(' &middot; ', $custParts) . "</div>";
+                    }
+                    if ($notes !== '') {
+                        $display .= "<div class='small text-muted'><i class='ri-chat-3-line me-1'></i>{$notes}</div>";
+                    }
+                    $display .= "</div>";
+
                     $data[] = [
-                        $cashmemo_no,
-                        $date,
+                        $cashmemoNoHtml,
+                        "<span class='text-nowrap'>{$date}</span>",
                         $display,
-                        "<div style='text-align:right'>{$subtotal}</div>",
-                        "<div style='text-align:right'>{$vat}</div>",
-                        "<div style='text-align:right'>{$grand}</div>",
-                        "<button class='btn btn-sm btn-primary viewCashmemo' data-id='{$id}'>
-                            <span class='ri ri-list-view icon-18px'></span>
-                        </button>",
-                        "<div class='d-flex gap-1 '>
-                            <button class='btn btn-sm btn-info btnOpenSignature' data-bs-toggle='tooltip' title='Apply Signature' data-id={$id} data-ref={$cashmemo_no} >
-                                <span class='ri ri-quill-pen-line icon-18px'></span>
+                        "<div class='text-end text-nowrap'>{$subtotal}</div>",
+                        "<div class='text-end text-nowrap'>{$vat}</div>",
+                        "<div class='text-end text-nowrap fw-bold text-success'>{$grand}</div>",
+                        "<div class='text-center'>
+                            <button class='btn btn-sm btn-outline-primary viewCashmemo' data-id='{$id}' data-bs-toggle='tooltip' title='Edit Receipt'>
+                                <span class='ri-edit-line'></span>
                             </button>
-                            <button class='btn btn-sm btn-warning cashmemoprint' data-bs-toggle='tooltip' title='Print' data-id={$id} data-ref={$cashmemo_no} >
-                                <span class='ri ri-printer-line icon-18px'></span>
+                        </div>",
+                        "<div class='d-flex gap-1 justify-content-center'>
+                            <button class='btn btn-sm btn-outline-info btnOpenSignature' data-bs-toggle='tooltip' title='Apply Signature' data-id='{$id}' data-ref='{$rawCashmemoNo}'>
+                                <span class='ri-quill-pen-line'></span>
+                            </button>
+                            <button class='btn btn-sm btn-outline-primary cashmemoprint' data-bs-toggle='tooltip' title='Print Receipt' data-id='{$id}' data-ref='{$rawCashmemoNo}'>
+                                <span class='ri-printer-line'></span>
                             </button>
                         </div>"
-                       
                     ];
                 }
             }

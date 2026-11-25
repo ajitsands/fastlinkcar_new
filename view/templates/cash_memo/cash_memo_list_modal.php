@@ -49,17 +49,17 @@
 
 </div>
        
-        <table class="table table-bordered" id="cashmemoList">
+        <table class="table table-hover align-middle" id="cashmemoList" style="font-size: 13px; width: 100%;">
             <thead>
                 <tr>
                     <th>No</th>
                     <th>Date</th>
                     <th>Details</th>
-                    <th>Subtotal</th>
-                    <th>VAT</th>
-                    <th>Total</th>
-                    <th>Action</th>
-                    <th>Sign/Print</th>
+                    <th class="text-end">Subtotal</th>
+                    <th class="text-end">VAT</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-center">Edit</th>
+                    <th class="text-center">Sign / Print</th>
                 </tr>
             </thead>
             <tbody></tbody>

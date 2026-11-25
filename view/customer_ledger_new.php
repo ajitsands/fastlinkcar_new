@@ -584,21 +584,44 @@ $clPrintSettings = getPrintSettings(null, $clCompanyId);
                     { 
                         data: null, 
                         render: r => {
-                            let out = `<div class="fw-semibold">${escHtml(r.ref_no || '-')} ${r.cheque_date ? `<span class="text-info fw-normal ms-1" style="font-size:11px">(${moment(r.cheque_date).format('DD MMM YYYY')})</span>` : ''}</div>`;
+                            const refNo = $.trim(r.ref_no || '');
+                            const agreeNo = $.trim(r.agreement_no || '');
+                            const bkgNo = $.trim(r.booking_no || '');
+                            const quotNo = $.trim(r.quotation_no || '');
+                            const primaryRef = refNo || agreeNo || bkgNo || quotNo || '-';
+
+                            let out = `<div class="fw-semibold text-dark">${escHtml(primaryRef)}`;
+                            if (r.cheque_date) {
+                                out += ` <span class="badge bg-label-warning ms-1"><i class="ri-calendar-line me-1"></i>Chq: ${moment(r.cheque_date).format('DD MMM YYYY')}</span>`;
+                            }
+                            out += `</div>`;
+
                             if (r.description) {
-                                out += `<div class="small text-muted">${escHtml(r.description)}</div>`;
+                                out += `<div class="small text-muted mt-1"><i class="ri-chat-3-line me-1"></i>${escHtml(r.description)}</div>`;
+                            }
+
+                            let metaBadges = [];
+                            if (agreeNo && agreeNo !== primaryRef) {
+                                metaBadges.push(`<span class="badge bg-label-primary"><i class="ri-file-text-line me-1"></i>Agr: ${escHtml(agreeNo)}</span>`);
+                            }
+                            if (bkgNo && bkgNo !== primaryRef) {
+                                metaBadges.push(`<span class="badge bg-label-info"><i class="ri-bookmark-line me-1"></i>Bkg: ${escHtml(bkgNo)}</span>`);
+                            }
+                            if (quotNo && quotNo !== primaryRef) {
+                                metaBadges.push(`<span class="badge bg-label-secondary"><i class="ri-file-list-line me-1"></i>Quot: ${escHtml(quotNo)}</span>`);
                             }
                             if (r.bank_name) {
-                                out += `<div style="font-size:11px" class="text-primary"><i class="ri-bank-line me-1"></i>From: ${escHtml(r.bank_name)} ${r.account_no ? '(' + escHtml(r.account_no) + ')' : ''}</div>`;
+                                metaBadges.push(`<span class="badge bg-label-primary"><i class="ri-bank-line me-1"></i>From: ${escHtml(r.bank_name)}${r.account_no ? ' (' + escHtml(r.account_no) + ')' : ''}</span>`);
                             }
                             if (r.company_bank_name) {
-                                out += `<div style="font-size:11px" class="text-success"><i class="ri-bank-fill me-1"></i>To: ${escHtml(r.company_bank_name)} ${r.company_account_no ? '(' + escHtml(r.company_account_no) + ')' : ''}</div>`;
+                                metaBadges.push(`<span class="badge bg-label-success"><i class="ri-bank-fill me-1"></i>To: ${escHtml(r.company_bank_name)}${r.company_account_no ? ' (' + escHtml(r.company_account_no) + ')' : ''}</span>`);
                             }
                             if (r.cheque_status === 'Collected' && r.collected_at) {
-                                out += `<div style="font-size:11px" class="text-success fw-medium"><i class="ri-checkbox-circle-line me-1"></i>Collected: ${moment(r.collected_at).format('DD MMM YYYY')}</div>`;
+                                metaBadges.push(`<span class="badge bg-label-success"><i class="ri-checkbox-circle-line me-1"></i>Collected: ${moment(r.collected_at).format('DD MMM YYYY')}</span>`);
                             }
-                            if (r.quotation_no || r.booking_no) {
-                                out += `<div style="font-size:11px" class="text-muted"><i class="ri-links-line me-1"></i>${escHtml(r.quotation_no || r.booking_no || '')}</div>`;
+
+                            if (metaBadges.length) {
+                                out += `<div class="d-flex flex-wrap gap-1 mt-1">${metaBadges.join('')}</div>`;
                             }
                             return out;
                         }
@@ -690,7 +713,8 @@ $clPrintSettings = getPrintSettings(null, $clCompanyId);
                 ? currentLedgerRows.map(r => {
                     const f = getLedgerFlag(r);
                     const dt = r.trans_date ? moment(r.trans_date).format('DD MMM YYYY') : '-';
-                    const descParts = [r.ref_no || '-'];
+                    const primaryRef = $.trim(r.ref_no || '') || $.trim(r.agreement_no || '') || $.trim(r.booking_no || '') || $.trim(r.quotation_no || '') || '-';
+                    const descParts = [primaryRef];
                     if (r.description) descParts.push(r.description);
                     if (r.bank_name) descParts.push('Bank: ' + r.bank_name);
                     return [

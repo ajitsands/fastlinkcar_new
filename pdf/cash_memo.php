@@ -194,8 +194,15 @@ class AA_CashMemo_PDF extends TCPDF {
     public function Footer() {
         $ps = $this->footer_settings;
         $showFooter = !isset($ps['show_footer']) || !empty($ps['show_footer']);
+        $hex = ltrim((string)($ps['accent_color'] ?? '#1b3d94'), '#');
+        $r = 27; $g = 61; $b = 148;
+        if (strlen($hex) === 6 && ctype_xdigit($hex)) {
+            $r = hexdec(substr($hex, 0, 2));
+            $g = hexdec(substr($hex, 2, 2));
+            $b = hexdec(substr($hex, 4, 2));
+        }
 
-        $this->SetY(-22);
+        $this->SetY(-24);
         $y = $this->GetY();
         $this->SetDrawColor(203, 213, 225);
         $this->SetLineWidth(0.3);
@@ -204,24 +211,24 @@ class AA_CashMemo_PDF extends TCPDF {
         if ($showFooter) {
             $footerText = (string)($ps['footer_text'] ?? '');
             $footerNote = (string)($ps['footer_note'] ?? '');
-            $this->SetXY(10, $y + 2);
-            $this->SetFont('dejavusans', '', 7.5);
-            $this->SetTextColor(71, 85, 105);
             if ($footerText !== '') {
-                $this->Cell(135, 4, $footerText, 0, 2, 'L');
+                $this->SetXY(10, $y + 2.5);
+                $this->SetFont('dejavusans', 'B', 8.5);
+                $this->SetTextColor($r, $g, $b);
+                $this->Cell(190, 4.5, $footerText, 0, 2, 'C');
             }
             if ($footerNote !== '') {
-                $this->SetFont('dejavusans', '', 7);
-                $this->SetTextColor(120, 130, 145);
                 $this->SetX(10);
-                $this->Cell(135, 4, $footerNote, 0, 0, 'L');
+                $this->SetFont('dejavusans', '', 7.5);
+                $this->SetTextColor(100, 116, 139);
+                $this->Cell(190, 4, $footerNote, 0, 0, 'C');
             }
         }
 
-        $this->SetXY(145, $y + 2);
+        $this->SetY(-9);
         $this->SetFont('dejavusans', '', 7.5);
-        $this->SetTextColor(71, 85, 105);
-        $this->Cell(55, 4, 'Generated: ' . date('d M Y') . '  |  Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages(), 0, 0, 'R');
+        $this->SetTextColor(100, 116, 139);
+        $this->Cell(0, 4, 'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages(), 0, 0, 'R');
     }
 
   

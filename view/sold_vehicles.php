@@ -50,7 +50,7 @@ include ROOT_PATH . '/view/envinclude.php';
                                             <div class="row g-2 align-items-center mb-2">
                                                 <label class="col-sm-4 col-form-label col-form-label-sm fw-semibold">Car No. <span class="text-danger">*</span></label>
                                                 <div class="col-sm-8">
-                                                    <select id="sv_car_select" class="form-select form-select-sm select2" style="width:100%;" required>
+                                                    <select id="sv_car_select" class="form-select form-select-sm select2" style="width:100%;">
                                                         <option value="">Select Car No.</option>
                                                     </select>
                                                     <input type="text" id="sv_car_no_readonly" class="form-control form-control-sm bg-light d-none" readonly>
@@ -145,7 +145,6 @@ include ROOT_PATH . '/view/envinclude.php';
                                             </div>
 
                                             <div class="d-flex justify-content-end gap-2 pt-2 border-top">
-                                                <button type="button" class="btn btn-sm btn-outline-primary" id="btnSaveAndNew">Save and New</button>
                                                 <button type="submit" class="btn btn-sm btn-primary" id="btnSaveSale">Save</button>
                                                 <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCancelSale">Cancel</button>
                                             </div>
@@ -203,7 +202,6 @@ include ROOT_PATH . '/view/envinclude.php';
         let availableVehicles = [];
         let soldRows = [];
         let dt = null;
-        let saveAndNewFlag = false;
 
         function esc(s) {
             return String(s || '').replace(/[&<>"']/g, ch => ({
@@ -319,21 +317,21 @@ include ROOT_PATH . '/view/envinclude.php';
             $('#sv_mileage_km').val(v.mileage_km || '');
         });
 
-        $('#btnSaveAndNew').on('click', function() {
-            saveAndNewFlag = true;
-            $('#soldVehicleForm').trigger('submit');
-        });
-
         $('#btnCancelSale').on('click', function() {
             resetForm();
         });
 
         $('#soldVehicleForm').on('submit', function(e) {
             e.preventDefault();
+            const vid = parseInt($('#sv_vehicle_id').val() || '0', 10);
+            if (vid <= 0) {
+                notify('Please select a Car No.', 'error');
+                return;
+            }
             const payload = {
                 action: 'save_sale',
                 ids: parseInt($('#sv_sale_id').val() || '0', 10),
-                vehicle_id: parseInt($('#sv_vehicle_id').val() || '0', 10),
+                vehicle_id: vid,
                 sale_date: $('#sv_sale_date').val(),
                 mileage_km: $('#sv_mileage_km').val(),
                 buyer_name: $.trim($('#sv_buyer_name').val()),
@@ -356,16 +354,11 @@ include ROOT_PATH . '/view/envinclude.php';
                         resetForm();
                         loadAvailableVehicles();
                         loadSoldVehicles();
-                        if (saveAndNewFlag) {
-                            setTimeout(() => $('#sv_car_select').select2('open'), 250);
-                        }
                     } else {
                         notify((res && res.message) || 'Failed to save.', 'error');
                     }
-                    saveAndNewFlag = false;
                 },
                 error: function() {
-                    saveAndNewFlag = false;
                     notify('Network error saving vehicle sale.', 'error');
                 }
             });

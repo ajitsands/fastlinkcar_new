@@ -229,15 +229,34 @@ if ($action == 'get_refunds') {
     }
 
     $stmt = $pdo->prepare("
-        SELECT r.*, c.customer_name, c.customer_mobile, c.customer_cr_cpr, comp.company_name 
+        SELECT r.*,
+               c.customer_name, c.customer_mobile, c.customer_cr_cpr,
+               comp.company_name,
+               vc.ids AS contract_id,
+               vc.agreement_group_ref_no AS booking_no,
+               vc.vehicle_no,
+               vc.vechile_details,
+               vc.service_start_date_time,
+               vc.service_end_date_time,
+               vc.return_date,
+               vc.status AS contract_status
         FROM tbl_refund_requests r
         LEFT JOIN customer_details c ON r.customer_code = c.customer_id
         LEFT JOIN tbl_company comp ON SUBSTRING_INDEX(r.refund_no, '/', 1) = comp.company_code
+        LEFT JOIN tbl_vehicle_rentout_contracts vc ON vc.agreement_no = r.agreement_no
         $where
         ORDER BY r.id DESC
     ");
     $stmt->execute($params);
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($data as &$row) {
+        $veh = json_decode($row['vechile_details'] ?? '{}', true);
+        $brand = $veh['brand_name'] ?? $veh['make'] ?? $veh['brand'] ?? '';
+        $model = $veh['model_name'] ?? $veh['model'] ?? '';
+        $row['vehicle_model'] = trim($brand . ' ' . $model);
+        $row['is_returned'] = !empty($row['return_date']) && $row['return_date'] !== '0000-00-00 00:00:00';
+        unset($row['vechile_details']);
+    }
     echo json_encode(['data' => $data]);
     exit;
 }

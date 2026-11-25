@@ -88,6 +88,10 @@ $logo_base64 = !empty($printSettings['show_logo']) ? ($printSettings['logo_base6
 $logo_width = (int)($printSettings['logo_width'] ?? 150);
 $printAccent = $printSettings['accent_color'] ?? '#1b3d94';
 
+$fmtRefundDate = !empty($refund['date']) ? date('d M Y', strtotime($refund['date'])) : 'N/A';
+$fmtStartDate = !empty($contract['service_start_date_time']) ? date('d M Y, h:i A', strtotime($contract['service_start_date_time'])) : 'N/A';
+$fmtReturnDate = (!empty($contract['return_date']) && $contract['return_date'] !== '0000-00-00 00:00:00') ? date('d M Y, h:i A', strtotime($contract['return_date'])) : 'N/A';
+
 $html = '
 <style>
     table { width: 100%; border-collapse: collapse; }
@@ -100,7 +104,7 @@ $html = '
 </style>
 
 <!-- MAIN HEADER -->
-<table cellpadding="1" border="0" width="100%">
+<table cellpadding="1" border="0" width="100%" style="border-bottom: 2px solid ' . $printAccent . '; padding-bottom: 6px;">
     <tr>
         <td width="55%" style="vertical-align: middle;">
             ' . (!empty($logo_base64) ? '<img src="@' . $logo_base64 . '" width="' . $logo_width . '">' : '<b style="font-size: 15pt; color:' . $printAccent . ';">' . htmlspecialchars(strtoupper($printSettings['company_name'] ?? 'FAST LINK')) . '</b>') . '
@@ -131,7 +135,7 @@ $html = '
     </tr>
     <tr>
         <td><strong>Date:</strong></td>
-        <td>' . htmlspecialchars($refund['date']) . '</td>
+        <td>' . htmlspecialchars($fmtRefundDate) . '</td>
     </tr>
     <tr>
         <td><strong>Status:</strong></td>
@@ -173,8 +177,8 @@ $html = '
         <td width="50%">
             <strong>Vehicle:</strong> ' . htmlspecialchars($vehicleName) . ' (' . htmlspecialchars($contract['vehicle_no'] ?? 'N/A') . ')<br>
             <strong>Chassis No:</strong> ' . htmlspecialchars($chassisNo) . '<br>
-            <strong>Rentout Date:</strong> ' . htmlspecialchars($contract['service_start_date_time'] ?? 'N/A') . '<br>
-            <strong>Return Date:</strong> ' . htmlspecialchars($contract['return_date'] ?? 'N/A') . '<br>
+            <strong>Rentout Date:</strong> ' . htmlspecialchars($fmtStartDate) . '<br>
+            <strong>Return Date:</strong> ' . htmlspecialchars($fmtReturnDate) . '<br>
             <strong>KM Used:</strong> ' . htmlspecialchars($contract['km_used'] ?? '0') . '
         </td>
         <td width="50%">
@@ -207,6 +211,15 @@ $html = '
     </tr>
 </table>
 ';
+
+if (!empty($printSettings['show_footer'])) {
+    $html .= '<br><br><table border="0" cellpadding="3" style="border-top: 1px solid #cbd5e1; font-size: 7.5pt; color: #475569;">
+        <tr>
+            <td width="75%">' . htmlspecialchars($printSettings['footer_text'] ?? '') . (!empty($printSettings['footer_note']) ? '<br><span style="color:#788291;">' . htmlspecialchars($printSettings['footer_note']) . '</span>' : '') . '</td>
+            <td width="25%" align="right">Generated: ' . date('d M Y') . '</td>
+        </tr>
+    </table>';
+}
 
 $pdf->writeHTML($html, true, false, true, false, '');
 $pdf->Output('Refund_Receipt_' . $refund['refund_no'] . '.pdf', 'I');

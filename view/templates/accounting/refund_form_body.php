@@ -121,10 +121,12 @@
     <div class="col-md-12">
         <div class="card">
             <div class="card-datatable table-responsive">
-                <div class="card-header card-headernew d-flex justify-content-between align-items-center py-2">
-                    <h5 class="card-title mb-0">Refund List</h5>
-                    <div class="d-flex align-items-center">
-                        <label class="form-label me-2 mb-0" for="filter_company_id">Company</label>
+                <div class="card-header card-headernew border-bottom d-flex justify-content-between align-items-center py-2">
+                    <h5 class="card-title mb-0 fw-bold" style="color: #1b3d94;">
+                        <i class="ri-refund-2-line me-1"></i> Refund List
+                    </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="form-label me-1 mb-0" for="filter_company_id">Company</label>
                         <select class="form-select form-select-sm" id="filter_company_id" name="filter_company_id" style="width: auto;">
                             <option value="All" selected>All</option>
                             <?php foreach ($companies as $c): ?>
@@ -133,16 +135,19 @@
                                 </option>
                             <?php endforeach; ?>
                         </select>
+                        <button type="button" class="btn btn-sm btn-primary" id="btnExportRefundPDF">
+                            <i class="ri-file-pdf-line me-1"></i> Export PDF
+                        </button>
                     </div>
                 </div>
                 <div class="card-body">
-                    <table class="table table-bordered table-sm" id="refundTable">
+                    <table class="table table-hover align-middle" id="refundTable" style="font-size: 13px; width: 100%;">
                         <thead>
                             <tr>
                                 <th>Refund No</th>
                                 <th>Date</th>
                                 <th>Customer</th>
-                                <th>Agreement No</th>
+                                <th>Agreement Details</th>
                                 <th class="text-end">Amount</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-center">Action</th>

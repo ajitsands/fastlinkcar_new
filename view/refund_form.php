@@ -32,6 +32,10 @@ if (!empty($userCompanyIds)) {
 }
 $companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+require_once ROOT_PATH . '/pdf/print_settings_helper.php';
+$rfCompanyId = !empty($_SESSION['company_id']) ? (int)$_SESSION['company_id'] : 1;
+$rfPrintSettings = getPrintSettings(null, $rfCompanyId);
+
 ?>
 <!doctype html>
 <html lang="en" class="layout-navbar-fixed layout-menu-fixed layout-wide" dir="ltr" data-skin="default" data-bs-theme="light" data-assets-path="../assets/" data-template="horizontal-menu-template-no-customizer">
@@ -94,9 +98,14 @@ $companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <script src="../assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
     <script src="../assets/vendor/libs/select2/select2.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="../assets/sands/settings.js"></script>
     <script src="../assets/sands/sands_popup.js"></script>
     <script src="../alertmessage/js/sandsalert.js"></script>
+    <script>
+        window.REFUND_PRINT_SETTINGS = <?= json_encode($rfPrintSettings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    </script>
 
     <script>
     $(document).ready(function() {
@@ -464,6 +473,33 @@ $companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
     });
 
+    function fmtFriendlyDate(val, withTime = false) {
+        if (!val || val === '0000-00-00' || val === '0000-00-00 00:00:00') return '-';
+        const d = new Date(String(val).replace(' ', 'T'));
+        if (isNaN(d.getTime())) return val;
+        const mNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const day = ('0' + d.getDate()).slice(-2);
+        const base = `${day} ${mNames[d.getMonth()]} ${d.getFullYear()}`;
+        if (!withTime) return base;
+        let h = d.getHours();
+        const m = ('0' + d.getMinutes()).slice(-2);
+        const ap = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return `${base}, ${('0' + h).slice(-2)}:${m} ${ap}`;
+    }
+
+    function openAgreementPrint(agreeNo) {
+        const clean = $.trim(agreeNo || '');
+        if (!clean) return;
+        fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(clean))
+            .then(r => r.text())
+            .then(token => {
+                if (token && token.trim()) {
+                    window.open('/PrintAgreement?token=' + encodeURIComponent(token.trim()), '_blank');
+                }
+            });
+    }
+
     let refundTable;
     function loadRefunds() {
         let company_code = $('#filter_company_id').val();
@@ -471,23 +507,43 @@ $companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
             let r = JSON.parse(res);
             let html = '';
             r.data.forEach(function(item) {
-                // format date to dd-mm-yyyy
-                let parts = item.date.split('-');
-                let formattedDate = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : item.date;
-
+                let formattedDate = fmtFriendlyDate(item.date, false);
                 let companyBadge = item.company_name ? `<br><span class="badge bg-label-primary mt-1">${item.company_name}</span>` : '';
-                let customerDetails = [];
-                if (item.customer_code) customerDetails.push(`<strong>${item.customer_code}</strong>`);
-                if (item.customer_name) customerDetails.push(item.customer_name);
-                if (item.customer_mobile) customerDetails.push(`<span class="text-muted">${item.customer_mobile}</span>`);
-                if (item.customer_cr_cpr) customerDetails.push(`<span class="text-muted">${item.customer_cr_cpr}</span>`);
-                let customerStr = customerDetails.join(' | ');
+
+                let customerHtml = `<div class="fw-semibold">${item.customer_name || '-'}</div>`;
+                customerHtml += `<div class="small text-muted">`;
+                if (item.customer_code) customerHtml += `<span class="me-2"><strong>Code:</strong> ${item.customer_code}</span>`;
+                if (item.customer_cr_cpr) customerHtml += `<span><strong>CPR:</strong> ${item.customer_cr_cpr}</span>`;
+                customerHtml += `</div>`;
+                if (item.customer_mobile) {
+                    customerHtml += `<div class="small text-muted"><i class="ri-phone-line me-1"></i>${item.customer_mobile}</div>`;
+                }
+
+                let cStatusBadge = item.is_returned
+                    ? `<span class="badge bg-label-secondary mt-1">Returned</span>`
+                    : `<span class="badge bg-label-success mt-1">${item.contract_status || 'Active'}</span>`;
+                let agreeHtml = `<a href="javascript:void(0);" onclick="openAgreementPrint('${(item.agreement_no || '').replace(/'/g, "\\'")}')" class="fw-semibold d-block" style="color: #1b3d94;">${item.agreement_no || '-'}</a>`;
+                if (item.booking_no) {
+                    agreeHtml += `<div class="small text-muted">${item.booking_no}</div>`;
+                }
+                if (item.vehicle_no || item.vehicle_model) {
+                    agreeHtml += `<div class="d-flex align-items-center gap-1 flex-wrap mt-1"><span class="badge bg-label-primary">${item.vehicle_no || '-'}</span><span class="small fw-medium">${item.vehicle_model || ''}</span></div>`;
+                }
+                if (item.service_start_date_time) {
+                    agreeHtml += `<div class="small text-muted mt-1"><strong>From:</strong> ${fmtFriendlyDate(item.service_start_date_time, true)}</div>`;
+                }
+                if (item.is_returned) {
+                    agreeHtml += `<div class="small text-muted"><strong>Returned:</strong> ${fmtFriendlyDate(item.return_date, true)}</div>`;
+                } else if (item.service_end_date_time) {
+                    agreeHtml += `<div class="small text-muted"><strong>To:</strong> ${fmtFriendlyDate(item.service_end_date_time, true)}</div>`;
+                }
+                agreeHtml += cStatusBadge;
 
                 html += `<tr>
-                    <td class="align-middle">${item.refund_no}${companyBadge}</td>
-                    <td class="align-middle">${formattedDate}</td>
-                    <td class="align-middle">${customerStr}</td>
-                    <td class="align-middle">${item.agreement_no}</td>
+                    <td class="align-middle text-nowrap">${item.refund_no}${companyBadge}</td>
+                    <td class="align-middle text-nowrap">${formattedDate}</td>
+                    <td class="align-middle">${customerHtml}</td>
+                    <td class="align-middle">${agreeHtml}</td>
                     <td class="align-middle text-end fw-bold">${parseFloat(item.amount).toFixed(3)}</td>
                     <td class="align-middle text-center"><span class="badge ${item.status === 'Approved' ? 'bg-success' : 'bg-warning'}">${item.status}</span></td>
                     <td class="align-middle text-center" style="white-space: nowrap;">`;
@@ -525,6 +581,143 @@ $companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $('.dataTables_length select').addClass('form-select');
         });
     }
+
+    function hexToRgbArray(hex, fallback) {
+        const clean = String(hex || '').replace('#', '').trim();
+        if (/^[0-9a-fA-F]{6}$/.test(clean)) {
+            return [parseInt(clean.substring(0, 2), 16), parseInt(clean.substring(2, 4), 16), parseInt(clean.substring(4, 6), 16)];
+        }
+        return fallback;
+    }
+
+    function cellTextClean(td) {
+        const clone = td.cloneNode(true);
+        clone.querySelectorAll('div, br').forEach(el => {
+            if (el.tagName === 'BR') el.replaceWith('\n');
+        });
+        return $(clone).text().replace(/[ \t]+/g, ' ').replace(/\n\s+/g, '\n').trim();
+    }
+
+    $(document).on('click', '#btnExportRefundPDF', function () {
+        if (typeof window.jspdf === 'undefined') {
+            alert('PDF library not loaded yet.');
+            return;
+        }
+        const rowNodes = refundTable ? refundTable.rows({ search: 'applied' }).nodes().toArray() : Array.from(document.querySelectorAll('#refundTableBody tr'));
+        const bodyRows = [];
+        rowNodes.forEach(tr => {
+            const tds = tr.querySelectorAll('td');
+            if (tds.length >= 6) {
+                bodyRows.push([
+                    cellTextClean(tds[0]),
+                    cellTextClean(tds[1]),
+                    cellTextClean(tds[2]),
+                    cellTextClean(tds[3]),
+                    cellTextClean(tds[4]),
+                    cellTextClean(tds[5])
+                ]);
+            }
+        });
+        if (!bodyRows.length) {
+            setupDropdown('dropdownContent', 'error', 'No refund records available to print', 'click');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'pt', 'a4');
+        const ps = window.REFUND_PRINT_SETTINGS || {};
+        const accentRgb = hexToRgbArray(ps.accent_color, [27, 61, 148]);
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const marginX = 32;
+        const imgData = ps.logo_base64 || '';
+        const showLogo = Number(ps.show_logo !== undefined ? ps.show_logo : 1) === 1;
+        const logoW = Math.min(130, Math.max(70, Number(ps.logo_width || 120) * 0.8));
+        const logoH = logoW / 2.8;
+        const compFilter = $('#filter_company_id option:selected').text() || 'All';
+
+        doc.autoTable({
+            head: [['Refund No', 'Date', 'Customer', 'Agreement Details', 'Amount', 'Status']],
+            body: bodyRows,
+            startY: 112,
+            theme: 'grid',
+            styles: { fontSize: 8.5, font: 'helvetica', cellPadding: 5, valign: 'middle', lineColor: [215, 222, 235], lineWidth: 0.4 },
+            headStyles: { fillColor: accentRgb, textColor: 255, fontStyle: 'bold' },
+            columnStyles: { 4: { halign: 'right', fontStyle: 'bold' }, 5: { halign: 'center' } },
+            alternateRowStyles: { fillColor: [248, 250, 253] },
+            margin: { top: 96, left: marginX, right: marginX, bottom: 50 },
+            didDrawPage: function (data) {
+                if (showLogo && imgData) {
+                    try { doc.addImage(imgData, 'PNG', marginX, 18, logoW, logoH); } catch (e) {}
+                }
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(15);
+                doc.setTextColor(accentRgb[0], accentRgb[1], accentRgb[2]);
+                doc.text(String(ps.company_name || 'FAST LINK CAR RENTAL'), pageWidth / 2, 30, { align: 'center' });
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.setTextColor(80, 90, 105);
+                if (ps.header_subtitle) doc.text(String(ps.header_subtitle), pageWidth / 2, 43, { align: 'center' });
+                if (ps.header_address) doc.text(String(ps.header_address), pageWidth / 2, 55, { align: 'center' });
+
+                doc.setFontSize(8);
+                let rightX = pageWidth - marginX;
+                let rightY = 26;
+                if (ps.header_phone) { doc.text('Tel: ' + String(ps.header_phone), rightX, rightY, { align: 'right' }); rightY += 11; }
+                if (ps.header_email) { doc.text(String(ps.header_email), rightX, rightY, { align: 'right' }); rightY += 11; }
+                if (ps.header_website) { doc.text(String(ps.header_website), rightX, rightY, { align: 'right' }); }
+
+                doc.setDrawColor(accentRgb[0], accentRgb[1], accentRgb[2]);
+                doc.setLineWidth(1.2);
+                doc.line(marginX, 68, pageWidth - marginX, 68);
+
+                if (data.pageNumber === 1) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(12);
+                    doc.setTextColor(30, 41, 59);
+                    doc.text('Refund Requests Report', marginX, 88);
+
+                    const d = new Date();
+                    const mNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    const dateStr = 'Generated on: ' + ('0' + d.getDate()).slice(-2) + ' ' + mNames[d.getMonth()] + ' ' + d.getFullYear();
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(100, 116, 139);
+                    doc.text(`${dateStr}  |  Company: ${compFilter}`, rightX, 88, { align: 'right' });
+                } else {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10);
+                    doc.setTextColor(71, 85, 105);
+                    doc.text('Refund Requests Report (Cont.)', marginX, 84);
+                }
+
+                let footerY = pageHeight - 28;
+                doc.setDrawColor(203, 213, 225);
+                doc.setLineWidth(0.6);
+                doc.line(marginX, footerY - 10, pageWidth - marginX, footerY - 10);
+                if (Number(ps.show_footer !== undefined ? ps.show_footer : 1) === 1) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(71, 85, 105);
+                    if (ps.footer_text) doc.text(String(ps.footer_text), marginX, footerY);
+                    if (ps.footer_note) {
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(120, 130, 145);
+                        doc.text(String(ps.footer_note), marginX, footerY + 11);
+                    }
+                }
+                let pageStr = 'Page ' + doc.internal.getNumberOfPages();
+                if (typeof doc.putTotalPages === 'function') pageStr += ' of totalPages';
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(8);
+                doc.setTextColor(71, 85, 105);
+                doc.text(pageStr, rightX, footerY, { align: 'right' });
+            }
+        });
+        if (typeof doc.putTotalPages === 'function') doc.putTotalPages('totalPages');
+        window.open(doc.output('bloburl'), '_blank');
+    });
 
     function approveRefund(id) {
         Swal.fire({

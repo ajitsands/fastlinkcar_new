@@ -951,6 +951,94 @@ $(document).on('change', '#company_id', function() {
     initagreementload('cashmemo_selagreement');
 });
 
+let isLoadingCashmemoEdit = false;
+
+function loadAgreementBalanceForCashmemo(contractId, preserveAmount = false) {
+    if (!contractId || contractId === '0') {
+        $('#cm_paid_advance').val('0.000');
+        $('#cm_balance_due').val('0.000');
+        if (!preserveAmount) $('#cm_amount').val('0.000');
+        return;
+    }
+    $.post('/CustomerLedgerController', { action: 'GetContractLedgerBalance', contract_id: contractId }, function(res) {
+        try {
+            const d = typeof res === 'string' ? JSON.parse(res) : res;
+            const paid = parseFloat(d.total_credit || 0) || 0;
+            const bal = Math.max(0, parseFloat(d.balance || 0) || 0);
+            $('#cm_paid_advance').val(paid.toFixed(3));
+            $('#cm_balance_due').val(bal.toFixed(3));
+            if (!preserveAmount && !$('#cashmemo_id').val()) {
+                $('#cm_amount').val(bal.toFixed(3));
+            }
+        } catch (e) {}
+    });
+}
+
+function resetCashMemoForm() {
+    $('#cashmemoForm')[0].reset();
+    $('#cashmemo_id').val('');
+    $('#cashmemo_number').val('');
+    $('#original_draft').val('No');
+    $('#cm_generated_receipt_no').val('');
+    $('#cm_receipt_no_display').val('Auto (Sequential)');
+    $('#cashmemoNumber').text('');
+    $('#cashmemo_date').val('<?= date('Y-m-d') ?>');
+    $('#cm_payment_type').val('FULL SETTLEMENT');
+    $('#cash_memo_payment_method').val('Cash').trigger('change');
+    $('#cm_paid_advance').val('0.000');
+    $('#cm_balance_due').val('0.000');
+    $('#cm_amount').val('0.000');
+    $('#cm_tax_amount').val('0.000');
+    $('#selectCustomerFromSelect2').val(null).trigger('change');
+    $('#customer_code').val('');
+    $('#cashmemo_selagreement').empty().append('<option value="">Select Agreement</option>').trigger('change');
+    $('#cm_success_banner').addClass('d-none').removeClass('d-flex');
+    $('#btn_save_cashmemo').html('<i class="ri-check-double-line me-1"></i> Generate Receipt');
+}
+
+$(document).on('click', '#btnNewReceiptTop, #cm_banner_new_btn', function() {
+    resetCashMemoForm();
+});
+
+$(document).on('change', '#cash_memo_payment_method', function() {
+    if ($(this).val() === 'Cheque') {
+        $('.cm-cheque-field').removeClass('d-none');
+    } else {
+        $('.cm-cheque-field').addClass('d-none');
+    }
+});
+
+$(document).on('click', '#cm_banner_print_btn', function() {
+    const recNo = $.trim($('#cm_generated_receipt_no').val() || $('#cashmemo_number').val() || '');
+    if (!recNo) return;
+    fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(recNo))
+        .then(r => r.text())
+        .then(token => {
+            if (token && token.trim()) window.open('/CashMemoPrint?token=' + encodeURIComponent(token.trim()), '_blank');
+        });
+});
+
+$(document).on('click', '#cm_banner_wa_btn', function() {
+    const recNo = $.trim($('#cm_generated_receipt_no').val() || $('#cashmemo_number').val() || '');
+    if (!recNo) return;
+    const phoneRaw = ($('#customer_phone').val() || '').replace(/[^0-9]/g, '');
+    const phone = phoneRaw.length === 8 ? ('973' + phoneRaw) : phoneRaw;
+    const msg = [
+        '*FAST LINK CAR RENTAL - RECEIPT VOUCHER*',
+        'Receipt No: ' + recNo,
+        'Date: ' + ($('#cashmemo_date').val() || ''),
+        'Agreement No: ' + $.trim($('#cashmemo_selagreement').find(':selected').text() || ''),
+        'Customer: ' + $.trim($('#selectCustomerFromSelect2').find(':selected').text() || ''),
+        'Vehicle: ' + ($('#cashmemo_car_type').val() || '') + ' (' + ($('#cashmemo_car_no').val() || '') + ')',
+        'Payment Type: ' + ($('#cm_payment_type').val() || ''),
+        'Payment Mode: ' + ($('#cash_memo_payment_method').val() || ''),
+        'Amount Paid: ' + (parseFloat($('#cm_amount').val()) || 0).toFixed(3) + ' BHD',
+        'Balance Due: ' + ($('#cm_balance_due').val() || '0.000') + ' BHD'
+    ].join('\n');
+    const url = phone ? ('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg)) : ('https://wa.me/?text=' + encodeURIComponent(msg));
+    window.open(url, '_blank');
+});
+
 $(document).on('change', '#cashmemo_selagreement', function () {
     let selected = $(this).find('option:selected');
 
@@ -960,6 +1048,7 @@ $(document).on('change', '#cashmemo_selagreement', function () {
     $('#cashmemo_hidvehicle_id').val(selected.data('vehicle') || '');
     $('#cashmemo_hidbooking_ids').val(selected.data('booking_ids') || '');
     $('#cashmemo_hidvehicle_model_id').val(selected.data('vehicle_model_id') || '');
+    loadAgreementBalanceForCashmemo($(this).val(), isLoadingCashmemoEdit);
 });
 
 
@@ -1197,10 +1286,15 @@ function(response) {
 
     let q = res.data[0]; // ✅ FIX: get first record
 
-    // store quotation id
+    isLoadingCashmemoEdit = true;
     $('#cashmemo_id').val(q.id);
-    $('#original_draft').val(q.draft);
+    $('#original_draft').val(q.draft || 'No');
     $('#cashmemo_number').val(q.cashmemo_no);
+    $('#cm_receipt_no_display').val(q.cashmemo_no);
+    $('#cm_generated_receipt_no').val(q.cashmemo_no);
+    $('#cm_generated_no_badge').text(q.cashmemo_no);
+    $('#cm_success_banner').removeClass('d-none').addClass('d-flex');
+    $('#btn_save_cashmemo').html('<i class="ri-save-line me-1"></i> Update Receipt');
 
     $('#cashmemoNumber').text(q.cashmemo_no);
     $('#cashmemo_date').val(q.cashmemo_date);
@@ -1212,46 +1306,33 @@ function(response) {
     $('input[name=customer_phone]').val(q.customer_phone);
     $('input[name=customer_email]').val(q.customer_email);
     $('input[name=customer_cpr_cr]').val(q.customer_cpr_cr);
+    $('#customer_address').val(q.customer_address);
     
-    $('textarea[name=customer_address]').val(q.customer_address);
-    $('input[name=total_discount]').val(q.total_discount);
-    
-    initagreementload('cashmemo_selagreement',q.contract_ids);
-    $('#cashmemo_selagreement').append(q.contract_ids).trigger('change');
-     $('input[name=cashmemo_car_type]').val(q.model_names);
-     $('input[name=cashmemo_car_no]').val(q.vehicle_no);
-     $('input[name=cashmemo_color]').val(q.vehicle_color);
-        $('#cashmemo_hidvehicle_id').val(q.vehicle_ids);
-        $('#cashmemo_hidbooking_ids').val(q.booking_ids);
-        $('#cashmemo_hidvehicle_model_id').val(q.model_ids);
-        $('#cashmemo_notes').val(q.cashmemo_notes);
-        $('#cash_memo_payment_method').val(q.cashmemo_payment_type).trigger('change');
-     
-        $('#cash_memo_cheque_date').val(q.cashmemo_cheque_date);
-        $('#cash_memo_cheque_ref_no').val(q.cashmemo_cheque_ref_no);
-    
-    $('#itemTable tbody').empty();
+    initagreementload('cashmemo_selagreement', q.contract_ids);
+    $('input[name=cashmemo_car_type]').val(q.model_names);
+    $('input[name=cashmemo_car_no]').val(q.vehicle_no);
+    $('input[name=cashmemo_color]').val(q.vehicle_color);
+    $('#cashmemo_hidvehicle_id').val(q.vehicle_ids);
+    $('#cashmemo_hidbooking_ids').val(q.booking_ids);
+    $('#cashmemo_hidvehicle_model_id').val(q.model_ids);
+    $('#cashmemo_notes').val(q.cashmemo_notes);
+    $('#cash_memo_payment_method').val(q.cashmemo_payment_type || 'Cash').trigger('change');
+    $('#cash_memo_cheque_date').val(q.cashmemo_cheque_date);
+    $('#cash_memo_cheque_ref_no').val(q.cashmemo_cheque_ref_no);
 
-  
-    let items = typeof q.items === "string" ? JSON.parse(q.items) : q.items;
-  
-    items.forEach(function(item) {
-        addRow();
-        let row = $('#itemTable tbody tr:last');
-       
-       initLedgerAutocomplete(row.find('.ledger_item'),item.contract_id);
-       
-        row.find('.ledger_item').val(item.item_name);
-       
-        row.find('.qty').val(item.qty);
-        row.find('.price').val(item.price);
-      
-        row.find('.vat').val(item.vat);
-        row.find('.line_total').text(item.total);
-    });
-
-    renumberRows();
-    calculateTotals();
+    let items = typeof q.items === "string" ? JSON.parse(q.items || '[]') : (q.items || []);
+    let firstItem = Array.isArray(items) && items.length ? items[0] : null;
+    if (firstItem && firstItem.item_name) {
+        const typeCandidate = String(firstItem.item_name).split(' (')[0].trim();
+        if ($('#cm_payment_type option[value="' + typeCandidate + '"]').length) {
+            $('#cm_payment_type').val(typeCandidate);
+        }
+    }
+    const amtVal = parseFloat(q.subtotal || (firstItem ? firstItem.price : 0) || q.grand_total || 0) || 0;
+    const taxVal = parseFloat(q.vat_total || 0) || 0;
+    $('#cm_amount').val(amtVal.toFixed(3));
+    $('#cm_tax_amount').val(taxVal.toFixed(3));
+    setTimeout(() => { isLoadingCashmemoEdit = false; }, 600);
 
     // close offcanvas
        
@@ -1348,30 +1429,27 @@ $('#cashmemoForm').submit(function(e){
 });
 
 function saveCashMemo(action_type){
-   
     var laddaBtn = Ladda.create(document.querySelector('#btn_save_cashmemo'));
-    
-        laddaBtn.start();
-       
-    let items = [];
-    $('#itemTable tbody tr').each(function() {
-       
-        items.push({
-           
-            item_name: $(this).find('.ledger_item ').val(),
-            qty: $(this).find('.qty').val(),
-            price: $(this).find('.price').val(),
-            vat: $(this).find('.vat').val(),
-            total: $(this).find('.line_total').text()
-        });
-    });
+    laddaBtn.start();
 
-    
+    const amt = parseFloat($('#cm_amount').val()) || 0;
+    const tax = parseFloat($('#cm_tax_amount').val()) || 0;
+    const totalAmt = amt + tax;
+    const payType = $('#cm_payment_type').val() || 'RENT';
+    const agreeNo = $.trim($('#cashmemo_selagreement').find(':selected').text());
+
+    let items = [{
+        item_name: payType + ' (' + agreeNo + ')',
+        qty: 1,
+        price: amt.toFixed(3),
+        vat: tax > 0 && amt > 0 ? ((tax / amt) * 100).toFixed(2) : 0,
+        total: totalAmt.toFixed(3)
+    }];
 
     let data = {
         company_id: $('#company_id').val(),
         cashmemo_id: $('#cashmemo_id').val(),
-        cashmemo_number:$('#cashmemo_number').val(),
+        cashmemo_number: $('#cashmemo_number').val(),
         original_draft: $('#original_draft').val(),
         action_type: action_type,
         save_type: saveType,
@@ -1380,44 +1458,47 @@ function saveCashMemo(action_type){
         customer_phone: $('input[name=customer_phone]').val(),
         customer_email: $('input[name=customer_email]').val(),
         customer_cpr_cr: $('input[name=customer_cpr_cr]').val(),
-        customer_address: $('textarea[name=customer_address]').val(),
+        customer_address: $('#customer_address').val(),
         cashmemo_date: $('#cashmemo_date').val(),
         cashmemo_notes: $('#cashmemo_notes').val(),
-        cashmemo_payment_type: $('#cash_memo_payment_method').find(':selected').val(),
+        cashmemo_payment_type: $('#cash_memo_payment_method').val(),
         cashmemo_cheque_date: $('#cash_memo_cheque_date').val(),
         cashmemo_cheque_ref_no: $('#cash_memo_cheque_ref_no').val(),
         contract_id: $('#cashmemo_selagreement').find(':selected').val(),
-        agreement_no:$.trim($('#cashmemo_selagreement').find(':selected').text()),
+        agreement_no: agreeNo,
         vehicle_id: $('#cashmemo_hidvehicle_model_id').val(),
-        booking_ids:  $('#cashmemo_hidbooking_ids').val(),
-        vehicle_model_id:  $('#cashmemo_hidvehicle_id').val(),
+        booking_ids: $('#cashmemo_hidbooking_ids').val(),
+        vehicle_model_id: $('#cashmemo_hidvehicle_id').val(),
         model_name: $('#cashmemo_car_type').val(),
         vehicleno: $('#cashmemo_car_no').val(),
         vehiclecolor: $('#cashmemo_color').val(),
         items: items,
-        subtotal: parseFloat($('#subtotal').text()) || 0,
-        vat_total: parseFloat($('#vat_total').text()) || 0,
-        grand_total: parseFloat($('#grand_total').text()) || 0,
-        total_discount: parseFloat($('#total_discount').val()) || 0,
-        total_discount_amount: parseFloat($('#total_discount_amount').text()) || 0,
-        after_discount_amount: parseFloat($('#after_discount_amount').text()) || 0,
-        allItemSubtotal: parseFloat($('#allItemSubtotal').text()) || 0,
-        action : 'SaveCashMemo'
+        subtotal: amt.toFixed(3),
+        vat_total: tax.toFixed(3),
+        grand_total: totalAmt.toFixed(3),
+        total_discount: 0,
+        total_discount_amount: 0,
+        after_discount_amount: totalAmt.toFixed(3),
+        allItemSubtotal: amt.toFixed(3),
+        action: 'SaveCashMemo'
     };
-     $.post('/CashMemoController', data)
+    $.post('/CashMemoController', data)
         .done(function(res) {
             try {
                 var jsonData = (typeof res === 'string') ? JSON.parse(res) : res;
 
                 if (jsonData.status && jsonData.status.toLowerCase() === "success") {
-                    setupDropdown('dropdownContent', 'success', svgSuccess + jsonData.message+" : " + jsonData.msg_text, 'click');
-                    setTimeout(function() {
-                      location.reload();
-                    }, 2000);
+                    const recNo = jsonData.message || $('#cashmemo_number').val() || '';
+                    $('#cm_generated_receipt_no').val(recNo);
+                    $('#cm_generated_no_badge').text(recNo);
+                    $('#cm_receipt_no_display').val(recNo);
+                    $('#cashmemoNumber').text(recNo);
+                    $('#cm_success_banner').removeClass('d-none').addClass('d-flex');
+                    loadAgreementBalanceForCashmemo($('#cashmemo_selagreement').val(), true);
+                    setupDropdown('dropdownContent', 'success', svgSuccess + recNo + " : " + jsonData.msg_text, 'click');
                 } else {
                     setupDropdown('dropdownContent', 'error', svgError + (jsonData.message || 'Unknown error'), 'click');
                 }
-
             } catch (err) {
                 setupDropdown('dropdownContent', 'error', svgError + 'Invalid server response', 'click');
                 console.error('JSON parse error:', err);
@@ -1428,13 +1509,9 @@ function saveCashMemo(action_type){
             console.error('AJAX error:', status, error);
         })
         .always(function() {
-            // Stop loading buttons no matter what
             laddaBtn.stop();
-         
         });
 }
-    
-   
 
 function validatecashmemoForm() {
     let valid = true;
@@ -1444,47 +1521,26 @@ function validatecashmemoForm() {
         message = "Company selection is required.";
         valid = false;
     }
-    
     if (valid && !$('#selectCustomerFromSelect2').val()) {
         message = "Customer name is required.";
         valid = false;
     }
-
-    if (!$('#cashmemo_date').val()) {
+    if (valid && !$('#cashmemo_date').val()) {
         message = "Date is required.";
         valid = false;
     }
-     if (!$('#cashmemo_selagreement').val()) {
+    if (valid && (!$('#cashmemo_selagreement').val() || $('#cashmemo_selagreement').val() === '0')) {
         message = "Agreement number is required.";
         valid = false;
     }
-    // Item rows validation
-    let rowCount = $('#itemTable tbody tr').length;
-    if (rowCount === 0) {
-        message = "Please add atleast one row item.";
+    if (valid && (parseFloat($('#cm_amount').val()) || 0) <= 0) {
+        message = "Please enter a receipt amount greater than 0.";
         valid = false;
     }
 
-    $('#itemTable tbody tr').each(function(index) {
-        
-        let item = $(this).find('.ledger_item ').val();
-        let qty = $(this).find('.qty').val();
-        let price = $(this).find('.price').val();
-       // let duration = $(this).find('.duration').val();
-        let vat = $(this).find('.vat').val();
-
-        if ( !item || !qty || !price  || !vat) {
-            message = "Please fill the details in item row " + (index + 1);
-            valid = false;
-            return false; // break loop
-        }
-    });
-
     if (!valid) {
-        setupDropdown('dropdownContent','error',svgSuccess+message,'click');
-       
+        setupDropdown('dropdownContent', 'error', svgSuccess + message, 'click');
     }
-
     return valid;
 }
   

@@ -191,72 +191,17 @@ class AA_CashMemo_PDF extends TCPDF {
     
     public function Header() {}
     public function Footer() {
-
-    $this->SetY(-45);
-
-    $footerY = $this->GetY();
-
-    $this->SetFont('dejavusans', '', 8);
-
-    // Outer box
-    $this->Rect(10, $footerY, 190, 30);
-
-    // Middle line
-    $this->Line(105, $footerY, 105, $footerY + 30);
-
-    // ================= LEFT SIGNATURE =================
-
-    if (!empty($this->company_signature) && file_exists($this->company_signature)) {
-        $this->Image(
-            $this->company_signature,
-            25,
-            $footerY + 2,
-            55,
-            12
+        $this->SetY(-10);
+        $this->SetFont('dejavusans', 'I', 8);
+        $this->Cell(
+            0,
+            5,
+            'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages(),
+            0,
+            0,
+            'R'
         );
     }
-
-    // Line + text LEFT
-    $this->SetXY(10, $footerY + 15);
-    $this->Cell(95, 5, '________________________________________', 0, 2, 'C');
-
-    $this->SetX(10);
-    $this->Cell(95, 5, 'For FAST LINK', 0, 2, 'C');
-
-
-    // ================= RIGHT SIGNATURE =================
-
-    if (!empty($this->customer_signature) && file_exists($this->customer_signature)) {
-        $this->Image(
-            $this->customer_signature,
-            120,
-            $footerY + 2,
-            55,
-            12
-        );
-    }
-
-    $this->SetXY(105, $footerY + 15);
-    $this->Cell(95, 5, '________________________________________', 0, 2, 'C');
-
-    $this->SetX(105);
-    $this->Cell(95, 5, 'Customer Acceptance / قبول الزبون', 0, 2, 'C');
-
-
-    // ================= PAGE NUMBER =================
-
-    $this->SetY(-10);
-    $this->SetFont('dejavusans', 'I', 8);
-
-    $this->Cell(
-        0,
-        5,
-        'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages(),
-        0,
-        0,
-        'R'
-    );
-}
 
   
 }
@@ -382,44 +327,44 @@ $html = '
 <br>
 
 <!-- AMOUNT / VAT / NET + PAY MODE / ADVANCE / BALANCE -->
-<table cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size: 8.5pt;">
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size: 8pt;">
     <tr>
-        <td width="38%" valign="middle">
+        <td width="34%" valign="middle">
             <table cellpadding="4" cellspacing="0" style="border: 1px solid #333333; width: 100%;">
                 <tr>
-                    <td width="36%" class="text-center bold" style="border-right: 1px solid #333; border-bottom: 1px solid #333; font-size: 7.5pt;">Amount (BHD)</td>
-                    <td width="24%" class="text-center bold" style="border-right: 1px solid #333; border-bottom: 1px solid #333; font-size: 7.5pt;">VAT</td>
-                    <td width="40%" class="text-center bold" style="border-bottom: 1px solid #333; font-size: 7.5pt;">Net Amount (BHD)</td>
+                    <td width="36%" class="text-center bold" style="border-right: 1px solid #333; border-bottom: 1px solid #333; font-size: 7pt;">Amount (BHD)</td>
+                    <td width="24%" class="text-center bold" style="border-right: 1px solid #333; border-bottom: 1px solid #333; font-size: 7pt;">VAT</td>
+                    <td width="40%" class="text-center bold" style="border-bottom: 1px solid #333; font-size: 7pt;">Net Amount (BHD)</td>
                 </tr>
                 <tr>
-                    <td class="text-center bold" style="border-right: 1px solid #333; font-size: 9pt;">' . number_format($amtVal, 3) . '</td>
-                    <td class="text-center bold" style="border-right: 1px solid #333; font-size: 9pt;">' . number_format($vatVal, 3) . '</td>
-                    <td class="text-center bold" style="font-size: 9pt;">' . number_format($netVal, 3) . '</td>
-                </tr>
-            </table>
-        </td>
-        <td width="2%"></td>
-        <td width="20%" valign="middle">
-            <table cellpadding="5" border="0" width="100%">
-                <tr>
-                    <td width="44%" class="bold" style="font-size: 8pt;">Pay Mode</td>
-                    <td width="56%" class="box-cell text-center bold">' . htmlspecialchars(strtoupper($data['cashmemo_payment_type'] ?? 'CASH')) . '</td>
+                    <td class="text-center bold" style="border-right: 1px solid #333; font-size: 8.5pt;">' . number_format($amtVal, 3) . '</td>
+                    <td class="text-center bold" style="border-right: 1px solid #333; font-size: 8.5pt;">' . number_format($vatVal, 3) . '</td>
+                    <td class="text-center bold" style="font-size: 8.5pt;">' . number_format($netVal, 3) . '</td>
                 </tr>
             </table>
         </td>
-        <td width="20%" valign="middle">
-            <table cellpadding="5" border="0" width="100%">
+        <td width="1%"></td>
+        <td width="21%" valign="middle">
+            <table cellpadding="4" border="0" width="100%">
                 <tr>
-                    <td width="42%" class="bold text-right" style="font-size: 8pt;">Advance</td>
-                    <td width="58%" class="box-cell text-center bold">' . number_format($total_advance, 3) . '</td>
+                    <td width="46%" class="bold text-right" style="font-size: 7.5pt; white-space: nowrap;">Pay Mode</td>
+                    <td width="54%" class="box-cell text-center bold" style="font-size: 8pt;">' . htmlspecialchars(strtoupper($data['cashmemo_payment_type'] ?? 'CASH')) . '</td>
                 </tr>
             </table>
         </td>
-        <td width="20%" valign="middle">
-            <table cellpadding="5" border="0" width="100%">
+        <td width="22%" valign="middle">
+            <table cellpadding="4" border="0" width="100%">
                 <tr>
-                    <td width="42%" class="bold text-right" style="font-size: 8pt;">Balance</td>
-                    <td width="58%" class="box-cell text-center bold">' . number_format($final_balance, 3) . '</td>
+                    <td width="46%" class="bold text-right" style="font-size: 7.5pt; white-space: nowrap;">Advance</td>
+                    <td width="54%" class="box-cell text-center bold" style="font-size: 8pt;">' . number_format($total_advance, 3) . '</td>
+                </tr>
+            </table>
+        </td>
+        <td width="22%" valign="middle">
+            <table cellpadding="4" border="0" width="100%">
+                <tr>
+                    <td width="46%" class="bold text-right" style="font-size: 7.5pt; white-space: nowrap;">Balance</td>
+                    <td width="54%" class="box-cell text-center bold" style="font-size: 8pt;">' . number_format($final_balance, 3) . '</td>
                 </tr>
             </table>
         </td>
@@ -433,11 +378,11 @@ $html = '
 <!-- CHEQUE / REMARKS LINE -->
 <table cellpadding="5" border="0" width="100%" style="font-size: 8.5pt;">
     <tr>
-        <td width="14%" class="bold">Cheque / Ref</td>
-        <td width="16%" class="bold">' . htmlspecialchars($data['cashmemo_cheque_ref_no'] ?? '') . '</td>
+        <td width="15%" class="bold" style="white-space: nowrap;">Cheque / Ref</td>
+        <td width="15%" class="bold">' . htmlspecialchars($data['cashmemo_cheque_ref_no'] ?? '') . '</td>
         <td width="10%" class="bold">Notes</td>
-        <td width="35%" class="bold">' . htmlspecialchars($remarksLine) . '</td>
-        <td width="12%" class="bold">Cheque Date</td>
+        <td width="32%" class="bold">' . htmlspecialchars($remarksLine) . '</td>
+        <td width="15%" class="bold text-right" style="white-space: nowrap;">Cheque Date</td>
         <td width="13%" class="bold">' . htmlspecialchars($chqDateFmt) . '</td>
     </tr>
 </table>
@@ -450,17 +395,17 @@ $html = '
 <!-- FROM / TO DATES + AGREEMENT NO + VEHICLE REGN NO -->
 <table cellpadding="4" border="0" width="100%" style="font-size: 8.5pt;">
     <tr>
-        <td width="10%" class="bold">From Date</td>
-        <td width="17%" class="box-cell text-center bold">' . htmlspecialchars($contract_from_date) . '</td>
+        <td width="11%" class="bold" style="white-space: nowrap;">From Date</td>
+        <td width="16%" class="box-cell text-center bold">' . htmlspecialchars($contract_from_date) . '</td>
         <td width="2%"></td>
-        <td width="14%" rowspan="2" class="bold text-right" valign="middle">Agreement No.</td>
-        <td width="22%" rowspan="2" class="box-cell text-center bold" valign="middle" style="font-size: 10pt;">' . htmlspecialchars($data['agreement_no'] ?? '-') . '</td>
+        <td width="16%" rowspan="2" class="bold text-right" valign="middle" style="white-space: nowrap;">Agreement No.</td>
+        <td width="20%" rowspan="2" class="box-cell text-center bold" valign="middle" style="font-size: 9.5pt;">' . htmlspecialchars($data['agreement_no'] ?? '-') . '</td>
         <td width="2%"></td>
-        <td width="15%" rowspan="2" class="bold text-right" valign="middle">Vehicle Regn No.</td>
-        <td width="18%" rowspan="2" class="box-cell text-center bold" valign="middle" style="font-size: 10pt;">' . htmlspecialchars($data['vehicle_no'] ?? '-') . '</td>
+        <td width="16%" rowspan="2" class="bold text-right" valign="middle" style="white-space: nowrap;">Vehicle Regn No.</td>
+        <td width="17%" rowspan="2" class="box-cell text-center bold" valign="middle" style="font-size: 9.5pt;">' . htmlspecialchars($data['vehicle_no'] ?? '-') . '</td>
     </tr>
     <tr>
-        <td class="bold">To Date</td>
+        <td class="bold" style="white-space: nowrap;">To Date</td>
         <td class="box-cell text-center bold">' . htmlspecialchars($contract_to_date) . '</td>
         <td></td>
     </tr>
@@ -468,6 +413,34 @@ $html = '
 
 <table cellpadding="4" border="0" width="100%">
     <tr><td class="dot-line" style="font-size:3pt;">&nbsp;</td></tr>
+</table>
+
+<br><br>
+
+<!-- SIGNATURES & COMPANY FOOTER -->
+<table cellpadding="4" border="0" width="100%" style="font-size: 8.5pt;">
+    <tr>
+        <td width="14%" class="bold" valign="bottom">Rent a Car</td>
+        <td width="32%" class="solid-line text-center" valign="bottom">'
+            . (!empty($data['company_signature']) && file_exists(ltrim($data['company_signature'], '/')) ? '<img src="' . htmlspecialchars(ltrim($data['company_signature'], '/')) . '" height="28"><br>' : '')
+            . '<span class="bold">' . htmlspecialchars($data['company_sign_name'] ?: ($data['user_name'] ?? $companyLabel)) . '</span>
+        </td>
+        <td width="8%"></td>
+        <td width="16%" class="bold text-right" valign="bottom">Renter Signature</td>
+        <td width="30%" class="solid-line text-center" valign="bottom">'
+            . (!empty($data['customer_signature']) && file_exists(ltrim($data['customer_signature'], '/')) ? '<img src="' . htmlspecialchars(ltrim($data['customer_signature'], '/')) . '" height="28"><br>' : '')
+            . '<span class="bold">' . htmlspecialchars($data['customer_sign_name'] ?: ($data['customer_name'] ?? '')) . '</span>
+        </td>
+    </tr>
+</table>
+<br>
+<table cellpadding="2" border="0" width="100%" style="font-size: 7.5pt; color: #444444;">
+    <tr>
+        <td class="text-center">'
+            . (!empty($printSettings['header_phone']) ? 'Tel : ' . htmlspecialchars($printSettings['header_phone']) . '<br>' : '')
+            . (!empty($printSettings['header_address']) ? htmlspecialchars(str_replace(["\r", "\n"], ' ', $printSettings['header_address'])) : '')
+        . '</td>
+    </tr>
 </table>
 ';
 

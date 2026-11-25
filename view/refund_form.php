@@ -508,16 +508,16 @@ $rfPrintSettings = getPrintSettings(null, $rfCompanyId);
             let html = '';
             r.data.forEach(function(item) {
                 let formattedDate = fmtFriendlyDate(item.date, false);
-                let companyBadge = item.company_name ? `<br><span class="badge bg-label-primary mt-1">${item.company_name}</span>` : '';
+                let companyBadge = item.company_name ? `<span class="badge bg-label-primary">${item.company_name}</span>` : '';
+                let statusBadgeCls = item.status === 'Approved' ? 'bg-label-success' : (item.status === 'Rejected' ? 'bg-label-danger' : 'bg-label-warning');
+                let statusBadge = `<span class="badge ${statusBadgeCls}">${item.status}</span>`;
 
                 let customerHtml = `<div class="fw-semibold">${item.customer_name || '-'}</div>`;
                 customerHtml += `<div class="small text-muted">`;
-                if (item.customer_code) customerHtml += `<span class="me-2"><strong>Code:</strong> ${item.customer_code}</span>`;
-                if (item.customer_cr_cpr) customerHtml += `<span><strong>CPR:</strong> ${item.customer_cr_cpr}</span>`;
+                customerHtml += `<span class="me-2"><strong>Code:</strong> ${item.customer_code || '-'}</span>`;
+                customerHtml += `<span><strong>CPR:</strong> ${item.customer_cr_cpr || '-'}</span>`;
                 customerHtml += `</div>`;
-                if (item.customer_mobile) {
-                    customerHtml += `<div class="small text-muted"><i class="ri-phone-line me-1"></i>${item.customer_mobile}</div>`;
-                }
+                customerHtml += `<div class="small text-muted"><i class="ri-phone-line me-1"></i>${item.customer_mobile || '-'}</div>`;
 
                 let cStatusBadge = item.is_returned
                     ? `<span class="badge bg-label-secondary mt-1">Returned</span>`
@@ -540,12 +540,14 @@ $rfPrintSettings = getPrintSettings(null, $rfCompanyId);
                 agreeHtml += cStatusBadge;
 
                 html += `<tr>
-                    <td class="align-middle text-nowrap">${item.refund_no}${companyBadge}</td>
+                    <td class="align-middle text-nowrap">
+                        <div class="fw-semibold">${item.refund_no}</div>
+                        <div class="d-flex flex-wrap gap-1 mt-1">${statusBadge}${companyBadge}</div>
+                    </td>
                     <td class="align-middle text-nowrap">${formattedDate}</td>
                     <td class="align-middle">${customerHtml}</td>
                     <td class="align-middle">${agreeHtml}</td>
                     <td class="align-middle text-end fw-bold">${parseFloat(item.amount).toFixed(3)}</td>
-                    <td class="align-middle text-center"><span class="badge ${item.status === 'Approved' ? 'bg-success' : 'bg-warning'}">${item.status}</span></td>
                     <td class="align-middle text-center" style="white-space: nowrap;">`;
                 
                 html += `<button class="btn btn-sm btn-info me-1" onclick="viewRefund(${item.id}); $('.tooltip').remove();" data-bs-toggle="tooltip" title="View"><i class="ri ri-eye-line"></i></button>`;
@@ -607,14 +609,13 @@ $rfPrintSettings = getPrintSettings(null, $rfCompanyId);
         const bodyRows = [];
         rowNodes.forEach(tr => {
             const tds = tr.querySelectorAll('td');
-            if (tds.length >= 6) {
+            if (tds.length >= 5) {
                 bodyRows.push([
                     cellTextClean(tds[0]),
                     cellTextClean(tds[1]),
                     cellTextClean(tds[2]),
                     cellTextClean(tds[3]),
-                    cellTextClean(tds[4]),
-                    cellTextClean(tds[5])
+                    cellTextClean(tds[4])
                 ]);
             }
         });
@@ -637,13 +638,13 @@ $rfPrintSettings = getPrintSettings(null, $rfCompanyId);
         const compFilter = $('#filter_company_id option:selected').text() || 'All';
 
         doc.autoTable({
-            head: [['Refund No', 'Date', 'Customer', 'Agreement Details', 'Amount', 'Status']],
+            head: [['Refund No / Status', 'Date', 'Customer', 'Agreement Details', 'Amount']],
             body: bodyRows,
             startY: 112,
             theme: 'grid',
             styles: { fontSize: 8.5, font: 'helvetica', cellPadding: 5, valign: 'middle', lineColor: [215, 222, 235], lineWidth: 0.4 },
             headStyles: { fillColor: accentRgb, textColor: 255, fontStyle: 'bold' },
-            columnStyles: { 4: { halign: 'right', fontStyle: 'bold' }, 5: { halign: 'center' } },
+            columnStyles: { 4: { halign: 'right', fontStyle: 'bold' } },
             alternateRowStyles: { fillColor: [248, 250, 253] },
             margin: { top: 96, left: marginX, right: marginX, bottom: 50 },
             didDrawPage: function (data) {

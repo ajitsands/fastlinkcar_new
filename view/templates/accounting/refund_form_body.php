@@ -144,12 +144,11 @@
                     <table class="table table-hover align-middle" id="refundTable" style="font-size: 13px; width: 100%;">
                         <thead>
                             <tr>
-                                <th>Refund No</th>
+                                <th>Refund No / Status</th>
                                 <th>Date</th>
                                 <th>Customer</th>
                                 <th>Agreement Details</th>
                                 <th class="text-end">Amount</th>
-                                <th class="text-center">Status</th>
                                 <th class="text-center">Action</th>
                             </tr>
                         </thead>

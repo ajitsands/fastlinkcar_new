@@ -239,7 +239,7 @@ if ($action == 'get_refunds') {
                vc.service_start_date_time,
                vc.service_end_date_time,
                vc.return_date,
-               vc.status AS contract_status
+               vc.agreement_status AS contract_status
         FROM tbl_refund_requests r
         LEFT JOIN customer_details c ON r.customer_code = c.customer_id
         LEFT JOIN tbl_company comp ON SUBSTRING_INDEX(r.refund_no, '/', 1) = comp.company_code

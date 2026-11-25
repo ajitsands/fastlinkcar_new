@@ -1,3 +1,30 @@
+<style>
+  #clSectionTabs {
+    gap: 0.5rem;
+  }
+  #clSectionTabs .nav-link {
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #334155;
+    border-radius: 0.5rem;
+    padding: 0.55rem 1.25rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    transition: all 0.15s ease;
+  }
+  #clSectionTabs .nav-link:hover:not(.active) {
+    background-color: #eef3fc;
+    border-color: #1b3d94;
+    color: #1b3d94;
+  }
+  #clSectionTabs .nav-link.active {
+    background-color: #1b3d94 !important;
+    border-color: #1b3d94 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(27, 61, 148, 0.25);
+  }
+</style>
+
 <div class="modal fade" id="contractLedgerModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:95%;">
     <div class="modal-content border-0 shadow-lg">
@@ -27,19 +54,20 @@
       <div class="modal-body p-3">
         <!-- TWO TABS (PAYMENTS & RECEIPTS) -->
         <div class="card shadow-sm border mb-3">
-          <div class="card-header bg-white pb-0 pt-2 px-3 border-bottom">
-            <ul class="nav nav-tabs card-header-tabs" id="clSectionTabs" role="tablist">
+          <div class="card-header bg-light py-2 px-3 border-bottom d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <ul class="nav nav-pills" id="clSectionTabs" role="tablist">
               <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-bold fs-5 py-2 px-3" id="cl-tab-payments-btn" data-bs-toggle="tab" data-bs-target="#clTabPayments" type="button" role="tab" aria-controls="clTabPayments" aria-selected="true">
+                <button class="nav-link active" id="cl-tab-payments-btn" data-bs-toggle="tab" data-bs-target="#clTabPayments" type="button" role="tab" aria-controls="clTabPayments" aria-selected="true">
                   <i class="ri-money-dollar-circle-line me-1"></i> Payments (Violations &amp; Other Fees)
                 </button>
               </li>
               <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold fs-5 py-2 px-3" id="cl-tab-receipts-btn" data-bs-toggle="tab" data-bs-target="#clTabReceipts" type="button" role="tab" aria-controls="clTabReceipts" aria-selected="false">
-                  <i class="ri-receipt-line me-1"></i> Receipts
+                <button class="nav-link" id="cl-tab-receipts-btn" data-bs-toggle="tab" data-bs-target="#clTabReceipts" type="button" role="tab" aria-controls="clTabReceipts" aria-selected="false">
+                  <i class="ri-receipt-line me-1"></i> Receipts (Generate Receipt)
                 </button>
               </li>
             </ul>
+            <span class="text-muted small fw-medium">Switch tabs to post charges or generate a receipt</span>
           </div>
 
           <div class="card-body p-3">

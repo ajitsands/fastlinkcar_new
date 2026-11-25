@@ -42,7 +42,7 @@
         <div class="card-header border-bottom d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">Report Results</h5>
             <div>
-                <button type="button" class="btn btn-danger" id="btnPdf">
+                <button type="button" class="btn btn-primary" id="btnPdf">
                     <i class="ri-file-pdf-2-line me-1"></i> Export PDF
                 </button>
             </div>

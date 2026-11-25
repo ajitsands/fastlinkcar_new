@@ -13,6 +13,9 @@ checkLogin();
 ?>
 <?php
 include ROOT_PATH . '/view/envinclude.php';
+require_once ROOT_PATH . '/pdf/print_settings_helper.php';
+$vuCompanyId = !empty($_SESSION['company_id']) ? (int)$_SESSION['company_id'] : 1;
+$vuPrintSettings = getPrintSettings(null, $vuCompanyId);
 ?>
 <!doctype html>
 
@@ -104,6 +107,9 @@ include ROOT_PATH . '/view/envinclude.php';
     <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/settings.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/sands/sands_popup.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>alertmessage/js/sandsalert.js"></script>
+    <script>
+        window.UTILIZATION_PRINT_SETTINGS = <?= json_encode($vuPrintSettings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    </script>
     <script src="../httpdocs/user_js/vehicle_utilization_report.js?v=<?= time() ?>"></script>
     
 </body>

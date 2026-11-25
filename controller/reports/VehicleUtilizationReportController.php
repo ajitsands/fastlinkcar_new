@@ -2,6 +2,7 @@
 // controller/reports/VehicleMovementReportController.php
 session_start();
 require_once ROOT_PATH . '/__db.php';
+require_once ROOT_PATH . '/model/common/VehicleStatusHelper.php';
 $pdo = getPDO();
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
@@ -162,13 +163,24 @@ if ($action === 'get_report') {
             l.log_datetime,
             l.new_status,
             v.vehicle_number,
+            b.brand_name,
             v.model_names,
             v.vehicle_year,
+            v.vehicle_color,
             v.chassis_number,
+            v.engine_type,
+            v.transmission,
+            v.vehicle_status,
+            v.is_outsourced,
+            oc.company_name as outsourcing_company_name,
+            cat.category_name,
             l.vehicle_ids,
             comp.company_name as vehicle_company_name
         FROM tbl_vehicle_log_movement l
         JOIN tbl_vehicles v ON v.ids = l.vehicle_ids
+        LEFT JOIN tbl_vehicle_brand b ON v.brand_id = b.ids
+        LEFT JOIN tbl_vehicle_category cat ON v.category_id = cat.ids
+        LEFT JOIN tbl_outsourcing_companies oc ON v.outsourcing_company_id = oc.ids
         LEFT JOIN tbl_company comp ON v.company_id = comp.ids
         WHERE $whereSql
         ORDER BY l.vehicle_ids ASC, l.log_datetime ASC
@@ -188,9 +200,17 @@ if ($action === 'get_report') {
             $vehicle_timelines[$vid] = [];
             $vehicle_details[$vid] = [
                 'vehicle_number' => $log['vehicle_number'],
+                'brand_name' => $log['brand_name'],
                 'model_names' => $log['model_names'],
                 'vehicle_year' => $log['vehicle_year'],
+                'vehicle_color' => $log['vehicle_color'],
                 'chassis_number' => $log['chassis_number'],
+                'engine_type' => $log['engine_type'],
+                'transmission' => $log['transmission'],
+                'vehicle_status' => $log['vehicle_status'],
+                'is_outsourced' => $log['is_outsourced'],
+                'outsourcing_company_name' => $log['outsourcing_company_name'],
+                'category_name' => $log['category_name'],
                 'vehicle_company_name' => $log['vehicle_company_name']
             ];
         }
@@ -253,13 +273,46 @@ if ($action === 'get_report') {
             $days_total = round($total_tracked_secs / 86400, 1);
             
             $vDetails = $vehicle_details[$vid];
-            $detailsStr = htmlspecialchars($vDetails['vehicle_number'] . ' - ' . $vDetails['model_names'] . ' (' . $vDetails['vehicle_year'] . ')');
-            $chassis = htmlspecialchars($vDetails['chassis_number'] ?? '');
+            $vehNo = htmlspecialchars($vDetails['vehicle_number'] ?? '-');
+            $vehBrand = trim((string) ($vDetails['brand_name'] ?? ''));
+            $vehModel = trim((string) ($vDetails['model_names'] ?? ''));
+            $brandAndModel = htmlspecialchars(trim($vehBrand . ($vehBrand !== '' && $vehModel !== '' ? ' - ' : '') . $vehModel));
+            $vehCat = htmlspecialchars($vDetails['category_name'] ?? '-');
+            $vehYr = htmlspecialchars($vDetails['vehicle_year'] ?? '-');
+            $vehClrRaw = trim((string) ($vDetails['vehicle_color'] ?? ''));
+            $vehClr = $vehClrRaw !== '' ? htmlspecialchars($vehClrRaw) : '-';
+            $dotColor = $vehClrRaw !== '' ? htmlspecialchars($vehClrRaw) : '#697a8d';
+            $vehEngine = htmlspecialchars(!empty($vDetails['engine_type']) ? $vDetails['engine_type'] : '-');
+            $vehTrans = htmlspecialchars(!empty($vDetails['transmission']) ? $vDetails['transmission'] : '-');
+            $chassis = !empty($vDetails['chassis_number']) ? htmlspecialchars($vDetails['chassis_number']) : 'N/A';
             $compName = htmlspecialchars($vDetails['vehicle_company_name'] ?? '');
-            
+            $curStatusRaw = $vDetails['vehicle_status'] ?? '';
+            $curStatus = htmlspecialchars($curStatusRaw);
+            $curStatusStyle = $curStatusRaw !== '' ? VehicleStatusHelper::getBadgeStyle($curStatusRaw) : '';
+            $isOutsourced = ($vDetails['is_outsourced'] ?? '') === 'Yes';
+            $outsourceName = htmlspecialchars($vDetails['outsourcing_company_name'] ?? '');
+
+            $vehicleBadgesHtml = "<span class='badge bg-label-secondary me-1'>{$vehCat}</span>";
+            $vehicleBadgesHtml .= "<span class='badge bg-label-info me-1'><i class='ri-calendar-line me-1'></i>{$vehYr}</span>";
+            $vehicleBadgesHtml .= "<span class='badge bg-label-warning me-1'><span style='display:inline-block;width:7px;height:7px;border-radius:50%;background-color:{$dotColor};margin-right:4px;vertical-align:middle;'></span>{$vehClr}</span>";
+            $vehicleBadgesHtml .= "<span class='badge bg-label-success me-1'><i class='ri-gas-station-line me-1'></i>{$vehEngine}</span>";
+            $vehicleBadgesHtml .= "<span class='badge bg-label-primary'><i class='ri-settings-3-line me-1'></i>{$vehTrans}</span>";
+
+            $vehicleMetaHtml = "<div class='small text-muted mt-1 d-flex flex-wrap align-items-center gap-2'>"
+                . "<span><i class='ri-barcode-line me-1'></i>Chassis: <strong>{$chassis}</strong></span>";
+            if ($compName !== '') {
+                $vehicleMetaHtml .= "<span class='text-success'><i class='ri-building-line me-1'></i>{$compName}</span>";
+            }
+            if ($isOutsourced && $outsourceName !== '') {
+                $vehicleMetaHtml .= "<span class='badge bg-label-warning'><i class='ri-share-forward-line me-1'></i>Outsource: {$outsourceName}</span>";
+            }
+            $vehicleMetaHtml .= "</div>";
+
             $html .= "<tr>";
-            $html .= "<td><strong>{$detailsStr}</strong><br>
-                        <span class='badge bg-label-info mt-1 me-1'>Chassis: {$chassis}</span>
+            $html .= "<td>
+                        <div class='mb-1'><span class='fw-bold text-primary me-1'>{$vehNo}</span><span class='fw-semibold text-dark'>{$brandAndModel}</span>" . ($curStatus !== '' ? " <span class='badge ms-1' style='{$curStatusStyle}'>{$curStatus}</span>" : "") . "</div>
+                        <div class='d-flex flex-wrap gap-1'>{$vehicleBadgesHtml}</div>
+                        {$vehicleMetaHtml}
                       </td>";
             $html .= "<td>{$days_total}</td>";
             $html .= "<td>{$days_rented}</td>";

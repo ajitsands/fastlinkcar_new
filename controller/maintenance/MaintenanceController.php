@@ -38,7 +38,7 @@ try {
             FROM tbl_vehicles v
             LEFT JOIN tbl_vehicle_brand b ON v.brand_id = b.ids
             LEFT JOIN tbl_vehicle_model m ON v.model_id = m.ids
-            WHERE v.vehicle_status NOT IN ('Sold', 'Written Off')
+            WHERE v.vehicle_status NOT IN ('Sale Out', 'Sold', 'Written Off')
         ");
         $stmtV->execute();
         $vehicles = $stmtV->fetchAll(PDO::FETCH_ASSOC);
@@ -74,7 +74,7 @@ try {
             FROM tbl_vehicles v
             LEFT JOIN tbl_vehicle_brand b ON v.brand_id = b.ids
             LEFT JOIN tbl_vehicle_model m ON v.model_id = m.ids
-            WHERE v.vehicle_status NOT IN ('Sold', 'Written Off') AND v.company_id = ?
+            WHERE v.vehicle_status NOT IN ('Sale Out', 'Sold', 'Written Off') AND v.company_id = ?
         ");
         $stmtV->execute([$filterCompanyId]);
         $vehicles = $stmtV->fetchAll(PDO::FETCH_ASSOC);

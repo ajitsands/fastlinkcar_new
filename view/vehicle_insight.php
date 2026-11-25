@@ -1095,7 +1095,7 @@ $(document).on('click', '.li_Vehicle_list', function () {
               divcontent = $('#BlockedvehicleAvailabilityContent');
               vehicle_card=$('#BlockedvehicleContainer .vehicle-card');
          break;
-         case 'Sold':
+         case 'Sale Out':
             divcontainer = $('#SoldvehicleContainer');
               divcontent = $('#SoldvehicleAvailabilityContent');
               vehicle_card=$('#SoldvehicleContainer .vehicle-card');

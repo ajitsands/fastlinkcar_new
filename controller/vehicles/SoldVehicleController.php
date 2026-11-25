@@ -99,7 +99,7 @@ class SoldVehicleController
             FROM tbl_vehicles v
             LEFT JOIN tbl_vehicle_brand b ON b.ids = v.brand_id
             WHERE v.company_id IN ($inQ)
-              AND COALESCE(v.vehicle_status, 'Available') NOT IN ('Sold', 'Rentout', 'Staff Use')
+              AND COALESCE(v.vehicle_status, 'Available') NOT IN ('Sale Out', 'Sold', 'Rentout', 'Staff Use')
             ORDER BY v.vehicle_number ASC
         ";
         $st = $this->pdo->prepare($sql);
@@ -207,11 +207,11 @@ class SoldVehicleController
                 $saleId = (int)$this->pdo->lastInsertId();
             }
 
-            // Automatically convert vehicle status to Sold
-            $statusNote = "Sold to {$buyerName} on {$saleDate} for " . number_format($saleAmount, 3) . " BHD" . ($note !== '' ? " ({$note})" : '');
+            // Automatically convert vehicle status to Sale Out
+            $statusNote = "Sale Out to {$buyerName} on {$saleDate} for " . number_format($saleAmount, 3) . " BHD" . ($note !== '' ? " ({$note})" : '');
             $stUpdVeh = $this->pdo->prepare("
                 UPDATE tbl_vehicles
-                SET vehicle_status = 'Sold',
+                SET vehicle_status = 'Sale Out',
                     is_active = 0,
                     mileage_km = COALESCE(?, mileage_km),
                     vehicle_status_notes = ?
@@ -219,12 +219,12 @@ class SoldVehicleController
             ");
             $stUpdVeh->execute([$mileageKm, $statusNote, $vehicleId]);
 
-            if ($oldStatus !== 'Sold') {
+            if ($oldStatus !== 'Sale Out') {
                 $this->commonModel->logVehicleMovement([
                     'vehicle_id' => $vehicleId,
                     'action_type' => 'Vehicle Sold',
                     'old_status' => $oldStatus,
-                    'new_status' => 'Sold',
+                    'new_status' => 'Sale Out',
                     'reference_type' => 'Vehicle Sale',
                     'reference_id' => $saleId,
                     'reference_no' => $veh['vehicle_number'],
@@ -236,7 +236,7 @@ class SoldVehicleController
             $this->pdo->commit();
             echo json_encode([
                 'status' => true,
-                'message' => 'Vehicle marked as Sold and status updated automatically.'
+                'message' => 'Vehicle marked as Sale Out and status updated automatically.'
             ]);
         } catch (Throwable $e) {
             if ($this->pdo->inTransaction()) {
@@ -269,7 +269,7 @@ class SoldVehicleController
             $this->commonModel->logVehicleMovement([
                 'vehicle_id' => (int)$row['vehicle_id'],
                 'action_type' => 'Sale Reverted',
-                'old_status' => 'Sold',
+                'old_status' => 'Sale Out',
                 'new_status' => 'Available',
                 'reference_type' => 'Vehicle Sale',
                 'reference_id' => $saleId,

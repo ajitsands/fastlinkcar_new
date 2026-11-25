@@ -147,7 +147,7 @@
                              
                             </button>
                           </li>
-                          <li class="nav-item li_Vehicle_list" data-status="Sold">
+                          <li class="nav-item li_Vehicle_list" data-status="Sale Out">
                             <button
                               type="button"
                               class="nav-link"

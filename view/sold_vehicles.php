@@ -270,12 +270,19 @@ include ROOT_PATH . '/view/envinclude.php';
                         data: soldRows,
                         pageLength: 15,
                         order: [],
+                        drawCallback: function() {
+                            if (typeof window.applyVehicleStatusBadge === 'function') {
+                                $('#soldVehiclesTable .sv-status-badge').each(function() {
+                                    window.applyVehicleStatusBadge(this, 'Sale Out');
+                                });
+                            }
+                        },
                         columns: [
                             { data: null, className: 'text-center', render: (d, t, r, m) => m.row + 1 },
                             { data: 'sale_date', className: 'text-nowrap', render: v => fmtDate(v) },
                             {
                                 data: null,
-                                render: r => `<div class="fw-bold text-danger">${esc(r.vehicle_number || '')}</div><small class="text-muted">${esc(r.car_type || '')} ${r.model_year ? '(' + esc(r.model_year) + ')' : ''}</small>`
+                                render: r => `<div class="fw-bold text-danger">${esc(r.vehicle_number || '')} <span class="badge rounded-pill ms-1 sv-status-badge" style="font-size:10px;">Sale Out</span></div><small class="text-muted">${esc(r.car_type || '')} ${r.model_year ? '(' + esc(r.model_year) + ')' : ''}</small>`
                             },
                             {
                                 data: null,

@@ -2,6 +2,7 @@
 // controller/reports/VehicleMovementReportController.php
 session_start();
 require_once ROOT_PATH . '/__db.php';
+require_once ROOT_PATH . '/model/common/VehicleStatusHelper.php';
 $pdo = getPDO();
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
@@ -150,10 +151,11 @@ if ($action === 'get_report') {
         $params[] = date('Y-m-d', strtotime($to_date));
     }
     
-    $whereSql = implode(" AND ", $where);
+    $whereSql = !empty($where) ? implode(" AND ", $where) : "1=1";
     
     $sql = "
         SELECT 
+            l.ids,
             l.log_datetime,
             l.action_type,
             l.old_status,
@@ -232,41 +234,51 @@ if ($action === 'get_report') {
         
         $processed_logs[$i]['duration'] = trim($duration_str);
     }
+
+    // Order movement logs by descending date/time (newest first)
+    usort($processed_logs, function ($a, $b) {
+        $ta = strtotime($a['log_datetime'] ?? '1970-01-01 00:00:00');
+        $tb = strtotime($b['log_datetime'] ?? '1970-01-01 00:00:00');
+        if ($tb !== $ta) {
+            return $tb <=> $ta;
+        }
+        return ((int)($b['ids'] ?? 0)) <=> ((int)($a['ids'] ?? 0));
+    });
     
     $html = "";
     if (empty($processed_logs)) {
-        $html .= "<tr><td colspan='7' class='text-center'>No movement logs found matching the criteria.</td></tr>";
+        $html .= "<tr><td colspan='7' class='text-center text-muted py-3'>No movement logs found matching the criteria.</td></tr>";
     } else {
         foreach ($processed_logs as $log) {
-            $dateFormatted = date('d-M-Y H:i', strtotime($log['log_datetime']));
+            $dateFormatted = date('d M Y, h:i A', strtotime($log['log_datetime']));
             $vehicleDetails = htmlspecialchars($log['vehicle_number'] . ' - ' . $log['model_names'] . ' (' . $log['vehicle_year'] . ')');
             $chassis = htmlspecialchars($log['chassis_number'] ?? '');
             $compName = htmlspecialchars($log['vehicle_company_name'] ?? '');
             
             $html .= "<tr>";
-            $html .= "<td>{$dateFormatted}</td>";
-            $html .= "<td>{$vehicleDetails}<br>
+            $html .= "<td class='text-nowrap'>{$dateFormatted}</td>";
+            $html .= "<td><strong>{$vehicleDetails}</strong><br>
                         <span class='badge bg-label-info mt-1 me-1'>Chassis: {$chassis}</span>
+                        " . ($compName !== '' ? "<span class='badge bg-label-secondary mt-1'>{$compName}</span>" : "") . "
                       </td>";
             
-            // Status formatting
-            $oldStatus = $log['old_status'] ? htmlspecialchars($log['old_status']) : '-';
-            $newStatus = $log['new_status'] ? htmlspecialchars($log['new_status']) : '-';
-            
-            if ($log['action_type'] === 'Creation') {
-                $oldStatus = '<span class="badge bg-label-secondary">N/A</span>';
+            // Master Status Badge Colors
+            $oldStatusRaw = trim((string)($log['old_status'] ?? ''));
+            $newStatusRaw = trim((string)($log['new_status'] ?? ''));
+            $oldStatusEsc = $oldStatusRaw !== '' ? htmlspecialchars($oldStatusRaw) : 'N/A';
+            $newStatusEsc = $newStatusRaw !== '' ? htmlspecialchars($newStatusRaw) : '-';
+
+            if ($log['action_type'] === 'Creation' || $oldStatusRaw === '') {
+                $oldStatusHtml = '<span class="badge rounded-pill bg-label-secondary">N/A</span>';
             } else {
-                $oldStatus = "<span class='badge bg-label-secondary'>{$oldStatus}</span>";
+                $oldStyle = VehicleStatusHelper::getBadgeStyle($oldStatusRaw);
+                $oldStatusHtml = "<span class='badge rounded-pill' style='{$oldStyle}'>{$oldStatusEsc}</span>";
             }
+
+            $newStyle = $newStatusRaw !== '' ? VehicleStatusHelper::getBadgeStyle($newStatusRaw) : '';
+            $ns = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $newStatusRaw));
             
-            $statusClass = 'bg-label-primary';
-            $ns = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $newStatus));
-            if ($ns === 'available' || $ns === 'active') $statusClass = 'bg-label-success';
-            else if ($ns === 'parking' || $ns === 'parked') $statusClass = 'bg-label-info';
-            else if ($ns === 'rentout' || $ns === 'rented' || $ns === 'onrent') $statusClass = 'bg-label-danger';
-            else if ($ns === 'maintenance') $statusClass = 'bg-label-warning';
-            
-            $html .= "<td>{$oldStatus}</td>";
+            $html .= "<td class='text-center'>{$oldStatusHtml}</td>";
             
             $details = "";
             if ($ns === 'rentout' && !empty($log['log_customer_name'])) {
@@ -284,11 +296,14 @@ if ($action === 'get_report') {
             
             $details .= "<br><small class='text-muted'>Duration: {$log['duration']}</small>";
             
-            $html .= "<td><span class='badge {$statusClass}'>{$newStatus}</span><br><small class='text-muted'>Action: " . htmlspecialchars($log['action_type']) . "</small>{$details}</td>";
+            $newBadgeHtml = $newStyle !== ''
+                ? "<span class='badge rounded-pill' style='{$newStyle}'>{$newStatusEsc}</span>"
+                : "<span class='badge rounded-pill bg-label-primary'>{$newStatusEsc}</span>";
+            $html .= "<td>{$newBadgeHtml}<br><small class='text-muted'>Action: " . htmlspecialchars($log['action_type']) . "</small>{$details}</td>";
             
             $odo = intval($log['odometer']) > 0 ? number_format($log['odometer']) : '-';
-            $html .= "<td>{$odo}</td>";
-            $html .= "<td>{$log['km_used']}</td>";
+            $html .= "<td class='text-end text-nowrap'>{$odo}</td>";
+            $html .= "<td class='text-end text-nowrap'>{$log['km_used']}</td>";
             
             $user = htmlspecialchars($log['created_name'] ?? 'System');
             $html .= "<td>{$user}</td>";

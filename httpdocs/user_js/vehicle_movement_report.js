@@ -38,6 +38,7 @@ $(document).ready(function () {
             });
             $('#filter_company').html(html);
             loadVehicles(); // Load vehicles initially
+            loadReport();   // Load movement logs on page open
         }
     });
 

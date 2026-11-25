@@ -24,7 +24,7 @@
                    name="filter_to_date"
                    type="date"
                    placeholder="dd-mm-yyyy">
-            <label for="filter_from_date">To Date</label>
+            <label for="filter_to_date">To Date</label>
         </div>
     </div>
     <!-- Dropdown -->

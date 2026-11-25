@@ -315,6 +315,7 @@ toDate.setDate(toDate.getDate() + 10);
 
 $('#filter_from_date').val(fromDate.toISOString().split('T')[0]);
 $('#filter_to_date').val(toDate.toISOString().split('T')[0]);
+loadVehiclesTable();
   let vehicleReturnCalendar;
 let calendarReturnInitialized = false;
 

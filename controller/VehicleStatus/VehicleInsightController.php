@@ -24,8 +24,8 @@ class VehicleInsightController
         $this->vehicleNumber = $_POST['vehicleNumber'] ?? null;
         $this->vehicleId = $_POST['vehicleId'] ?? null;
        
-        $this->filter_from_date = date('Y-m-d 00:00:00', strtotime($_POST['filter_from_date']))?? null;;
-        $this->filter_to_date   = date('Y-m-d 23:59:59', strtotime($_POST['filter_to_date']))?? null;;
+        $this->filter_from_date = !empty($_POST['filter_from_date']) ? date('Y-m-d 00:00:00', strtotime($_POST['filter_from_date'])) : null;
+        $this->filter_to_date   = !empty($_POST['filter_to_date']) ? date('Y-m-d 23:59:59', strtotime($_POST['filter_to_date'])) : null;
         $this->filter_company_id = $_POST['filter_company_id'] ?? 'All';
 
         $allowedCompanyIds = [];
@@ -1648,9 +1648,9 @@ $this->params[15] = [
                     
                     $lastImage = count($images) > 0 ? end($images) : "default.jpg";
                 
-                    $data_other_details = json_decode($item['other_details_json'], true);
-                    $vehicleFuelType = $data_other_details['vehicleFuelType'];
-                    $vehicleGearType = $data_other_details['vehicleGearType'];
+                    $data_other_details = json_decode($item['other_details_json'] ?? '', true);
+                    $vehicleFuelType = !empty($item['engine_type']) ? $item['engine_type'] : ($data_other_details['vehicleFuelType'] ?? 'N/A');
+                    $vehicleGearType = !empty($item['transmission']) ? $item['transmission'] : ($data_other_details['vehicleGearType'] ?? 'N/A');
                 
                     $nextPassing = !empty($item['next_passing_date']) ? date('d/m/Y', strtotime($item['next_passing_date'])) : 'NA';
                     $nextInsurance = !empty($item['next_insurance_date']) ? date('d/m/Y', strtotime($item['next_insurance_date'])) : 'NA';
@@ -2145,9 +2145,9 @@ $this->params[15] = [
                     
                     $lastImage = count($images) > 0 ? end($images) : "default.jpg";
                 
-                    $data_other_details = json_decode($item['other_details_json'], true);
-                    $vehicleFuelType = $data_other_details['vehicleFuelType'];
-                    $vehicleGearType = $data_other_details['vehicleGearType'];
+                    $data_other_details = json_decode($item['other_details_json'] ?? '', true);
+                    $vehicleFuelType = !empty($item['engine_type']) ? $item['engine_type'] : ($data_other_details['vehicleFuelType'] ?? 'N/A');
+                    $vehicleGearType = !empty($item['transmission']) ? $item['transmission'] : ($data_other_details['vehicleGearType'] ?? 'N/A');
                 
                     $nextPassing = !empty($item['next_passing_date']) ? date('d/m/Y', strtotime($item['next_passing_date'])) : 'NA';
                     $nextInsurance = !empty($item['next_insurance_date']) ? date('d/m/Y', strtotime($item['next_insurance_date'])) : 'NA';

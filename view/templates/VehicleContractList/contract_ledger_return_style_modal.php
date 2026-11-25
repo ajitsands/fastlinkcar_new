@@ -206,14 +206,19 @@
 
                     <div class="col-md-3">
                       <label class="form-label form-label-sm mb-1 fw-semibold">Payment Type</label>
-                      <select id="cl_rr_payment_type" class="form-select form-select-sm">
-                        <option value="RENT">RENT</option>
-                        <option value="FULL SETTLEMENT" selected>FULL SETTLEMENT</option>
-                        <option value="OVERDUE CHARGES">OVERDUE CHARGES</option>
-                        <option value="VIOLATION / FINE">VIOLATION / FINE</option>
-                        <option value="OTHER FEES">OTHER FEES</option>
-                        <option value="ADVANCE / DEPOSIT">ADVANCE / DEPOSIT</option>
-                      </select>
+                      <div class="input-group input-group-sm">
+                        <select id="cl_rr_payment_type" class="form-select form-select-sm">
+                          <option value="RENT">RENT</option>
+                          <option value="FULL SETTLEMENT" selected>FULL SETTLEMENT</option>
+                          <option value="OVERDUE CHARGES">OVERDUE CHARGES</option>
+                          <option value="VIOLATION / FINE">VIOLATION / FINE</option>
+                          <option value="OTHER FEES">OTHER FEES</option>
+                          <option value="ADVANCE / DEPOSIT">ADVANCE / DEPOSIT</option>
+                        </select>
+                        <button type="button" class="btn btn-outline-primary" id="cl_btn_add_payment_type" title="Add Payment Type">
+                          <i class="ri-add-line"></i>
+                        </button>
+                      </div>
                     </div>
                     <div class="col-md-3">
                       <label class="form-label form-label-sm mb-1 fw-semibold">Payment Mode</label>

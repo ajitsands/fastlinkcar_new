@@ -508,6 +508,43 @@ class cashmemoController
             ]);
         
             break;
+            case 'GetReceiptPaymentTypes':
+                $pdo = $this->varPDOModelObj->varDBPDO;
+                $pdo->exec("CREATE TABLE IF NOT EXISTS tbl_receipt_payment_types (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    type_name VARCHAR(120) NOT NULL UNIQUE,
+                    status VARCHAR(20) DEFAULT 'Active',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                $cnt = (int)$pdo->query("SELECT COUNT(*) FROM tbl_receipt_payment_types")->fetchColumn();
+                if ($cnt === 0) {
+                    $defaults = ['RENT', 'FULL SETTLEMENT', 'OVERDUE CHARGES', 'VIOLATION / FINE', 'OTHER FEES', 'ADVANCE / DEPOSIT'];
+                    $ins = $pdo->prepare("INSERT IGNORE INTO tbl_receipt_payment_types (type_name) VALUES (?)");
+                    foreach ($defaults as $d) {
+                        $ins->execute([$d]);
+                    }
+                }
+                $rows = $pdo->query("SELECT id, type_name FROM tbl_receipt_payment_types WHERE status = 'Active' ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC);
+                echo json_encode(['status' => 'Success', 'data' => $rows]);
+                break;
+
+            case 'SaveReceiptPaymentType':
+                $typeName = strtoupper(trim((string)($_POST['type_name'] ?? '')));
+                if ($typeName === '') {
+                    echo json_encode(['status' => 'Error', 'message' => 'Payment type name is required']);
+                    break;
+                }
+                $pdo = $this->varPDOModelObj->varDBPDO;
+                $pdo->exec("CREATE TABLE IF NOT EXISTS tbl_receipt_payment_types (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    type_name VARCHAR(120) NOT NULL UNIQUE,
+                    status VARCHAR(20) DEFAULT 'Active',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                $stmt = $pdo->prepare("INSERT IGNORE INTO tbl_receipt_payment_types (type_name) VALUES (?)");
+                $stmt->execute([$typeName]);
+                echo json_encode(['status' => 'Success', 'type_name' => $typeName]);
+                break;
             case 'GetCashmemoDetails':
 
                 $this->ReturnData = $this->varPDOModelObj->ListFromTable(

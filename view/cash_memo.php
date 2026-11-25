@@ -961,6 +961,49 @@ $(document).on('change', '#company_id', function() {
 
 let isLoadingCashmemoEdit = false;
 
+function loadReceiptPaymentTypes(selectedVal = null) {
+    $.post('/CashMemoController', { action: 'GetReceiptPaymentTypes' }, function(res) {
+        try {
+            const d = typeof res === 'string' ? JSON.parse(res) : res;
+            if (d && d.status === 'Success' && Array.isArray(d.data)) {
+                const $sel = $('#cm_payment_type');
+                const current = selectedVal || $sel.val() || 'FULL SETTLEMENT';
+                $sel.empty();
+                d.data.forEach(item => {
+                    $sel.append(new Option(item.type_name, item.type_name, false, item.type_name === current));
+                });
+                if (current && !$sel.find('option[value="' + current.replace(/"/g, '\\"') + '"]').length) {
+                    $sel.append(new Option(current, current, true, true));
+                }
+            }
+        } catch (e) {}
+    });
+}
+loadReceiptPaymentTypes();
+
+$(document).on('click', '#btnAddPaymentType', function() {
+    Swal.fire({
+        title: 'Add Payment Type',
+        input: 'text',
+        inputPlaceholder: 'e.g. SECURITY DEPOSIT, EXTENSION FEE',
+        showCancelButton: true,
+        confirmButtonText: 'Save',
+        inputValidator: (v) => !v || !v.trim() ? 'Please enter a payment type name' : null
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            $.post('/CashMemoController', { action: 'SaveReceiptPaymentType', type_name: result.value.trim() }, function(res) {
+                try {
+                    const d = typeof res === 'string' ? JSON.parse(res) : res;
+                    if (d && d.status === 'Success') {
+                        loadReceiptPaymentTypes(d.type_name);
+                        setupDropdown('dropdownContent', 'success', svgSuccess + 'Payment type added: ' + d.type_name, 'click');
+                    }
+                } catch (e) {}
+            });
+        }
+    });
+});
+
 function loadAgreementBalanceForCashmemo(contractId, preserveAmount = false) {
     if (!contractId || contractId === '0') {
         $('#cm_paid_advance').val('0.000');

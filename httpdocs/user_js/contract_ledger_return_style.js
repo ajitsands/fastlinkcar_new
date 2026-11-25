@@ -2,6 +2,46 @@
     let ledgerTable = null;
     let clOtherFeeHeadsMap = {};
 
+    function clLoadReceiptPaymentTypes(selectedVal = null) {
+        $.post('/CashMemoController', { action: 'GetReceiptPaymentTypes' }, function(res) {
+            try {
+                const d = typeof res === 'string' ? JSON.parse(res) : res;
+                if (d && d.status === 'Success' && Array.isArray(d.data)) {
+                    const $sel = $('#cl_rr_payment_type');
+                    const current = selectedVal || $sel.val() || 'FULL SETTLEMENT';
+                    $sel.empty();
+                    d.data.forEach(item => {
+                        $sel.append(new Option(item.type_name, item.type_name, false, item.type_name === current));
+                    });
+                }
+            } catch (e) {}
+        });
+    }
+    clLoadReceiptPaymentTypes();
+
+    $(document).on('click', '#cl_btn_add_payment_type', function() {
+        Swal.fire({
+            title: 'Add Payment Type',
+            input: 'text',
+            inputPlaceholder: 'e.g. SECURITY DEPOSIT, EXTENSION FEE',
+            showCancelButton: true,
+            confirmButtonText: 'Save',
+            inputValidator: (v) => !v || !v.trim() ? 'Please enter a payment type name' : null
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                $.post('/CashMemoController', { action: 'SaveReceiptPaymentType', type_name: result.value.trim() }, function(res) {
+                    try {
+                        const d = typeof res === 'string' ? JSON.parse(res) : res;
+                        if (d && d.status === 'Success') {
+                            clLoadReceiptPaymentTypes(d.type_name);
+                            notifyLedger('Payment type added: ' + d.type_name, 'success');
+                        }
+                    } catch (e) {}
+                });
+            }
+        });
+    });
+
     function escHtml(str) {
         return String(str || '').replace(/[&<>"']/g, s => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'

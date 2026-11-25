@@ -137,14 +137,19 @@
 
                         <div class="col-md-3">
                             <label class="form-label form-label-sm mb-1 fw-semibold" for="cm_payment_type">Payment Type</label>
-                            <select id="cm_payment_type" class="form-select form-select-sm">
-                                <option value="RENT">RENT</option>
-                                <option value="FULL SETTLEMENT" selected>FULL SETTLEMENT</option>
-                                <option value="OVERDUE CHARGES">OVERDUE CHARGES</option>
-                                <option value="VIOLATION / FINE">VIOLATION / FINE</option>
-                                <option value="OTHER FEES">OTHER FEES</option>
-                                <option value="ADVANCE / DEPOSIT">ADVANCE / DEPOSIT</option>
-                            </select>
+                            <div class="input-group input-group-sm">
+                                <select id="cm_payment_type" class="form-select form-select-sm">
+                                    <option value="RENT">RENT</option>
+                                    <option value="FULL SETTLEMENT" selected>FULL SETTLEMENT</option>
+                                    <option value="OVERDUE CHARGES">OVERDUE CHARGES</option>
+                                    <option value="VIOLATION / FINE">VIOLATION / FINE</option>
+                                    <option value="OTHER FEES">OTHER FEES</option>
+                                    <option value="ADVANCE / DEPOSIT">ADVANCE / DEPOSIT</option>
+                                </select>
+                                <button type="button" class="btn btn-outline-primary" id="btnAddPaymentType" title="Add Payment Type">
+                                    <i class="ri-add-line"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label form-label-sm mb-1 fw-semibold" for="cash_memo_payment_method">Payment Mode</label>

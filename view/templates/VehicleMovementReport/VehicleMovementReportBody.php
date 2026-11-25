@@ -44,7 +44,7 @@
         </div>
         <div class="card-body p-3">
             <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle text-start mb-0" id="movementReportTable" style="font-size: 13px; width: 100%;">
+                <table class="table table-hover align-middle text-start mb-0" id="movementReportTable" style="font-size: 13px; width: 100%;">
                     <thead>
                         <tr>
                             <th>Date &amp; Time</th>

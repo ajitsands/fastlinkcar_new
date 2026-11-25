@@ -1620,7 +1620,8 @@ function downloadPDF() {
                     doc.text("Vehicle Insights Report - " + activeTabName, marginX, 88);
 
                     let d = new Date();
-                    let dateStr = "Generated on: " + ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear();
+                    const pdfMonths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    let dateStr = "Generated on: " + ("0" + d.getDate()).slice(-2) + " " + pdfMonths[d.getMonth()] + " " + d.getFullYear();
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(8.5);
                     doc.setTextColor(100, 116, 139);

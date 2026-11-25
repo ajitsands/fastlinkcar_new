@@ -1703,7 +1703,9 @@ $this->params[15] = [
                         $reqStatus = !empty($item['maintenance_request_status']) ? $item['maintenance_request_status'] : 'N/A';
                         $remarksText = 'Garage: ' . $garageName . ' | Req No: ' . $reqNo . ' | Status: ' . $reqStatus;
                     } else {
-                        $remarksText = !empty($item['vehicle_status_notes']) ? $item['vehicle_status_notes'] : '';
+                        $remarksText = !empty($item['vehicle_status_notes'])
+                            ? preg_replace_callback('/\b(\d{4}-\d{2}-\d{2})\b/', function ($m) { return date('d M Y', strtotime($m[1])); }, $item['vehicle_status_notes'])
+                            : '';
                     }
 
                     $chassis = htmlspecialchars($item['chassis_number'] ?? 'N/A');
@@ -1933,7 +1935,9 @@ $this->params[15] = [
                         $reqStatus = !empty($item['maintenance_request_status']) ? $item['maintenance_request_status'] : 'N/A';
                         $remarksText = 'Garage: ' . $garageName . ' | Req No: ' . $reqNo . ' | Status: ' . $reqStatus;
                     } else {
-                        $remarksText = !empty($item['vehicle_status_notes']) ? $item['vehicle_status_notes'] : '';
+                        $remarksText = !empty($item['vehicle_status_notes'])
+                            ? preg_replace_callback('/\b(\d{4}-\d{2}-\d{2})\b/', function ($m) { return date('d M Y', strtotime($m[1])); }, $item['vehicle_status_notes'])
+                            : '';
                     }
 
                     $chassis = htmlspecialchars($item['chassis_number'] ?? 'N/A');
@@ -2232,7 +2236,9 @@ $this->params[15] = [
                         $reqStatus = !empty($item['maintenance_request_status']) ? $item['maintenance_request_status'] : 'N/A';
                         $remarksText = 'Garage: ' . $garageName . ' | Req No: ' . $reqNo . ' | Status: ' . $reqStatus;
                     } else {
-                        $remarksText = !empty($item['vehicle_status_notes']) ? $item['vehicle_status_notes'] : '';
+                        $remarksText = !empty($item['vehicle_status_notes'])
+                            ? preg_replace_callback('/\b(\d{4}-\d{2}-\d{2})\b/', function ($m) { return date('d M Y', strtotime($m[1])); }, $item['vehicle_status_notes'])
+                            : '';
                     }
 
                     $chassis = htmlspecialchars($item['chassis_number'] ?? 'N/A');

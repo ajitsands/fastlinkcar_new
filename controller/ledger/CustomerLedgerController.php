@@ -67,15 +67,11 @@ class CustomerLedgerController
                 break;
             case 'GetCustomerContractLedgerData':
                 $contractid = $_GET['contract_id'] ?? 'All';
-                if($contractid=='0' || $contractid=='All')
-                {
-                     $this->handleGetLedger();
-                }
-                else
-                {
+                if (empty($contractid) || $contractid == '0' || $contractid == 'All') {
+                    $this->handleGetLedger();
+                } else {
                     $this->handleContractGetLedger();
                 }
-                
                 break;
              
             case 'GetChequeCalendarEvents':
@@ -511,59 +507,79 @@ class CustomerLedgerController
     private function handleGetLedger()
     {
         $customer_code = $_GET['customer_code'] ?? '';
+        if (empty($customer_code)) {
+            echo json_encode(['status' => true, 'data' => []]);
+            return;
+        }
+
         $sql = "SELECT l.*,
                        COALESCE(NULLIF(l.agreement_no, ''), vc.agreement_no, '') AS agreement_no,
-                       cm.cashmemo_no AS matched_cashmemo_no,
                        b.bank_name, b.account_no,
                        cb.bank_name as company_bank_name, cb.account_no as company_account_no
                 FROM tbl_customer_ledger l 
                 LEFT JOIN tbl_vehicle_rentout_contracts vc ON vc.ids = l.contract_ids
-                LEFT JOIN cashmemo cm ON cm.cashmemo_no = l.ref_no
                 LEFT JOIN tbl_banks b ON l.bank_id = b.ids 
                 LEFT JOIN tbl_banks cb ON l.company_bank_id = cb.ids 
-                WHERE l.customer_code = ? 
+                WHERE (
+                    l.customer_code = ?
+                    OR vc.customer_code = ?
+                    OR l.customer_code IN (SELECT CAST(ids AS CHAR) FROM customer_details WHERE customer_id = ?)
+                )
                 ORDER BY l.trans_date ASC, l.ids ASC";
-        $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$customer_code]), true);
-        
-        if ($res['status']) {
-            $balance = 0;
-            foreach ($res['data'] as &$row) {
-                $balance += ($row['debit'] - $row['credit']);
-                $row['running_balance'] = $balance;
-            }
-            echo json_encode($res);
-        } else {
-            echo json_encode($res);
+        $stmt = $this->varPDOModelObj->varDBPDO->prepare($sql);
+        $stmt->execute([$customer_code, $customer_code, $customer_code]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmtCm = $this->varPDOModelObj->varDBPDO->prepare("SELECT cashmemo_no FROM cashmemo WHERE customer_code = ?");
+        $stmtCm->execute([$customer_code]);
+        $cmSet = array_flip($stmtCm->fetchAll(PDO::FETCH_COLUMN));
+
+        $balance = 0;
+        foreach ($rows as &$row) {
+            $balance += ((float)$row['debit'] - (float)$row['credit']);
+            $row['running_balance'] = $balance;
+            $ref = trim((string)($row['ref_no'] ?? ''));
+            $row['matched_cashmemo_no'] = ($ref !== '' && isset($cmSet[$ref])) ? $ref : '';
         }
+
+        echo json_encode(['status' => true, 'data' => $rows]);
     }
     
     private function handleContractGetLedger()
     {
         $contract_id = $_GET['contract_id'] ?? '';
+        if (empty($contract_id)) {
+            echo json_encode(['status' => true, 'data' => []]);
+            return;
+        }
+
         $sql = "SELECT l.*,
                        COALESCE(NULLIF(l.agreement_no, ''), vc.agreement_no, '') AS agreement_no,
-                       cm.cashmemo_no AS matched_cashmemo_no,
                        b.bank_name, b.account_no,
                        cb.bank_name as company_bank_name, cb.account_no as company_account_no
                 FROM tbl_customer_ledger l 
                 LEFT JOIN tbl_vehicle_rentout_contracts vc ON vc.ids = l.contract_ids
-                LEFT JOIN cashmemo cm ON cm.cashmemo_no = l.ref_no
                 LEFT JOIN tbl_banks b ON l.bank_id = b.ids 
                 LEFT JOIN tbl_banks cb ON l.company_bank_id = cb.ids 
                 WHERE l.contract_ids = ? 
                 ORDER BY l.trans_date ASC, l.ids ASC";
-        $res = json_decode($this->varPDOModelObj->ListFromTable($sql, [$contract_id]), true);
-        
-        if ($res['status']) {
-            $balance = 0;
-            foreach ($res['data'] as &$row) {
-                $balance += ($row['debit'] - $row['credit']);
-                $row['running_balance'] = $balance;
-            }
-            echo json_encode($res);
-        } else {
-            echo json_encode($res);
+        $stmt = $this->varPDOModelObj->varDBPDO->prepare($sql);
+        $stmt->execute([$contract_id]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmtCm = $this->varPDOModelObj->varDBPDO->prepare("SELECT cashmemo_no FROM cashmemo WHERE contract_ids = ?");
+        $stmtCm->execute([$contract_id]);
+        $cmSet = array_flip($stmtCm->fetchAll(PDO::FETCH_COLUMN));
+
+        $balance = 0;
+        foreach ($rows as &$row) {
+            $balance += ((float)$row['debit'] - (float)$row['credit']);
+            $row['running_balance'] = $balance;
+            $ref = trim((string)($row['ref_no'] ?? ''));
+            $row['matched_cashmemo_no'] = ($ref !== '' && isset($cmSet[$ref])) ? $ref : '';
         }
+
+        echo json_encode(['status' => true, 'data' => $rows]);
     }
    private function handleContractGetLedgerBalance()
 {

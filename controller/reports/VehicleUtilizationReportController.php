@@ -161,6 +161,7 @@ if ($action === 'get_report') {
     $sql = "
         SELECT 
             l.log_datetime,
+            l.action_type,
             l.new_status,
             v.vehicle_number,
             b.brand_name,
@@ -216,6 +217,7 @@ if ($action === 'get_report') {
         }
         $vehicle_timelines[$vid][] = [
             'time' => strtotime($log['log_datetime']),
+            'action_type' => $log['action_type'],
             'status' => $log['new_status']
         ];
     }
@@ -236,7 +238,11 @@ if ($action === 'get_report') {
             $cnt = count($timeline);
             for ($i = 0; $i < $cnt; $i++) {
                 $current_time = $timeline[$i]['time'];
-                $status = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $timeline[$i]['status']));
+                $rawStatus = trim((string)($timeline[$i]['status'] ?? ''));
+                if ($rawStatus === '' && strcasecmp(trim((string)($timeline[$i]['action_type'] ?? '')), 'Rentout') === 0) {
+                    $rawStatus = 'Rentout';
+                }
+                $status = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $rawStatus));
                 
                 $next_time = ($i + 1 < $cnt) ? $timeline[$i+1]['time'] : $period_end;
                 if ($next_time > $period_end) $next_time = $period_end;

@@ -167,7 +167,9 @@ if ($action === 'get_report') {
             v.vehicle_number,
             v.model_names,
             v.vehicle_year,
+            v.vehicle_color,
             v.chassis_number,
+            cat.category_name,
             l.vehicle_ids,
             c.customer_name as log_customer_name,
             comp.company_name as vehicle_company_name,
@@ -175,6 +177,7 @@ if ($action === 'get_report') {
             g.garage_name
         FROM tbl_vehicle_log_movement l
         JOIN tbl_vehicles v ON v.ids = l.vehicle_ids
+        LEFT JOIN tbl_vehicle_category cat ON v.category_id = cat.ids
         LEFT JOIN customer_details c ON l.customer_id = c.ids
         LEFT JOIN tbl_company comp ON v.company_id = comp.ids
         LEFT JOIN tbl_staff st ON l.staff_id = st.ids
@@ -251,15 +254,20 @@ if ($action === 'get_report') {
     } else {
         foreach ($processed_logs as $log) {
             $dateFormatted = date('d M Y, h:i A', strtotime($log['log_datetime']));
-            $vehicleDetails = htmlspecialchars($log['vehicle_number'] . ' - ' . $log['model_names'] . ' (' . $log['vehicle_year'] . ')');
-            $chassis = htmlspecialchars($log['chassis_number'] ?? '');
+            $vehNo = htmlspecialchars($log['vehicle_number'] ?? '-');
+            $vehModel = htmlspecialchars($log['model_names'] ?? '');
+            $vehCat = htmlspecialchars($log['category_name'] ?? '-');
+            $vehYr = htmlspecialchars($log['vehicle_year'] ?? '-');
+            $vehClr = htmlspecialchars($log['vehicle_color'] ?? '-');
+            $chassis = !empty($log['chassis_number']) ? htmlspecialchars($log['chassis_number']) : '-';
             $compName = htmlspecialchars($log['vehicle_company_name'] ?? '');
             
             $html .= "<tr>";
             $html .= "<td class='text-nowrap'>{$dateFormatted}</td>";
-            $html .= "<td><strong>{$vehicleDetails}</strong><br>
-                        <span class='badge bg-label-info mt-1 me-1'>Chassis: {$chassis}</span>
-                        " . ($compName !== '' ? "<span class='badge bg-label-secondary mt-1'>{$compName}</span>" : "") . "
+            $html .= "<td>
+                        <div><span class='badge bg-label-primary fw-bold me-1'>{$vehNo}</span><span>{$vehModel}</span></div>
+                        <div class='small text-muted mt-1'><strong>Cat:</strong> {$vehCat} | <strong>Yr:</strong> {$vehYr} | <strong>Clr:</strong> {$vehClr}</div>
+                        <div class='small text-muted'><strong>Chassis:</strong> {$chassis}" . ($compName !== '' ? " | <span class='badge bg-label-secondary'>{$compName}</span>" : "") . "</div>
                       </td>";
             
             // Master Status Badge Colors

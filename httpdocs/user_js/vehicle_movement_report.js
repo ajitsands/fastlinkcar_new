@@ -15,6 +15,16 @@ $(document).ready(function () {
     };
     img.src = '/assets/img/logo/logo.png';
 
+    // Default Date From / Date To to current month
+    (function setDefaultMonthDates() {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const lastDay = String(new Date(yyyy, now.getMonth() + 1, 0).getDate()).padStart(2, '0');
+        $('#filter_from_date').val(`${yyyy}-${mm}-01`);
+        $('#filter_to_date').val(`${yyyy}-${mm}-${lastDay}`);
+    })();
+
     // Initialize Select2
     $('.select2').select2();
 

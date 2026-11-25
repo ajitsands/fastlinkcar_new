@@ -306,7 +306,7 @@ if ($action === 'get_report') {
             $html .= "<td class='text-end text-nowrap'>{$log['km_used']}</td>";
             
             $user = htmlspecialchars($log['created_name'] ?? 'System');
-            $html .= "<td>{$user}</td>";
+            $html .= "<td class='text-nowrap'><strong>{$user}</strong><br><small class='text-muted'><i class='ri-time-line me-1'></i>{$dateFormatted}</small></td>";
             
             $html .= "</tr>";
         }

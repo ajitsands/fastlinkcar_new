@@ -1184,7 +1184,7 @@ FROM tbl_vehicles v
 LEFT JOIN tbl_vehicle_model vm
     ON vm.ids = v.model_id
 
-LEFT JOIN (
+INNER JOIN (
     SELECT
         r1.vehicle_id,
         r1.customer_name,
@@ -1410,7 +1410,7 @@ FROM tbl_vehicles v
 LEFT JOIN tbl_vehicle_model vm
     ON vm.ids = v.model_id
 
-LEFT JOIN (
+INNER JOIN (
     SELECT
         r1.vehicle_id,
         r1.customer_name,

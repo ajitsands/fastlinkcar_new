@@ -444,22 +444,26 @@ $html = '
     <tr><td class="dot-line" style="font-size:3pt;">&nbsp;</td></tr>
 </table>
 
-<br><br>
+<br><br>';
 
-<!-- SIGNATURES & COMPANY FOOTER -->
+$compSigPath = !empty($data['company_signature']) ? dirname(__DIR__) . '/' . ltrim($data['company_signature'], '/') : '';
+$custSigPath = !empty($data['customer_signature']) ? dirname(__DIR__) . '/' . ltrim($data['customer_signature'], '/') : '';
+$compSigHtml = ($compSigPath !== '' && file_exists($compSigPath))
+    ? '<img src="' . htmlspecialchars($compSigPath) . '" height="32">'
+    : '<span class="bold">' . htmlspecialchars($data['company_sign_name'] ?: ($data['user_name'] ?? $companyLabel)) . '</span>';
+$custSigHtml = ($custSigPath !== '' && file_exists($custSigPath))
+    ? '<img src="' . htmlspecialchars($custSigPath) . '" height="32">'
+    : '<span class="bold">' . htmlspecialchars($data['customer_sign_name'] ?: ($data['customer_name'] ?? '')) . '</span>';
+
+$html .= '
+<!-- SIGNATURES -->
 <table cellpadding="4" border="0" width="100%" style="font-size: 8.5pt;">
     <tr>
         <td width="14%" class="bold" valign="bottom">Rent a Car</td>
-        <td width="32%" class="solid-line text-center" valign="bottom">'
-            . (!empty($data['company_signature']) && file_exists(ltrim($data['company_signature'], '/')) ? '<img src="' . htmlspecialchars(ltrim($data['company_signature'], '/')) . '" height="28"><br>' : '')
-            . '<span class="bold">' . htmlspecialchars($data['company_sign_name'] ?: ($data['user_name'] ?? $companyLabel)) . '</span>
-        </td>
+        <td width="32%" class="solid-line text-center" valign="bottom">' . $compSigHtml . '</td>
         <td width="8%"></td>
         <td width="16%" class="bold text-right" valign="bottom">Renter Signature</td>
-        <td width="30%" class="solid-line text-center" valign="bottom">'
-            . (!empty($data['customer_signature']) && file_exists(ltrim($data['customer_signature'], '/')) ? '<img src="' . htmlspecialchars(ltrim($data['customer_signature'], '/')) . '" height="28"><br>' : '')
-            . '<span class="bold">' . htmlspecialchars($data['customer_sign_name'] ?: ($data['customer_name'] ?? '')) . '</span>
-        </td>
+        <td width="30%" class="solid-line text-center" valign="bottom">' . $custSigHtml . '</td>
     </tr>
 </table>
 ';

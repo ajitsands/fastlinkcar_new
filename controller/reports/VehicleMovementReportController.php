@@ -308,6 +308,9 @@ if ($action === 'get_report') {
             // Master Status Badge Colors
             $oldStatusRaw = trim((string)($log['old_status'] ?? ''));
             $newStatusRaw = trim((string)($log['new_status'] ?? ''));
+            if ($newStatusRaw === '' && strcasecmp(trim((string)($log['action_type'] ?? '')), 'Rentout') === 0) {
+                $newStatusRaw = 'Rentout';
+            }
             $oldStatusEsc = $oldStatusRaw !== '' ? htmlspecialchars($oldStatusRaw) : 'N/A';
             $newStatusEsc = $newStatusRaw !== '' ? htmlspecialchars($newStatusRaw) : '-';
 

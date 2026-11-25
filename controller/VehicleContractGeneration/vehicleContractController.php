@@ -720,18 +720,21 @@ class VehiclesContractController
 
                                 if ($this->is_rentout == 1) {
                                     $actual_vehicle_id = !empty($this->vehicleid) ? $this->vehicleid : ($this->vehicle_data['vehicle_id'] ?? 0);
+                                    $oldStatusStmt = $this->varPDOModelObj->selectexecuteQuery("SELECT vehicle_status FROM tbl_vehicles WHERE ids = :vid", [':vid' => intval($actual_vehicle_id)]);
+                                    $old_status = $oldStatusStmt ? ($oldStatusStmt->fetchColumn() ?: 'Available') : 'Available';
                                     $this->varPDOModelObj->executeQuery("UPDATE tbl_vehicles SET vehicle_status = 'Rentout' WHERE ids = " . intval($actual_vehicle_id));
                                     
                                     $existing_agreement_no = $this->generateAgreementNo($this->varPDOModelObj, $this->company_id, $this->contract_ids);
 
                                     $this->varPDOModelObj->executeQuery("
                                         INSERT INTO tbl_vehicle_log_movement 
-                                        (vehicle_ids, vehicle_no, log_datetime, action_type, reference_type, reference_id, reference_no, odometer, fuel_level, customer_id, created_by, created_name, created_on)
+                                        (vehicle_ids, vehicle_no, log_datetime, action_type, old_status, new_status, reference_type, reference_id, reference_no, odometer, fuel_level, customer_id, created_by, created_name, created_on)
                                         VALUES 
-                                        (:vehicle_id, :vehicle_no, NOW(), 'Rentout', 'Direct Contract', :reference_id, :reference_no, :odometer, :fuel_level, :customer_code, :user_id, :created_name, NOW())
+                                        (:vehicle_id, :vehicle_no, NOW(), 'Rentout', :old_status, 'Rentout', 'Direct Contract', :reference_id, :reference_no, :odometer, :fuel_level, :customer_code, :user_id, :created_name, NOW())
                                     ", [
                                         ':vehicle_id' => $actual_vehicle_id,
                                         ':vehicle_no' => $this->vehicle_data['veh_no'] ?? '',
+                                        ':old_status' => $old_status,
                                         ':reference_id' => $this->contract_ids,
                                         ':reference_no' => $existing_agreement_no,
                                         ':odometer' => $this->vehicle_accessories['vehicle_km_out'] ?? 0,
@@ -896,6 +899,8 @@ class VehiclesContractController
                                     );
                                 
                                     if ($this->is_rentout == 1) {
+                                        $oldStatusStmt = $this->varPDOModelObj->selectexecuteQuery("SELECT vehicle_status FROM tbl_vehicles WHERE ids = :vid", [':vid' => intval($this->vehicleid)]);
+                                        $old_status = $oldStatusStmt ? ($oldStatusStmt->fetchColumn() ?: 'Available') : 'Available';
                                         $this->varPDOModelObj->executeQuery("UPDATE tbl_vehicles SET vehicle_status = 'Rentout' WHERE ids = " . intval($this->vehicleid));
                                         
                                         $inserted_contract_id = $this->varPDOModelObj->varDBPDO->lastInsertId();
@@ -903,12 +908,13 @@ class VehiclesContractController
                                         
                                         $this->varPDOModelObj->executeQuery("
                                             INSERT INTO tbl_vehicle_log_movement 
-                                            (vehicle_ids, vehicle_no, log_datetime, action_type, reference_type, reference_id, reference_no, odometer, fuel_level, customer_id, created_by, created_name, created_on)
+                                            (vehicle_ids, vehicle_no, log_datetime, action_type, old_status, new_status, reference_type, reference_id, reference_no, odometer, fuel_level, customer_id, created_by, created_name, created_on)
                                             VALUES 
-                                            (:vehicle_id, :vehicle_no, NOW(), 'Rentout', 'Direct Contract', :reference_id, :reference_no, :odometer, :fuel_level, :customer_code, :user_id, :created_name, NOW())
+                                            (:vehicle_id, :vehicle_no, NOW(), 'Rentout', :old_status, 'Rentout', 'Direct Contract', :reference_id, :reference_no, :odometer, :fuel_level, :customer_code, :user_id, :created_name, NOW())
                                         ", [
                                             ':vehicle_id' => $this->vehicleid,
                                             ':vehicle_no' => $this->vehicle_data['veh_no'] ?? '',
+                                            ':old_status' => $old_status,
                                             ':reference_id' => $inserted_contract_id,
                                             ':reference_no' => $inserted_agreement_no,
                                             ':odometer' => $this->vehicle_accessories['vehicle_km_out'] ?? 0,
@@ -1655,18 +1661,21 @@ class VehiclesContractController
                             
                             // Update vehicle status to Rentout if requested
                             if ($is_rentout == 1) {
+                                $oldStatusStmt = $this->varPDOModelObj->selectexecuteQuery("SELECT vehicle_status FROM tbl_vehicles WHERE ids = :vid", [':vid' => intval($vehicle_id)]);
+                                $old_status = $oldStatusStmt ? ($oldStatusStmt->fetchColumn() ?: 'Available') : 'Available';
                                 // 1. Update Vehicle Status
                                 $this->varPDOModelObj->executequery("UPDATE tbl_vehicles SET vehicle_status = 'Rentout' WHERE ids = " . intval($vehicle_id));
                                 
                                 // 2. Add log to movement
                                 $this->varPDOModelObj->executeQuery("
                                     INSERT INTO tbl_vehicle_log_movement 
-                                    (vehicle_ids, vehicle_no, log_datetime, action_type, reference_type, reference_id, reference_no, odometer, fuel_level, customer_id, created_by, created_name, created_on)
+                                    (vehicle_ids, vehicle_no, log_datetime, action_type, old_status, new_status, reference_type, reference_id, reference_no, odometer, fuel_level, customer_id, created_by, created_name, created_on)
                                     VALUES 
-                                    (:vehicle_id, :vehicle_no, NOW(), 'Rentout', 'Direct Contract', :reference_id, :reference_no, :odometer, :fuel_level, :customer_code, :user_id, :created_name, NOW())
+                                    (:vehicle_id, :vehicle_no, NOW(), 'Rentout', :old_status, 'Rentout', 'Direct Contract', :reference_id, :reference_no, :odometer, :fuel_level, :customer_code, :user_id, :created_name, NOW())
                                 ", [
                                     ':vehicle_id' => $vehicle_id,
                                     ':vehicle_no' => $vData['veh_no'] ?? '',
+                                    ':old_status' => $old_status,
                                     ':reference_id' => $new_contract_id,
                                     ':reference_no' => $agreement_no,
                                     ':odometer' => $odo_out,

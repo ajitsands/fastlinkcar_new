@@ -78,28 +78,47 @@ $vehicleName = trim($make . ' ' . $model) ?: 'N/A';
 
 class AA_RefundReceipt_PDF extends TCPDF {
     public $company_label = 'For FAST LINK';
+    public $footer_settings = [];
     public function Header() {}
     public function Footer() {
         $this->SetY(-45);
         $footerY = $this->GetY();
         $this->SetFont('dejavusans', '', 8);
 
-        $this->Rect(10, $footerY, 190, 30);
-        $this->Line(105, $footerY, 105, $footerY + 30);
+        $this->Rect(10, $footerY, 190, 24);
+        $this->Line(105, $footerY, 105, $footerY + 24);
 
-        $this->SetXY(10, $footerY + 15);
+        $this->SetXY(10, $footerY + 12);
         $this->Cell(95, 5, '________________________________________', 0, 2, 'C');
         $this->SetX(10);
         $this->Cell(95, 5, $this->company_label, 0, 2, 'C');
 
-        $this->SetXY(105, $footerY + 15);
+        $this->SetXY(105, $footerY + 12);
         $this->Cell(95, 5, '________________________________________', 0, 2, 'C');
         $this->SetX(105);
         $this->Cell(95, 5, 'Customer Acceptance / قبول الزبون', 0, 2, 'C');
 
-        $this->SetY(-10);
-        $this->SetFont('dejavusans', 'I', 8);
-        $this->Cell(0, 5, 'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages(), 0, 0, 'R');
+        $ps = $this->footer_settings;
+        $showFooter = !isset($ps['show_footer']) || !empty($ps['show_footer']);
+        $y = $footerY + 26;
+        if ($showFooter) {
+            $footerText = (string)($ps['footer_text'] ?? '');
+            $footerNote = (string)($ps['footer_note'] ?? '');
+            $this->SetXY(10, $y);
+            $this->SetFont('dejavusans', '', 7.5);
+            $this->SetTextColor(71, 85, 105);
+            if ($footerText !== '') $this->Cell(135, 4, $footerText, 0, 2, 'L');
+            if ($footerNote !== '') {
+                $this->SetFont('dejavusans', '', 7);
+                $this->SetTextColor(120, 130, 145);
+                $this->SetX(10);
+                $this->Cell(135, 4, $footerNote, 0, 0, 'L');
+            }
+        }
+        $this->SetXY(145, $y);
+        $this->SetFont('dejavusans', '', 7.5);
+        $this->SetTextColor(71, 85, 105);
+        $this->Cell(55, 4, 'Generated: ' . date('d M Y') . '  |  Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages(), 0, 0, 'R');
     }
 }
 
@@ -115,6 +134,7 @@ $pdf->setCellPaddings(0, 0, 0, 0);
 require_once __DIR__ . '/print_settings_helper.php';
 $resolvedCompanyId = $refund['resolved_company_id'] ?? ($contract['company_id'] ?? null);
 $printSettings = getPrintSettings(null, $resolvedCompanyId);
+$pdf->footer_settings = $printSettings;
 $logo_base64 = !empty($printSettings['show_logo']) ? ($printSettings['logo_base64'] ?? '') : '';
 $logo_width = (int)($printSettings['logo_width'] ?? 150);
 $printAccent = $printSettings['accent_color'] ?? '#1b3d94';

@@ -188,19 +188,40 @@ class AA_CashMemo_PDF extends TCPDF {
     // Overriding Header and Footer to keep the layout pixel perfect and custom
      public $company_signature = '';
     public $customer_signature = '';
-    
+    public $footer_settings = [];
+
     public function Header() {}
     public function Footer() {
-        $this->SetY(-10);
-        $this->SetFont('dejavusans', 'I', 8);
-        $this->Cell(
-            0,
-            5,
-            'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages(),
-            0,
-            0,
-            'R'
-        );
+        $ps = $this->footer_settings;
+        $showFooter = !isset($ps['show_footer']) || !empty($ps['show_footer']);
+
+        $this->SetY(-22);
+        $y = $this->GetY();
+        $this->SetDrawColor(203, 213, 225);
+        $this->SetLineWidth(0.3);
+        $this->Line(10, $y, 200, $y);
+
+        if ($showFooter) {
+            $footerText = (string)($ps['footer_text'] ?? '');
+            $footerNote = (string)($ps['footer_note'] ?? '');
+            $this->SetXY(10, $y + 2);
+            $this->SetFont('dejavusans', '', 7.5);
+            $this->SetTextColor(71, 85, 105);
+            if ($footerText !== '') {
+                $this->Cell(135, 4, $footerText, 0, 2, 'L');
+            }
+            if ($footerNote !== '') {
+                $this->SetFont('dejavusans', '', 7);
+                $this->SetTextColor(120, 130, 145);
+                $this->SetX(10);
+                $this->Cell(135, 4, $footerNote, 0, 0, 'L');
+            }
+        }
+
+        $this->SetXY(145, $y + 2);
+        $this->SetFont('dejavusans', '', 7.5);
+        $this->SetTextColor(71, 85, 105);
+        $this->Cell(55, 4, 'Generated: ' . date('d M Y') . '  |  Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages(), 0, 0, 'R');
     }
 
   
@@ -222,6 +243,7 @@ $pdf->setCellPaddings(0, 0, 0, 0);
 // Prepare Logo & Print Settings Data
 require_once __DIR__ . '/print_settings_helper.php';
 $printSettings = getPrintSettings($mysqli ?? null, $data['company_id'] ?? null);
+$pdf->footer_settings = $printSettings;
 $logo_base64 = !empty($printSettings['show_logo']) ? ($printSettings['logo_base64'] ?? '') : '';
 $logo_width = (int)($printSettings['logo_width'] ?? 150);
 $printAccent = $printSettings['accent_color'] ?? '#1b3d94';
@@ -433,13 +455,6 @@ $html = '
         </td>
     </tr>
 </table>
-<br>
-' . (!empty($printSettings['show_footer']) ? '<table cellpadding="3" border="0" width="100%" style="border-top: 1px solid #cbd5e1; font-size: 7.5pt; color: #475569;">
-    <tr>
-        <td width="75%">' . htmlspecialchars($printSettings['footer_text'] ?? '') . (!empty($printSettings['footer_note']) ? '<br><span style="color:#788291;">' . htmlspecialchars($printSettings['footer_note']) . '</span>' : '') . '</td>
-        <td width="25%" align="right">Generated: ' . date('d M Y') . '</td>
-    </tr>
-</table>' : '') . '
 ';
 
 $pdf->writeHTML($html, true, false, true, false, '');

@@ -163,7 +163,7 @@ class cashmemoController
                 
                 $sign_details = $result_sign->fetchAll(PDO::FETCH_ASSOC);
                 if (!empty($sign_details[0])) {
-                    $sign_details[0]['logged_user_name'] = $_SESSION['full_name'] ?? $_SESSION['username'] ?? '';
+                    $sign_details[0]['logged_user_name'] = $_SESSION['profile_name'] ?? $_SESSION['full_name'] ?? $_SESSION['user_name'] ?? $_SESSION['username'] ?? '';
                 }
                  $response = [
                         'data' => $sign_details ?: []

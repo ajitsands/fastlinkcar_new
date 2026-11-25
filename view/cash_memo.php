@@ -3103,7 +3103,7 @@ $(document).on('click', '.btnOpenSignature', function () {
 
         }
 
-        const defaultLoggedUser = <?= json_encode($_SESSION['full_name'] ?? $_SESSION['username'] ?? '') ?>;
+        const defaultLoggedUser = <?= json_encode($_SESSION['profile_name'] ?? $_SESSION['full_name'] ?? $_SESSION['user_name'] ?? $_SESSION['username'] ?? '') ?>;
         $('#hirer_name')
             .val(row.company_sign_name
                 ? row.company_sign_name

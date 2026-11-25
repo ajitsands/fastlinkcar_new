@@ -34,10 +34,15 @@ $db = new ClassDatabaseConnection();
 $pdo = $db->pdo;
 
 $stmt = $pdo->prepare("
-    SELECT r.*, c.customer_name, c.customer_mobile, c.customer_cr_cpr, c.customer_addr, comp.company_name, comp.company_logo, comp.ids AS resolved_company_id
+    SELECT r.*, c.customer_name, c.customer_mobile, c.customer_cr_cpr, c.customer_addr,
+           comp.company_name, comp.company_logo, comp.ids AS resolved_company_id,
+           COALESCE(NULLIF(u_prep.profile_name, ''), u_prep.user_name, '') AS prepared_by_name,
+           COALESCE(NULLIF(u_app.profile_name, ''), u_app.user_name, '') AS approved_by_name
     FROM tbl_refund_requests r
     LEFT JOIN customer_details c ON r.customer_code = c.customer_id
     LEFT JOIN tbl_company comp ON SUBSTRING_INDEX(r.refund_no, '/', 1) = comp.company_code
+    LEFT JOIN tbl_users u_prep ON r.created_by = u_prep.user_id
+    LEFT JOIN tbl_users u_app ON r.approved_by = u_app.user_id
     WHERE r.id = ?
 ");
 $stmt->execute([$id]);
@@ -247,10 +252,12 @@ $html = '
 <table>
     <tr>
         <td width="50%" class="text-center">
+            <span class="bold">' . htmlspecialchars($refund['prepared_by_name'] ?? '') . '</span><br>
             ________________________<br><br>
             <strong>Prepared By</strong>
         </td>
         <td width="50%" class="text-center">
+            <span class="bold">' . ($refund['status'] === 'Approved' ? htmlspecialchars($refund['approved_by_name'] ?? '') : '') . '</span><br>
             ________________________<br><br>
             <strong>Approved By</strong>
         </td>

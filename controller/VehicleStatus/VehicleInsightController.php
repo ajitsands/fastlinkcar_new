@@ -1837,6 +1837,11 @@ $this->params[15] = [
                      case 'Staffuse':
                         $this->ReturnData = $this->varPDOModelObj->ListFromTable($var[17],$this->params[17]);
                     break;
+                    case 'Sale Out':
+                        $sqlSaleOut = str_replace("v2.vehicle_status = ?", "v2.vehicle_status IN ('Sale Out', 'Sold')", $var[13]);
+                        $sqlSaleOut = str_replace("v.vehicle_status = ?", "v.vehicle_status IN ('Sale Out', 'Sold')", $sqlSaleOut);
+                        $this->ReturnData = $this->varPDOModelObj->ListFromTable($sqlSaleOut, [$this->company_id, $this->company_id]);
+                    break;
                     default:
                         $this->ReturnData = $this->varPDOModelObj->ListFromTable($var[13],$this->params[13]);
                     break;
@@ -1849,11 +1854,11 @@ $this->params[15] = [
                 $resultvehicle = json_decode($this->ReturnData, true);
 
 
-            if (!isset($resultvehicle['data']) || !is_array($resultvehicle['data'])) {
+            if (!isset($resultvehicle['data']) || !is_array($resultvehicle['data']) || count($resultvehicle['data']) === 0) {
                 echo json_encode([
                     'status' => false,
                     'message' => 'No data found',
-                    'html' => '',
+                    'html' => '<div class="col-12 text-center text-muted py-4">No vehicles found for this status.</div>',
                     'summary' => null
                 ]);
                 exit;

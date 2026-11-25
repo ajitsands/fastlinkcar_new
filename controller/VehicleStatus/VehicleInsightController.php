@@ -1,6 +1,7 @@
 <?php
 session_start();
 header('Content-Type: application/json');
+require_once ROOT_PATH . '/model/common/VehicleStatusHelper.php';
 // ini_set('display_errors', 1);
 // ini_set('display_startup_errors', 1);
 // error_reporting(E_ALL);
@@ -1591,7 +1592,7 @@ $this->params[15] = [
                             }
                 }
                
-            $vehicleStatushtml= '<span class="badge rounded-pill  '.$this->getStatusClass($item['vehicle_status']).'">'.$item['vehicle_status'].'</span>';
+            $vehicleStatushtml= '<span class="badge rounded-pill '.$this->getStatusClass($item['vehicle_status']).'" style="'.VehicleStatusHelper::getBadgeStyle($item['vehicle_status']).'">'.$item['vehicle_status'].'</span>';
                 echo json_encode([
                     "data" => $result['data'] ?? [],
                     "last_image" => $lastImage,
@@ -1712,7 +1713,7 @@ $this->params[15] = [
                         <!-- Left Side Image -->
                         <div class="col-6 bg-white border-end position-relative vehicle-image p-0" data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>' style="cursor:pointer;">
                             <img src="uploads/vehicleImages/<?= $lastImage ?>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; padding: 0.5rem;" alt="Vehicle Image">
-                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem;">
+                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem; <?= VehicleStatusHelper::getBadgeStyle($item['vehicle_status']) ?>">
                                 <?=$item['vehicle_status']?>
                             </span>
                         </div>
@@ -1923,7 +1924,7 @@ $this->params[15] = [
                         <!-- Left Side Image -->
                         <div class="col-6 bg-white border-end position-relative vehicle-image p-0" data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>' style="cursor:pointer;">
                             <img src="uploads/vehicleImages/<?= $lastImage ?>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; padding: 0.5rem;" alt="Vehicle Image">
-                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem;">
+                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem; <?= VehicleStatusHelper::getBadgeStyle($item['vehicle_status']) ?>">
                                 <?=$item['vehicle_status']?>
                             </span>
                         </div>
@@ -2209,7 +2210,7 @@ $this->params[15] = [
                         <!-- Left Side Image -->
                         <div class="col-6 bg-white border-end position-relative vehicle-image p-0" data-images='<?= htmlspecialchars(json_encode($images), ENT_QUOTES, "UTF-8") ?>' style="cursor:pointer;">
                             <img src="uploads/vehicleImages/<?= $lastImage ?>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; padding: 0.5rem;" alt="Vehicle Image">
-                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem;">
+                            <span class="badge rounded-pill <?=$this->getStatusClass($item['vehicle_status'])?> shadow-sm position-absolute top-0 start-0 m-2" style="font-size: 0.65rem; <?= VehicleStatusHelper::getBadgeStyle($item['vehicle_status']) ?>">
                                 <?=$item['vehicle_status']?>
                             </span>
                         </div>

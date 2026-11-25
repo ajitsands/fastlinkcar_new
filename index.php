@@ -236,6 +236,10 @@ class RoutingClass
 
             'VehicleInsurance' => 'VehicleInsurance',
             'VehicleInsurance/' => 'VehicleInsurance',
+            'SoldVehicles' => 'SoldVehicles',
+            'SoldVehicles/' => 'SoldVehicles',
+            'SoldVehicleController' => 'SoldVehicleController',
+            'SoldVehicleController/' => 'SoldVehicleController',
             
             'VehicleInsuranceController' => 'VehicleInsuranceController',
             'VehicleInsuranceController/' => 'VehicleInsuranceController',
@@ -1056,6 +1060,14 @@ class RoutingClass
      private function RegisterDrivers(...$params)
     {
         $this->includeWithParams("view/driver_register.php", $_GET);
+    }
+    private function SoldVehicles(...$params)
+    {
+        $this->includeWithParams("view/sold_vehicles.php", $_GET);
+    }
+    private function SoldVehicleController(...$params)
+    {
+        $this->includeWithParams("controller/vehicles/SoldVehicleController.php", $_GET);
     }
       private function DriverController(...$params)
     {

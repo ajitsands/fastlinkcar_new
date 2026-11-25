@@ -187,7 +187,7 @@
        </li>
 
        <!-- Vehicles -->
-       <li class="menu-item <?php if (in_array($menuRoute, ['VehicleInsurance', 'RegisterVehicles', 'VehicleMasterConfiguration', 'VehicleMovementReport', 'VehicleUtilizationReport'], true) || ($decrypt[0] ?? '') == '9' || in_array($menuSubCode, ['2-1', '2-10', '6-8', '6-9'], true)) {
+       <li class="menu-item <?php if (in_array($menuRoute, ['VehicleInsurance', 'RegisterVehicles', 'SoldVehicles', 'VehicleMasterConfiguration', 'VehicleMovementReport', 'VehicleUtilizationReport'], true) || ($decrypt[0] ?? '') == '9' || in_array($menuSubCode, ['2-1', '2-10', '2-11', '6-8', '6-9'], true)) {
                               echo 'active';
                             } ?>" data-permission="vehicle_insurance_access,vehicle_registration_access,vehicle_registration_manage,vehicle_config_access,vehicle_config_manage,vehicle_insight_access">
          <a href="javascript:void(0)" class="menu-link menu-toggle">
@@ -209,6 +209,12 @@
              <a href="/RegisterVehicles?val=<?php echo $this->encryption->encrypt('2,2-1'); ?>" class="menu-link">
                <i class="menu-icon icon-base ri ri-car-line"></i>
                <div data-i18n="Vehicle Registration">Vehicle Registration</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'SoldVehicles' || $menuSubCode == '2-11') { echo 'active'; } ?>" data-permission="vehicle_registration_access,vehicle_registration_manage">
+             <a href="/SoldVehicles?val=<?php echo $this->encryption->encrypt('2,2-11'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-price-tag-3-line"></i>
+               <div data-i18n="Sold Vehicles">Sold Vehicles</div>
              </a>
            </li>
            <li class="menu-item <?php if ($menuRoute === 'VehicleMasterConfiguration') {
@@ -437,6 +443,7 @@ if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
         'AddUser'                     => ['Users & Roles Master', 'Manage system users, roles, and access permissions.', 'ri-user-settings-line'],
         'VehicleMasterConfiguration'  => ['Vehicle Master Configuration', 'Configure vehicle categories, brands, models, and model pricing.', 'ri-settings-3-line'],
         'RegisterVehicles'            => ['Vehicle Master', 'Register vehicles, specifications, pricing preview, insurance, and passing.', 'ri-car-line'],
+        'SoldVehicles'                => ['Sold Vehicles', 'Record vehicle sales and automatically mark vehicles as Sold.', 'ri-price-tag-3-line'],
         'RegisterDrivers'             => ['Drivers Master', 'Register and manage company drivers and license details.', 'ri-steering-2-line'],
         'RegisterStaff'               => ['Staff Master', 'Manage staff profiles and contact details.', 'ri-team-line'],
         'OutsourcingCompany'          => ['Outsourcing Companies Master', 'Manage external fleet outsourcing partner companies.', 'ri-building-2-line'],

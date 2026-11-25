@@ -1276,6 +1276,29 @@ CREATE TABLE `tbl_vehicle_rentout_contracts` (
 ) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+CREATE TABLE `tbl_vehicle_sales` (
+  `ids` int(11) NOT NULL AUTO_INCREMENT,
+  `vehicle_id` int(11) NOT NULL,
+  `company_id` int(11) DEFAULT '1',
+  `vehicle_number` varchar(100) DEFAULT NULL,
+  `car_type` varchar(255) DEFAULT NULL,
+  `model_year` int(11) DEFAULT NULL,
+  `car_color` varchar(100) DEFAULT NULL,
+  `sale_date` date NOT NULL,
+  `mileage_km` int(11) DEFAULT NULL,
+  `buyer_name` varchar(255) NOT NULL,
+  `cpr_id_number` varchar(100) DEFAULT NULL,
+  `contact_phone` varchar(50) DEFAULT NULL,
+  `contact_mobile` varchar(50) DEFAULT NULL,
+  `email` varchar(150) DEFAULT NULL,
+  `sale_amount` decimal(12,3) NOT NULL DEFAULT '0.000',
+  `note` text,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`ids`),
+  KEY `idx_vs_vehicle_id` (`vehicle_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 --
 -- Table structure for table `tbl_vehicles`
 --

@@ -907,6 +907,7 @@ break;
 
                 $sql = "  SELECT 
                          c.ids,
+                         c.vehicle_id,
                          c.agreement_no,
                          JSON_UNQUOTE(JSON_EXTRACT(c.customer_details, '$.customer_name')) AS customer_name,
                          JSON_UNQUOTE(JSON_EXTRACT(c.customer_details, '$.customer_mobile')) AS customer_mobile,

@@ -2252,18 +2252,24 @@ $this->params[15] = [
                                             <strong class="text-danger">Exp Return:</strong><br>
                                             <?= !empty($exp_return_date) ? $exp_return_date : '' ?>
                                         </div>
-                                    <?php } else { ?>
-                                        <button class="btn btn-sm btn-danger flex-fill d-flex justify-content-center align-items-center action-btn btn_vehicle_select px-1" 
-                                            data-bs-toggle="tooltip" title="Select"
-                                            data-insurance="<?=$item['next_insurance_date']?>"
-                                            data-passing="<?=$item['next_passing_date']?>"
-                                            data-maintenance="<?=$item['next_maintenance_date']?>"
-                                            data-modelName="<?=$item['model_names']?>"
-                                            data-model="<?=$item['model_id']?>"
-                                            data-veh_no="<?=$item['vehicle_number']?>"
-                                            data-id="<?=$item['ids']?>" style="font-size: 1rem;">
-                                            <i class="ri ri-check-line me-1"></i> Select
-                                        </button>
+                                    <?php } else if ($item['vehicle_status'] == 'Staff Use') { ?>
+                                        <div class="small w-100 mt-2 border-top pt-1">
+                                            <strong>Staff:</strong> <?= $item['customer_name'] ?? '' ?><br>
+                                            <strong class="text-danger">Ref No:</strong> <?= $item['agreement_no'] ?? '' ?><br>
+                                            <strong class="text-danger">Exp Return:</strong><br>
+                                            <?= !empty($exp_return_date) ? $exp_return_date : '' ?>
+                                        </div>
+                                    <?php } else if ($item['vehicle_status'] == 'Maintenance') {
+                                        $garageName = !empty($item['garage_name']) ? $item['garage_name'] : 'N/A';
+                                        $reqNo = !empty($item['maintenance_request_no']) ? $item['maintenance_request_no'] : 'N/A';
+                                        $reqStatus = !empty($item['maintenance_request_status']) ? $item['maintenance_request_status'] : 'N/A';
+                                    ?>
+                                        <div class="small w-100 mt-2 border-top pt-1">
+                                            <strong>Garage:</strong> <?= htmlspecialchars($garageName) ?><br>
+                                            <strong>Req No:</strong> <?= htmlspecialchars($reqNo) ?><br>
+                                            <strong class="text-danger">Status:</strong> <?= htmlspecialchars($reqStatus) ?><br>
+                                            <strong class="text-danger">Next Maintenance:</strong> <?= $nextMaintenance ?>
+                                        </div>
                                     <?php } ?>
                                 </div>
                             </div>

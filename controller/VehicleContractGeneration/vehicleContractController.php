@@ -283,9 +283,47 @@ class VehiclesContractController
     
         return $prefix . $sequence;
     }
+    private function ensureUtf8mb4TermsColumns()
+    {
+        try {
+            $pdo = $this->varPDOModelObj->varDBPDO;
+            $targets = ['tbl_vehicle_rentout_contracts', 'tbl_terms_and_condition_contract'];
+            foreach ($targets as $tbl) {
+                $st = $pdo->prepare("
+                    SELECT CHARACTER_SET_NAME
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = ?
+                      AND COLUMN_NAME = 'terms_condition'
+                    LIMIT 1
+                ");
+                $st->execute([$tbl]);
+                $cs = $st->fetchColumn();
+                if ($cs !== false && strtolower((string)$cs) !== 'utf8mb4') {
+                    try {
+                        $pdo->exec("ALTER TABLE `{$tbl}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                    } catch (\Throwable $e) {
+                        $pdo->exec("ALTER TABLE `{$tbl}` MODIFY `terms_condition` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Do not block request if DB user lacks ALTER privilege
+        }
+    }
+
 	function DataRequest($action)
 	{
 	 	$var =  $this->SQLArray();
+		switch($action)
+		{
+			case 'SaveDirectContract':
+			case 'SaveVehicleContract':
+			case 'saveTermsAndCondition':
+			case 'addTermsAndCondition':
+				$this->ensureUtf8mb4TermsColumns();
+				break;
+		}
 		switch($action)
 		{
 			

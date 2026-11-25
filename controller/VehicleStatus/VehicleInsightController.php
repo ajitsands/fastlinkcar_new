@@ -116,7 +116,9 @@ class VehicleInsightController
                     SELECT 
                         v.*,
                         COALESCE(rc.customer_name, '') AS customer_name,
+COALESCE(rc.customer_mobile, '') AS customer_mobile,
 COALESCE(rc.agreement_no, '') AS agreement_no,
+COALESCE(rc.service_start_date_time, '') AS service_start_date_time,
 COALESCE(rc.service_end_date_time, '') AS service_end_date_time,
 COALESCE(ext.extend_end_date, '') AS extend_end_date,
                         0 AS has_unconfirmed_overlap,
@@ -212,7 +214,9 @@ COALESCE(ext.extend_end_date, '') AS extend_end_date,
      $array[3] = "SELECT 
     v.*,
 COALESCE(rc.customer_name, '') AS customer_name,
+COALESCE(rc.customer_mobile, '') AS customer_mobile,
 COALESCE(rc.agreement_no, '') AS agreement_no,
+COALESCE(rc.service_start_date_time, '') AS service_start_date_time,
 COALESCE(rc.service_end_date_time, '') AS service_end_date_time,
 COALESCE(ext.extend_end_date, '') AS extend_end_date,
      COUNT(v.ids) AS  has_unconfirmed_overlap,
@@ -268,13 +272,15 @@ LEFT JOIN tbl_vehicle_model vm
 LEFT JOIN (
     SELECT r1.vehicle_id,
            r1.customer_name,
+           JSON_UNQUOTE(JSON_EXTRACT(r1.customer_details, '$.customer_mobile')) AS customer_mobile,
            r1.agreement_no,
+           r1.service_start_date_time,
            r1.service_end_date_time
     FROM tbl_vehicle_rentout_contracts r1
     INNER JOIN (
         SELECT vehicle_id, MAX(ids) AS max_id
         FROM tbl_vehicle_rentout_contracts
-        WHERE agreement_status = 'Rentout'
+        WHERE agreement_status IN ('Rentout', 'Extended')
         GROUP BY vehicle_id
     ) r2 ON r1.ids = r2.max_id
 ) rc ON rc.vehicle_id = v.ids
@@ -310,7 +316,9 @@ $this->params[3] = [
        $array[6] = "SELECT 
     v.*,
 COALESCE(rc.customer_name, '') AS customer_name,
+COALESCE(rc.customer_mobile, '') AS customer_mobile,
 COALESCE(rc.agreement_no, '') AS agreement_no,
+COALESCE(rc.service_start_date_time, '') AS service_start_date_time,
 COALESCE(rc.service_end_date_time, '') AS service_end_date_time,
 COALESCE(ext.extend_end_date, '') AS extend_end_date,
      COUNT(v.ids) AS  has_unconfirmed_overlap,
@@ -366,13 +374,15 @@ LEFT JOIN tbl_vehicle_model vm
 LEFT JOIN (
     SELECT r1.vehicle_id,
            r1.customer_name,
+           JSON_UNQUOTE(JSON_EXTRACT(r1.customer_details, '$.customer_mobile')) AS customer_mobile,
            r1.agreement_no,
+           r1.service_start_date_time,
            r1.service_end_date_time
     FROM tbl_vehicle_rentout_contracts r1
     INNER JOIN (
         SELECT vehicle_id, MAX(ids) AS max_id
         FROM tbl_vehicle_rentout_contracts
-        WHERE agreement_status = 'Rentout'
+        WHERE agreement_status IN ('Rentout', 'Extended')
         GROUP BY vehicle_id
     ) r2 ON r1.ids = r2.max_id
 ) rc ON rc.vehicle_id = v.ids
@@ -847,7 +857,9 @@ $this->params[9] = [
  $array[13] = "SELECT 
     v.*,
  COALESCE(rc.customer_name, '') AS customer_name,
+COALESCE(rc.customer_mobile, '') AS customer_mobile,
 COALESCE(rc.agreement_no, '') AS agreement_no,
+COALESCE(rc.service_start_date_time, '') AS service_start_date_time,
 COALESCE(rc.service_end_date_time, '') AS service_end_date_time,
 COALESCE(ext.extend_end_date, '') AS extend_end_date,
 COALESCE(mr.garage_name, '') AS garage_name,
@@ -907,13 +919,15 @@ LEFT JOIN tbl_vehicle_model vm
 LEFT JOIN (
     SELECT r1.vehicle_id,
            r1.customer_name,
+           JSON_UNQUOTE(JSON_EXTRACT(r1.customer_details, '$.customer_mobile')) AS customer_mobile,
            r1.agreement_no,
+           r1.service_start_date_time,
            r1.service_end_date_time
     FROM tbl_vehicle_rentout_contracts r1
     INNER JOIN (
         SELECT vehicle_id, MAX(ids) AS max_id
         FROM tbl_vehicle_rentout_contracts
-        WHERE agreement_status = 'Rentout'
+        WHERE agreement_status IN ('Rentout', 'Extended')
         GROUP BY vehicle_id
     ) r2 ON r1.ids = r2.max_id
 ) rc ON rc.vehicle_id = v.ids
@@ -1882,6 +1896,9 @@ $this->params[15] = [
             $return_date = null;
         }
         
+        $start_period_date = !empty($item['service_start_date_time'])
+            ? date('d M Y, h:i A', strtotime($item['service_start_date_time']))
+            : '';
         $exp_return_date = $return_date
             ? $return_date->format('d M Y, h:i A')
             : '';
@@ -1890,10 +1907,12 @@ $this->params[15] = [
             $odo = ($vehicleFuelType ?? 'N/A') . ' / ' . ($vehicleGearType ?? 'N/A');
                     $companyName = $companyMap[$item['company_id']] ?? 'Unknown';
                     $remarksText = '';
+                    $custPhoneStr = !empty($item['customer_mobile']) ? ' (' . $item['customer_mobile'] . ')' : '';
+                    $periodStr = (!empty($start_period_date) ? $start_period_date : '-') . ' to ' . (!empty($exp_return_date) ? $exp_return_date : '-');
                     if ($item['vehicle_status'] == 'Rentout') {
-                        $remarksText = 'On Rent: ' . ($item['customer_name'] ?? '') . ' | Agr No: ' . ($item['agreement_no'] ?? '') . ' | Exp Return: ' . (!empty($exp_return_date) ? $exp_return_date : '');
+                        $remarksText = 'Customer: ' . ($item['customer_name'] ?? '') . $custPhoneStr . ' | Agr No: ' . ($item['agreement_no'] ?? '') . ' | Period: ' . $periodStr;
                     } else if ($item['vehicle_status'] == 'Staff Use') {
-                        $remarksText = 'Staff: ' . ($item['customer_name'] ?? '') . ' | Ref No: ' . ($item['agreement_no'] ?? '') . ' | Exp Return: ' . (!empty($exp_return_date) ? $exp_return_date : '');
+                        $remarksText = 'Staff: ' . ($item['customer_name'] ?? '') . ' | Ref No: ' . ($item['agreement_no'] ?? '') . ' | Period: ' . $periodStr;
                     } else if ($item['vehicle_status'] == 'Maintenance') {
                         $garageName = !empty($item['garage_name']) ? $item['garage_name'] : 'N/A';
                         $reqNo = !empty($item['maintenance_request_no']) ? $item['maintenance_request_no'] : 'N/A';
@@ -1962,17 +1981,21 @@ $this->params[15] = [
                                     
                                     <?php if ($item['vehicle_status'] == 'Rentout') { ?>
                                         <div class="small w-100 mt-2 border-top pt-1">
-                                            <strong>On Rent:</strong> <?= $item['customer_name'] ?? '' ?><br>
-                                            <strong class="text-danger">Agr No:</strong> <?= $item['agreement_no'] ?? '' ?><br>
-                                            <strong class="text-danger">Exp Return:</strong><br>
-                                            <?= !empty($exp_return_date) ? $exp_return_date : '' ?>
+                                            <strong>Customer:</strong> <?= htmlspecialchars($item['customer_name'] ?? '') ?><?= !empty($item['customer_mobile']) ? ' <span class="text-muted">(' . htmlspecialchars($item['customer_mobile']) . ')</span>' : '' ?><br>
+                                            <strong class="text-danger">Agr No:</strong> <?= htmlspecialchars($item['agreement_no'] ?? '') ?><br>
+                                            <?php if (!empty($start_period_date)) { ?>
+                                            <strong class="text-muted">From:</strong> <?= $start_period_date ?><br>
+                                            <?php } ?>
+                                            <strong class="text-danger">Exp Return:</strong> <?= !empty($exp_return_date) ? $exp_return_date : '-' ?>
                                         </div>
                                     <?php } else if($item['vehicle_status'] == 'Staff Use') { ?>
                                         <div class="small w-100 mt-2 border-top pt-1">
-                                            <strong>Staff:</strong> <?= $item['customer_name'] ?? '' ?><br>
-                                            <strong class="text-danger">Ref No:</strong> <?= $item['agreement_no'] ?? '' ?><br>
-                                            <strong class="text-danger">Exp Return:</strong><br>
-                                            <?= !empty($exp_return_date) ? $exp_return_date : '' ?>
+                                            <strong>Staff:</strong> <?= htmlspecialchars($item['customer_name'] ?? '') ?><br>
+                                            <strong class="text-danger">Ref No:</strong> <?= htmlspecialchars($item['agreement_no'] ?? '') ?><br>
+                                            <?php if (!empty($start_period_date)) { ?>
+                                            <strong class="text-muted">From:</strong> <?= $start_period_date ?><br>
+                                            <?php } ?>
+                                            <strong class="text-danger">Exp Return:</strong> <?= !empty($exp_return_date) ? $exp_return_date : '-' ?>
                                         </div>
                                     <?php } else if($item['vehicle_status'] == 'Maintenance') { 
                                         $garageName = !empty($item['garage_name']) ? $item['garage_name'] : 'N/A';

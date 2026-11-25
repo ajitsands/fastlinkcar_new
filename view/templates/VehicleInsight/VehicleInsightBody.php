@@ -147,6 +147,20 @@
                              
                             </button>
                           </li>
+                          <li class="nav-item li_Vehicle_list" data-status="Sold">
+                            <button
+                              type="button"
+                              class="nav-link"
+                              role="tab"
+                              data-bs-toggle="tab"
+                              data-bs-target="#navs-justified-sold"
+                              aria-controls="navs-justified-sold"
+                              aria-selected="false">
+                              <span class="d-none d-sm-inline-flex align-items-center"
+                                ><i class="icon-base ri ri-price-tag-3-line icon-sm me-2"></i>Sold Vehicles</span
+                              >
+                            </button>
+                          </li>
                         </ul>
              <div class="tab-content">
                           <div class="tab-pane fade show active" id="navs-justified-home" role="tabpanel">
@@ -172,6 +186,9 @@
                           </div>
                            <div class="tab-pane fade" id="navs-justified-blocked" role="tabpanel">
                             <?php include("vehicleinsight_blockedvehicles.php");?>
+                          </div>
+                          <div class="tab-pane fade" id="navs-justified-sold" role="tabpanel">
+                            <?php include("vehicleinsight_soldvehicles.php");?>
                           </div>
                         </div>
         </div>

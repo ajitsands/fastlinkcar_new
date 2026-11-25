@@ -13,6 +13,9 @@ checkLogin();
 ?>
 <?php
 include ROOT_PATH . '/view/envinclude.php';
+require_once ROOT_PATH . '/pdf/print_settings_helper.php';
+$insightCompanyId = !empty($_SESSION['company_id']) ? (int)$_SESSION['company_id'] : 1;
+$insightPrintSettings = getPrintSettings(null, $insightCompanyId);
 ?>
 <!doctype html>
 
@@ -1092,6 +1095,11 @@ $(document).on('click', '.li_Vehicle_list', function () {
               divcontent = $('#BlockedvehicleAvailabilityContent');
               vehicle_card=$('#BlockedvehicleContainer .vehicle-card');
          break;
+         case 'Sold':
+            divcontainer = $('#SoldvehicleContainer');
+              divcontent = $('#SoldvehicleAvailabilityContent');
+              vehicle_card=$('#SoldvehicleContainer .vehicle-card');
+         break;
      }
   
   
@@ -1464,6 +1472,20 @@ $('#filterCompany').on('change', function() {
     }
 });
 
+const INSIGHT_PRINT_SETTINGS = <?= json_encode($insightPrintSettings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+
+function hexToRgbArray(hex, fallback) {
+    const clean = String(hex || '').replace('#', '').trim();
+    if (/^[0-9a-fA-F]{6}$/.test(clean)) {
+        return [
+            parseInt(clean.substring(0, 2), 16),
+            parseInt(clean.substring(2, 4), 16),
+            parseInt(clean.substring(4, 6), 16)
+        ];
+    }
+    return fallback;
+}
+
 function downloadPDF() {
     let activeTabContent = $('.tab-content > .active');
     let tableContainer = activeTabContent.find('.d-print-block');
@@ -1487,104 +1509,157 @@ function downloadPDF() {
     
     try {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'pt', 'letter'); // Landscape, points, letter format
-        
+        const doc = new jsPDF('l', 'pt', 'a4'); // A4 Landscape
+        const ps = INSIGHT_PRINT_SETTINGS || {};
+        const accentRgb = hexToRgbArray(ps.accent_color, [27, 61, 148]);
         let activeTabName = $('.nav.nav-tabs .nav-link.active').text().trim() || "All Vehicles";
         let pageWidth = doc.internal.pageSize.getWidth();
+        let pageHeight = doc.internal.pageSize.getHeight();
+        let marginX = 32;
 
-        // Use preloaded high-res logo
-        let imgData = highResLogoBase64;
-        let logoH = 40;
-        let logoW = logoH * highResLogoRatio;
-        
-        if (!imgData) {
-            let logo = document.getElementById('companyLogo');
-            if (logo) {
-                let canvas = document.createElement('canvas');
-                canvas.width = logo.naturalWidth || logo.width || 150;
-                canvas.height = logo.naturalHeight || logo.height || 50;
-                let ctx = canvas.getContext('2d');
-                ctx.drawImage(logo, 0, 0, canvas.width, canvas.height);
-                imgData = canvas.toDataURL('image/png');
-                let ratio = canvas.width / canvas.height;
-                logoH = 40;
-                logoW = logoH * ratio;
-            }
+        // Logo from Print Format Master (fallback to preloaded companyLogo)
+        let imgData = ps.logo_base64 || highResLogoBase64 || '';
+        let showLogo = Number(ps.show_logo !== undefined ? ps.show_logo : 1) === 1;
+        let logoW = Math.min(130, Math.max(70, Number(ps.logo_width || 120) * 0.8));
+        let logoH = logoW / (highResLogoRatio || 2.8);
+        if (logoH > 46) {
+            logoH = 46;
+            logoW = logoH * (highResLogoRatio || 2.8);
         }
 
-        // Generate AutoTable
+        // Build clean rows from the hidden print table
+        const headRow = ['Vehicle Details', 'Color', 'Type', 'Status', 'Company', 'Remarks / Details'];
+        const bodyRows = [];
+        $(table).find('tbody tr').each(function() {
+            const cells = $(this).find('td');
+            if (cells.length >= 6) {
+                const detHtml = $(cells[0]).html() || '';
+                const detText = detHtml.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/\n{2,}/g, '\n').trim();
+                bodyRows.push([
+                    detText,
+                    $(cells[1]).text().trim(),
+                    $(cells[2]).text().trim(),
+                    $(cells[3]).text().trim(),
+                    $(cells[4]).text().trim(),
+                    $(cells[5]).text().trim()
+                ]);
+            }
+        });
+
         doc.autoTable({
-            html: table,
-            startY: 145, // Start below titles on page 1
+            head: [headRow],
+            body: bodyRows,
+            startY: 122,
             theme: 'grid',
             styles: { 
-                fontSize: 9, 
+                fontSize: 8.5, 
                 font: 'helvetica',
-                cellPadding: 4,
-                lineColor: [200, 200, 200],
-                lineWidth: 0.1
+                cellPadding: 5,
+                valign: 'middle',
+                overflow: 'linebreak',
+                lineColor: [215, 222, 235],
+                lineWidth: 0.4
             },
             headStyles: { 
-                fillColor: [138, 28, 20], 
+                fillColor: accentRgb, 
                 textColor: 255,
-                fontStyle: 'bold'
+                fontStyle: 'bold',
+                halign: 'left'
+            },
+            columnStyles: {
+                0: { cellWidth: 180 },
+                1: { cellWidth: 62 },
+                2: { cellWidth: 95 },
+                3: { cellWidth: 70 },
+                4: { cellWidth: 115 },
+                5: { cellWidth: 'auto' }
             },
             alternateRowStyles: { 
-                fillColor: [248, 249, 250] 
+                fillColor: [248, 250, 253] 
             },
-            margin: { top: 90, bottom: 40, left: 42.5, right: 42.5 },
+            margin: { top: 96, bottom: 50, left: marginX, right: marginX },
             didDrawPage: function (data) {
-                // HEADER
-                if (imgData) {
-                    doc.addImage(imgData, 'PNG', 42.5, 20, 136, 136 / highResLogoRatio);
+                // MASTER HEADER
+                if (showLogo && imgData) {
+                    try {
+                        doc.addImage(imgData, 'PNG', marginX, 18, logoW, logoH);
+                    } catch (e) {}
                 }
-                
+
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(18);
-                doc.setTextColor(0, 0, 0);
-                doc.text("FAST LINK CAR RENTAL", pageWidth / 2, 40, { align: 'center' });
-                
+                doc.setFontSize(15);
+                doc.setTextColor(accentRgb[0], accentRgb[1], accentRgb[2]);
+                doc.text(String(ps.company_name || 'FAST LINK CAR RENTAL'), pageWidth / 2, 30, { align: 'center' });
+
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(9);
-                doc.text("Salmabad, Kingdom of Bahrain", pageWidth / 2, 55, { align: 'center' });
-                
+                doc.setTextColor(80, 90, 105);
+                if (ps.header_subtitle) {
+                    doc.text(String(ps.header_subtitle), pageWidth / 2, 43, { align: 'center' });
+                }
+                if (ps.header_address) {
+                    doc.text(String(ps.header_address), pageWidth / 2, 55, { align: 'center' });
+                }
+
                 doc.setFontSize(8);
-                let rightX = pageWidth - 42.5; 
-                doc.text("Tel : +973 17300322", rightX, 32, { align: 'right' });
-                doc.text("Fax : +973 17300311", rightX, 44, { align: 'right' });
-                doc.text("info@aarentalbh.com", rightX, 56, { align: 'right' });
-                
-                doc.setDrawColor(180, 180, 180);
-                doc.setLineWidth(1.1); 
-                doc.line(42.5, 80, pageWidth - 42.5, 80);
-                
-                // Titles
+                let rightX = pageWidth - marginX;
+                let rightY = 26;
+                if (ps.header_phone) { doc.text('Tel: ' + String(ps.header_phone), rightX, rightY, { align: 'right' }); rightY += 11; }
+                if (ps.header_email) { doc.text(String(ps.header_email), rightX, rightY, { align: 'right' }); rightY += 11; }
+                if (ps.header_website) { doc.text(String(ps.header_website), rightX, rightY, { align: 'right' }); }
+
+                doc.setDrawColor(accentRgb[0], accentRgb[1], accentRgb[2]);
+                doc.setLineWidth(1.2);
+                doc.line(marginX, 68, pageWidth - marginX, 68);
+
+                // Report Title & Date
                 if (data.pageNumber === 1) {
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
-                    doc.setTextColor(44, 62, 80);
-                    doc.text("Vehicle Insights Report - " + activeTabName, pageWidth / 2, 100, { align: 'center' });
-                    
+                    doc.setFontSize(12);
+                    doc.setTextColor(30, 41, 59);
+                    doc.text("Vehicle Insights Report - " + activeTabName, marginX, 88);
+
                     let d = new Date();
-                    let day = ("0" + d.getDate()).slice(-2);
-                    let month = ("0" + (d.getMonth() + 1)).slice(-2);
-                    let year = d.getFullYear();
-                    let dateStr = "Generated on: " + day + "/" + month + "/" + year;
-                    
+                    let dateStr = "Generated on: " + ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear();
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(9);
-                    doc.setTextColor(100, 100, 100);
-                    doc.text(dateStr, 42.5, 120);
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(100, 116, 139);
+                    doc.text(dateStr + "  |  Total Vehicles: " + bodyRows.length, pageWidth - marginX, 88, { align: 'right' });
+                } else {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10);
+                    doc.setTextColor(71, 85, 105);
+                    doc.text("Vehicle Insights Report - " + activeTabName + " (Cont.)", marginX, 84);
                 }
-                
-                // FOOTER
-                let str = "Page " + doc.internal.getNumberOfPages();
+
+                // MASTER FOOTER
+                let footerY = pageHeight - 28;
+                doc.setDrawColor(203, 213, 225);
+                doc.setLineWidth(0.6);
+                doc.line(marginX, footerY - 10, pageWidth - marginX, footerY - 10);
+
+                if (Number(ps.show_footer !== undefined ? ps.show_footer : 1) === 1) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(71, 85, 105);
+                    if (ps.footer_text) {
+                        doc.text(String(ps.footer_text), marginX, footerY);
+                    }
+                    if (ps.footer_note) {
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(120, 130, 145);
+                        doc.text(String(ps.footer_note), marginX, footerY + 11);
+                    }
+                }
+
+                let pageStr = "Page " + doc.internal.getNumberOfPages();
                 if (typeof doc.putTotalPages === 'function') {
-                    str = str + " of " + 'totalPages';
+                    pageStr += " of totalPages";
                 }
+                doc.setFont('helvetica', 'bold');
                 doc.setFontSize(8);
-                let pageHeight = doc.internal.pageSize.getHeight();
-                doc.text(str, pageWidth / 2, pageHeight - 15, { align: 'center' });
+                doc.setTextColor(71, 85, 105);
+                doc.text(pageStr, pageWidth - marginX, footerY, { align: 'right' });
             }
         });
         doc.putTotalPages('totalPages');

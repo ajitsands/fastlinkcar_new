@@ -1822,7 +1822,8 @@ function populatecontractLedgerModal(d) {
         $('#txtAmounthidden').val('0');
          $('#txtAmount').val('');
         loadHeads();
-        refreshLedger(data.contract.ids);
+        const contractIdToLoad = (data.contract && data.contract.ids) ? data.contract.ids : $('#txt_ledger_modal_agreement_id').val();
+        refreshLedger(contractIdToLoad);
         
        
    
@@ -1952,10 +1953,155 @@ function openEncryptedLedgerPrint(urlPath, docNo) {
         });
 }
 
+let contractModalLedgerRows = [];
+let contractModalCustomerInfo = {};
+let contractModalAgreementNo = '';
+
+$(document).on('click', '#btnContractModalPrintSOA', function() {
+    if (typeof window.jspdf === 'undefined') {
+        alert('PDF library not loaded yet.');
+        return;
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('l', 'pt', 'a4');
+    const ps = window.LEDGER_PRINT_SETTINGS || {};
+    const cleanHex = String(ps.accent_color || '').replace('#', '').trim();
+    const accentRgb = /^[0-9a-fA-F]{6}$/.test(cleanHex)
+        ? [parseInt(cleanHex.substring(0, 2), 16), parseInt(cleanHex.substring(2, 4), 16), parseInt(cleanHex.substring(4, 6), 16)]
+        : [27, 61, 148];
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const marginX = 32;
+    const imgData = ps.logo_base64 || '';
+    const showLogo = Number(ps.show_logo !== undefined ? ps.show_logo : 1) === 1;
+    const logoW = Math.min(130, Math.max(70, Number(ps.logo_width || 120) * 0.8));
+    const logoH = logoW / 2.8;
+
+    const totDebit = $('#lblTotalDebit').text() || '0.000';
+    const totCredit = $('#lblTotalCredit').text() || '0.000';
+    const totBalance = $('#lblBalance').text() || '0.000';
+    const agreeNo = $('#txt_ledger_modal_agreement_no').val() || contractModalAgreementNo || '-';
+    const custLabel = $('#display_customer_name').text() || '';
+
+    const bodyRows = contractModalLedgerRows.length
+        ? contractModalLedgerRows.map(r => {
+            const f = getLedgerFlagObj(r);
+            const dt = r.trans_date ? moment(r.trans_date).format('DD MMM YYYY') : '-';
+            const primaryRef = $.trim(r.ref_no || '') || $.trim(r.agreement_no || '') || $.trim(r.booking_no || '') || $.trim(r.quotation_no || '') || '-';
+            const descParts = [primaryRef];
+            if (r.description) descParts.push(r.description);
+            if (r.bank_name) descParts.push('Bank: ' + r.bank_name);
+            return [
+                dt,
+                r.agreement_no || agreeNo,
+                `${r.trans_type || '-'}${r.payment_method && r.payment_method !== 'N/A' ? ' (' + r.payment_method + ')' : ''}`,
+                descParts.join(' | '),
+                f.label,
+                parseFloat(r.debit || 0) > 0 ? parseFloat(r.debit).toFixed(3) : '-',
+                parseFloat(r.credit || 0) > 0 ? parseFloat(r.credit).toFixed(3) : '-',
+                parseFloat(r.running_balance || 0).toFixed(3)
+            ];
+        })
+        : [[{ content: 'No ledger transactions found.', colSpan: 8, styles: { halign: 'center' } }]];
+
+    doc.autoTable({
+        head: [['Date', 'Agreement', 'Type / Method', 'Reference & Details', 'Flag', 'Debit', 'Credit', 'Balance']],
+        body: bodyRows,
+        startY: 128,
+        theme: 'grid',
+        styles: { fontSize: 8.5, font: 'helvetica', cellPadding: 5, valign: 'middle', lineColor: [215, 222, 235], lineWidth: 0.4 },
+        headStyles: { fillColor: accentRgb, textColor: 255, fontStyle: 'bold' },
+        columnStyles: {
+            0: { cellWidth: 70 },
+            1: { cellWidth: 95 },
+            4: { cellWidth: 72, halign: 'center' },
+            5: { cellWidth: 62, halign: 'right' },
+            6: { cellWidth: 62, halign: 'right' },
+            7: { cellWidth: 66, halign: 'right', fontStyle: 'bold' }
+        },
+        alternateRowStyles: { fillColor: [248, 250, 253] },
+        margin: { top: 96, left: marginX, right: marginX, bottom: 50 },
+        didDrawPage: function (data) {
+            if (showLogo && imgData) {
+                try { doc.addImage(imgData, 'PNG', marginX, 18, logoW, logoH); } catch (e) {}
+            }
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(15);
+            doc.setTextColor(accentRgb[0], accentRgb[1], accentRgb[2]);
+            doc.text(String(ps.company_name || 'FAST LINK CAR RENTAL'), pageWidth / 2, 30, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(80, 90, 105);
+            if (ps.header_subtitle) doc.text(String(ps.header_subtitle), pageWidth / 2, 43, { align: 'center' });
+            if (ps.header_address) doc.text(String(ps.header_address), pageWidth / 2, 55, { align: 'center' });
+
+            let rightX = pageWidth - marginX;
+            let rightY = 26;
+            doc.setFontSize(8);
+            if (ps.header_phone) { doc.text('Tel: ' + String(ps.header_phone), rightX, rightY, { align: 'right' }); rightY += 11; }
+            if (ps.header_email) { doc.text(String(ps.header_email), rightX, rightY, { align: 'right' }); rightY += 11; }
+            if (ps.header_website) { doc.text(String(ps.header_website), rightX, rightY, { align: 'right' }); }
+
+            doc.setDrawColor(accentRgb[0], accentRgb[1], accentRgb[2]);
+            doc.setLineWidth(1.2);
+            doc.line(marginX, 68, pageWidth - marginX, 68);
+
+            if (data.pageNumber === 1) {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.setTextColor(30, 41, 59);
+                doc.text('AGREEMENT STATEMENT OF ACCOUNT (SOA)', marginX, 86);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8.5);
+                doc.setTextColor(71, 85, 105);
+                doc.text(`Customer: ${custLabel}  |  Agreement: ${agreeNo}`, marginX, 102);
+                doc.text(`Statement Date: ${moment().format('DD MMM YYYY')}`, rightX, 86, { align: 'right' });
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Total Debit: ${totDebit}   |   Total Credit: ${totCredit}   |   Balance: ${totBalance} BHD`, rightX, 114, { align: 'right' });
+            } else {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10);
+                doc.setTextColor(71, 85, 105);
+                doc.text(`Agreement SOA - ${agreeNo} (Cont.)`, marginX, 84);
+            }
+
+            let footerY = pageHeight - 28;
+            doc.setDrawColor(203, 213, 225);
+            doc.setLineWidth(0.6);
+            doc.line(marginX, footerY - 10, pageWidth - marginX, footerY - 10);
+            if (Number(ps.show_footer !== undefined ? ps.show_footer : 1) === 1) {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                doc.setTextColor(71, 85, 105);
+                if (ps.footer_text) doc.text(String(ps.footer_text), marginX, footerY);
+                if (ps.footer_note) {
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(120, 130, 145);
+                    doc.text(String(ps.footer_note), marginX, footerY + 11);
+                }
+            }
+            let pageStr = 'Page ' + doc.internal.getNumberOfPages();
+            if (typeof doc.putTotalPages === 'function') pageStr += ' of totalPages';
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(71, 85, 105);
+            doc.text(pageStr, rightX, footerY, { align: 'right' });
+        }
+    });
+    if (typeof doc.putTotalPages === 'function') doc.putTotalPages('totalPages');
+    window.open(doc.output('bloburl'), '_blank');
+});
+
 function refreshLedger(code) {
             if ($.fn.DataTable.isDataTable('#tblLedger')) {
                 $('#tblLedger').DataTable().destroy();
             }
+
+            contractModalAgreementNo = $('#txt_ledger_modal_agreement_no').val() || '';
+            contractModalCustomerInfo = {
+                customer_name: $('#display_customer_name').text() || '',
+                customer_mobile: $('#display_mobile').text() || ''
+            };
 
             ledgerTable = $('#tblLedger').DataTable({
                 ajax: {
@@ -1963,6 +2109,7 @@ function refreshLedger(code) {
                     data: { action: 'GetContractLedgerData', contract_id: code },
                     dataSrc: function(json) {
                         const rows = (json && Array.isArray(json.data)) ? json.data : [];
+                        contractModalLedgerRows = rows;
                         let totDebit = 0, totCredit = 0;
                         rows.forEach(r => {
                             totDebit += parseFloat(r.debit || 0);

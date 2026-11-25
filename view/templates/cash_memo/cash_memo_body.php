@@ -44,9 +44,6 @@
                         <button type="button" class="btn btn-sm btn-success" id="cm_banner_wa_btn">
                             <i class="ri-whatsapp-line me-1"></i> Send to WhatsApp
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" id="cm_banner_new_btn">
-                            <i class="ri-add-line me-1"></i> New Receipt
-                        </button>
                     </div>
                 </div>
 

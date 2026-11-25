@@ -138,6 +138,31 @@ $(document).ready(function () {
         return fallback;
     }
 
+    function formatVehicleCellForPdf(td) {
+        const divs = td.querySelectorAll(':scope > div');
+        if (!divs.length) {
+            return cellHtmlToText(td.innerHTML);
+        }
+        const lines = [];
+        divs.forEach(function (div, divIdx) {
+            const spans = div.querySelectorAll(':scope > span');
+            const parts = [];
+            if (spans.length) {
+                spans.forEach(function (sp) {
+                    const txt = $(sp).text().replace(/\s+/g, ' ').trim();
+                    if (txt) parts.push(txt);
+                });
+            } else {
+                const txt = $(div).text().replace(/\s+/g, ' ').trim();
+                if (txt) parts.push(txt);
+            }
+            if (parts.length) {
+                lines.push(parts.join(divIdx === 0 ? '  ' : ' | '));
+            }
+        });
+        return lines.join('\n');
+    }
+
     function cellHtmlToText(htmlStr) {
         return String(htmlStr || '')
             .replace(/<br\s*\/?>/gi, '\n')
@@ -212,7 +237,7 @@ $(document).ready(function () {
                 if (tds.length >= 7) {
                     bodyRows.push([
                         cellHtmlToText(tds[0].innerHTML),
-                        cellHtmlToText(tds[1].innerHTML),
+                        formatVehicleCellForPdf(tds[1]),
                         cellHtmlToText(tds[2].innerHTML),
                         cellHtmlToText(tds[3].innerHTML),
                         cellHtmlToText(tds[4].innerHTML),

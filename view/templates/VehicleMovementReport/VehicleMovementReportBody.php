@@ -38,7 +38,7 @@
             <h5 class="card-title mb-0 fw-bold" style="color: #1b3d94;">
                 <i class="ri-route-line me-1"></i> Movement Logs
             </h5>
-            <button id="btnExportPDF" class="btn btn-sm btn-outline-danger">
+            <button id="btnExportPDF" class="btn btn-sm btn-primary">
                 <i class="ri-file-pdf-line me-1"></i> Export PDF
             </button>
         </div>

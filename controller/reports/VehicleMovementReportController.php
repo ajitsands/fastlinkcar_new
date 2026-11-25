@@ -165,10 +165,16 @@ if ($action === 'get_report') {
             l.odometer,
             l.created_name,
             v.vehicle_number,
+            b.brand_name,
             v.model_names,
             v.vehicle_year,
             v.vehicle_color,
             v.chassis_number,
+            v.engine_type,
+            v.transmission,
+            v.vehicle_status,
+            v.is_outsourced,
+            oc.company_name as outsourcing_company_name,
             cat.category_name,
             l.vehicle_ids,
             c.customer_name as log_customer_name,
@@ -177,7 +183,9 @@ if ($action === 'get_report') {
             g.garage_name
         FROM tbl_vehicle_log_movement l
         JOIN tbl_vehicles v ON v.ids = l.vehicle_ids
+        LEFT JOIN tbl_vehicle_brand b ON v.brand_id = b.ids
         LEFT JOIN tbl_vehicle_category cat ON v.category_id = cat.ids
+        LEFT JOIN tbl_outsourcing_companies oc ON v.outsourcing_company_id = oc.ids
         LEFT JOIN customer_details c ON l.customer_id = c.ids
         LEFT JOIN tbl_company comp ON v.company_id = comp.ids
         LEFT JOIN tbl_staff st ON l.staff_id = st.ids
@@ -255,19 +263,46 @@ if ($action === 'get_report') {
         foreach ($processed_logs as $log) {
             $dateFormatted = date('d M Y, h:i A', strtotime($log['log_datetime']));
             $vehNo = htmlspecialchars($log['vehicle_number'] ?? '-');
-            $vehModel = htmlspecialchars($log['model_names'] ?? '');
+            $vehBrand = trim((string) ($log['brand_name'] ?? ''));
+            $vehModel = trim((string) ($log['model_names'] ?? ''));
+            $brandAndModel = htmlspecialchars(trim($vehBrand . ($vehBrand !== '' && $vehModel !== '' ? ' - ' : '') . $vehModel));
             $vehCat = htmlspecialchars($log['category_name'] ?? '-');
             $vehYr = htmlspecialchars($log['vehicle_year'] ?? '-');
-            $vehClr = htmlspecialchars($log['vehicle_color'] ?? '-');
-            $chassis = !empty($log['chassis_number']) ? htmlspecialchars($log['chassis_number']) : '-';
+            $vehClrRaw = trim((string) ($log['vehicle_color'] ?? ''));
+            $vehClr = $vehClrRaw !== '' ? htmlspecialchars($vehClrRaw) : '-';
+            $dotColor = $vehClrRaw !== '' ? htmlspecialchars($vehClrRaw) : '#697a8d';
+            $vehEngine = htmlspecialchars(!empty($log['engine_type']) ? $log['engine_type'] : '-');
+            $vehTrans = htmlspecialchars(!empty($log['transmission']) ? $log['transmission'] : '-');
+            $chassis = !empty($log['chassis_number']) ? htmlspecialchars($log['chassis_number']) : 'N/A';
             $compName = htmlspecialchars($log['vehicle_company_name'] ?? '');
-            
+            $curStatusRaw = $log['vehicle_status'] ?? '';
+            $curStatus = htmlspecialchars($curStatusRaw);
+            $curStatusStyle = $curStatusRaw !== '' ? VehicleStatusHelper::getBadgeStyle($curStatusRaw) : '';
+            $isOutsourced = ($log['is_outsourced'] ?? '') === 'Yes';
+            $outsourceName = htmlspecialchars($log['outsourcing_company_name'] ?? '');
+
+            $vehicleBadgesHtml = "<span class='badge bg-label-secondary me-1'>{$vehCat}</span>";
+            $vehicleBadgesHtml .= "<span class='badge bg-label-info me-1'><i class='ri-calendar-line me-1'></i>{$vehYr}</span>";
+            $vehicleBadgesHtml .= "<span class='badge bg-label-warning me-1'><span style='display:inline-block;width:7px;height:7px;border-radius:50%;background-color:{$dotColor};margin-right:4px;vertical-align:middle;'></span>{$vehClr}</span>";
+            $vehicleBadgesHtml .= "<span class='badge bg-label-success me-1'><i class='ri-gas-station-line me-1'></i>{$vehEngine}</span>";
+            $vehicleBadgesHtml .= "<span class='badge bg-label-primary'><i class='ri-settings-3-line me-1'></i>{$vehTrans}</span>";
+
+            $vehicleMetaHtml = "<div class='small text-muted mt-1 d-flex flex-wrap align-items-center gap-2'>"
+                . "<span><i class='ri-barcode-line me-1'></i>Chassis: <strong>{$chassis}</strong></span>";
+            if ($compName !== '') {
+                $vehicleMetaHtml .= "<span class='text-success'><i class='ri-building-line me-1'></i>{$compName}</span>";
+            }
+            if ($isOutsourced && $outsourceName !== '') {
+                $vehicleMetaHtml .= "<span class='badge bg-label-warning'><i class='ri-share-forward-line me-1'></i>Outsource: {$outsourceName}</span>";
+            }
+            $vehicleMetaHtml .= "</div>";
+
             $html .= "<tr>";
             $html .= "<td class='text-nowrap'>{$dateFormatted}</td>";
             $html .= "<td>
-                        <div><span class='badge bg-label-primary fw-bold me-1'>{$vehNo}</span><span>{$vehModel}</span></div>
-                        <div class='small text-muted mt-1'><strong>Cat:</strong> {$vehCat} | <strong>Yr:</strong> {$vehYr} | <strong>Clr:</strong> {$vehClr}</div>
-                        <div class='small text-muted'><strong>Chassis:</strong> {$chassis}" . ($compName !== '' ? " | <span class='badge bg-label-secondary'>{$compName}</span>" : "") . "</div>
+                        <div class='mb-1'><span class='fw-bold text-primary me-1'>{$vehNo}</span><span class='fw-semibold text-dark'>{$brandAndModel}</span>" . ($curStatus !== '' ? " <span class='badge ms-1' style='{$curStatusStyle}'>{$curStatus}</span>" : "") . "</div>
+                        <div class='d-flex flex-wrap gap-1'>{$vehicleBadgesHtml}</div>
+                        {$vehicleMetaHtml}
                       </td>";
             
             // Master Status Badge Colors

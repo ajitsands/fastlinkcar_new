@@ -56,24 +56,9 @@ $vmPrintSettings = getPrintSettings(null, $vmCompanyId);
         .dt-buttons .btn {
             margin-right: 5px;
         }
-        #movementReportTable thead th {
-            background-color: #1b3d94 !important;
-            color: #ffffff !important;
-            font-weight: 600;
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-color: #16337d !important;
-            padding: 0.65rem 0.75rem;
-            white-space: nowrap;
-        }
         #movementReportTable tbody td {
-            padding: 0.6rem 0.75rem;
+            padding: 0.65rem 0.75rem;
             vertical-align: middle;
-            border-color: #e6ebf5;
-        }
-        #movementReportTable tbody tr:hover {
-            background-color: #f6f8fd !important;
         }
         .dataTables_wrapper .dataTables_filter input,
         .dataTables_wrapper .dataTables_length select {

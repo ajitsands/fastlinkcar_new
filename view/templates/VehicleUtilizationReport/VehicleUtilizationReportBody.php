@@ -1,34 +1,31 @@
 <div class="container-fluid flex-grow-1 container-p-y">
-    <div class="card mb-4 mt-4">
-        <div class="card-header border-bottom">
-            <h5 class="card-title mb-0">Vehicle Utilization Report</h5>
-        </div>
-        <div class="card-body mt-3">
+    <div class="card shadow-sm border-0 mb-3 mt-4">
+        <div class="card-body py-3">
             <form id="frmUtilizationReport">
-                <div class="row g-3">
+                <div class="row g-2 align-items-end">
                     <div class="col-md-3">
-                        <label class="form-label">Company</label>
-                        <select class="form-select" id="filter_company" name="company_id">
+                        <label class="form-label form-label-sm fw-semibold mb-1">Company</label>
+                        <select class="form-select form-select-sm" id="filter_company" name="company_id">
                             <!-- Populated via JS -->
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Vehicle</label>
-                        <select class="form-select select2" id="filter_vehicle" name="vehicle_id">
+                        <label class="form-label form-label-sm fw-semibold mb-1">Vehicle</label>
+                        <select class="form-select form-select-sm select2" id="filter_vehicle" name="vehicle_id">
                             <option value="">All Vehicles</option>
                             <!-- Populated via JS -->
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Date From</label>
-                        <input type="date" class="form-control" id="filter_from_date" name="from_date">
+                        <label class="form-label form-label-sm fw-semibold mb-1">Date From</label>
+                        <input type="date" class="form-control form-control-sm" id="filter_from_date" name="from_date">
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Date To</label>
-                        <input type="date" class="form-control" id="filter_to_date" name="to_date">
+                        <label class="form-label form-label-sm fw-semibold mb-1">Date To</label>
+                        <input type="date" class="form-control form-control-sm" id="filter_to_date" name="to_date">
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="button" id="btnSearch" class="btn btn-primary w-100">
+                    <div class="col-md-2 d-flex">
+                        <button type="button" id="btnSearch" class="btn btn-sm btn-primary w-100">
                             <i class="ri-search-line me-1"></i> Search
                         </button>
                     </div>
@@ -38,11 +35,13 @@
     </div>
 
     <!-- Results Card -->
-    <div class="card">
-        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0">Report Results</h5>
+    <div class="card shadow-sm border-0">
+        <div class="card-header border-bottom py-2 d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 fw-bold" style="color: #1b3d94;">
+                <i class="ri-bar-chart-2-line me-1"></i> Vehicle Utilization Report
+            </h5>
             <div>
-                <button type="button" class="btn btn-primary" id="btnPdf">
+                <button type="button" class="btn btn-sm btn-primary" id="btnPdf">
                     <i class="ri-file-pdf-2-line me-1"></i> Export PDF
                 </button>
             </div>

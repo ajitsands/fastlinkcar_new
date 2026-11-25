@@ -17,7 +17,7 @@ class CustomerLedgerController
         switch ($action) {
             case 'SearchCustomer':
                 $search = $_GET['q'] ?? '';
-                $sql = "SELECT ids AS id, customer_id AS customer_code, customer_name, customer_mobile 
+                $sql = "SELECT ids AS id, customer_id AS customer_code, customer_name, customer_mobile, customer_email, customer_cr_cpr 
                         FROM customer_details 
                         WHERE customer_name LIKE ? OR customer_mobile LIKE ? 
                         LIMIT 20";
@@ -47,6 +47,9 @@ class CustomerLedgerController
                 $res = $this->varPDOModelObj->ListFromTable($sql, [$customer_code]);
                 $data = json_decode($res, true);
                 echo json_encode($data['data'] ?? []);
+                break;
+            case 'GetCustomerContractsSummary':
+                $this->handleGetCustomerContractsSummary();
                 break;
           
             case 'SaveTransaction':
@@ -459,11 +462,65 @@ class CustomerLedgerController
         return true;
     }
 
+    private function handleGetCustomerContractsSummary()
+    {
+        $customer_code = $_GET['customer_code'] ?? '';
+        if (empty($customer_code)) {
+            echo json_encode(['status' => true, 'data' => []]);
+            return;
+        }
+
+        $sql = "SELECT vc.ids AS contract_id,
+                       vc.agreement_no,
+                       vc.vehicle_no,
+                       vc.service_type,
+                       vc.service_start_date_time,
+                       vc.service_end_date_time,
+                       vc.return_date,
+                       vc.vechile_details,
+                       COALESCE(SUM(l.debit), 0) AS total_debit,
+                       COALESCE(SUM(CASE WHEN COALESCE(l.cheque_status, '') = 'Bounced' THEN 0 ELSE l.credit END), 0) AS total_credit
+                FROM tbl_vehicle_rentout_contracts vc
+                LEFT JOIN tbl_customer_ledger l ON l.contract_ids = vc.ids
+                WHERE vc.customer_code = ?
+                GROUP BY vc.ids
+                ORDER BY vc.ids DESC";
+        $stmt = $this->varPDOModelObj->varDBPDO->prepare($sql);
+        $stmt->execute([$customer_code]);
+        $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmtCm = $this->varPDOModelObj->varDBPDO->prepare(
+            "SELECT cashmemo_no, cashmemo_date, net_total, cashmemo_payment_type
+             FROM cashmemo
+             WHERE contract_id = ? OR agreement_no = ?
+             ORDER BY ids DESC"
+        );
+
+        foreach ($contracts as &$c) {
+            $veh = json_decode($c['vechile_details'] ?? '{}', true);
+            $c['model_name'] = trim(($veh['brand_name'] ?? $veh['make'] ?? '') . ' ' . ($veh['model_name'] ?? $veh['model'] ?? ''));
+            $c['balance'] = (float)$c['total_debit'] - (float)$c['total_credit'];
+            $c['is_returned'] = !empty($c['return_date']) && $c['return_date'] !== '0000-00-00 00:00:00';
+            unset($c['vechile_details']);
+
+            $stmtCm->execute([$c['contract_id'], $c['agreement_no']]);
+            $c['receipts'] = $stmtCm->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        echo json_encode(['status' => true, 'data' => $contracts]);
+    }
+
     private function handleGetLedger()
     {
         $customer_code = $_GET['customer_code'] ?? '';
-        $sql = "SELECT l.*, b.bank_name, b.account_no, cb.bank_name as company_bank_name, cb.account_no as company_account_no
+        $sql = "SELECT l.*,
+                       COALESCE(NULLIF(l.agreement_no, ''), vc.agreement_no, '') AS agreement_no,
+                       cm.cashmemo_no AS matched_cashmemo_no,
+                       b.bank_name, b.account_no,
+                       cb.bank_name as company_bank_name, cb.account_no as company_account_no
                 FROM tbl_customer_ledger l 
+                LEFT JOIN tbl_vehicle_rentout_contracts vc ON vc.ids = l.contract_ids
+                LEFT JOIN cashmemo cm ON cm.cashmemo_no = l.ref_no
                 LEFT JOIN tbl_banks b ON l.bank_id = b.ids 
                 LEFT JOIN tbl_banks cb ON l.company_bank_id = cb.ids 
                 WHERE l.customer_code = ? 
@@ -485,8 +542,14 @@ class CustomerLedgerController
     private function handleContractGetLedger()
     {
         $contract_id = $_GET['contract_id'] ?? '';
-        $sql = "SELECT l.*, b.bank_name, b.account_no, cb.bank_name as company_bank_name, cb.account_no as company_account_no
+        $sql = "SELECT l.*,
+                       COALESCE(NULLIF(l.agreement_no, ''), vc.agreement_no, '') AS agreement_no,
+                       cm.cashmemo_no AS matched_cashmemo_no,
+                       b.bank_name, b.account_no,
+                       cb.bank_name as company_bank_name, cb.account_no as company_account_no
                 FROM tbl_customer_ledger l 
+                LEFT JOIN tbl_vehicle_rentout_contracts vc ON vc.ids = l.contract_ids
+                LEFT JOIN cashmemo cm ON cm.cashmemo_no = l.ref_no
                 LEFT JOIN tbl_banks b ON l.bank_id = b.ids 
                 LEFT JOIN tbl_banks cb ON l.company_bank_id = cb.ids 
                 WHERE l.contract_ids = ? 

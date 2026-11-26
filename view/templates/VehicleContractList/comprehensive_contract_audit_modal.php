@@ -24,58 +24,90 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <div class="modal-body p-3 bg-light">
+      <div class="modal-body p-3" style="background-color: #ffffff;">
         <div id="cca_loading" class="text-center py-5">
           <div class="spinner-border text-primary" role="status"></div>
           <div class="small text-muted mt-2">Loading comprehensive contract audit...</div>
         </div>
 
         <div id="cca_content" class="d-none">
+          <!-- Top Contract Meta Strip (Matching Previous Layout) -->
+          <div class="row g-2 mb-3 p-2 rounded border bg-white align-items-center" style="border-color: #cfe0ff !important;">
+            <div class="col-6 col-md-3">
+              <div class="text-muted small">Agreement Date</div>
+              <div class="fw-semibold" id="cca_meta_date">-</div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="text-muted small">Booking / Qtn No</div>
+              <div class="fw-semibold" id="cca_meta_booking">-</div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="text-muted small">Company</div>
+              <div class="fw-semibold" id="cca_meta_company">-</div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="text-muted small">Status</div>
+              <div id="cca_meta_status">-</div>
+            </div>
+          </div>
+
           <!-- Navigation Tabs -->
-          <ul class="nav nav-tabs nav-fill bg-white rounded-top border px-2 pt-2 mb-0" id="ccaTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active fw-semibold" id="cca-tab-overview-btn" data-bs-toggle="tab" data-bs-target="#ccaTabOverview" type="button" role="tab">
+          <ul class="nav nav-pills mb-3 p-1 rounded border" id="ccaTabs" role="tablist" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+            <li class="nav-item flex-fill text-center" role="presentation">
+              <button class="nav-link active fw-semibold w-100" id="cca-tab-overview-btn" data-bs-toggle="tab" data-bs-target="#ccaTabOverview" type="button" role="tab">
                 <i class="ri-car-line me-1"></i> Contract &amp; Current Vehicle
               </button>
             </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link fw-semibold" id="cca-tab-repl-btn" data-bs-toggle="tab" data-bs-target="#ccaTabReplacements" type="button" role="tab">
+            <li class="nav-item flex-fill text-center" role="presentation">
+              <button class="nav-link fw-semibold w-100" id="cca-tab-repl-btn" data-bs-toggle="tab" data-bs-target="#ccaTabReplacements" type="button" role="tab">
                 <i class="ri-repeat-line me-1"></i> Replacements <span id="cca_repl_badge" class="badge bg-secondary ms-1">0</span>
               </button>
             </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link fw-semibold" id="cca-tab-ledger-btn" data-bs-toggle="tab" data-bs-target="#ccaTabLedger" type="button" role="tab">
+            <li class="nav-item flex-fill text-center" role="presentation">
+              <button class="nav-link fw-semibold w-100" id="cca-tab-ledger-btn" data-bs-toggle="tab" data-bs-target="#ccaTabLedger" type="button" role="tab">
                 <i class="ri-book-open-line me-1"></i> Complete Ledger, Receipts &amp; SOA
               </button>
             </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link fw-semibold" id="cca-tab-activities-btn" data-bs-toggle="tab" data-bs-target="#ccaTabActivities" type="button" role="tab">
+            <li class="nav-item flex-fill text-center" role="presentation">
+              <button class="nav-link fw-semibold w-100" id="cca-tab-activities-btn" data-bs-toggle="tab" data-bs-target="#ccaTabActivities" type="button" role="tab">
                 <i class="ri-history-line me-1"></i> Invoices, Activities &amp; Logs
               </button>
             </li>
           </ul>
 
-          <div class="tab-content bg-white border border-top-0 rounded-bottom p-3 shadow-sm">
+          <div class="tab-content p-0">
             <!-- TAB 1: CONTRACT & CURRENT VEHICLE -->
             <div class="tab-pane fade show active" id="ccaTabOverview" role="tabpanel">
               <div class="row g-3 mb-3">
                 <div class="col-12 col-lg-6">
-                  <div class="p-3 rounded border h-100" style="background:#f8fafc;">
-                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-2"><i class="ri-user-line me-1"></i> Customer &amp; Driver Details</h6>
-                    <div class="row g-1 small" id="cca_customer_grid"></div>
+                  <div class="p-3 rounded border h-100" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                    <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
+                      <i class="ri-user-line me-1"></i> Customer &amp; Driver Information
+                    </div>
+                    <div class="row g-2 small" id="cca_customer_grid"></div>
                   </div>
                 </div>
                 <div class="col-12 col-lg-6">
-                  <div class="p-3 rounded border h-100" style="background:#f8fafc;">
-                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-2"><i class="ri-car-line me-1"></i> Current Vehicle &amp; Contract Period</h6>
-                    <div class="row g-1 small" id="cca_vehicle_grid"></div>
+                  <div class="p-3 rounded border h-100" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                    <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
+                      <i class="ri-car-line me-1"></i> Current Vehicle &amp; Contract Period
+                    </div>
+                    <div class="row g-2 small" id="cca_vehicle_grid"></div>
                   </div>
                 </div>
               </div>
 
+              <!-- Financial Summary Strip (Matching Previous Layout) -->
+              <div class="p-3 rounded border mb-3" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
+                  <i class="ri-money-dollar-circle-line me-1"></i> Financial Summary
+                </div>
+                <div class="row g-2 text-center" id="cca_financial_strip"></div>
+              </div>
+
               <!-- Checklist & Car Survey -->
-              <div class="p-3 rounded border mb-3 bg-white">
-                <h6 class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="ri-checkbox-multiple-line text-primary me-1"></i> Vehicle Checklist &amp; Car Survey</h6>
+              <div class="p-3 rounded border mb-3" style="background-color: #ffffff; border-color: #dbe4ff !important;">
+                <span class="d-block text-uppercase fw-semibold mb-2" style="font-size: 11px; color: #1b3d94;"><i class="ri-checkbox-multiple-line me-1"></i> Vehicle Checklist &amp; Car Survey</span>
                 <div id="cca_checklist_badges" class="d-flex flex-wrap gap-2 mb-3"></div>
                 <div class="row g-3 text-center">
                   <div class="col-md-6">
@@ -92,8 +124,8 @@
               <!-- Images & Signatures -->
               <div class="row g-3">
                 <div class="col-12 col-lg-6">
-                  <div class="p-3 rounded border h-100 bg-white">
-                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="ri-image-line text-primary me-1"></i> Vehicle Rentout &amp; Return Images</h6>
+                  <div class="p-3 rounded border h-100" style="background-color: #ffffff; border-color: #dbe4ff !important;">
+                    <span class="d-block text-uppercase fw-semibold mb-2" style="font-size: 11px; color: #1b3d94;"><i class="ri-image-line me-1"></i> Vehicle Rentout &amp; Return Images</span>
                     <div class="small fw-semibold text-muted mb-1">Rentout Images</div>
                     <div id="cca_rentout_images" class="d-flex flex-wrap gap-2 mb-3"></div>
                     <div class="small fw-semibold text-muted mb-1">Return Images</div>
@@ -101,8 +133,8 @@
                   </div>
                 </div>
                 <div class="col-12 col-lg-6">
-                  <div class="p-3 rounded border h-100 bg-white">
-                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="ri-quill-pen-line text-primary me-1"></i> Contract Signatures</h6>
+                  <div class="p-3 rounded border h-100" style="background-color: #ffffff; border-color: #dbe4ff !important;">
+                    <span class="d-block text-uppercase fw-semibold mb-2" style="font-size: 11px; color: #1b3d94;"><i class="ri-quill-pen-line me-1"></i> Contract Signatures</span>
                     <div class="row g-2 text-center" id="cca_signatures_grid"></div>
                   </div>
                 </div>
@@ -343,6 +375,22 @@
                 $('#cca_status_text').text(c.agreement_status || '-');
                 $('#cca_company_name').text(c.company_name || '-');
                 $('#cca_agreement_date').text(ccaFmtDate24(c.agreement_date, false));
+
+                $('#cca_meta_date').text(ccaFmtDate24(c.agreement_date, false));
+                $('#cca_meta_booking').text(c.quotation_number || c.booking_ids || '-');
+                $('#cca_meta_company').text(c.company_name || '-');
+                $('#cca_meta_status').html(`<span class="badge bg-label-primary">${ccaEsc(c.agreement_status || '-')}</span>`);
+
+                const ledSum = res.ledger || {};
+                const cTotal = parseFloat(cdj.total_amount || cdj.total_amt || cdj.grand_total || ledSum.total_debit || 0);
+                const cPaid = parseFloat(ledSum.total_credit || 0);
+                const cBal = parseFloat(ledSum.balance || 0);
+                $('#cca_financial_strip').html(`
+                    <div class="col-6 col-md-3"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">Contract / Billed Total</div><div class="fw-bold mt-1 text-dark">${cTotal.toFixed(3)} BHD</div></div></div>
+                    <div class="col-6 col-md-3"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">Total Paid</div><div class="fw-bold mt-1 text-success">${cPaid.toFixed(3)} BHD</div></div></div>
+                    <div class="col-6 col-md-3"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">Outstanding Balance</div><div class="fw-bold mt-1 text-danger">${cBal.toFixed(3)} BHD</div></div></div>
+                    <div class="col-6 col-md-3"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">Replacements</div><div class="fw-bold mt-1 text-primary">${Array.isArray(res.replaced_history) ? res.replaced_history.length : 0}</div></div></div>
+                `);
 
                 // Tab 1: Customer & Driver
                 const custRows = [

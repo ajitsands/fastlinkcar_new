@@ -134,7 +134,7 @@
        </li>
 
        <!-- Reservation -->
-       <li class="menu-item <?php if (($decrypt[0] ?? '') == '3' && !in_array($menuSubCode, ['3-4', '3-5', '3-11'], true) && !in_array($menuRoute, ['ContractList', 'NonRevenueTickets', 'DirectContract'], true)) {
+       <li class="menu-item <?php if (($decrypt[0] ?? '') == '3' && !in_array($menuSubCode, ['3-4', '3-5', '3-11', '3-12', '3-13'], true) && !in_array($menuRoute, ['ContractList', 'NonRevenueTickets', 'DirectContract', 'VehicleReplacement', 'ContractFinancialReport'], true)) {
                               echo 'active';
                             } ?>">
          <a href="javascript:void(0)" class="menu-link menu-toggle">

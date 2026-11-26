@@ -376,12 +376,11 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                                         <thead class="table-light">
                                             <tr>
                                                 <th width="4%" class="text-center">#</th>
-                                                <th width="15%">Agreement No</th>
-                                                <th width="22%">Customer Details</th>
-                                                <th width="25%">Current / Initial Vehicle</th>
-                                                <th width="12%">Agreement Date</th>
-                                                <th width="10%" class="text-center">Replacements</th>
-                                                <th width="8%" class="text-center">Status</th>
+                                                <th width="18%">Contract Details</th>
+                                                <th width="24%">Vehicle Details</th>
+                                                <th width="20%">Customer Details</th>
+                                                <th width="14%">Contract Period</th>
+                                                <th width="14%">Replacements</th>
                                                 <th width="6%" class="text-center">Action</th>
                                             </tr>
                                         </thead>
@@ -613,11 +612,19 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
         </div>
     </div>
 
+    <!-- Contract Details Modal (Identical to VehicleContractList) -->
+    <?php include ROOT_PATH . '/view/templates/VehicleContractList/view_contract_details_modal.php'; ?>
+    <?php include ROOT_PATH . '/view/templates/VehicleContractList/vehicle_image_preview_modal.php'; ?>
+    <?php include ROOT_PATH . '/view/templates/VehicleStatus/vehicle_filepreview_modal.php'; ?>
+
     <div id="dropdownContent" style="text-align:center;"></div>
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/select2/select2.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/katex.js"></script>
+    <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/quill/quill.js"></script>
+    <script src="../httpdocs/user_js/car_survey_widget.js?v=<?= time() ?>"></script>
     <script src="../assets/sands/sands_popup.js"></script>
     <script src="../alertmessage/js/sandsalert.js"></script>
 
@@ -774,52 +781,115 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                 { 
                     data: 'agreement_no', 
                     render: (d, t, r) => {
+                        if (t === 'filter' || t === 'sort') {
+                            return `${d || ''} ${r.company_name || ''} ${r.booking_no || 'Direct Contract'} ${r.agreement_status || ''}`;
+                        }
                         let compBadge = (r.company_name && r.company_name !== 'N/A')
-                            ? `<div class="mt-1"><span class="badge bg-label-danger" style="font-size:0.72rem;">${escapeHtml(r.company_name)}</span></div>` 
+                            ? `<span class="badge bg-label-danger">${escapeHtml(r.company_name)}</span>`
                             : '';
-                        return `<div><a href="javascript:void(0)" class="fw-bold text-primary btn-view-full-history" data-id="${r.ids}" title="Click to view full history & audit">${escapeHtml(d)} <i class="ri ri-external-link-line ms-1 small"></i></a></div>${compBadge}`;
+                        let statusStr = (r.agreement_status || '').trim() || 'Rentout';
+                        let statusBadge = (typeof window.getContractStatusBadgeHtml === 'function')
+                            ? window.getContractStatusBadgeHtml(statusStr)
+                            : `<span class="badge bg-secondary">${escapeHtml(statusStr)}</span>`;
+                        let sourceText = r.booking_no ? `Booking: ${escapeHtml(r.booking_no)}` : 'Direct Contract';
+                        let sourceBadge = `<span class="badge bg-label-secondary">${sourceText}</span>`;
+
+                        return `
+                            <div class="d-flex flex-column gap-1">
+                                <div><a href="javascript:void(0)" class="fw-bold text-primary btn-view-full-history" data-id="${r.ids}" title="Click to view full history & audit">${escapeHtml(d)} <i class="ri ri-external-link-line ms-1 small"></i></a></div>
+                                <div class="d-flex flex-wrap align-items-center gap-1">
+                                    ${compBadge}
+                                    <span class="status-cell">${statusBadge}</span>
+                                </div>
+                                <div>${sourceBadge}</div>
+                            </div>
+                        `;
                     } 
+                },
+                { 
+                    data: null,
+                    render: (d, t, r) => {
+                        if (t === 'filter' || t === 'sort') {
+                            return `${r.vehicle_no || ''} ${r.brand_name || ''} ${r.model_name || ''} ${r.category_name || ''} ${r.chassis_number || ''} ${r.vehicle_year || ''} ${r.vehicle_color || ''}`;
+                        }
+                        const brandModel = [r.brand_name, r.model_name].filter(Boolean).join(' - ') || '-';
+                        const vStatus = r.vehicle_status
+                            ? (typeof window.getVehicleStatusBadgeHtml === 'function' ? window.getVehicleStatusBadgeHtml(r.vehicle_status) : `<span class="badge bg-label-info">${escapeHtml(r.vehicle_status)}</span>`)
+                            : '';
+                        let badges = '';
+                        if (r.category_name) badges += `<span class="badge bg-label-primary me-1 mb-1">${escapeHtml(r.category_name)}</span>`;
+                        if (r.vehicle_year) badges += `<span class="badge bg-label-info me-1 mb-1"><i class="ri-calendar-line me-1"></i>${escapeHtml(r.vehicle_year)}</span>`;
+                        if (r.vehicle_color) badges += `<span class="badge me-1 mb-1" style="background-color:#fef3c7;color:#92400e;"><span class="d-inline-block rounded-circle me-1 border" style="width:8px;height:8px;background-color:${escapeHtml(r.vehicle_color)};"></span>${escapeHtml(r.vehicle_color)}</span>`;
+                        if (r.fuel_type) badges += `<span class="badge bg-label-success me-1 mb-1"><i class="ri-gas-station-line me-1"></i>${escapeHtml(r.fuel_type)}</span>`;
+                        if (r.gear_type) badges += `<span class="badge me-1 mb-1" style="background-color:#ede9fe;color:#6d28d9;"><i class="ri-settings-4-line me-1"></i>${escapeHtml(r.gear_type)}</span>`;
+                        let chassisHtml = r.chassis_number ? `<small class="text-muted"><i class="ri-barcode-line me-1"></i>Chassis: <strong>${escapeHtml(r.chassis_number)}</strong></small>` : '';
+
+                        return `
+                            <div class="d-flex flex-column gap-1">
+                                <div class="d-flex flex-wrap align-items-center gap-1">
+                                    <span class="fw-bold text-dark">${escapeHtml(r.vehicle_no || '-')}</span>
+                                    <span class="text-muted fw-semibold">${escapeHtml(brandModel)}</span>
+                                    ${vStatus}
+                                </div>
+                                <div class="d-flex flex-wrap align-items-center">${badges}</div>
+                                ${chassisHtml}
+                            </div>
+                        `;
+                    }
                 },
                 { 
                     data: 'customer_name', 
                     render: (d, t, r) => {
-                        let name = d || 'N/A';
-                        let code = r.customer_code ? `<span class="badge bg-label-primary ms-1" style="font-size:0.7rem;">#${escapeHtml(r.customer_code)}</span>` : '';
-                        let mobile = r.mobile_number ? `<div><small class="text-muted"><i class="ri ri-phone-line me-1"></i>${escapeHtml(r.mobile_number)}</small></div>` : '';
-                        let cpr = r.cpr_no ? `<div><small class="text-muted"><i class="ri ri-id-card-line me-1"></i>CPR: ${escapeHtml(r.cpr_no)}</small></div>` : '';
-                        return `<div><strong class="text-dark">${escapeHtml(name)}</strong>${code}${mobile}${cpr}</div>`;
+                        if (t === 'filter' || t === 'sort') {
+                            return `${r.customer_name || ''} ${r.customer_code || ''} ${r.mobile_number || ''} ${r.cpr_no || ''} ${r.customer_email || ''}`;
+                        }
+                        let meta = [];
+                        if (r.mobile_number && r.mobile_number !== '-') meta.push(`<i class="ri-phone-line me-1"></i>${escapeHtml(r.mobile_number)}`);
+                        if (r.cpr_no) meta.push(`<i class="ri-id-card-line me-1"></i>${escapeHtml(r.cpr_no)}`);
+                        if (r.customer_nationality) meta.push(`<i class="ri-global-line me-1"></i>${escapeHtml(r.customer_nationality)}`);
+                        let emailLine = r.customer_email ? `<small class="text-muted d-block text-truncate" style="max-width:200px;"><i class="ri-mail-line me-1"></i>${escapeHtml(r.customer_email)}</small>` : '';
+                        return `
+                            <div class="d-flex flex-column gap-1">
+                                <div class="d-flex flex-wrap align-items-center gap-1">
+                                    <strong class="text-dark">${escapeHtml(d || 'N/A')}</strong>
+                                    ${r.customer_code ? `<span class="badge bg-label-secondary">${escapeHtml(r.customer_code)}</span>` : ''}
+                                </div>
+                                <small class="text-muted d-flex flex-wrap gap-2">${meta.join(' ')}</small>
+                                ${emailLine}
+                            </div>
+                        `;
                     } 
                 },
                 { 
-                    data: 'vehicle_summary',
-                    render: d => `<div><i class="ri ri-car-line text-danger me-1"></i>${escapeHtml(d || 'N/A')}</div>`
+                    data: null,
+                    render: (d, t, r) => `
+                        <div class="d-flex flex-column gap-1 small">
+                            <div><span class="text-muted fw-semibold">From:</span> <strong class="text-dark">${escapeHtml(r.from_date_format || formatDisplayDate(r.agreement_date))}</strong></div>
+                            <div><span class="text-muted fw-semibold">To:</span> <strong class="text-dark">${escapeHtml(r.to_date_format || '-')}</strong></div>
+                        </div>
+                    `
                 },
-                { data: 'agreement_date', render: d => formatDisplayDate(d) },
                 { 
                     data: 'replacement_count', 
-                    className: 'text-center',
-                    render: d => {
+                    render: (d, t, r) => {
                         let count = parseInt(d) || 0;
-                        return count > 0 
-                            ? `<span class="badge bg-warning text-dark"><i class="ri ri-repeat-line me-1"></i>${count} Replacement(s)</span>` 
-                            : '<span class="badge bg-light text-secondary">0 Replacements</span>';
-                    }
-                },
-                { 
-                    data: 'agreement_status',
-                    className: 'text-center',
-                    render: d => {
-                        let s = (d || '').trim() || 'Rentout';
-                        if (typeof window.getContractStatusBadgeHtml === 'function') {
-                            return window.getContractStatusBadgeHtml(s);
+                        if (count === 0) {
+                            return '<span class="badge bg-label-secondary">0 Replacements</span>';
                         }
-                        return `<span class="badge bg-secondary">${escapeHtml(s)}</span>`;
+                        let list = Array.isArray(r.replaced_summary) ? r.replaced_summary : [];
+                        let itemsHtml = list.map(rep => `<div class="small text-muted text-nowrap mt-1"><i class="ri-arrow-right-line text-warning me-1"></i><strong>${escapeHtml(rep.old_veh)}</strong> → <strong>${escapeHtml(rep.new_veh)}</strong> <span class="text-muted">(${formatDisplayDate(rep.replaced_on)})</span></div>`).join('');
+                        return `<div><span class="badge bg-warning text-dark"><i class="ri-repeat-line me-1"></i>${count} Replacement${count > 1 ? 's' : ''}</span>${itemsHtml}</div>`;
                     }
                 },
                 {
                     data: 'ids',
                     className: 'text-center',
-                    render: d => `<button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-view-full-history" data-id="${d}" title="View Audit & History Details"><i class="ri ri-eye-line fs-5"></i></button>`
+                    render: (d, t, r) => `
+                        <div class="d-flex justify-content-center gap-1">
+                            <button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-view-contract-modal" data-id="${r.ids}" data-vehicle="${r.vehicle_id || ''}" data-customer="${escapeHtml(r.customer_code || '')}" data-model="${r.model_id || ''}" title="View Contract Details"><i class="ri ri-eye-line fs-5"></i></button>
+                            <button type="button" class="btn btn-sm btn-icon btn-outline-info btn-view-full-history" data-id="${r.ids}" title="View Audit & Replacement History"><i class="ri ri-history-line fs-5"></i></button>
+                        </div>
+                    `
                 }
             ],
             language: {
@@ -852,6 +922,17 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
 
         $('#btn_export_excel').click(function() {
             exportHistoryToCSV();
+        });
+
+        $(document).on('click', '.btn-view-contract-modal', function(e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            const vid = $(this).data('vehicle');
+            const ccode = $(this).data('customer');
+            const mid = $(this).data('model');
+            if (id) {
+                openviewcontractModal(id, vid, ccode, mid);
+            }
         });
 
         $(document).on('click', '.btn-view-full-history', function(e) {
@@ -1223,6 +1304,163 @@ $defaultCompanyValue  = $hasMultipleCompanies ? 'all' : strval($allowedCompanies
                 </div>
             </div>
         `);
+    }
+
+    let chrQuillEditor = null;
+    function getChrQuill() {
+        if (!chrQuillEditor && typeof Quill !== 'undefined' && document.getElementById('full-editor-onbody')) {
+            chrQuillEditor = new Quill('#full-editor-onbody', { theme: 'snow', readOnly: true, modules: { toolbar: false } });
+        }
+        return chrQuillEditor;
+    }
+
+    function openviewcontractModal(id, vehicleid, customer_code, model_ids) {
+        $.ajax({
+            url: '/ContractListController',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                action: 'GetContractDetails',
+                agreementid: id,
+                vehicleid: vehicleid || '',
+                customer_code: customer_code || '',
+                model_ids: model_ids || ''
+            }),
+            success: function (res) {
+                populateviewContractModal(res);
+                const modalEl = document.getElementById('viewcontractModal');
+                const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.show();
+            },
+            error: function() {
+                alert('Failed to load contract details.');
+            }
+        });
+    }
+
+    function populateviewContractModal(d) {
+        let data = (typeof d === 'string') ? JSON.parse(d) : d;
+        data = data || {};
+        let customer = data.customer || {};
+        let vehicle = data.vehicle || {};
+        let contract = data.contract || {};
+
+        $('#viewcontract_agreement_ref').text(contract.agreement_no || '');
+        $('#txt_viewcontract_modal_agreement_id').val(contract.ids || '');
+        $('#txt_viewcontract_modal_agreement_no').val(contract.agreement_no || '');
+        $('#txt_viewcontract_modal_booking_ids').val(contract.booking_ids || '');
+
+        $('#viewcontract_c_name').text(customer.customer_name || '');
+        $('#viewcontract_c_code').text(customer.customer_id || '');
+        $('#viewcontract_c_mobile').text(customer.customer_mobile || '');
+        $('#viewcontract_c_email').text(customer.customer_email || '');
+        $('#viewcontract_c_attn').text(customer.customer_attn || '');
+        $('#viewcontract_c_attr').text(customer.customer_addr || '');
+
+        $('#viewcontract_v_no').text(vehicle.vehicle_number || '');
+        $('#viewcontract_v_model').text(vehicle.model_names || '');
+        $('#viewcontract_v_brand').text(vehicle.brand_name || '');
+        $('#viewcontract_v_category').text(vehicle.category_name || '');
+        $('#viewcontract_v_color').text(vehicle.vehicle_color || '');
+        $('#viewcontract_v_year').text(vehicle.vehicle_year || '');
+        $('#viewcontract_v_passing').text(vehicle.formatted_next_passing_date || '');
+        $('#viewcontract_hid_nxt_passing').val(vehicle.next_passing_date || '');
+        $('#viewcontract_v_maintenance').text(vehicle.formatted_next_maintenance_date || '');
+        $('#viewcontract_hid_nxt_maintenance').val(vehicle.next_maintenance_date || '');
+        $('#viewcontract_v_insurance').text(vehicle.formatted_next_insurance_date || '');
+        $('#viewcontract_hid_nxt_insurance').val(vehicle.next_insurance_date || '');
+
+        $('#viewcontract_hid_vehicle_id').val(vehicle.ids || '');
+        $('#viewcontract_hid_category_id').val(vehicle.category_id || '');
+        $('#viewcontract_hid_model_id').val(vehicle.model_id || '');
+        $('#viewcontract_hid_vehicle_no').val(vehicle.vehicle_number || '');
+
+        if (Array.isArray(data.price_list)) {
+            data.price_list.forEach(function(item) {
+                const amt = parseFloat(item.amount || 0).toFixed(3);
+                switch (item.item) {
+                    case 'Price per hour rental without driver': $('#viewcontract_wod_hourly').text(amt); break;
+                    case 'Price per hour rental with driver': $('#viewcontract_wd_hourly').text(amt); break;
+                    case 'Price per day rental without driver': $('#viewcontract_wod_daily').text(amt); break;
+                    case 'Price per day rental with driver': $('#viewcontract_wd_daily').text(amt); break;
+                    case 'Price per week rental without driver': $('#viewcontract_wod_weekly').text(amt); break;
+                    case 'Price per week rental with driver': $('#viewcontract_wd_weekly').text(amt); break;
+                    case 'Price per month rental without driver': $('#viewcontract_wod_monthly').text(amt); break;
+                    case 'Price per month rental with driver': $('#viewcontract_wd_monthly').text(amt); break;
+                }
+            });
+        }
+
+        let driverDetails = {};
+        let acc = {};
+        try { driverDetails = JSON.parse(contract.driver_details || '{}') || {}; } catch(e) {}
+        try { acc = JSON.parse(contract.vehicle_accessories_details || '{}') || {}; } catch(e) {}
+
+        $('#viewcontractchk_tools').prop('checked', acc.chk_tools === 'Yes');
+        $('#viewcontractchk_spare').prop('checked', acc.chk_spare === 'Yes');
+        $('#viewcontractchk_radio').prop('checked', acc.chk_radio === 'Yes');
+        $('#viewcontractkm_out').val(acc.vehicle_km_out || contract.km_out || 0);
+        $('#viewcontractkm_in').val(contract.km_in || 0);
+        $('#viewcontractfuel_level').val(acc.fuel_level || '');
+        $('#viewcontractdt_out').val(acc.date_out || '');
+        $('#viewcontractdt_in').val(contract.return_date || '');
+        $('#viewcontractdt_contract_date').val(contract.agreement_date || '');
+
+        $('#viewcontractcust_driver').val(contract.customer_driver_name || '');
+        $('#viewcontract_agreement_status').html(typeof window.getContractStatusBadgeHtml === 'function' ? window.getContractStatusBadgeHtml(contract.agreement_status) : (contract.agreement_status || ''));
+        $('#viewcontractcust_driver_contact_no').val(contract.customer_driver_contact_number || '');
+        $('.driverclass').show();
+
+        $('#viewcontractd_name').text(driverDetails.driver_name === 'Select Driver' ? '' : (driverDetails.driver_name || ''));
+        $('#viewcontractd_mobile').text(driverDetails.driver_mobile || '');
+        $('#viewcontractd_license_no').text(driverDetails.driver_license_no || '');
+        $('#viewcontractd_license_issue_place').text(driverDetails.driver_license_issplace || '');
+        $('#viewcontractd_licenseissueDate').text(driverDetails.driver_license_expdate || '');
+        $('#viewcontractd_licenseexpiryDate').text(driverDetails.driver_license_expdate || '');
+
+        const q = getChrQuill();
+        if (q && q.root) {
+            q.root.innerHTML = contract.terms_condition || '';
+        } else {
+            $('#full-editor-onbody').html(contract.terms_condition || '');
+        }
+
+        const bindSig = (sig, imgSel, noSel, nameSel, nameVal, dateSel, dateVal, emptyTxt) => {
+            if (sig && sig.trim() !== '') {
+                $(imgSel).attr('src', sig).show();
+                $(noSel).hide();
+            } else {
+                $(imgSel).hide();
+                $(noSel).show().text(emptyTxt);
+            }
+            $(nameSel).text(nameVal || '-');
+            $(dateSel).text(dateVal || '-');
+        };
+        bindSig(contract.hirer_signature, '#latest_hirer_signature', '#no_hirer_signature', '#latest_hirer_name', contract.hirer_name, '#latest_hirer_date', contract.hirer_signature_date, 'No Hirer Signature Applied');
+        bindSig(contract.delivered_signature, '#latest_delivery_signature', '#no_delivery_signature', '#latest_delivery_name', contract.delivered_signatory || contract.delivered_by, '#latest_delivery_date', contract.delivered_signature_date, 'No Delivered Signature Applied');
+        bindSig(contract.receiver_signature, '#latest_receiver_signature', '#no_receiver_signature', '#latest_receiver_name', contract.receiver_name, '#latest_receiver_date', contract.receiver_signature_datetime, 'No Receiver Signature Applied');
+
+        $('#viewcontractpreview').empty();
+        let rentImgs = [];
+        try { rentImgs = JSON.parse(contract.vehicle_rentout_images || '[]') || []; } catch(e) {}
+        if (Array.isArray(rentImgs)) {
+            rentImgs.forEach(img => {
+                $('#viewcontractpreview').append(`<div class="position-relative me-2 mb-2"><a href="../uploads/rentvehicleImages/${escapeHtml(img)}" target="_blank"><img src="../uploads/rentvehicleImages/${escapeHtml(img)}" class="rounded border" style="width:80px;height:80px;object-fit:cover;"></a></div>`);
+            });
+        }
+
+        $('#viewcontractreturnpreview').empty();
+        let retImgs = [];
+        try { retImgs = JSON.parse(contract.vehicle_return_images || '[]') || []; } catch(e) {}
+        if (Array.isArray(retImgs)) {
+            retImgs.forEach(img => {
+                $('#viewcontractreturnpreview').append(`<div class="position-relative me-2 mb-2"><a href="../uploads/returnvehicleImages/${escapeHtml(img)}" target="_blank"><img src="../uploads/returnvehicleImages/${escapeHtml(img)}" class="rounded border" style="width:80px;height:80px;object-fit:cover;"></a></div>`);
+            });
+        }
+
+        if (typeof listExtendedListviewcontract === 'function' && contract.ids) {
+            listExtendedListviewcontract(contract.ids);
+        }
     }
     </script>
 </body>

@@ -115,12 +115,27 @@ class ContractHistoryController {
             $whereSql = implode(' AND ', $whereConds);
             $sql = "SELECT c.*, 
                            comp.company_name,
+                           DATE_FORMAT(c.service_start_date_time, '%d-%b-%Y %H:%i') AS from_date_format,
+                           DATE_FORMAT(c.service_end_date_time, '%d-%b-%Y %H:%i') AS to_date_format,
                            cust.customer_name AS cust_full_name, 
                            cust.customer_mobile AS mobile_number, 
-                           cust.customer_cr_cpr AS cpr_no
+                           cust.customer_cr_cpr AS cpr_no,
+                           cust.customer_email,
+                           cust.nationality AS customer_nationality,
+                           tv.vehicle_year,
+                           tv.vehicle_color,
+                           tv.vehicle_status,
+                           tv.other_details_json AS veh_other_json,
+                           cat.category_name,
+                           mdl.modal_name AS model_name,
+                           tb.brand_name
                     FROM tbl_vehicle_rentout_contracts c
                     LEFT JOIN tbl_company comp ON comp.ids = c.company_id
                     LEFT JOIN customer_details cust ON cust.customer_id = c.customer_code
+                    LEFT JOIN tbl_vehicles tv ON tv.ids = c.vehicle_id
+                    LEFT JOIN tbl_vehicle_category cat ON cat.ids = COALESCE(tv.category_id, c.vehicle_category_id)
+                    LEFT JOIN tbl_vehicle_model mdl ON mdl.ids = COALESCE(tv.model_id, c.vehicle_model_id)
+                    LEFT JOIN tbl_vehicle_brand tb ON tb.ids = tv.brand_id
                     WHERE {$whereSql}
                     ORDER BY c.ids DESC";
 
@@ -131,27 +146,52 @@ class ContractHistoryController {
             foreach ($rows as $row) {
                 $replacedList = !empty($row['replaced_vehicle_json']) ? (json_decode($row['replaced_vehicle_json'], true) ?: []) : [];
                 $replacementCount = count($replacedList);
+                $replacedSummary = [];
+                foreach ($replacedList as $rep) {
+                    $replacedSummary[] = [
+                        'old_veh'     => $rep['old_vehicle']['vehicle_number'] ?? '-',
+                        'new_veh'     => $rep['new_vehicle']['vehicle_number'] ?? '-',
+                        'replaced_on' => $rep['replaced_on'] ?? '',
+                    ];
+                }
 
                 $vehDetails = !empty($row['vechile_details']) ? (json_decode($row['vechile_details'], true) ?: []) : [];
-                $vehSummary = ($row['vehicle_no'] ?? '') . ' - ' . ($vehDetails['category_name'] ?? '') . ' ' . ($vehDetails['model_name'] ?? '');
+                $vehOther = !empty($row['veh_other_json']) ? (json_decode($row['veh_other_json'], true) ?: []) : [];
+                $vehSummary = ($row['vehicle_no'] ?? '') . ' - ' . ($row['category_name'] ?? ($vehDetails['category_name'] ?? '')) . ' ' . ($row['model_name'] ?? ($vehDetails['model_name'] ?? ''));
 
                 $custDetails = !empty($row['customer_details']) ? (json_decode($row['customer_details'], true) ?: []) : [];
                 $customerName = $row['cust_full_name'] ?? ($row['customer_name'] ?? ($custDetails['customer_name'] ?? 'N/A'));
 
                 $result[] = [
-                    'ids'               => $row['ids'],
-                    'company_name'      => $row['company_name'] ?? 'AA Car Rental',
-                    'agreement_no'      => $row['agreement_no'] ?? '',
-                    'agreement_date'    => $row['agreement_date'] ?? '',
-                    'customer_code'     => $row['customer_code'] ?? '',
-                    'customer_name'     => $customerName,
-                    'mobile_number'     => $row['mobile_number'] ?? ($custDetails['customer_mobile'] ?? ''),
-                    'cpr_no'            => $row['cpr_no'] ?? ($custDetails['customer_cr_cpr'] ?? ''),
-                    'vehicle_id'        => $row['vehicle_id'] ?? '',
-                    'vehicle_no'        => $row['vehicle_no'] ?? '',
-                    'vehicle_summary'   => $vehSummary,
-                    'agreement_status'  => $row['agreement_status'] ?? 'Rentout',
-                    'replacement_count' => $replacementCount
+                    'ids'                  => $row['ids'],
+                    'company_name'         => $row['company_name'] ?? 'AA Car Rental',
+                    'agreement_no'         => $row['agreement_no'] ?? '',
+                    'agreement_date'       => $row['agreement_date'] ?? '',
+                    'booking_no'           => $row['agreement_group_ref_no'] ?? '',
+                    'from_date_format'     => $row['from_date_format'] ?? '',
+                    'to_date_format'       => $row['to_date_format'] ?? '',
+                    'customer_code'        => $row['customer_code'] ?? '',
+                    'customer_name'        => $customerName,
+                    'mobile_number'        => $row['mobile_number'] ?? ($custDetails['customer_mobile'] ?? ''),
+                    'cpr_no'               => $row['cpr_no'] ?? ($custDetails['customer_cr_cpr'] ?? ''),
+                    'customer_email'       => $row['customer_email'] ?? ($custDetails['customer_email'] ?? ''),
+                    'customer_nationality' => $row['customer_nationality'] ?? '',
+                    'vehicle_id'           => $row['vehicle_id'] ?? '',
+                    'model_id'             => $row['vehicle_model_id'] ?? '',
+                    'vehicle_no'           => $row['vehicle_no'] ?? '',
+                    'brand_name'           => $row['brand_name'] ?? '',
+                    'category_name'        => $row['category_name'] ?? ($vehDetails['category_name'] ?? ''),
+                    'model_name'           => $row['model_name'] ?? ($vehDetails['model_name'] ?? ''),
+                    'vehicle_year'         => $row['vehicle_year'] ?? ($vehDetails['vehicle_year'] ?? ''),
+                    'vehicle_color'        => $row['vehicle_color'] ?? ($vehDetails['vehicle_color'] ?? ''),
+                    'vehicle_status'       => $row['vehicle_status'] ?? '',
+                    'fuel_type'            => $vehOther['vehicleFuelType'] ?? ($vehOther['fuel_type'] ?? ''),
+                    'gear_type'            => $vehOther['gear_type'] ?? ($vehOther['transmission'] ?? ''),
+                    'chassis_number'       => $vehOther['chassis_number'] ?? ($vehOther['chassis_no'] ?? ''),
+                    'vehicle_summary'      => $vehSummary,
+                    'agreement_status'     => $row['agreement_status'] ?? 'Rentout',
+                    'replacement_count'    => $replacementCount,
+                    'replaced_summary'     => $replacedSummary
                 ];
             }
 

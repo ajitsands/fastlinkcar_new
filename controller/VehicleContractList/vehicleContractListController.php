@@ -279,8 +279,8 @@ class VehiclesContractListController
                             tv.chassis_number, tv.vehicle_year, tv.vehicle_color, tv.other_details_json AS veh_other_details_json, tv.vehicle_status,
                             tb.brand_name,
                             cd.customer_cr_cpr, cd.customer_email, cd.nationality AS customer_nationality, cd.customer_address,
-                            DATE_FORMAT(tbl_vehicle_rentout_contracts.service_start_date_time, '%d-%b-%Y %h:%i %p') AS from_date_format,
-                            DATE_FORMAT(tbl_vehicle_rentout_contracts.service_end_date_time, '%d-%b-%Y %h:%i %p') AS to_date_format,
+                            DATE_FORMAT(tbl_vehicle_rentout_contracts.service_start_date_time, '%d-%b-%Y %H:%i') AS from_date_format,
+                            DATE_FORMAT(tbl_vehicle_rentout_contracts.service_end_date_time, '%d-%b-%Y %H:%i') AS to_date_format,
                             DATE_FORMAT(tbl_vehicle_rentout_contracts.agreement_date, '%d-%b-%Y') AS agreement_date_format
                         FROM tbl_vehicle_rentout_contracts
                         LEFT JOIN tbl_company tc ON tc.ids = tbl_vehicle_rentout_contracts.company_id

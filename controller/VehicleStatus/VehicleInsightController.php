@@ -1688,7 +1688,7 @@ $this->params[15] = [
                     }
                     
                     $exp_return_date = $return_date
-                        ? $return_date->format('d M Y, h:i A')
+                        ? $return_date->format('d M Y, H:i')
                         : '';
                     $odo = ($vehicleFuelType ?? 'N/A') . ' / ' . ($vehicleGearType ?? 'N/A');
                     $companyName = $companyMap[$item['company_id']] ?? 'Unknown';
@@ -1913,10 +1913,10 @@ $this->params[15] = [
         }
         
         $start_period_date = !empty($item['service_start_date_time'])
-            ? date('d M Y, h:i A', strtotime($item['service_start_date_time']))
+            ? date('d M Y, H:i', strtotime($item['service_start_date_time']))
             : '';
         $exp_return_date = $return_date
-            ? $return_date->format('d M Y, h:i A')
+            ? $return_date->format('d M Y, H:i')
             : '';
             
             
@@ -2271,7 +2271,7 @@ $this->params[15] = [
                     }
                     
                     $exp_return_date = $return_date
-                        ? $return_date->format('d M Y, h:i A')
+                        ? $return_date->format('d M Y, H:i')
                         : '';
                     $odo = ($vehicleFuelType ?? 'N/A') . ' / ' . ($vehicleGearType ?? 'N/A');
                     $companyName = $companyMap[$item['company_id']] ?? 'Unknown';
@@ -2444,8 +2444,8 @@ $this->params[15] = [
                                             'vehicle_no' => $item['vehicle_number'] ?? '',
                                             'vehicle_model' => $item['model_names'] ?? '',
                                             'model_id' => $cInfo['vehicle_model_id'] ?? 0,
-                                            'start_date' => $stTsRr ? date('d M Y, h:i A', $stTsRr) : 'N/A',
-                                            'end_date' => $effEndTsRr ? date('d M Y, h:i A', $effEndTsRr) : ($exp_return_date ?: 'N/A'),
+                                            'start_date' => $stTsRr ? date('d M Y, H:i', $stTsRr) : 'N/A',
+                                            'end_date' => $effEndTsRr ? date('d M Y, H:i', $effEndTsRr) : ($exp_return_date ?: 'N/A'),
                                             'rate_type' => ucfirst($activeRateTypeRr),
                                             'unit_price' => number_format($dispUnitRate, 3, '.', ''),
                                             'contract_total' => number_format($contractTotRr, 3, '.', ''),

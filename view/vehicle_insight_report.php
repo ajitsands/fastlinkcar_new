@@ -38,7 +38,7 @@ function renderVehicleCard($v) {
           <div class="mt-3" style="font-size: 0.85rem;">
             <strong>On Rent To:</strong> '.htmlspecialchars($v['contract']['customer_name']).'<br>
             <strong class="text-danger">Expected Return:</strong><br>
-            '.htmlspecialchars(date('d M Y, h:i A', strtotime($v['contract']['expected_return_date']))).'
+            '.htmlspecialchars(date('d M Y, H:i', strtotime($v['contract']['expected_return_date']))).'
           </div>';
     }
 

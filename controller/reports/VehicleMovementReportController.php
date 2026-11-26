@@ -261,7 +261,7 @@ if ($action === 'get_report') {
         $html .= "<tr><td colspan='7' class='text-center text-muted py-3'>No movement logs found matching the criteria.</td></tr>";
     } else {
         foreach ($processed_logs as $log) {
-            $dateFormatted = date('d M Y, h:i A', strtotime($log['log_datetime']));
+            $dateFormatted = date('d M Y, H:i', strtotime($log['log_datetime']));
             $vehNo = htmlspecialchars($log['vehicle_number'] ?? '-');
             $vehBrand = trim((string) ($log['brand_name'] ?? ''));
             $vehModel = trim((string) ($log['model_names'] ?? ''));

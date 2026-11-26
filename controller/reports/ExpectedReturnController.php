@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                 'image' => $img_url,
                                 'status' => (strtolower($vinfo['vehicle_status']) === 'rented' || strtolower($vinfo['vehicle_status']) === 'rentout') ? 'RentOut' : $vinfo['vehicle_status'],
                                 'customer_name' => $row['customer_name'],
-                                'expected_return' => date('d M Y, h:i A', $return_ts),
+                                'expected_return' => date('d M Y, H:i', $return_ts),
                                 'expected_return_ts' => $return_ts
                             ];
                         }

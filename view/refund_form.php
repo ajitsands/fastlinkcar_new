@@ -481,11 +481,9 @@ $rfPrintSettings = getPrintSettings(null, $rfCompanyId);
         const day = ('0' + d.getDate()).slice(-2);
         const base = `${day} ${mNames[d.getMonth()]} ${d.getFullYear()}`;
         if (!withTime) return base;
-        let h = d.getHours();
+        const h = ('0' + d.getHours()).slice(-2);
         const m = ('0' + d.getMinutes()).slice(-2);
-        const ap = h >= 12 ? 'PM' : 'AM';
-        h = h % 12 || 12;
-        return `${base}, ${('0' + h).slice(-2)}:${m} ${ap}`;
+        return `${base}, ${h}:${m}`;
     }
 
     function openAgreementPrint(agreeNo) {

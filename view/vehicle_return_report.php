@@ -596,9 +596,9 @@ function openVehicleProfile(vehicleId) {
                     $("#vpCurrentUserName").text(v.current_user_name);
                     $("#vpCurrentUserContact").text(v.current_user_contact || "No Contact");
                     $("#vpContractRef").text(v.contract_ref || "N/A");
-                    let expRet = v.expected_return_date ? (new Date(v.expected_return_date).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}).replace(',', '')) : "N/A";
+                    let expRet = v.expected_return_date ? (new Date(v.expected_return_date).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false}).replace(',', '')) : "N/A";
                     if (typeof dayjs !== 'undefined') {
-                        expRet = v.expected_return_date ? dayjs(v.expected_return_date).format('DD-MMM-YYYY h:mm A') : "N/A";
+                        expRet = v.expected_return_date ? dayjs(v.expected_return_date).format('DD-MMM-YYYY HH:mm') : "N/A";
                     }
                     $("#vpReturnDate").text(expRet);
                 } else if (v.vehicle_status === 'Staff Use' && v.current_user_name) {
@@ -606,9 +606,9 @@ function openVehicleProfile(vehicleId) {
                     $("#vpStaffName").text(v.current_user_name);
                     $("#vpStaffContact").text(v.current_user_contact || "No Contact");
                     $("#vpStaffRef").text(v.contract_ref || "N/A");
-                    let expRet = v.expected_return_date ? (new Date(v.expected_return_date).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}).replace(',', '')) : "N/A";
+                    let expRet = v.expected_return_date ? (new Date(v.expected_return_date).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false}).replace(',', '')) : "N/A";
                     if (typeof dayjs !== 'undefined') {
-                        expRet = v.expected_return_date ? dayjs(v.expected_return_date).format('DD-MMM-YYYY h:mm A') : "N/A";
+                        expRet = v.expected_return_date ? dayjs(v.expected_return_date).format('DD-MMM-YYYY HH:mm') : "N/A";
                     }
                     $("#vpStaffReturnDate").text(expRet);
                 }

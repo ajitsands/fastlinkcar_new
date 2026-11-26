@@ -82,7 +82,7 @@ if ($settings && !empty($settings['date_format'])) {
     <?php
         require_once __DIR__ . '/print_settings_helper.php';
         $printSettings = getPrintSettings($pdo ?? null);
-        echo renderPrintHeaderHtml($printSettings, 'Reservation / Booking Report', 'Ref No: ' . $booking['booking_no'], 'Generated Date: ' . date('d/m/Y H:i A'));
+        echo renderPrintHeaderHtml($printSettings, 'Reservation / Booking Report', 'Ref No: ' . $booking['booking_no'], 'Generated Date: ' . date('d/m/Y H:i'));
     ?>
 
     <!-- Customer & Booking Overview -->

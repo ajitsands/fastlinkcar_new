@@ -140,8 +140,8 @@ $logo_width = (int)($printSettings['logo_width'] ?? 150);
 $printAccent = $printSettings['accent_color'] ?? '#1b3d94';
 
 $fmtRefundDate = !empty($refund['date']) ? date('d M Y', strtotime($refund['date'])) : 'N/A';
-$fmtStartDate = !empty($contract['service_start_date_time']) ? date('d M Y, h:i A', strtotime($contract['service_start_date_time'])) : 'N/A';
-$fmtReturnDate = (!empty($contract['return_date']) && $contract['return_date'] !== '0000-00-00 00:00:00') ? date('d M Y, h:i A', strtotime($contract['return_date'])) : 'N/A';
+$fmtStartDate = !empty($contract['service_start_date_time']) ? date('d M Y, H:i', strtotime($contract['service_start_date_time'])) : 'N/A';
+$fmtReturnDate = (!empty($contract['return_date']) && $contract['return_date'] !== '0000-00-00 00:00:00') ? date('d M Y, H:i', strtotime($contract['return_date'])) : 'N/A';
 
 $html = '
 <style>

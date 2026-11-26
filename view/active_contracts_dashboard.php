@@ -622,7 +622,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             if (isNaN(d.getTime())) return val;
             return d.toLocaleString('en-GB', {
                 day: '2-digit', month: 'short', year: 'numeric',
-                hour: '2-digit', minute: '2-digit'
+                hour: '2-digit', minute: '2-digit', hour12: false
             });
         }
 

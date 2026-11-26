@@ -89,7 +89,7 @@ $balance = $totDebit - $totCredit;
     <?php
         require_once __DIR__ . '/print_settings_helper.php';
         $printSettings = getPrintSettings($pdo ?? null);
-        echo renderPrintHeaderHtml($printSettings, 'Contract Audit & History Report', 'Agreement No: ' . $agreementNo, 'Generated Date: ' . date('d/m/Y H:i A'));
+        echo renderPrintHeaderHtml($printSettings, 'Contract Audit & History Report', 'Agreement No: ' . $agreementNo, 'Generated Date: ' . date('d/m/Y H:i'));
     ?>
 
     <!-- Customer & Contract Overview -->

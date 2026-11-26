@@ -32,12 +32,17 @@
                           <i class="ri ri-calculator-line me-2"></i>How Overdue Charges Are Calculated
                         </h5>
                         <p class="text-muted mb-0">
-                          Reference guide for how overdue duration and charges are computed on the <strong>Active Contracts Dashboard</strong>.
+                          Reference guide for how overdue duration and charges are computed on the <strong>Active Contracts Dashboard</strong> and <strong>Contract Return Overdue Report</strong>.
                         </p>
                       </div>
-                      <a href="/ActiveContractsDashboard?val=<?= $this->encryption->encrypt('7,7-1') ?>" class="btn btn-primary btn-sm">
-                        <i class="ri ri-arrow-left-line me-1"></i> Back to Active Contracts
-                      </a>
+                      <div class="d-flex gap-2">
+                        <a href="/ContractReturnOverdueReport?val=<?= $this->encryption->encrypt('6,6-9') ?>" class="btn btn-outline-primary btn-sm">
+                          <i class="ri ri-file-chart-line me-1"></i> Overdue Report
+                        </a>
+                        <a href="/ActiveContractsDashboard?val=<?= $this->encryption->encrypt('7,7-1') ?>" class="btn btn-primary btn-sm">
+                          <i class="ri ri-arrow-left-line me-1"></i> Back to Active Contracts
+                        </a>
+                      </div>
                     </div>
 
                     <div class="row g-3">
@@ -51,9 +56,10 @@
                       </div>
                       <div class="col-md-4">
                         <div class="border rounded p-3 h-100 bg-lighter">
-                          <div class="fw-bold text-dark mb-1"><i class="ri ri-time-line text-warning me-1"></i> 2. Grace Period (1 Hour)</div>
+                          <div class="fw-bold text-dark mb-1"><i class="ri ri-time-line text-warning me-1"></i> 2. Grace Period &amp; Same-Day Rule</div>
                           <small class="text-muted">
-                            A uniform <strong>1-hour (3,600 seconds)</strong> grace period is applied after the effective return date/time for <strong>Hourly, Daily, Weekly, and Monthly</strong> contracts before overdue charges begin.
+                            A uniform <strong>1-hour (3,600 seconds)</strong> grace period applies after the effective return time.<br>
+                            <strong>Note:</strong> If the return time is <code>00:00:00</code> (date-only), the contract stays <span class="badge bg-label-warning">Due Today</span> until <code>23:59:59</code>, and overdue starts after <code>01:00 AM</code> the next day.
                           </small>
                         </div>
                       </div>
@@ -65,6 +71,14 @@
                             <strong>Fallback:</strong> Contract/Extension unit price formula if model pricing is not configured.
                           </small>
                         </div>
+                      </div>
+                    </div>
+
+                    <div class="alert alert-info d-flex align-items-start gap-2 mt-3 mb-0">
+                      <i class="ri ri-information-line fs-5 mt-1"></i>
+                      <div class="small">
+                        <strong>Note on Midnight (<code>00:00:00</code>) Return Dates:</strong>
+                        Contracts saved with a date-only expected return (e.g., <code>26-11-2026 00:00</code>) are not charged overdue during that same calendar day. They are flagged as <strong>Due Today</strong> for the full day (grace anchor at <code>23:59:59</code>) and begin accruing overdue charges only after <code>01:00 AM</code> the next day. Contracts with a specific return time (e.g., <code>26-11-2026 14:00</code>) begin accruing overdue after <code>15:00</code>.
                       </div>
                     </div>
                   </div>

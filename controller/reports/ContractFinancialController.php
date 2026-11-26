@@ -32,9 +32,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $companyFilter = trim((string)($req['company_id'] ?? 'all'));
         $fromDate = trim((string)($req['from_date'] ?? ''));
         $toDate = trim((string)($req['to_date'] ?? ''));
+        $todayStr = date('Y-m-d');
+        $asOfDate = trim((string)($req['as_of_date'] ?? $todayStr));
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $asOfDate)) {
+            $asOfDate = $todayStr;
+        }
+        $isToday = ($asOfDate === $todayStr);
+        $nowTs = $isToday ? time() : strtotime($asOfDate . ' 23:59:59');
+        $asOfDisplay = $isToday ? date('d M Y, H:i') : date('d M Y', $nowTs) . ' (23:59)';
 
-        $where = ["LOWER(COALESCE(ct.agreement_status, '')) NOT IN ('cancelled', 'canceled', 'void')"];
-        $params = [];
+        $where = [
+            "LOWER(COALESCE(ct.agreement_status, '')) NOT IN ('cancelled', 'canceled', 'void')",
+            "DATE(COALESCE(NULLIF(ct.agreement_date, '0000-00-00'), ct.service_start_date_time)) <= :as_of_date"
+        ];
+        $params = [':as_of_date' => $asOfDate];
 
         if ($companyFilter !== '' && strtolower($companyFilter) !== 'all') {
             $where[] = "ct.company_id = :comp_id";
@@ -97,23 +108,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute($params);
         $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Batch load extensions
+        // Batch load extensions up to as_of_date
         $extByContract = [];
         try {
-            $stExt = $pdo->query("SELECT agreement_ids, extend_end_date, extend_details FROM tbl_vehicle_contract_extensions ORDER BY extend_end_date ASC, ids ASC");
+            $stExt = $pdo->prepare("SELECT agreement_ids, extend_end_date, extend_details FROM tbl_vehicle_contract_extensions WHERE DATE(COALESCE(NULLIF(extend_start_date, '0000-00-00'), created_at)) <= :as_of_date ORDER BY extend_end_date ASC, ids ASC");
+            $stExt->execute([':as_of_date' => $asOfDate]);
             foreach ($stExt->fetchAll(PDO::FETCH_ASSOC) as $er) {
                 $extByContract[(int)$er['agreement_ids']][] = $er;
             }
         } catch (\Throwable $e) {}
 
-        // Batch load ledger totals per contract_ids and agreement_no
+        // Batch load ledger totals up to as_of_date
         $ledByContractId = [];
         $ledByAgrNo = [];
         try {
-            $stLed = $pdo->query("
+            $stLed = $pdo->prepare("
                 SELECT contract_ids, agreement_no, debit, credit, cheque_status
                 FROM tbl_customer_ledger
+                WHERE DATE(COALESCE(NULLIF(trans_date, '0000-00-00'), created_at)) <= :as_of_date
             ");
+            $stLed->execute([':as_of_date' => $asOfDate]);
             foreach ($stLed->fetchAll(PDO::FETCH_ASSOC) as $l) {
                 $deb = (float)($l['debit'] ?? 0);
                 $isBounced = (strcasecmp(trim((string)($l['cheque_status'] ?? '')), 'Bounced') === 0);
@@ -136,17 +150,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } catch (\Throwable $e) {}
 
-        // Batch load invoices by reference_number
+        // Batch load invoices up to as_of_date
         $invByAgr = [];
         try {
-            $stInv = $pdo->query("SELECT reference_number, COUNT(*) AS cnt, COALESCE(SUM(grand_total), 0) AS tot FROM invoices WHERE COALESCE(draft, 0) = 0 AND reference_number IS NOT NULL AND reference_number != '' GROUP BY reference_number");
+            $stInv = $pdo->prepare("SELECT reference_number, COUNT(*) AS cnt, COALESCE(SUM(grand_total), 0) AS tot FROM invoices WHERE COALESCE(draft, 0) = 0 AND reference_number IS NOT NULL AND reference_number != '' AND DATE(invoice_date) <= :as_of_date GROUP BY reference_number");
+            $stInv->execute([':as_of_date' => $asOfDate]);
             foreach ($stInv->fetchAll(PDO::FETCH_ASSOC) as $ir) {
                 $invByAgr[(string)$ir['reference_number']] = ['cnt' => (int)$ir['cnt'], 'tot' => (float)$ir['tot']];
             }
         } catch (\Throwable $e) {}
-
-        $nowTs = time();
-        $todayStr = date('Y-m-d', $nowTs);
 
         $rows = [];
         $kpiTotalContracts = 0;
@@ -200,10 +212,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $collected = round($ledInfo['c'], 3);
             $bouncedCount = (int)$ledInfo['b'];
 
-            // Overdue calculation ONLY for active Rentout / Rented / Extended
+            // Overdue calculation ONLY if contract was active (not yet returned) as of as_of_date
             $overdueDays = 0;
             $overdueAmt = 0.0;
-            $isActive = in_array($stLower, ['rentout', 'rented', 'extended'], true);
+            $retStr = trim((string)($ct['return_date'] ?? ''));
+            $retTs = (!empty($retStr) && strpos($retStr, '0000-00-00') === false) ? strtotime($retStr) : false;
+            $isActive = in_array($stLower, ['rentout', 'rented', 'extended'], true)
+                || ($retTs && $retTs > $nowTs);
             if ($isActive) {
                 $kpiActiveContracts++;
                 $expTs = (!empty($expStr) && strpos($expStr, '0000-00-00') === false) ? strtotime($expStr) : false;
@@ -213,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         : $expTs;
                     if ($nowTs > ($graceAnchorTs + 3600)) {
                         $diffSec = $nowTs - $graceAnchorTs;
-                        $isDueToday = (date('Y-m-d', $expTs) === $todayStr);
+                        $isDueToday = (date('Y-m-d', $expTs) === $asOfDate);
                         $overdueDays = $isDueToday ? 1 : max(1, (int)ceil($diffSec / 86400));
 
                         $modelRates = ['hourly' => 0.0, 'daily' => 0.0, 'weekly' => 0.0, 'monthly' => 0.0];
@@ -344,7 +359,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'status' => true,
             'data'   => $rows,
             'kpis'   => [
-                'as_of_date'               => date('d M Y, H:i'),
+                'as_of_date'               => $asOfDisplay,
+                'as_of_date_iso'           => $asOfDate,
                 'total_contracts'          => $kpiTotalContracts,
                 'active_contracts'         => $kpiActiveContracts,
                 'closed_returned_contracts'=> $kpiClosedReturned,

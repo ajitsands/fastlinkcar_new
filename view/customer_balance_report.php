@@ -186,9 +186,15 @@ $cbFooterHtml = renderPrintFooterHtml($cbPrintSettings);
           
                         <!-- Action Bar (Global header rendered by menu.php) -->
                         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 no-print">
-                            <span class="badge bg-label-primary px-3 py-2 fs-6">
-                                <i class="ri ri-calendar-check-line me-1"></i> Report As of Today: <strong id="lbl_as_of_date"><?= date('d M Y, H:i') ?></strong>
-                            </span>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="badge bg-label-primary px-3 py-2 fs-6">
+                                    <i class="ri ri-calendar-check-line me-1"></i> Report As of: <strong id="lbl_as_of_date"><?= date('d M Y, H:i') ?></strong>
+                                </span>
+                                <div class="input-group input-group-sm" style="width: 210px;">
+                                    <span class="input-group-text bg-white fw-semibold">As of Date</span>
+                                    <input type="date" id="cb_as_of_date" class="form-control" value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>">
+                                </div>
+                            </div>
                             <div class="d-flex gap-2">
                                 <button type="button" id="btn_export_excel" class="btn btn-outline-success btn-sm">
                                     <i class="ri ri-file-excel-2-line me-1"></i> Export to Excel
@@ -466,7 +472,10 @@ $(document).ready(function() {
         ajax: {
             url: '/CustomerBalances',
             type: 'POST',
-            data: { action: 'get_balances' },
+            data: function(d) {
+                d.action = 'get_balances';
+                d.as_of_date = $('#cb_as_of_date').val() || '<?= date('Y-m-d') ?>';
+            },
             dataSrc: function(json) {
                 if(json.status === 'success') {
                     balancesCache = json.data || [];
@@ -674,6 +683,10 @@ $(document).ready(function() {
         if (activeStatusFilter === 'settled') return Math.abs(bal) <= 0.0001;
         if (activeStatusFilter === 'blacklisted') return !!row.is_blacklisted;
         return true;
+    });
+
+    $('#cb_as_of_date').on('change', function() {
+        tblBalances.ajax.reload();
     });
 
     $(document).on('click', '.cb-filter-pill', function() {

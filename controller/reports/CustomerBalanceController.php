@@ -5,6 +5,15 @@ require_once ROOT_PATH . '/__db.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'get_balances') {
     $pdo = getPDO();
 
+    $todayStr = date('Y-m-d');
+    $asOfDate = trim((string)($_POST['as_of_date'] ?? $todayStr));
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $asOfDate)) {
+        $asOfDate = $todayStr;
+    }
+    $isToday = ($asOfDate === $todayStr);
+    $nowTs = $isToday ? time() : strtotime($asOfDate . ' 23:59:59');
+    $asOfDisplay = $isToday ? date('d M Y, H:i') : date('d M Y', $nowTs) . ' (23:59)';
+
     try {
         // 1. Load all customers keyed by customer_id and ids
         $stmtCust = $pdo->query("
@@ -59,8 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
         }
 
-        // 2. Aggregate ledger debits & valid credits per customer and track payment methods
-        $stmtLed = $pdo->query("
+        // 2. Aggregate ledger debits & valid credits per customer up to as_of_date
+        $stmtLed = $pdo->prepare("
             SELECT
                 customer_code,
                 contract_ids,
@@ -71,7 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 credit,
                 CASE WHEN COALESCE(cheque_status, '') = 'Bounced' THEN 0 ELSE credit END AS valid_credit
             FROM tbl_customer_ledger
+            WHERE DATE(COALESCE(NULLIF(trans_date, '0000-00-00'), created_at)) <= :as_of_date
         ");
+        $stmtLed->execute([':as_of_date' => $asOfDate]);
         $contractsWithDebit = [];
         $paymentMethodTotals = [];
         $totalCollected = 0.0;
@@ -116,26 +127,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
         }
 
-        // 3. Batch load latest extensions for active overdue calculation
+        // 3. Batch load latest extensions up to as_of_date
         $extByContract = [];
         try {
-            $stmtExt = $pdo->query("SELECT agreement_ids, extend_end_date, extend_details FROM tbl_vehicle_contract_extensions ORDER BY extend_end_date ASC, ids ASC");
+            $stmtExt = $pdo->prepare("SELECT agreement_ids, extend_end_date, extend_details FROM tbl_vehicle_contract_extensions WHERE DATE(COALESCE(NULLIF(extend_start_date, '0000-00-00'), created_at)) <= :as_of_date ORDER BY extend_end_date ASC, ids ASC");
+            $stmtExt->execute([':as_of_date' => $asOfDate]);
             foreach ($stmtExt->fetchAll(PDO::FETCH_ASSOC) as $er) {
                 $extByContract[(int)$er['agreement_ids']][] = $er;
             }
         } catch (\Throwable $e) {}
 
-        // 4. Include unposted contracts and calculate Overdue Return Amount for active contracts
-        $nowTs = time();
-        $todayStr = date('Y-m-d', $nowTs);
-        $stmtCon = $pdo->query("
+        // 4. Include unposted contracts and calculate Overdue Return Amount as of as_of_date
+        $stmtCon = $pdo->prepare("
             SELECT ct.ids, ct.agreement_no, ct.vehicle_no, ct.customer_code, ct.agreement_status, ct.service_type,
-                   ct.service_start_date_time, ct.service_end_date_time, ct.contract_details_json,
+                   ct.service_start_date_time, ct.service_end_date_time, ct.return_date, ct.contract_details_json,
                    m.price_json AS model_price_json
             FROM tbl_vehicle_rentout_contracts ct
             LEFT JOIN tbl_vehicle_model m ON m.ids = ct.vehicle_model_id
             WHERE LOWER(COALESCE(ct.agreement_status, '')) NOT IN ('cancelled', 'canceled', 'void')
+              AND DATE(COALESCE(NULLIF(ct.agreement_date, '0000-00-00'), ct.service_start_date_time)) <= :as_of_date
         ");
+        $stmtCon->execute([':as_of_date' => $asOfDate]);
         foreach ($stmtCon->fetchAll(PDO::FETCH_ASSOC) as $ct) {
             $rawCode = (string)($ct['customer_code'] ?? '');
             $custKey = $custAlias[$rawCode] ?? '';
@@ -155,9 +167,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $customersByKey[$custKey]['total_debit'] += $contractAmt;
             }
 
-            // Overdue Return Amount ONLY for active Rentout / Rented / Extended contracts
+            // Overdue Return Amount ONLY if contract was active (not yet returned) as of as_of_date
             $stLower = strtolower(trim($ct['agreement_status'] ?? ''));
-            if (!in_array($stLower, ['rentout', 'rented', 'extended'], true)) {
+            $retStr = trim((string)($ct['return_date'] ?? ''));
+            $retTs = (!empty($retStr) && strpos($retStr, '0000-00-00') === false) ? strtotime($retStr) : false;
+            $wasActiveAsOf = in_array($stLower, ['rentout', 'rented', 'extended'], true)
+                || ($retTs && $retTs > $nowTs);
+            if (!$wasActiveAsOf) {
                 if ($unpostedAmt > 0) {
                     $customersByKey[$custKey]['unposted_or_overdue'][] = [
                         'agreement_no'   => $ct['agreement_no'] ?? '',
@@ -226,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
 
             $diffSec = $nowTs - $graceAnchorTs;
-            $isDueToday = (date('Y-m-d', $expTs) === $todayStr);
+            $isDueToday = (date('Y-m-d', $expTs) === $asOfDate);
             $overdueDays = $isDueToday ? 1 : max(1, (int)ceil($diffSec / 86400));
 
             // Effective rates from model price_json or contract fallback
@@ -328,7 +344,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             'status' => 'success',
             'data'   => $results,
             'kpis'   => [
-                'as_of_date'            => date('d M Y, H:i'),
+                'as_of_date'            => $asOfDisplay,
+                'as_of_date_iso'        => $asOfDate,
                 'total_customers'       => $totalCustomers,
                 'blacklisted_customers' => $blacklistedCustomers,
                 'active_customers'      => $activeCustomers,

@@ -66,11 +66,17 @@ $cfPrintSettings = getPrintSettings(null, $cfCompanyId);
         <?php include ROOT_PATH . '/view/templates/menu.php'; ?>
 
         <div class="container-fluid flex-grow-1 container-p-y">
-          <!-- Top Bar: As of Today & Export Buttons -->
+          <!-- Top Bar: As of Date & Export Buttons -->
           <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-            <span class="badge bg-label-primary px-3 py-2 fs-6">
-              <i class="ri-calendar-check-line me-1"></i> Report As of Today: <strong id="cf_as_of_date"><?= date('d M Y, H:i') ?></strong>
-            </span>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <span class="badge bg-label-primary px-3 py-2 fs-6">
+                <i class="ri-calendar-check-line me-1"></i> Report As of: <strong id="cf_as_of_date"><?= date('d M Y, H:i') ?></strong>
+              </span>
+              <div class="input-group input-group-sm" style="width: 210px;">
+                <span class="input-group-text bg-white fw-semibold">As of Date</span>
+                <input type="date" id="cf_input_as_of_date" class="form-control" value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>">
+              </div>
+            </div>
             <div class="d-flex gap-2">
               <button type="button" id="cf_btn_excel" class="btn btn-outline-success btn-sm">
                 <i class="ri-file-excel-2-line me-1"></i> Export to Excel
@@ -426,7 +432,8 @@ $(function() {
                 action: 'getReportData',
                 company_id: $('#cf_filter_company').val(),
                 from_date: $('#cf_filter_from').val(),
-                to_date: $('#cf_filter_to').val()
+                to_date: $('#cf_filter_to').val(),
+                as_of_date: $('#cf_input_as_of_date').val() || '<?= date('Y-m-d') ?>'
             }),
             dataType: 'json',
             success: function(res) {
@@ -461,10 +468,14 @@ $(function() {
         cfTable.draw();
     });
 
-    $('#cf_btn_search').on('click', loadReport);
+    $('#cf_btn_search, #cf_input_as_of_date').on('change click', function(e) {
+        if (e.type === 'change' && this.id !== 'cf_input_as_of_date') return;
+        loadReport();
+    });
     $('#cf_btn_reset').on('click', function() {
         $('#cf_filter_company').val('all');
         $('#cf_filter_from, #cf_filter_to').val('');
+        $('#cf_input_as_of_date').val('<?= date('Y-m-d') ?>');
         cfFilter = 'all';
         $('.cf-pill').removeClass('active');
         $('.cf-pill[data-filter="all"]').addClass('active');

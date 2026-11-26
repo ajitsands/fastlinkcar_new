@@ -40,6 +40,39 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
             color: #334155;
             font-weight: 500;
         }
+        .vr-thumb-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        .vr-thumb-wrap img {
+            width: 72px;
+            height: 72px;
+            object-fit: cover;
+            border-radius: 0.45rem;
+            border: 1px solid #cbd5e1;
+        }
+        .vr-thumb-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #dc3545;
+            color: #fff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            line-height: 18px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .vr-sign-pad {
+            border: 1px dashed #94a3b8;
+            border-radius: 0.5rem;
+            background: #fff;
+            width: 100%;
+            height: 140px;
+            touch-action: none;
+        }
     </style>
 </head>
 <body>
@@ -86,14 +119,14 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
               </div>
             </div>
 
-            <!-- DETAILS CONTAINER (Auto-displayed once agreement is selected) -->
+            <!-- DETAILS CONTAINER -->
             <div id="vr_details_wrapper" class="d-none">
 
-              <!-- CARD 2: CURRENT VEHICLE DETAILS -->
+              <!-- CARD 2: OLD VEHICLE RETURN & CHECK-IN (Moves to Parking by default) -->
               <div class="card shadow-sm border border-danger-subtle mb-3">
                 <div class="card-header bg-danger-subtle text-danger fw-bold py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                  <span><i class="ri-car-line me-1"></i> Current Vehicle Details &amp; Check-In</span>
-                  <span class="badge bg-danger text-white" id="vr_curr_status_badge">Rentout</span>
+                  <span><i class="ri-logout-box-r-line me-1"></i> Step 2: Old Vehicle Return &amp; Check-In (Moves to Parking)</span>
+                  <span class="badge bg-danger text-white" id="vr_curr_status_badge">Rentout → Parking</span>
                 </div>
                 <div class="card-body pt-3">
                   <div class="row g-3">
@@ -111,26 +144,38 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                             <label for="vr_curr_type">Vehicle Type</label>
                           </div>
                         </div>
-                        <div class="col-6 col-sm-6 col-md-2">
+                        <div class="col-6 col-md-2">
                           <div class="form-floating form-floating-outline">
                             <input type="text" id="vr_curr_year" class="form-control form-control-sm vr-readonly" readonly placeholder="Year">
                             <label for="vr_curr_year">Model Year</label>
                           </div>
                         </div>
-                        <div class="col-6 col-sm-6 col-md-2">
+                        <div class="col-6 col-md-2">
                           <div class="form-floating form-floating-outline">
                             <input type="text" id="vr_curr_color" class="form-control form-control-sm vr-readonly" readonly placeholder="Color">
                             <label for="vr_curr_color">Color</label>
                           </div>
                         </div>
 
-                        <div class="col-12 col-sm-6 col-md-3">
+                        <div class="col-6 col-sm-4 col-md-2">
                           <div class="form-floating form-floating-outline">
-                            <input type="text" id="vr_km_in" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="KM In">
-                            <label for="vr_km_in">KM In</label>
+                            <input type="text" id="vr_old_km_out" class="form-control form-control-sm vr-readonly" readonly placeholder="KM Out">
+                            <label for="vr_old_km_out">KM Out</label>
                           </div>
                         </div>
-                        <div class="col-12 col-sm-6 col-md-3">
+                        <div class="col-6 col-sm-4 col-md-2">
+                          <div class="form-floating form-floating-outline">
+                            <input type="text" id="vr_km_in" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="KM In">
+                            <label for="vr_km_in">KM In *</label>
+                          </div>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-2">
+                          <div class="form-floating form-floating-outline">
+                            <input type="text" id="vr_old_km_used" class="form-control form-control-sm vr-readonly" readonly placeholder="KM Used">
+                            <label for="vr_old_km_used">KM Used</label>
+                          </div>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-2">
                           <div class="form-floating form-floating-outline">
                             <select id="vr_fuel_in" class="form-select form-select-sm">
                               <option value="0%">0%</option>
@@ -142,11 +187,10 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                             <label for="vr_fuel_in">Fuel Level In</label>
                           </div>
                         </div>
-                        <div class="col-12 col-sm-6 col-md-3">
+                        <div class="col-6 col-sm-4 col-md-2">
                           <div class="form-floating form-floating-outline">
                             <select id="vr_parking_location_in" class="form-select form-select-sm">
-                              <option value="">-- Select Location --</option>
-                              <option value="Main Parking">Main Parking</option>
+                              <option value="Main Parking" selected>Main Parking</option>
                               <option value="Showroom">Showroom</option>
                               <option value="Airport Branch">Airport Branch</option>
                               <option value="Workshop / Garage">Workshop / Garage</option>
@@ -155,7 +199,7 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                             <label for="vr_parking_location_in">Parking Location In *</label>
                           </div>
                         </div>
-                        <div class="col-12 col-sm-6 col-md-3">
+                        <div class="col-6 col-sm-4 col-md-2">
                           <div class="form-floating form-floating-outline">
                             <select id="vr_check_in_type" class="form-select form-select-sm">
                               <option value="Replacement">Replacement</option>
@@ -167,6 +211,40 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                             </select>
                             <label for="vr_check_in_type">Check In Type</label>
                           </div>
+                        </div>
+
+                        <!-- Old Vehicle Checklist -->
+                        <div class="col-12">
+                          <div class="p-2 bg-light rounded border">
+                            <span class="small fw-bold text-dark me-3"><i class="ri-checkbox-multiple-line me-1"></i>Old Vehicle Return Checklist:</span>
+                            <div class="form-check form-check-inline mb-0">
+                              <input class="form-check-input" type="checkbox" id="vr_old_chk_tools">
+                              <label class="form-check-label small" for="vr_old_chk_tools">Jack &amp; Tools</label>
+                            </div>
+                            <div class="form-check form-check-inline mb-0">
+                              <input class="form-check-input" type="checkbox" id="vr_old_chk_spare">
+                              <label class="form-check-label small" for="vr_old_chk_spare">Spare Tyre</label>
+                            </div>
+                            <div class="form-check form-check-inline mb-0">
+                              <input class="form-check-input" type="checkbox" id="vr_old_chk_radio">
+                              <label class="form-check-label small" for="vr_old_chk_radio">Radio / Accessories</label>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Old Vehicle Rentout Images & Return Images Upload -->
+                        <div class="col-12 col-md-6">
+                          <label class="form-label fw-semibold small mb-1 text-muted">Old Vehicle Rentout Images (Previous)</label>
+                          <div id="vr_old_rentout_preview" class="d-flex flex-wrap gap-2 p-2 border rounded bg-light" style="min-height:62px;">
+                            <small class="text-muted fst-italic">No rentout images</small>
+                          </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                          <label for="vr_old_return_images" class="form-label fw-semibold small mb-1 text-danger">
+                            <i class="ri-camera-line me-1"></i>Capture / Upload Return Images (Old Vehicle)
+                          </label>
+                          <input type="file" id="vr_old_return_images" class="form-control form-control-sm mb-2" multiple accept="image/*" capture="environment">
+                          <div id="vr_old_return_preview" class="d-flex flex-wrap gap-2"></div>
                         </div>
                       </div>
                     </div>
@@ -272,10 +350,10 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                 </div>
               </div>
 
-              <!-- CARD 4: REPLACEMENT VEHICLE DETAILS -->
+              <!-- CARD 4: REPLACEMENT VEHICLE RELEASE -->
               <div class="card shadow-sm border border-warning-subtle mb-3">
                 <div class="card-header bg-warning-subtle text-dark fw-bold py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                  <span><i class="ri-swap-line text-warning me-1"></i> Replacement Vehicle Details</span>
+                  <span><i class="ri-swap-line text-warning me-1"></i> Step 3: Replacement Vehicle Release (Available → Rentout)</span>
                   <span class="small text-muted fw-normal">Filter available vehicles by Category &amp; Model</span>
                 </div>
                 <div class="card-body pt-3">
@@ -330,7 +408,7 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                         <div class="col-6 col-sm-4 col-md-3">
                           <div class="form-floating form-floating-outline">
                             <input type="text" id="vr_new_km_out" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="KM Out">
-                            <label for="vr_new_km_out">KM Out</label>
+                            <label for="vr_new_km_out">KM Out *</label>
                           </div>
                         </div>
                         <div class="col-6 col-sm-4 col-md-3">
@@ -345,7 +423,7 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                             <label for="vr_new_fuel_out">Fuel Level Out</label>
                           </div>
                         </div>
-                        <div class="col-12 col-sm-4 col-md-3">
+                        <div class="col-6 col-sm-4 col-md-2">
                           <div class="form-floating form-floating-outline">
                             <select id="vr_out_location" class="form-select form-select-sm">
                               <option value="Main Parking">Main Parking</option>
@@ -356,30 +434,45 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                             <label for="vr_out_location">Out Location</label>
                           </div>
                         </div>
-                        <div class="col-12 col-sm-6 col-md-3">
-                          <div class="form-floating form-floating-outline">
-                            <input type="text" id="vr_replaced_by" class="form-control form-control-sm vr-readonly" value="<?= htmlspecialchars($loggedUserName) ?>" readonly placeholder="Replaced By">
-                            <label for="vr_replaced_by">Replaced By</label>
-                          </div>
-                        </div>
-
-                        <div class="col-6 col-sm-3 col-md-3">
+                        <div class="col-6 col-sm-6 col-md-2">
                           <div class="form-floating form-floating-outline">
                             <input type="date" id="vr_repl_date" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>">
                             <label for="vr_repl_date">Replacement Date *</label>
                           </div>
                         </div>
-                        <div class="col-6 col-sm-3 col-md-3">
+                        <div class="col-6 col-sm-6 col-md-2">
                           <div class="form-floating form-floating-outline">
                             <input type="time" id="vr_repl_time" class="form-control form-control-sm" value="<?= date('H:i') ?>">
-                            <label for="vr_repl_time">Replacement Time</label>
+                            <label for="vr_repl_time">Time (24h)</label>
                           </div>
                         </div>
-                        <div class="col-12 col-md-6">
-                          <div class="form-floating form-floating-outline">
-                            <textarea id="vr_reason" class="form-control form-control-sm" style="height:58px;" placeholder="Reason for Replacement"></textarea>
-                            <label for="vr_reason">Reason for Replacement</label>
+
+                        <!-- Replacement Vehicle Checklist -->
+                        <div class="col-12">
+                          <div class="p-2 bg-light rounded border">
+                            <span class="small fw-bold text-dark me-3"><i class="ri-checkbox-circle-line me-1"></i>New Vehicle Release Checklist:</span>
+                            <div class="form-check form-check-inline mb-0">
+                              <input class="form-check-input" type="checkbox" id="vr_new_chk_tools" checked>
+                              <label class="form-check-label small" for="vr_new_chk_tools">Jack &amp; Tools</label>
+                            </div>
+                            <div class="form-check form-check-inline mb-0">
+                              <input class="form-check-input" type="checkbox" id="vr_new_chk_spare" checked>
+                              <label class="form-check-label small" for="vr_new_chk_spare">Spare Tyre</label>
+                            </div>
+                            <div class="form-check form-check-inline mb-0">
+                              <input class="form-check-input" type="checkbox" id="vr_new_chk_radio" checked>
+                              <label class="form-check-label small" for="vr_new_chk_radio">Radio / Accessories</label>
+                            </div>
                           </div>
+                        </div>
+
+                        <!-- New Vehicle Release Images -->
+                        <div class="col-12">
+                          <label for="vr_new_rentout_images" class="form-label fw-semibold small mb-1 text-success">
+                            <i class="ri-camera-line me-1"></i>Capture / Upload Release Images (Replacement Vehicle)
+                          </label>
+                          <input type="file" id="vr_new_rentout_images" class="form-control form-control-sm mb-2" multiple accept="image/*" capture="environment">
+                          <div id="vr_new_rentout_preview" class="d-flex flex-wrap gap-2"></div>
                         </div>
                       </div>
                     </div>
@@ -412,6 +505,37 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <!-- CARD 5: CONCERNED STAFF SIGNATURE & REASON -->
+              <div class="card shadow-sm border border-secondary-subtle mb-3">
+                <div class="card-header bg-light fw-bold py-2 text-dark">
+                  <i class="ri-quill-pen-line text-primary me-1"></i> Step 4: Concerned Person Signature &amp; Remarks
+                </div>
+                <div class="card-body pt-3">
+                  <div class="row g-3">
+                    <div class="col-12 col-md-5">
+                      <div class="form-floating form-floating-outline mb-3">
+                        <input type="text" id="vr_replaced_by" class="form-control form-control-sm" value="<?= htmlspecialchars($loggedUserName) ?>" placeholder="Concerned Staff Name">
+                        <label for="vr_replaced_by">Concerned Person / Staff Name *</label>
+                      </div>
+                      <div class="form-floating form-floating-outline">
+                        <textarea id="vr_reason" class="form-control form-control-sm" style="height:82px;" placeholder="Reason for Replacement"></textarea>
+                        <label for="vr_reason">Reason for Replacement</label>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-7">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label fw-semibold small mb-0">Concerned Person Signature <span class="text-danger">*</span></label>
+                        <button type="button" id="vr_btn_clear_sign" class="btn btn-xs btn-outline-danger">
+                          <i class="ri-eraser-line me-1"></i> Clear Signature
+                        </button>
+                      </div>
+                      <canvas id="vr_staff_signature_canvas" class="vr-sign-pad"></canvas>
+                      <small class="text-muted">Please sign above to authorize the vehicle replacement and release.</small>
+                    </div>
+                  </div>
+                </div>
                 <div class="card-footer bg-light d-flex justify-content-end gap-2 py-2">
                   <button type="button" id="vr_btn_reset" class="btn btn-outline-secondary">
                     <i class="ri-refresh-line me-1"></i> Reset
@@ -428,7 +552,7 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
               <div class="card-body text-center py-5 text-muted">
                 <i class="ri-search-eye-line fs-1 text-primary d-block mb-2"></i>
                 <h6 class="fw-bold text-dark mb-1">Select a Customer or Active Agreement Above</h6>
-                <p class="small mb-0">Once an agreement is selected, current vehicle details, rental contract summary, and replacement vehicle options will appear automatically.</p>
+                <p class="small mb-0">Once an agreement is selected, current vehicle return checklist, images, contract summary, replacement vehicle options, and signature capture will appear automatically.</p>
               </div>
             </div>
           </form>
@@ -468,6 +592,7 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
 
 <?php include('templates/scripts.php'); ?>
 <script src="../assets/vendor/libs/select2/select2.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 <script>
 $(function() {
     const preContractId = <?= json_encode($preselectContractId) ?>;
@@ -478,6 +603,32 @@ $(function() {
     let allModels = [];
     let allAvailableVehicles = [];
     let selectedContract = null;
+
+    let oldReturnQueue = [];
+    let oldReturnUploaded = [];
+    let newRentoutQueue = [];
+    let newRentoutUploaded = [];
+    let staffSignaturePad = null;
+
+    function initSignaturePad() {
+        const canvas = document.getElementById('vr_staff_signature_canvas');
+        if (!canvas || typeof SignaturePad === 'undefined') return;
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        const w = canvas.offsetWidth || 500;
+        const h = canvas.offsetHeight || 140;
+        canvas.width = w * ratio;
+        canvas.height = h * ratio;
+        canvas.getContext('2d').scale(ratio, ratio);
+        if (!staffSignaturePad) {
+            staffSignaturePad = new SignaturePad(canvas, { backgroundColor: '#ffffff', penColor: '#0f172a' });
+        } else {
+            staffSignaturePad.clear();
+        }
+    }
+
+    $('#vr_btn_clear_sign').on('click', function() {
+        if (staffSignaturePad) staffSignaturePad.clear();
+    });
 
     function showPageAlert(type, msg) {
         $('#vr_page_alert')
@@ -513,6 +664,92 @@ $(function() {
         }
     }
 
+    function updateKmUsed() {
+        const kmOut = parseFloat($('#vr_old_km_out').val()) || 0;
+        const kmIn = parseFloat($('#vr_km_in').val());
+        if (isNaN(kmIn)) {
+            $('#vr_old_km_used').val('0');
+            return;
+        }
+        const diff = kmIn >= kmOut ? (kmIn - kmOut) : 0;
+        $('#vr_old_km_used').val(diff.toFixed(0));
+    }
+
+    $('#vr_km_in').on('input', updateKmUsed);
+
+    // Image queue handlers
+    $('#vr_old_return_images').on('change', function(e) {
+        Array.from(e.target.files || []).forEach(file => {
+            const id = 'old_ret_' + Date.now() + Math.random().toString(36).slice(2, 6);
+            oldReturnQueue.push({ id, file });
+            const reader = new FileReader();
+            reader.onload = ev => {
+                $('#vr_old_return_preview').append(`
+                    <div class="vr-thumb-wrap" id="thumb-${id}">
+                        <img src="${ev.target.result}" alt="Return">
+                        <span class="vr-thumb-remove vr-rem-old-img" data-id="${id}">&times;</span>
+                    </div>
+                `);
+            };
+            reader.readAsDataURL(file);
+        });
+        $(this).val('');
+    });
+
+    $(document).on('click', '.vr-rem-old-img', function() {
+        const id = $(this).data('id');
+        oldReturnQueue = oldReturnQueue.filter(x => x.id !== id);
+        $('#thumb-' + id).remove();
+    });
+
+    $('#vr_new_rentout_images').on('change', function(e) {
+        Array.from(e.target.files || []).forEach(file => {
+            const id = 'new_rel_' + Date.now() + Math.random().toString(36).slice(2, 6);
+            newRentoutQueue.push({ id, file });
+            const reader = new FileReader();
+            reader.onload = ev => {
+                $('#vr_new_rentout_preview').append(`
+                    <div class="vr-thumb-wrap" id="thumb-${id}">
+                        <img src="${ev.target.result}" alt="Release">
+                        <span class="vr-thumb-remove vr-rem-new-img" data-id="${id}">&times;</span>
+                    </div>
+                `);
+            };
+            reader.readAsDataURL(file);
+        });
+        $(this).val('');
+    });
+
+    $(document).on('click', '.vr-rem-new-img', function() {
+        const id = $(this).data('id');
+        newRentoutQueue = newRentoutQueue.filter(x => x.id !== id);
+        $('#thumb-' + id).remove();
+    });
+
+    function uploadImageQueue(queue, endpoint, targetArr) {
+        return new Promise((resolve, reject) => {
+            if (!queue.length) { resolve(); return; }
+            const fd = new FormData();
+            queue.forEach(item => fd.append('car_images[]', item.file));
+            $.ajax({
+                url: endpoint,
+                type: 'POST',
+                data: fd,
+                contentType: false,
+                processData: false,
+                success: function(res) {
+                    const parsed = (typeof res === 'string') ? JSON.parse(res) : res;
+                    const files = (parsed && Array.isArray(parsed.files)) ? parsed.files : [];
+                    targetArr.push(...files);
+                    resolve();
+                },
+                error: function() {
+                    reject('Image upload failed (' + endpoint + ')');
+                }
+            });
+        });
+    }
+
     function populateAgreementDropdown(customerCode, preserveContractId) {
         const filtered = customerCode
             ? allContracts.filter(c => String(c.customer_code) === String(customerCode))
@@ -525,7 +762,6 @@ $(function() {
         if (preserveContractId && filtered.some(c => String(c.contract_id) === String(preserveContractId))) {
             $('#vr_curr_reg_select').val(preserveContractId);
         } else if (customerCode && filtered.length === 1) {
-            // Auto-select if customer has only 1 active agreement
             $('#vr_curr_reg_select').val(filtered[0].contract_id);
         } else {
             $('#vr_curr_reg_select').val('');
@@ -548,14 +784,41 @@ $(function() {
 
         $('#vr_details_wrapper').removeClass('d-none');
         $('#vr_empty_prompt').addClass('d-none');
+        setTimeout(initSignaturePad, 60);
 
         $('#vr_agreement_id').val(c.contract_id);
-        $('#vr_curr_status_badge').text('Rentout · ' + (c.agreement_no || ''));
+        $('#vr_curr_status_badge').text('Rentout → Parking · ' + (c.agreement_no || ''));
         $('#vr_curr_reg_no').val(c.vehicle_no || '-');
         $('#vr_curr_type').val([c.category_name, c.model_name].filter(Boolean).join(' - '));
         $('#vr_curr_year').val(c.vehicle_year || '-');
         $('#vr_curr_color').val(c.vehicle_color || '-');
+        $('#vr_old_km_out').val(c.km_out || '0');
         $('#vr_km_in').val(c.km_out || '');
+        updateKmUsed();
+        $('#vr_parking_location_in').val('Main Parking');
+
+        // Old Accessories checklist
+        const acc = c.old_accessories || {};
+        $('#vr_old_chk_tools').prop('checked', acc.chk_tools === 'Yes');
+        $('#vr_old_chk_spare').prop('checked', acc.chk_spare === 'Yes');
+        $('#vr_old_chk_radio').prop('checked', acc.chk_radio === 'Yes');
+
+        // Old Rentout Images preview
+        const oldImgs = Array.isArray(c.old_rentout_images) ? c.old_rentout_images : [];
+        if (oldImgs.length) {
+            $('#vr_old_rentout_preview').html(oldImgs.map(img => `
+                <a href="../uploads/rentvehicleImages/${img}" target="_blank" title="View Image">
+                    <img src="../uploads/rentvehicleImages/${img}" class="rounded border" style="width:60px;height:60px;object-fit:cover;">
+                </a>
+            `).join(''));
+        } else {
+            $('#vr_old_rentout_preview').html('<small class="text-muted fst-italic">No rentout images</small>');
+        }
+
+        // Clear pending return images
+        oldReturnQueue = [];
+        oldReturnUploaded = [];
+        $('#vr_old_return_preview').empty();
 
         // Agreement details
         $('#vr_ag_no').val(c.agreement_no || '-');
@@ -748,7 +1011,6 @@ $(function() {
                     $('#vr_replaced_by').val(res.replaced_by);
                 }
 
-                // Populate Customer Search dropdown (distinct customers with active Rentout contracts)
                 const custMap = new Map();
                 allContracts.forEach(c => {
                     if (c.customer_code && !custMap.has(String(c.customer_code))) {
@@ -762,10 +1024,8 @@ $(function() {
                 });
                 $('#vr_customer_select').html(custHtml);
 
-                // Populate Agreement dropdown
                 populateAgreementDropdown('', '');
 
-                // Populate Category & Model filters
                 let catHtml = '<option value="">All Categories</option>';
                 allCategories.forEach(cat => {
                     catHtml += `<option value="${cat.ids}">${cat.category_name}</option>`;
@@ -779,7 +1039,6 @@ $(function() {
                     $('#vr_customer_select, #vr_curr_reg_select, #vr_filter_category, #vr_filter_model, #vr_new_reg_select').select2({ width: '100%' });
                 }
 
-                // Preselect if linked from Contract List
                 let target = null;
                 if (preContractId) {
                     target = allContracts.find(c => String(c.contract_id) === String(preContractId));
@@ -852,68 +1111,120 @@ $(function() {
     $('#vr_btn_reset').on('click', function() {
         $('#vr_customer_select').val('').trigger('change');
         $('#vr_filter_category').val('').trigger('change');
-        $('#vr_parking_location_in').val('');
+        $('#vr_parking_location_in').val('Main Parking');
         $('#vr_check_in_type').val('Replacement');
         $('#vr_reason').val('');
+        oldReturnQueue = [];
+        oldReturnUploaded = [];
+        newRentoutQueue = [];
+        newRentoutUploaded = [];
+        $('#vr_old_return_preview, #vr_new_rentout_preview').empty();
+        if (staffSignaturePad) staffSignaturePad.clear();
     });
 
     $('#vehicleReplacementForm').on('submit', function(e) {
         e.preventDefault();
-        const payload = {
-            action: 'saveReplacement',
-            agreement_id: $('#vr_agreement_id').val(),
-            km_in: $('#vr_km_in').val(),
-            fuel_level_in: $('#vr_fuel_in').val(),
-            parking_location_in: $('#vr_parking_location_in').val(),
-            check_in_type: $('#vr_check_in_type').val(),
-            new_vehicle_id: $('#vr_new_reg_select').val(),
-            km_out: $('#vr_new_km_out').val(),
-            fuel_level_out: $('#vr_new_fuel_out').val(),
-            out_location: $('#vr_out_location').val(),
-            replacement_date: $('#vr_repl_date').val(),
-            replacement_time: $('#vr_repl_time').val(),
-            reason: $('#vr_reason').val()
-        };
+        const agreementId = $('#vr_agreement_id').val();
+        const parkingLocationIn = $('#vr_parking_location_in').val() || 'Main Parking';
+        const newVehicleId = $('#vr_new_reg_select').val();
+        const replacementDate = $('#vr_repl_date').val();
+        const kmInVal = $.trim($('#vr_km_in').val());
+        const kmOutOld = parseFloat($('#vr_old_km_out').val()) || 0;
+        const staffName = $.trim($('#vr_replaced_by').val());
 
-        if (!payload.agreement_id) {
+        if (!agreementId) {
             showPageAlert('warning', 'Please select a Customer and Agreement.');
             return;
         }
-        if (!payload.parking_location_in) {
-            showPageAlert('warning', 'Please select Parking Location In.');
+        if (kmInVal === '' || isNaN(parseFloat(kmInVal))) {
+            showPageAlert('warning', 'Please enter Old Vehicle KM In.');
             return;
         }
-        if (!payload.new_vehicle_id) {
+        if (parseFloat(kmInVal) < kmOutOld) {
+            showPageAlert('warning', 'Old Vehicle KM In (' + kmInVal + ') cannot be less than KM Out (' + kmOutOld + ').');
+            return;
+        }
+        if (!newVehicleId) {
             showPageAlert('warning', 'Please select Replacement Reg No.');
             return;
         }
-        if (!payload.replacement_date) {
+        if (!replacementDate) {
             showPageAlert('warning', 'Please select Replacement Date.');
             return;
         }
+        if (!staffName) {
+            showPageAlert('warning', 'Please enter the Concerned Person / Staff Name.');
+            return;
+        }
+        if (!staffSignaturePad || staffSignaturePad.isEmpty()) {
+            showPageAlert('warning', 'Please capture the Concerned Person signature before saving.');
+            return;
+        }
 
-        const $btn = $('#vr_btn_save').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Saving...');
-        $.ajax({
-            url: '/VehicleReplacementController',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(payload),
-            dataType: 'json',
-            success: function(res) {
-                $btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save Replacement');
-                if (res && res.status) {
-                    showPageAlert('success', res.message || 'Vehicle replaced successfully! Redirecting to Contract List...');
-                    setTimeout(function() {
-                        window.location.href = '/ContractList?val=<?= urlencode($this->encryption->encrypt("3,3-4")) ?>';
-                    }, 1200);
-                } else {
-                    showPageAlert('danger', (res && res.message) ? res.message : 'Failed to replace vehicle.');
+        const $btn = $('#vr_btn_save').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Uploading &amp; Saving...');
+
+        Promise.all([
+            uploadImageQueue(oldReturnQueue, '/ReturnCompressUploadImage', oldReturnUploaded),
+            uploadImageQueue(newRentoutQueue, '/CompressUploadImage', newRentoutUploaded)
+        ]).then(() => {
+            oldReturnQueue = [];
+            newRentoutQueue = [];
+
+            const payload = {
+                action: 'saveReplacement',
+                agreement_id: agreementId,
+                km_in: kmInVal,
+                fuel_level_in: $('#vr_fuel_in').val(),
+                parking_location_in: parkingLocationIn,
+                check_in_type: $('#vr_check_in_type').val(),
+                old_accessories: {
+                    chk_tools: $('#vr_old_chk_tools').is(':checked') ? 'Yes' : 'No',
+                    chk_spare: $('#vr_old_chk_spare').is(':checked') ? 'Yes' : 'No',
+                    chk_radio: $('#vr_old_chk_radio').is(':checked') ? 'Yes' : 'No'
+                },
+                old_return_images: oldReturnUploaded,
+                new_vehicle_id: newVehicleId,
+                km_out: $('#vr_new_km_out').val(),
+                fuel_level_out: $('#vr_new_fuel_out').val(),
+                out_location: $('#vr_out_location').val(),
+                replacement_date: replacementDate,
+                replacement_time: $('#vr_repl_time').val(),
+                new_accessories: {
+                    chk_tools: $('#vr_new_chk_tools').is(':checked') ? 'Yes' : 'No',
+                    chk_spare: $('#vr_new_chk_spare').is(':checked') ? 'Yes' : 'No',
+                    chk_radio: $('#vr_new_chk_radio').is(':checked') ? 'Yes' : 'No'
+                },
+                new_rentout_images: newRentoutUploaded,
+                staff_name: staffName,
+                staff_signature: staffSignaturePad.toDataURL(),
+                reason: $('#vr_reason').val()
+            };
+
+            $.ajax({
+                url: '/VehicleReplacementController',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                dataType: 'json',
+                success: function(res) {
+                    $btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save Replacement');
+                    if (res && res.status) {
+                        showPageAlert('success', res.message || 'Vehicle replaced successfully! Redirecting to Contract List...');
+                        setTimeout(function() {
+                            window.location.href = '/ContractList?val=<?= urlencode($this->encryption->encrypt("3,3-4")) ?>';
+                        }, 1200);
+                    } else {
+                        showPageAlert('danger', (res && res.message) ? res.message : 'Failed to replace vehicle.');
+                    }
+                },
+                error: function() {
+                    $btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save Replacement');
+                    showPageAlert('danger', 'Server error while saving vehicle replacement.');
                 }
-            },
-            error: function() {
-                $btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save Replacement');
-                showPageAlert('danger', 'Server error while saving vehicle replacement.');
-            }
+            });
+        }).catch(err => {
+            $btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save Replacement');
+            showPageAlert('danger', typeof err === 'string' ? err : 'Failed to upload vehicle images.');
         });
     });
 

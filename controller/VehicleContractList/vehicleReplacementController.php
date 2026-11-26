@@ -143,6 +143,8 @@ class VehicleReplacementController
                     ct.agreement_status,
                     ct.contract_details_json,
                     ct.vechile_details,
+                    ct.vehicle_accessories_details,
+                    ct.vehicle_rentout_images,
                     ct.replaced_vehicle_json,
                     ct.company_id,
                     cd.customer_name,
@@ -233,6 +235,8 @@ class VehicleReplacementController
                     'next_passing_date'     => $vehFormatted['next_passing_date'],
                     'last_image'            => $vehFormatted['last_image'],
                     'vehicle_status'        => $c['vehicle_status'] ?? 'Rentout',
+                    'old_accessories'       => !empty($c['vehicle_accessories_details']) ? (json_decode($c['vehicle_accessories_details'], true) ?: []) : [],
+                    'old_rentout_images'    => !empty($c['vehicle_rentout_images']) ? (json_decode($c['vehicle_rentout_images'], true) ?: []) : [],
                 ];
             }
 
@@ -274,12 +278,18 @@ class VehicleReplacementController
         try {
             $agreementId = intval($data['agreement_id'] ?? 0);
             $newVehId = intval($data['new_vehicle_id'] ?? 0);
-            $parkingLocationIn = trim($data['parking_location_in'] ?? '');
+            $parkingLocationIn = trim($data['parking_location_in'] ?? 'Main Parking') ?: 'Main Parking';
             $checkInType = trim($data['check_in_type'] ?? 'Replacement');
-            $outLocation = trim($data['out_location'] ?? 'Main Parking');
+            $outLocation = trim($data['out_location'] ?? 'Main Parking') ?: 'Main Parking';
             $replacementDate = trim($data['replacement_date'] ?? date('Y-m-d'));
             $replacementTime = trim($data['replacement_time'] ?? date('H:i'));
             $reason = trim($data['reason'] ?? '');
+            $staffName = trim($data['staff_name'] ?? $this->userName);
+            $staffSignature = trim($data['staff_signature'] ?? '');
+            $oldAccessories = is_array($data['old_accessories'] ?? null) ? $data['old_accessories'] : [];
+            $newAccessories = is_array($data['new_accessories'] ?? null) ? $data['new_accessories'] : [];
+            $oldReturnImages = is_array($data['old_return_images'] ?? null) ? $data['old_return_images'] : [];
+            $newRentoutImages = is_array($data['new_rentout_images'] ?? null) ? $data['new_rentout_images'] : [];
 
             if (empty($agreementId)) {
                 echo json_encode(['status' => false, 'message' => 'Please select a current vehicle / agreement.']);
@@ -289,12 +299,12 @@ class VehicleReplacementController
                 echo json_encode(['status' => false, 'message' => 'Please select a replacement vehicle.']);
                 return;
             }
-            if ($parkingLocationIn === '') {
-                echo json_encode(['status' => false, 'message' => 'Please select Parking Location In.']);
-                return;
-            }
             if ($replacementDate === '') {
                 echo json_encode(['status' => false, 'message' => 'Please select Replacement Date.']);
+                return;
+            }
+            if ($staffName === '' || $staffSignature === '') {
+                echo json_encode(['status' => false, 'message' => 'Please provide the concerned staff name and signature.']);
                 return;
             }
 
@@ -431,40 +441,45 @@ class VehicleReplacementController
             $oldFuelOut = $existingContractDetails['fuel_out'] ?? ($existingContractDetails['fuel_level'] ?? '');
 
             $replacementRecordNode = [
-                'replacement_id'   => 'REPL-' . time() . '-' . rand(100, 999),
-                'replaced_on'      => $replDateTime,
-                'replaced_by_user' => $this->userId,
-                'staff_name'       => $this->userName,
+                'replacement_id'      => 'REPL-' . time() . '-' . rand(100, 999),
+                'replaced_on'         => $replDateTime,
+                'replaced_by_user'    => $this->userId,
+                'staff_name'          => $staffName,
+                'staff_signature'     => $staffSignature,
                 'parking_location_in' => $parkingLocationIn,
-                'check_in_type'    => $checkInType,
-                'out_location'     => $outLocation,
-                'old_vehicle'      => [
-                    'vehicle_id'     => $oldVehId,
-                    'vehicle_number' => $oldVehNo,
-                    'category_id'    => $oldCatId,
-                    'model_id'       => $oldModelId,
-                    'category_name'  => $contractRow['category_name'] ?? '',
-                    'model_name'     => $contractRow['model_name'] ?? '',
-                    'km_out'         => $oldKmOut,
-                    'km_in'          => $oldKmIn,
-                    'km_used'        => $oldKmUsed,
-                    'dt_out'         => $oldDtOut,
-                    'dt_in'          => $replDateTime,
-                    'fuel_level_out' => $oldFuelOut,
-                    'fuel_level_in'  => $oldFuelIn,
+                'check_in_type'       => $checkInType,
+                'out_location'        => $outLocation,
+                'old_vehicle'         => [
+                    'vehicle_id'        => $oldVehId,
+                    'vehicle_number'    => $oldVehNo,
+                    'category_id'       => $oldCatId,
+                    'model_id'          => $oldModelId,
+                    'category_name'     => $contractRow['category_name'] ?? '',
+                    'model_name'        => $contractRow['model_name'] ?? '',
+                    'km_out'            => $oldKmOut,
+                    'km_in'             => $oldKmIn,
+                    'km_used'           => $oldKmUsed,
+                    'dt_out'            => $oldDtOut,
+                    'dt_in'             => $replDateTime,
+                    'fuel_level_out'    => $oldFuelOut,
+                    'fuel_level_in'     => $oldFuelIn,
+                    'accessories'       => $oldAccessories,
+                    'old_return_images' => $oldReturnImages,
                 ],
-                'new_vehicle'      => [
-                    'vehicle_id'     => $newVehId,
-                    'vehicle_number' => $newVehNo,
-                    'category_id'    => $newCatId,
-                    'model_id'       => $newModelId,
-                    'category_name'  => $newVehRow['category_name'] ?? '',
-                    'model_name'     => $newVehRow['model_name'] ?? '',
-                    'km_out'         => $newKmOut,
-                    'fuel_level_out' => $newFuelOut,
-                    'dt_out'         => $replDateTime,
+                'new_vehicle'         => [
+                    'vehicle_id'         => $newVehId,
+                    'vehicle_number'     => $newVehNo,
+                    'category_id'        => $newCatId,
+                    'model_id'           => $newModelId,
+                    'category_name'      => $newVehRow['category_name'] ?? '',
+                    'model_name'         => $newVehRow['model_name'] ?? '',
+                    'km_out'             => $newKmOut,
+                    'fuel_level_out'     => $newFuelOut,
+                    'dt_out'             => $replDateTime,
+                    'accessories'        => $newAccessories,
+                    'new_rentout_images' => $newRentoutImages,
                 ],
-                'remarks'          => $reason,
+                'remarks'             => $reason,
             ];
 
             $existingReplacedList[] = $replacementRecordNode;
@@ -487,14 +502,16 @@ class VehicleReplacementController
             $this->varPDOModelObj->executeQuery("
                 UPDATE tbl_vehicle_rentout_contracts
                 SET
-                    vehicle_category_id   = :new_cat_id,
-                    vehicle_model_id      = :new_model_id,
-                    vehicle_id            = :new_veh_id,
-                    vehicle_no            = :new_veh_no,
-                    vechile_details       = :new_veh_details,
-                    km_out                = :new_km_out,
-                    contract_details_json = :contract_details_json,
-                    replaced_vehicle_json = :replaced_json
+                    vehicle_category_id         = :new_cat_id,
+                    vehicle_model_id            = :new_model_id,
+                    vehicle_id                  = :new_veh_id,
+                    vehicle_no                  = :new_veh_no,
+                    vechile_details             = :new_veh_details,
+                    km_out                      = :new_km_out,
+                    contract_details_json       = :contract_details_json,
+                    vehicle_accessories_details = :new_accessories,
+                    vehicle_rentout_images      = :new_rentout_images,
+                    replaced_vehicle_json       = :replaced_json
                 WHERE ids = :agreement_id
             ", [
                 ':new_cat_id'            => $newCatId,
@@ -504,6 +521,8 @@ class VehicleReplacementController
                 ':new_veh_details'       => $newVehDetailsStr,
                 ':new_km_out'            => $newKmOut,
                 ':contract_details_json' => json_encode($existingContractDetails),
+                ':new_accessories'       => json_encode($newAccessories),
+                ':new_rentout_images'    => json_encode($newRentoutImages),
                 ':replaced_json'         => $replacedJsonStr,
                 ':agreement_id'          => $agreementId,
             ]);

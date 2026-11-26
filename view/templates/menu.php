@@ -46,7 +46,7 @@
        </li>
 
        <!-- Contracts -->
-       <li class="menu-item <?php if (in_array($menuRoute, ['ContractList', 'VehicleReplacement', 'ReturnReport', 'ContractHistoryReport', 'ContractReturnOverdueReport'], true) || in_array($menuSubCode, ['3-4', '3-12', '6-2', '6-7', '6-10'], true)) {
+       <li class="menu-item <?php if (in_array($menuRoute, ['ContractList', 'VehicleReplacement', 'ReturnReport', 'ContractHistoryReport', 'ContractReturnOverdueReport', 'ContractFinancialReport'], true) || in_array($menuSubCode, ['3-4', '3-12', '3-13', '6-2', '6-7', '6-10'], true)) {
                               echo 'active';
                             } ?>" data-permission="contract_list_access,expected_returns_access,contract_history_report_access">
          <a href="javascript:void(0)" class="menu-link menu-toggle">
@@ -86,6 +86,12 @@
              <a href="/ContractReturnOverdueReport?val=<?php echo $this->encryption->encrypt('6,6-10'); ?>" class="menu-link">
                <i class="menu-icon icon-base ri ri-time-line"></i>
                <div data-i18n="Contract Return & Overdue Report">Contract Return & Overdue Report</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'ContractFinancialReport' || $menuSubCode == '3-13') { echo 'active'; } ?>">
+             <a href="/ContractFinancialReport?val=<?php echo $this->encryption->encrypt('3,3-13'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-funds-box-line"></i>
+               <div data-i18n="Contract Financials Report">Contract Financials Report</div>
              </a>
            </li>
          </ul>
@@ -484,6 +490,7 @@ if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
         'NonRevenueTicketReport'      => ['Staff Use Report', 'Summary of non-revenue staff vehicle usage.', 'ri-coupon-3-line'],
         'ContractHistoryReport'       => ['Contract & Replacement History', 'Audit trail of contracts and vehicle replacements.', 'ri-history-line'],
         'ContractReturnOverdueReport' => ['Contract Return & Overdue Report', 'Track contract returns and overdue charges.', 'ri-time-line'],
+        'ContractFinancialReport'     => ['Contract Financials & Status Report', 'Overview of contract statuses, agreed totals, collections, overdue charges, invoices, and balances.', 'ri-funds-box-line'],
         'OverdueRules'                => ['Business Rules', 'Reference guide for grace periods, model pricing, and overdue formulas.', 'ri-scales-3-line'],
     ];
     if (isset($routeHeaderMap[$reqPath])) {

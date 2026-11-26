@@ -587,6 +587,10 @@ class RoutingClass
             'ContractReturnOverdueReport/' => 'ContractReturnOverdueReport',
             'ContractReturnOverdueController' => 'ContractReturnOverdueController',
             'ContractReturnOverdueController/' => 'ContractReturnOverdueController',
+            'ContractFinancialReport' => 'ContractFinancialReport',
+            'ContractFinancialReport/' => 'ContractFinancialReport',
+            'ContractFinancialController' => 'ContractFinancialController',
+            'ContractFinancialController/' => 'ContractFinancialController',
             'VehicleReplacement' => 'VehicleReplacement',
             'VehicleReplacement/' => 'VehicleReplacement',
             'VehicleReplacementController' => 'VehicleReplacementController',
@@ -1312,6 +1316,14 @@ class RoutingClass
     private function ContractReturnOverdueController(...$params)
     {
         $this->includeWithParams("controller/reports/ContractReturnOverdueController.php", $_GET);
+    }
+    private function ContractFinancialReport(...$params)
+    {
+        $this->includeWithParams("view/contract_financial_report.php", $_GET);
+    }
+    private function ContractFinancialController(...$params)
+    {
+        $this->includeWithParams("controller/reports/ContractFinancialController.php", $_GET);
     }
     private function VehicleReplacement(...$params)
     {

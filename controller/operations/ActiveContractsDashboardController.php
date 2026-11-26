@@ -696,7 +696,8 @@ try {
             'total_contract_value'     => $totalContractValue,
             'to_collect_excl_overdue'  => $toCollectExclOverdue,
             'to_collect_incl_overdue'  => $toCollectInclOverdue,
-            'rate_type'             => $cd['rate_type'] ?? '',
+            'rate_type'             => ucfirst($activeRateType ?: ($cd['rate_type'] ?? 'daily')),
+            'unit_price'            => round($activeUnitPrice > 0 ? $activeUnitPrice : $effDaily, 3),
             'notes'                 => $cd['booking_notes'] ?? '',
         ];
     }

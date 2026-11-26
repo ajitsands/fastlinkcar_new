@@ -719,9 +719,12 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                 } else if (row.is_due_today) {
                                     tag = '<span class="badge bg-label-warning mt-1">Due Today</span>';
                                 }
+                                const rateLabel = row.rate_type ? (String(row.rate_type).charAt(0).toUpperCase() + String(row.rate_type).slice(1)) : 'Daily';
+                                const unitRateHtml = `<div class="small mt-1"><span class="badge bg-label-info me-1">${escapeHtml(rateLabel)}</span><span class="fw-semibold text-dark">${Number(row.unit_price || 0).toFixed(3)} BHD</span></div>`;
                                 return `
                                     <div class="small"><strong>From:</strong> ${escapeHtml(formatDateTime(v))}</div>
                                     <div class="small"><strong>To:</strong> ${escapeHtml(formatDateTime(row.end_date))}</div>
+                                    ${unitRateHtml}
                                     ${tag}
                                 `;
                             }

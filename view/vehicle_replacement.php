@@ -465,20 +465,21 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
 
                         <div class="col-6 col-sm-4 col-md-3">
                           <div class="form-floating form-floating-outline">
-                            <input type="text" id="vr_new_km_out" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="KM Out">
-                            <label for="vr_new_km_out">KM Out *</label>
+                            <input type="text" id="vr_new_km_out" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="Enter KM Out" required>
+                            <label for="vr_new_km_out">KM Out <span class="text-danger">*</span></label>
                           </div>
                         </div>
                         <div class="col-6 col-sm-4 col-md-3">
                           <div class="form-floating form-floating-outline">
-                            <select id="vr_new_fuel_out" class="form-select form-select-sm">
+                            <select id="vr_new_fuel_out" class="form-select form-select-sm" required>
+                              <option value="">-- Select Fuel --</option>
                               <option value="0%">0%</option>
                               <option value="25%">25%</option>
                               <option value="50%">50%</option>
                               <option value="75%">75%</option>
                               <option value="100%">100%</option>
                             </select>
-                            <label for="vr_new_fuel_out">Fuel Level Out</label>
+                            <label for="vr_new_fuel_out">Fuel Level Out <span class="text-danger">*</span></label>
                           </div>
                         </div>
                         <div class="col-6 col-sm-4 col-md-2">
@@ -1016,8 +1017,8 @@ $(function() {
         $('#vr_new_type').val([v.category_name, v.model_name].filter(Boolean).join(' - '));
         $('#vr_new_year').val(v.vehicle_year || '-');
         $('#vr_new_color').val(v.vehicle_color || '-');
-        $('#vr_new_km_out').val(v.odo_meter || '0');
-        setSelectFuel($('#vr_new_fuel_out'), v.fuel_level);
+        $('#vr_new_km_out').val('');
+        $('#vr_new_fuel_out').val('');
 
         $('#vr_new_veh_card').removeClass('d-none');
         $('#vr_new_card_no').text(v.vehicle_number || '-');
@@ -1269,6 +1270,19 @@ $(function() {
         }
         if (!newVehicleId) {
             showPageAlert('warning', 'Please select Replacement Reg No.');
+            return;
+        }
+        const newKmOutRaw = $.trim($('#vr_new_km_out').val());
+        const newKmOutNum = parseFloat(newKmOutRaw);
+        if (newKmOutRaw === '' || isNaN(newKmOutNum) || newKmOutNum <= 0) {
+            showPageAlert('warning', 'Please enter Replacement Vehicle KM Out (must be greater than 0).');
+            $('#vr_new_km_out').focus();
+            return;
+        }
+        const newFuelOutVal = $.trim($('#vr_new_fuel_out').val());
+        if (!newFuelOutVal) {
+            showPageAlert('warning', 'Please select Replacement Vehicle Fuel Level Out.');
+            $('#vr_new_fuel_out').focus();
             return;
         }
         if (!replacementDate) {

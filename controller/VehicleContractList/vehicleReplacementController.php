@@ -303,6 +303,14 @@ class VehicleReplacementController
                 echo json_encode(['status' => false, 'message' => 'Please select a replacement vehicle.']);
                 return;
             }
+            if (!isset($data['km_out']) || trim((string)$data['km_out']) === '' || !is_numeric($data['km_out']) || floatval($data['km_out']) <= 0) {
+                echo json_encode(['status' => false, 'message' => 'Please enter Replacement Vehicle KM Out (must be greater than 0).']);
+                return;
+            }
+            if (trim((string)($data['fuel_level_out'] ?? '')) === '') {
+                echo json_encode(['status' => false, 'message' => 'Please select Replacement Vehicle Fuel Level Out.']);
+                return;
+            }
             if ($replacementDate === '') {
                 echo json_encode(['status' => false, 'message' => 'Please select Replacement Date.']);
                 return;
@@ -401,12 +409,14 @@ class VehicleReplacementController
             $newCatId = $newVehRow['category_id'] ?? '';
             $newModelId = $newVehRow['model_id'] ?? '';
             $newOtherJson = !empty($newVehRow['other_details_json']) ? (json_decode($newVehRow['other_details_json'], true) ?: []) : [];
-            $newKmOut = isset($data['km_out']) && $data['km_out'] !== '' ? floatval($data['km_out']) : floatval($newOtherJson['current_km'] ?? 0);
-            $newFuelOut = trim($data['fuel_level_out'] ?? ($newOtherJson['fuel_level'] ?? ''));
+            $newKmOut = floatval($data['km_out']);
+            $newFuelOut = trim($data['fuel_level_out']);
+            $newOtherJson['current_km'] = $newKmOut;
+            $newOtherJson['fuel_level'] = $newFuelOut;
 
             $this->varPDOModelObj->executeQuery(
-                "UPDATE tbl_vehicles SET vehicle_status = 'Rentout' WHERE ids = :id",
-                [':id' => $newVehId]
+                "UPDATE tbl_vehicles SET vehicle_status = 'Rentout', other_details_json = :oth WHERE ids = :id",
+                [':oth' => json_encode($newOtherJson), ':id' => $newVehId]
             );
 
             $this->varPDOModelObj->logVehicleMovement([

@@ -487,7 +487,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
 
                         <!-- Car Survey (OUT & IN) -->
                         <div class="row g-3 mb-3">
-                            <div class="col-md-6">
+                            <div class="col-12" id="qvSurveyOutCol">
                                 <div class="p-3 rounded border h-100 text-center" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
                                     <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle text-start" style="color: #1b3d94;">
                                         <i class="ri-car-washing-line me-1"></i> Car Survey (OUT)
@@ -495,7 +495,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                     <canvas id="qvSurveyOutCanvas" width="360" height="220" class="border rounded bg-white" style="max-width: 100%;"></canvas>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 d-none" id="qvSurveyInCol">
                                 <div class="p-3 rounded border h-100 text-center" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
                                     <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle text-start" style="color: #1b3d94;">
                                         <i class="ri-car-washing-line me-1"></i> Car Survey (IN - Return)
@@ -514,12 +514,14 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                             <div class="col-md-6">
                                 <div class="p-3 rounded border h-100" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
                                     <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
-                                        <i class="ri-image-line me-1"></i> Car Images (Rentout &amp; Return)
+                                        <i class="ri-image-line me-1"></i> Car Images
                                     </div>
                                     <div class="small fw-semibold text-muted mb-1">Rentout Car Images</div>
-                                    <div id="qvRentoutImages" class="d-flex flex-wrap gap-2 mb-3"><span class="text-muted small">No rentout images</span></div>
-                                    <div class="small fw-semibold text-muted mb-1">Return Car Images</div>
-                                    <div id="qvReturnImages" class="d-flex flex-wrap gap-2"><span class="text-muted small">No return images</span></div>
+                                    <div id="qvRentoutImages" class="d-flex flex-wrap gap-2"><span class="text-muted small">No rentout images</span></div>
+                                    <div id="qvReturnImagesWrap" class="mt-3 d-none">
+                                        <div class="small fw-semibold text-muted mb-1">Return Car Images</div>
+                                        <div id="qvReturnImages" class="d-flex flex-wrap gap-2"><span class="text-muted small">No return images</span></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -528,19 +530,19 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                         <i class="ri-quill-pen-line me-1"></i> Related Signatures
                                     </div>
                                     <div class="row g-2 text-center small">
-                                        <div class="col-4">
+                                        <div class="col-6" id="qvHirerSignCol">
                                             <div class="text-muted mb-1">Hirer Signature</div>
                                             <div id="qvHirerSignBox" class="border rounded p-1 bg-white" style="min-height: 55px;">-</div>
                                             <div class="fw-semibold mt-1 text-truncate" id="qvHirerSignName">-</div>
                                             <div class="text-muted" style="font-size:10px;" id="qvHirerSignDate">-</div>
                                         </div>
-                                        <div class="col-4">
+                                        <div class="col-6" id="qvDeliveredSignCol">
                                             <div class="text-muted mb-1">Delivered By</div>
                                             <div id="qvDeliveredSignBox" class="border rounded p-1 bg-white" style="min-height: 55px;">-</div>
                                             <div class="fw-semibold mt-1 text-truncate" id="qvDeliveredSignName">-</div>
                                             <div class="text-muted" style="font-size:10px;" id="qvDeliveredSignDate">-</div>
                                         </div>
-                                        <div class="col-4">
+                                        <div class="col-4 d-none" id="qvReceiverSignCol">
                                             <div class="text-muted mb-1">Receiver (Return)</div>
                                             <div id="qvReceiverSignBox" class="border rounded p-1 bg-white" style="min-height: 55px;">-</div>
                                             <div class="fw-semibold mt-1 text-truncate" id="qvReceiverSignName">-</div>
@@ -1174,7 +1176,9 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             $('#qvReturnChecklistBadges').html('<span class="text-muted small">-</span>');
             $('#qvRentoutImages').html('<span class="text-muted small">No rentout images</span>');
             $('#qvReturnImages').html('<span class="text-muted small">No return images</span>');
-            $('#qvExtensionsSection').addClass('d-none');
+            $('#qvExtensionsSection, #qvSurveyInCol, #qvReturnImagesWrap, #qvReceiverSignCol').addClass('d-none');
+            $('#qvSurveyOutCol').attr('class', 'col-12');
+            $('#qvHirerSignCol, #qvDeliveredSignCol').attr('class', 'col-6');
             $('#qvHirerSignBox, #qvDeliveredSignBox, #qvReceiverSignBox').html('-');
             $('#qvHirerSignName, #qvHirerSignDate, #qvDeliveredSignName, #qvDeliveredSignDate, #qvReceiverSignName, #qvReceiverSignDate').text('-');
             if (window.CarSurveyWidget) {
@@ -1236,9 +1240,20 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                         $('#qvExtensionsSection').removeClass('d-none');
                     }
 
+                    const agStatus = String(c.agreement_status || '').toLowerCase();
+                    const isReturned = agStatus === 'returned' || agStatus === 'closed' || !!(c.return_date && c.return_date !== '0000-00-00 00:00:00') || !!c.receiver_signature;
+
+                    if (isReturned) {
+                        $('#qvSurveyOutCol').attr('class', 'col-md-6');
+                        $('#qvSurveyInCol, #qvReturnImagesWrap, #qvReceiverSignCol').removeClass('d-none');
+                        $('#qvHirerSignCol, #qvDeliveredSignCol').attr('class', 'col-4');
+                    }
+
                     if (window.CarSurveyWidget) {
                         CarSurveyWidget.init('qvSurveyOutCanvas', Array.isArray(acc.car_survey_out) ? acc.car_survey_out : [], { readOnly: true });
-                        CarSurveyWidget.init('qvSurveyInCanvas', Array.isArray(acc.car_survey_in) ? acc.car_survey_in : [], { readOnly: true });
+                        if (isReturned) {
+                            CarSurveyWidget.init('qvSurveyInCanvas', Array.isArray(acc.car_survey_in) ? acc.car_survey_in : [], { readOnly: true });
+                        }
                     }
 
                     const retChk = acc.return_checklist || {};

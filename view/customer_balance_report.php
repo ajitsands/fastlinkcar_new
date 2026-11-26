@@ -178,21 +178,11 @@ if (isset($this) && isset($this->encryption)) {
                     <?php include ROOT_PATH . '/view/templates/menu.php'; ?>
                     <div class="container-fluid flex-grow-1 container-p-y">
           
-                        <!-- Top Title & Action Bar matching Contract Status & Return Overdue Report -->
-                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2 no-print">
-                            <div>
-                                <h4 class="fw-bold mb-1">
-                                    <i class="ri ri-wallet-3-line text-danger me-2"></i>Customer Balances Summary Report
-                                </h4>
-                                <p class="text-muted mb-0">
-                                    Monitor customer balances, total debits, total credits, outstanding receivables, and refund liabilities in real time.
-                                </p>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button type="button" id="btn_export_excel" class="btn btn-outline-success btn-sm">
-                                    <i class="ri ri-file-excel-2-line me-1"></i> Export to Excel
-                                </button>
-                            </div>
+                        <!-- Action Bar (Global header rendered by menu.php) -->
+                        <div class="d-flex justify-content-end mb-3 gap-2 no-print">
+                            <button type="button" id="btn_export_excel" class="btn btn-outline-success btn-sm">
+                                <i class="ri ri-file-excel-2-line me-1"></i> Export to Excel
+                            </button>
                         </div>
                         
                         <!-- Summary KPI Metrics Cards matching Contract Status & Return Overdue Report -->

@@ -165,8 +165,8 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                         </div>
                         <div class="col-6 col-sm-4 col-md-2">
                           <div class="form-floating form-floating-outline">
-                            <input type="text" id="vr_km_in" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="KM In">
-                            <label for="vr_km_in">KM In *</label>
+                            <input type="text" id="vr_km_in" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="KM In" required>
+                            <label for="vr_km_in">KM In <span class="text-danger">*</span></label>
                           </div>
                         </div>
                         <div class="col-6 col-sm-4 col-md-2">
@@ -897,7 +897,7 @@ $(function() {
         $('#vr_curr_year').val(c.vehicle_year || '-');
         $('#vr_curr_color').val(c.vehicle_color || '-');
         $('#vr_old_km_out').val(c.km_out || '0');
-        $('#vr_km_in').val(c.km_out || '');
+        $('#vr_km_in').val('');
         updateKmUsed();
         $('#vr_parking_location_in').val('Main Parking');
 
@@ -1255,10 +1255,12 @@ $(function() {
         }
         if (kmInVal === '' || isNaN(parseFloat(kmInVal))) {
             showPageAlert('warning', 'Please enter Old Vehicle KM In.');
+            $('#vr_km_in').focus();
             return;
         }
         if (parseFloat(kmInVal) < kmOutOld) {
             showPageAlert('warning', 'Old Vehicle KM In (' + kmInVal + ') cannot be less than KM Out (' + kmOutOld + ').');
+            $('#vr_km_in').focus();
             return;
         }
         if (!newVehicleId) {

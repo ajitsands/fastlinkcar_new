@@ -295,6 +295,10 @@ class VehicleReplacementController
                 echo json_encode(['status' => false, 'message' => 'Please select a current vehicle / agreement.']);
                 return;
             }
+            if (!isset($data['km_in']) || trim((string)$data['km_in']) === '' || !is_numeric($data['km_in'])) {
+                echo json_encode(['status' => false, 'message' => 'Please enter Old Vehicle KM In.']);
+                return;
+            }
             if (empty($newVehId)) {
                 echo json_encode(['status' => false, 'message' => 'Please select a replacement vehicle.']);
                 return;

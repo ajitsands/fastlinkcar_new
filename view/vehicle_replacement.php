@@ -14,55 +14,16 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
     <?php include('templates/head.php'); ?>
     <link rel="stylesheet" href="../assets/vendor/libs/select2/select2.css" />
     <style>
-        .vr-section {
-            border-radius: 0.5rem;
-            padding: 1rem 1.25rem;
-            margin-bottom: 1rem;
-            border: 1px solid transparent;
-        }
-        .vr-section-current {
-            background-color: #fff5f5;
-            border-color: #f5c2c7;
-        }
-        .vr-section-agreement {
-            background-color: #f0f6ff;
-            border-color: #b6d4fe;
-        }
-        .vr-section-replacement {
-            background-color: #fffbeb;
-            border-color: #fde68a;
-        }
-        .vr-section-title {
-            font-weight: 700;
-            font-size: 0.92rem;
-            margin-bottom: 0.85rem;
-            color: #334155;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(0,0,0,0.07);
-            padding-bottom: 0.45rem;
-        }
-        .vr-label {
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 0;
-        }
-        .vr-readonly {
-            background-color: #e9ecef !important;
-            color: #334155;
-        }
         .vr-veh-card {
             border-radius: 0.75rem;
             overflow: hidden;
-            border: 1px solid #dee2e6;
+            border: 1px solid #e2e8f0;
             background: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         .vr-veh-img-box {
-            background: #fff;
-            min-height: 150px;
+            background: #f8fafc;
+            min-height: 155px;
             position: relative;
             border-right: 1px solid #eef0f3;
         }
@@ -73,6 +34,11 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
             height: 100%;
             object-fit: contain;
             padding: 0.5rem;
+        }
+        .vr-readonly {
+            background-color: #f8fafc !important;
+            color: #334155;
+            font-weight: 500;
         }
     </style>
 </head>
@@ -85,113 +51,121 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
         <?php include('templates/menu.php'); ?>
 
         <div class="container-fluid flex-grow-1 container-p-y">
-          <div class="card shadow-sm border-0">
-            <div class="card-body pt-3">
-              <div class="d-flex justify-content-end mb-2">
-                <a href="/ContractList?val=<?php echo $this->encryption->encrypt('3,3-4'); ?>" class="btn btn-sm btn-outline-secondary">
+          <div id="vr_page_alert" class="d-none mb-3"></div>
+
+          <form id="vehicleReplacementForm" onsubmit="return false;">
+            <input type="hidden" id="vr_agreement_id" value="">
+
+            <!-- CARD 1: CUSTOMER & AGREEMENT SEARCH -->
+            <div class="card shadow-sm border-0 mb-3">
+              <div class="card-header bg-primary-subtle text-primary fw-bold py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span><i class="ri-search-line me-1"></i> Step 1: Find Customer &amp; Active Agreement</span>
+                <a href="/ContractList?val=<?php echo $this->encryption->encrypt('3,3-4'); ?>" class="btn btn-sm btn-outline-primary bg-white">
                   <i class="ri-arrow-left-line me-1"></i> Back to Contract List
                 </a>
               </div>
-              <form id="vehicleReplacementForm" onsubmit="return false;">
-                <input type="hidden" id="vr_agreement_id" value="">
-
-                <!-- SECTION 1: CURRENT VEHICLE DETAILS -->
-                <div class="vr-section vr-section-current">
-                  <div class="vr-section-title">
-                    <span><i class="ri-car-line text-danger me-1"></i> Current Vehicle Details</span>
-                    <span class="badge bg-label-danger" id="vr_curr_status_badge">Select Active Vehicle</span>
+              <div class="card-body pt-3 pb-3">
+                <div class="row g-3 align-items-center">
+                  <div class="col-12 col-md-6">
+                    <label for="vr_customer_select" class="form-label fw-semibold small mb-1">
+                      <i class="ri-user-search-line text-primary me-1"></i> Customer Search (Name / Mobile / CPR)
+                    </label>
+                    <select id="vr_customer_select" class="form-select select2" style="width:100%;">
+                      <option value="">-- All Active Customers --</option>
+                    </select>
                   </div>
+                  <div class="col-12 col-md-6">
+                    <label for="vr_curr_reg_select" class="form-label fw-semibold small mb-1">
+                      <i class="ri-file-search-line text-primary me-1"></i> Agreement / Current Vehicle Search <span class="text-danger">*</span>
+                    </label>
+                    <select id="vr_curr_reg_select" class="form-select select2" style="width:100%;">
+                      <option value="">-- Select Agreement No. or Vehicle Reg No. --</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
 
+            <!-- DETAILS CONTAINER (Auto-displayed once agreement is selected) -->
+            <div id="vr_details_wrapper" class="d-none">
+
+              <!-- CARD 2: CURRENT VEHICLE DETAILS -->
+              <div class="card shadow-sm border border-danger-subtle mb-3">
+                <div class="card-header bg-danger-subtle text-danger fw-bold py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                  <span><i class="ri-car-line me-1"></i> Current Vehicle Details &amp; Check-In</span>
+                  <span class="badge bg-danger text-white" id="vr_curr_status_badge">Rentout</span>
+                </div>
+                <div class="card-body pt-3">
                   <div class="row g-3">
                     <div class="col-12 col-lg-8">
-                      <div class="row g-2 align-items-center">
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Reg No. <span class="text-danger">*</span></label>
-                            <div class="col-sm-8">
-                              <select id="vr_curr_reg_select" class="form-select form-select-sm select2" style="width:100%;">
-                                <option value="">-- Select Active Vehicle / Agreement --</option>
-                              </select>
-                            </div>
+                      <div class="row g-3">
+                        <div class="col-12 col-sm-6 col-md-3">
+                          <div class="form-floating form-floating-outline">
+                            <input type="text" id="vr_curr_reg_no" class="form-control form-control-sm vr-readonly" readonly placeholder="Reg No.">
+                            <label for="vr_curr_reg_no">Reg No.</label>
                           </div>
                         </div>
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Vehicle Type</label>
-                            <div class="col-sm-8">
-                              <input type="text" id="vr_curr_type" class="form-control form-control-sm vr-readonly" readonly>
-                            </div>
+                        <div class="col-12 col-sm-6 col-md-5">
+                          <div class="form-floating form-floating-outline">
+                            <input type="text" id="vr_curr_type" class="form-control form-control-sm vr-readonly" readonly placeholder="Vehicle Type">
+                            <label for="vr_curr_type">Vehicle Type</label>
                           </div>
                         </div>
-
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Model Year</label>
-                            <div class="col-sm-8">
-                              <input type="text" id="vr_curr_year" class="form-control form-control-sm vr-readonly" readonly>
-                            </div>
+                        <div class="col-6 col-sm-6 col-md-2">
+                          <div class="form-floating form-floating-outline">
+                            <input type="text" id="vr_curr_year" class="form-control form-control-sm vr-readonly" readonly placeholder="Year">
+                            <label for="vr_curr_year">Model Year</label>
                           </div>
                         </div>
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Vehicle Color</label>
-                            <div class="col-sm-8">
-                              <input type="text" id="vr_curr_color" class="form-control form-control-sm vr-readonly" readonly>
-                            </div>
+                        <div class="col-6 col-sm-6 col-md-2">
+                          <div class="form-floating form-floating-outline">
+                            <input type="text" id="vr_curr_color" class="form-control form-control-sm vr-readonly" readonly placeholder="Color">
+                            <label for="vr_curr_color">Color</label>
                           </div>
                         </div>
 
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">KM In</label>
-                            <div class="col-sm-8">
-                              <input type="text" id="vr_km_in" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="Enter return odometer">
-                            </div>
+                        <div class="col-12 col-sm-6 col-md-3">
+                          <div class="form-floating form-floating-outline">
+                            <input type="text" id="vr_km_in" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="KM In">
+                            <label for="vr_km_in">KM In</label>
                           </div>
                         </div>
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Fuel Level In</label>
-                            <div class="col-sm-8">
-                              <select id="vr_fuel_in" class="form-select form-select-sm">
-                                <option value="0%">0%</option>
-                                <option value="25%">25%</option>
-                                <option value="50%">50%</option>
-                                <option value="75%">75%</option>
-                                <option value="100%">100%</option>
-                              </select>
-                            </div>
+                        <div class="col-12 col-sm-6 col-md-3">
+                          <div class="form-floating form-floating-outline">
+                            <select id="vr_fuel_in" class="form-select form-select-sm">
+                              <option value="0%">0%</option>
+                              <option value="25%">25%</option>
+                              <option value="50%">50%</option>
+                              <option value="75%">75%</option>
+                              <option value="100%">100%</option>
+                            </select>
+                            <label for="vr_fuel_in">Fuel Level In</label>
                           </div>
                         </div>
-
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Parking Location In <span class="text-danger">*</span></label>
-                            <div class="col-sm-8">
-                              <select id="vr_parking_location_in" class="form-select form-select-sm">
-                                <option value="">-- Select Parking Location --</option>
-                                <option value="Main Parking">Main Parking</option>
-                                <option value="Showroom">Showroom</option>
-                                <option value="Airport Branch">Airport Branch</option>
-                                <option value="Workshop / Garage">Workshop / Garage</option>
-                                <option value="Yard">Yard</option>
-                              </select>
-                            </div>
+                        <div class="col-12 col-sm-6 col-md-3">
+                          <div class="form-floating form-floating-outline">
+                            <select id="vr_parking_location_in" class="form-select form-select-sm">
+                              <option value="">-- Select Location --</option>
+                              <option value="Main Parking">Main Parking</option>
+                              <option value="Showroom">Showroom</option>
+                              <option value="Airport Branch">Airport Branch</option>
+                              <option value="Workshop / Garage">Workshop / Garage</option>
+                              <option value="Yard">Yard</option>
+                            </select>
+                            <label for="vr_parking_location_in">Parking Location In *</label>
                           </div>
                         </div>
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Check In Type</label>
-                            <div class="col-sm-8">
-                              <select id="vr_check_in_type" class="form-select form-select-sm">
-                                <option value="Replacement">Replacement</option>
-                                <option value="Breakdown">Breakdown</option>
-                                <option value="Maintenance / Service">Maintenance / Service</option>
-                                <option value="Accident">Accident</option>
-                                <option value="Customer Request">Customer Request</option>
-                                <option value="Other">Other</option>
-                              </select>
-                            </div>
+                        <div class="col-12 col-sm-6 col-md-3">
+                          <div class="form-floating form-floating-outline">
+                            <select id="vr_check_in_type" class="form-select form-select-sm">
+                              <option value="Replacement">Replacement</option>
+                              <option value="Breakdown">Breakdown</option>
+                              <option value="Maintenance / Service">Maintenance / Service</option>
+                              <option value="Accident">Accident</option>
+                              <option value="Customer Request">Customer Request</option>
+                              <option value="Other">Other</option>
+                            </select>
+                            <label for="vr_check_in_type">Check In Type</label>
                           </div>
                         </div>
                       </div>
@@ -199,7 +173,7 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
 
                     <!-- Current Vehicle Card -->
                     <div class="col-12 col-lg-4">
-                      <div id="vr_curr_veh_card" class="vr-veh-card d-none h-100">
+                      <div id="vr_curr_veh_card" class="vr-veh-card h-100">
                         <div class="row g-0 h-100">
                           <div class="col-5 vr-veh-img-box">
                             <img id="vr_curr_card_img" src="uploads/vehicleImages/default.jpg" onerror="this.onerror=null;this.src='uploads/vehicleImages/default.jpg';" alt="Current Vehicle">
@@ -223,133 +197,104 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <!-- SECTION 2: RENTAL/LEASE AGREEMENT DETAILS -->
-                <div class="vr-section vr-section-agreement">
-                  <div class="vr-section-title">
-                    <span><i class="ri-file-text-line text-primary me-1"></i> Rental/Lease Agreement Details</span>
-                    <span class="small text-muted" id="vr_ag_exp_return_badge"></span>
-                  </div>
-
-                  <div class="row g-2 align-items-center">
-                    <div class="col-12 col-md-6">
-                      <div class="row align-items-center g-2">
-                        <label class="col-sm-4 vr-label">Agreement No.</label>
-                        <div class="col-sm-8">
-                          <input type="text" id="vr_ag_no" class="form-control form-control-sm vr-readonly" readonly>
-                        </div>
+              <!-- CARD 3: RENTAL/LEASE AGREEMENT DETAILS -->
+              <div class="card shadow-sm border border-info-subtle mb-3">
+                <div class="card-header bg-info-subtle text-info fw-bold py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                  <span><i class="ri-file-text-line me-1"></i> Rental / Lease Agreement Details</span>
+                  <span class="badge bg-info text-white" id="vr_ag_exp_return_badge"></span>
+                </div>
+                <div class="card-body pt-3">
+                  <div class="row g-3">
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <div class="form-floating form-floating-outline">
+                        <input type="text" id="vr_ag_no" class="form-control form-control-sm vr-readonly" readonly placeholder="Agreement No.">
+                        <label for="vr_ag_no">Agreement No.</label>
                       </div>
                     </div>
-                    <div class="col-12 col-md-6">
-                      <div class="row align-items-center g-2">
-                        <label class="col-sm-4 vr-label">RA Location</label>
-                        <div class="col-sm-8">
-                          <input type="text" id="vr_ag_location" class="form-control form-control-sm vr-readonly" readonly>
-                        </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <div class="form-floating form-floating-outline">
+                        <input type="text" id="vr_ag_location" class="form-control form-control-sm vr-readonly" readonly placeholder="RA Location">
+                        <label for="vr_ag_location">RA Location</label>
                       </div>
                     </div>
-
-                    <div class="col-12 col-md-6">
-                      <div class="row align-items-center g-2">
-                        <label class="col-sm-4 vr-label">Rental CPR No.</label>
-                        <div class="col-sm-8">
-                          <input type="text" id="vr_ag_cpr" class="form-control form-control-sm vr-readonly" readonly>
-                        </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <div class="form-floating form-floating-outline">
+                        <input type="text" id="vr_ag_cpr" class="form-control form-control-sm vr-readonly" readonly placeholder="Rental CPR No.">
+                        <label for="vr_ag_cpr">Rental CPR No.</label>
                       </div>
                     </div>
-                    <div class="col-12 col-md-6">
-                      <div class="row align-items-center g-2">
-                        <label class="col-sm-4 vr-label">Rental Name</label>
-                        <div class="col-sm-8">
-                          <input type="text" id="vr_ag_name" class="form-control form-control-sm vr-readonly" readonly>
-                        </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <div class="form-floating form-floating-outline">
+                        <input type="text" id="vr_ag_name" class="form-control form-control-sm vr-readonly" readonly placeholder="Rental Name">
+                        <label for="vr_ag_name">Rental Name</label>
                       </div>
                     </div>
 
-                    <div class="col-12 col-md-6">
-                      <div class="row align-items-center g-2">
-                        <label class="col-sm-4 vr-label">Fuel Level Out</label>
-                        <div class="col-sm-8">
-                          <input type="text" id="vr_ag_fuel_out" class="form-control form-control-sm vr-readonly" readonly>
-                        </div>
+                    <div class="col-12 col-sm-6 col-md-2">
+                      <div class="form-floating form-floating-outline">
+                        <input type="text" id="vr_ag_fuel_out" class="form-control form-control-sm vr-readonly" readonly placeholder="Fuel Level Out">
+                        <label for="vr_ag_fuel_out">Fuel Level Out</label>
                       </div>
                     </div>
-                    <div class="col-12 col-md-6">
-                      <div class="row align-items-center g-2">
-                        <label class="col-sm-4 vr-label">Rental Agreement Date</label>
-                        <div class="col-sm-8">
-                          <input type="text" id="vr_ag_date" class="form-control form-control-sm vr-readonly" readonly>
-                        </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <div class="form-floating form-floating-outline">
+                        <input type="text" id="vr_ag_date" class="form-control form-control-sm vr-readonly" readonly placeholder="Rental Agreement Date">
+                        <label for="vr_ag_date">Rental Agreement Date</label>
                       </div>
                     </div>
-
-                    <div class="col-12 col-md-6">
-                      <div class="row align-items-center g-2">
-                        <label class="col-sm-4 vr-label">Rental Amount</label>
-                        <div class="col-sm-8">
-                          <input type="text" id="vr_ag_amount" class="form-control form-control-sm vr-readonly" readonly>
-                        </div>
+                    <div class="col-12 col-sm-6 col-md-2">
+                      <div class="form-floating form-floating-outline">
+                        <input type="text" id="vr_ag_amount" class="form-control form-control-sm vr-readonly" readonly placeholder="Rental Amount">
+                        <label for="vr_ag_amount">Rental Amount</label>
                       </div>
                     </div>
-                    <div class="col-12 col-md-6">
-                      <div class="row align-items-center g-2">
-                        <label class="col-sm-4 vr-label">Last Replacement Date</label>
-                        <div class="col-sm-8">
-                          <input type="text" id="vr_ag_last_repl" class="form-control form-control-sm vr-readonly" readonly>
-                        </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <div class="form-floating form-floating-outline">
+                        <input type="text" id="vr_ag_last_repl" class="form-control form-control-sm vr-readonly" readonly placeholder="Last Replacement Date">
+                        <label for="vr_ag_last_repl">Last Replacement Date</label>
                       </div>
                     </div>
-
-                    <div class="col-12 col-md-6">
-                      <div class="row align-items-center g-2">
-                        <label class="col-sm-4 vr-label">Total Replacement</label>
-                        <div class="col-sm-8">
-                          <input type="text" id="vr_ag_total_repl" class="form-control form-control-sm vr-readonly" readonly>
-                        </div>
+                    <div class="col-6 col-md-1">
+                      <div class="form-floating form-floating-outline">
+                        <input type="text" id="vr_ag_total_repl" class="form-control form-control-sm vr-readonly" readonly placeholder="Total">
+                        <label for="vr_ag_total_repl">Repl. #</label>
                       </div>
                     </div>
-                    <div class="col-12 col-md-6">
-                      <div class="row align-items-center g-2">
-                        <label class="col-sm-4 vr-label">Last Invoice Date</label>
-                        <div class="col-sm-8">
-                          <input type="text" id="vr_ag_last_inv" class="form-control form-control-sm vr-readonly" readonly>
-                        </div>
+                    <div class="col-6 col-md-1">
+                      <div class="form-floating form-floating-outline">
+                        <input type="text" id="vr_ag_last_inv" class="form-control form-control-sm vr-readonly" readonly placeholder="Last Invoice">
+                        <label for="vr_ag_last_inv">Last Inv.</label>
                       </div>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <!-- SECTION 3: REPLACEMENT VEHICLE DETAILS -->
-                <div class="vr-section vr-section-replacement">
-                  <div class="vr-section-title">
-                    <span><i class="ri-swap-line text-warning me-1"></i> Replacement Vehicle Details</span>
-                    <span class="small text-muted">Filter available vehicles by Category &amp; Model</span>
-                  </div>
-
+              <!-- CARD 4: REPLACEMENT VEHICLE DETAILS -->
+              <div class="card shadow-sm border border-warning-subtle mb-3">
+                <div class="card-header bg-warning-subtle text-dark fw-bold py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                  <span><i class="ri-swap-line text-warning me-1"></i> Replacement Vehicle Details</span>
+                  <span class="small text-muted fw-normal">Filter available vehicles by Category &amp; Model</span>
+                </div>
+                <div class="card-body pt-3">
                   <!-- Category & Model Filters -->
-                  <div class="row g-2 mb-3 p-2 bg-white rounded border">
+                  <div class="row g-2 mb-3 p-2 bg-light rounded border">
                     <div class="col-12 col-md-5">
-                      <div class="row align-items-center g-2">
-                        <label class="col-sm-4 vr-label">Filter Category</label>
-                        <div class="col-sm-8">
-                          <select id="vr_filter_category" class="form-select form-select-sm select2" style="width:100%;">
-                            <option value="">All Categories</option>
-                          </select>
-                        </div>
-                      </div>
+                      <label for="vr_filter_category" class="form-label fw-semibold small mb-1">Filter Category</label>
+                      <select id="vr_filter_category" class="form-select form-select-sm select2" style="width:100%;">
+                        <option value="">All Categories</option>
+                      </select>
                     </div>
                     <div class="col-12 col-md-5">
-                      <div class="row align-items-center g-2">
-                        <label class="col-sm-4 vr-label">Filter Model</label>
-                        <div class="col-sm-8">
-                          <select id="vr_filter_model" class="form-select form-select-sm select2" style="width:100%;">
-                            <option value="">All Models</option>
-                          </select>
-                        </div>
-                      </div>
+                      <label for="vr_filter_model" class="form-label fw-semibold small mb-1">Filter Model</label>
+                      <select id="vr_filter_model" class="form-select form-select-sm select2" style="width:100%;">
+                        <option value="">All Models</option>
+                      </select>
                     </div>
-                    <div class="col-12 col-md-2 d-flex align-items-center justify-content-end">
-                      <button type="button" id="vr_btn_open_picker" class="btn btn-sm btn-outline-warning text-dark w-100" title="Browse Available Vehicles">
+                    <div class="col-12 col-md-2 d-flex align-items-end">
+                      <button type="button" id="vr_btn_open_picker" class="btn btn-sm btn-warning w-100" title="Browse Available Vehicles">
                         <i class="ri-car-line me-1"></i> Pick Vehicle
                       </button>
                     </div>
@@ -357,107 +302,83 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
 
                   <div class="row g-3">
                     <div class="col-12 col-lg-8">
-                      <div class="row g-2 align-items-center">
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Replacement Reg No. <span class="text-danger">*</span></label>
-                            <div class="col-sm-8">
-                              <div class="input-group input-group-sm">
-                                <select id="vr_new_reg_select" class="form-select form-select-sm select2" style="width:calc(100% - 36px);">
-                                  <option value="">-- Select Available Vehicle --</option>
-                                </select>
-                                <button type="button" id="vr_btn_picker_icon" class="btn btn-outline-secondary" title="Browse Available Vehicles">
-                                  <i class="ri-roadster-line text-success"></i>
-                                </button>
-                              </div>
-                            </div>
+                      <div class="row g-3">
+                        <div class="col-12 col-md-5">
+                          <label for="vr_new_reg_select" class="form-label fw-semibold small mb-1">Replacement Reg No. <span class="text-danger">*</span></label>
+                          <div class="input-group input-group-sm">
+                            <select id="vr_new_reg_select" class="form-select form-select-sm select2" style="width:calc(100% - 38px);">
+                              <option value="">-- Select Available Vehicle --</option>
+                            </select>
+                            <button type="button" id="vr_btn_picker_icon" class="btn btn-outline-secondary" title="Browse Available Vehicles">
+                              <i class="ri-roadster-line text-success"></i>
+                            </button>
                           </div>
                         </div>
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Vehicle Type</label>
-                            <div class="col-sm-8">
-                              <input type="text" id="vr_new_type" class="form-control form-control-sm vr-readonly" readonly>
-                            </div>
+                        <div class="col-12 col-sm-6 col-md-3">
+                          <label class="form-label fw-semibold small mb-1">Vehicle Type</label>
+                          <input type="text" id="vr_new_type" class="form-control form-control-sm vr-readonly" readonly>
+                        </div>
+                        <div class="col-6 col-sm-3 col-md-2">
+                          <label class="form-label fw-semibold small mb-1">Model Year</label>
+                          <input type="text" id="vr_new_year" class="form-control form-control-sm vr-readonly" readonly>
+                        </div>
+                        <div class="col-6 col-sm-3 col-md-2">
+                          <label class="form-label fw-semibold small mb-1">Color</label>
+                          <input type="text" id="vr_new_color" class="form-control form-control-sm vr-readonly" readonly>
+                        </div>
+
+                        <div class="col-6 col-sm-4 col-md-3">
+                          <div class="form-floating form-floating-outline">
+                            <input type="text" id="vr_new_km_out" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="KM Out">
+                            <label for="vr_new_km_out">KM Out</label>
+                          </div>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-3">
+                          <div class="form-floating form-floating-outline">
+                            <select id="vr_new_fuel_out" class="form-select form-select-sm">
+                              <option value="0%">0%</option>
+                              <option value="25%">25%</option>
+                              <option value="50%">50%</option>
+                              <option value="75%">75%</option>
+                              <option value="100%">100%</option>
+                            </select>
+                            <label for="vr_new_fuel_out">Fuel Level Out</label>
+                          </div>
+                        </div>
+                        <div class="col-12 col-sm-4 col-md-3">
+                          <div class="form-floating form-floating-outline">
+                            <select id="vr_out_location" class="form-select form-select-sm">
+                              <option value="Main Parking">Main Parking</option>
+                              <option value="Showroom">Showroom</option>
+                              <option value="Airport Branch">Airport Branch</option>
+                              <option value="Yard">Yard</option>
+                            </select>
+                            <label for="vr_out_location">Out Location</label>
+                          </div>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-3">
+                          <div class="form-floating form-floating-outline">
+                            <input type="text" id="vr_replaced_by" class="form-control form-control-sm vr-readonly" value="<?= htmlspecialchars($loggedUserName) ?>" readonly placeholder="Replaced By">
+                            <label for="vr_replaced_by">Replaced By</label>
                           </div>
                         </div>
 
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Model Year</label>
-                            <div class="col-sm-8">
-                              <input type="text" id="vr_new_year" class="form-control form-control-sm vr-readonly" readonly>
-                            </div>
+                        <div class="col-6 col-sm-3 col-md-3">
+                          <div class="form-floating form-floating-outline">
+                            <input type="date" id="vr_repl_date" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>">
+                            <label for="vr_repl_date">Replacement Date *</label>
+                          </div>
+                        </div>
+                        <div class="col-6 col-sm-3 col-md-3">
+                          <div class="form-floating form-floating-outline">
+                            <input type="time" id="vr_repl_time" class="form-control form-control-sm" value="<?= date('H:i') ?>">
+                            <label for="vr_repl_time">Replacement Time</label>
                           </div>
                         </div>
                         <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Vehicle Color</label>
-                            <div class="col-sm-8">
-                              <input type="text" id="vr_new_color" class="form-control form-control-sm vr-readonly" readonly>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">KM Out</label>
-                            <div class="col-sm-8">
-                              <input type="text" id="vr_new_km_out" class="form-control form-control-sm" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" placeholder="0">
-                            </div>
-                          </div>
-                        </div>
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Fuel Level Out</label>
-                            <div class="col-sm-8">
-                              <select id="vr_new_fuel_out" class="form-select form-select-sm">
-                                <option value="0%">0%</option>
-                                <option value="25%">25%</option>
-                                <option value="50%">50%</option>
-                                <option value="75%">75%</option>
-                                <option value="100%">100%</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Out Location</label>
-                            <div class="col-sm-8">
-                              <select id="vr_out_location" class="form-select form-select-sm">
-                                <option value="Main Parking">Main Parking</option>
-                                <option value="Showroom">Showroom</option>
-                                <option value="Airport Branch">Airport Branch</option>
-                                <option value="Yard">Yard</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Replaced By</label>
-                            <div class="col-sm-8">
-                              <input type="text" id="vr_replaced_by" class="form-control form-control-sm vr-readonly" value="<?= htmlspecialchars($loggedUserName) ?>" readonly>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Replacement Date <span class="text-danger">*</span></label>
-                            <div class="col-sm-8">
-                              <input type="date" id="vr_repl_date" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>">
-                            </div>
-                          </div>
-                        </div>
-                        <div class="col-12 col-md-6">
-                          <div class="row align-items-center g-2">
-                            <label class="col-sm-4 vr-label">Replacement Time</label>
-                            <div class="col-sm-8">
-                              <input type="time" id="vr_repl_time" class="form-control form-control-sm" value="<?= date('H:i') ?>">
-                            </div>
+                          <div class="form-floating form-floating-outline">
+                            <textarea id="vr_reason" class="form-control form-control-sm" style="height:58px;" placeholder="Reason for Replacement"></textarea>
+                            <label for="vr_reason">Reason for Replacement</label>
                           </div>
                         </div>
                       </div>
@@ -491,26 +412,26 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                     </div>
                   </div>
                 </div>
-
-                <!-- REASON & SAVE -->
-                <div class="row g-3 align-items-start mt-1">
-                  <label class="col-sm-2 vr-label pt-2">Reason for Replacement</label>
-                  <div class="col-sm-10">
-                    <textarea id="vr_reason" class="form-control form-control-sm" rows="3" placeholder="Enter reason for vehicle replacement..."></textarea>
-                  </div>
-                </div>
-
-                <div class="mt-3 d-flex justify-content-start gap-2">
-                  <button type="submit" id="vr_btn_save" class="btn btn-primary px-4">
-                    <i class="ri-save-line me-1"></i> Save
-                  </button>
+                <div class="card-footer bg-light d-flex justify-content-end gap-2 py-2">
                   <button type="button" id="vr_btn_reset" class="btn btn-outline-secondary">
-                    Reset
+                    <i class="ri-refresh-line me-1"></i> Reset
+                  </button>
+                  <button type="submit" id="vr_btn_save" class="btn btn-primary px-4">
+                    <i class="ri-save-line me-1"></i> Save Replacement
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
-          </div>
+
+            <!-- Empty state prompt when no agreement is selected -->
+            <div id="vr_empty_prompt" class="card shadow-sm border-0">
+              <div class="card-body text-center py-5 text-muted">
+                <i class="ri-search-eye-line fs-1 text-primary d-block mb-2"></i>
+                <h6 class="fw-bold text-dark mb-1">Select a Customer or Active Agreement Above</h6>
+                <p class="small mb-0">Once an agreement is selected, current vehicle details, rental contract summary, and replacement vehicle options will appear automatically.</p>
+              </div>
+            </div>
+          </form>
         </div>
 
         <?php include('templates/footer.php'); ?>
@@ -558,6 +479,13 @@ $(function() {
     let allAvailableVehicles = [];
     let selectedContract = null;
 
+    function showPageAlert(type, msg) {
+        $('#vr_page_alert')
+            .removeClass('d-none')
+            .html(`<div class="alert alert-${type} alert-dismissible fade show py-2 px-3 mb-0" role="alert">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function fmtDate24(val, dateOnly) {
         if (!val || val === '0000-00-00' || val === '0000-00-00 00:00:00') return '-';
         const s = String(val).trim();
@@ -585,21 +513,45 @@ $(function() {
         }
     }
 
+    function populateAgreementDropdown(customerCode, preserveContractId) {
+        const filtered = customerCode
+            ? allContracts.filter(c => String(c.customer_code) === String(customerCode))
+            : allContracts;
+        let html = '<option value="">-- Select Agreement No. or Vehicle Reg No. (' + filtered.length + ') --</option>';
+        filtered.forEach(c => {
+            html += `<option value="${c.contract_id}">${c.agreement_no} | ${c.vehicle_no} (${c.customer_name || ''})</option>`;
+        });
+        $('#vr_curr_reg_select').html(html);
+        if (preserveContractId && filtered.some(c => String(c.contract_id) === String(preserveContractId))) {
+            $('#vr_curr_reg_select').val(preserveContractId);
+        } else if (customerCode && filtered.length === 1) {
+            // Auto-select if customer has only 1 active agreement
+            $('#vr_curr_reg_select').val(filtered[0].contract_id);
+        } else {
+            $('#vr_curr_reg_select').val('');
+        }
+        $('#vr_curr_reg_select').trigger('change.select2');
+        const cid = $('#vr_curr_reg_select').val();
+        const found = allContracts.find(x => String(x.contract_id) === String(cid));
+        populateCurrentContract(found || null);
+    }
+
     function populateCurrentContract(c) {
         selectedContract = c || null;
         if (!c) {
             $('#vr_agreement_id').val('');
-            $('#vr_curr_type, #vr_curr_year, #vr_curr_color, #vr_km_in').val('');
-            $('#vr_ag_no, #vr_ag_location, #vr_ag_cpr, #vr_ag_name, #vr_ag_fuel_out, #vr_ag_date, #vr_ag_amount, #vr_ag_last_repl, #vr_ag_total_repl, #vr_ag_last_inv').val('');
-            $('#vr_ag_exp_return_badge').text('');
-            $('#vr_curr_veh_card').addClass('d-none');
-            $('#vr_curr_status_badge').text('Select Active Vehicle');
+            $('#vr_details_wrapper').addClass('d-none');
+            $('#vr_empty_prompt').removeClass('d-none');
             updateComplianceNotification();
             return;
         }
 
+        $('#vr_details_wrapper').removeClass('d-none');
+        $('#vr_empty_prompt').addClass('d-none');
+
         $('#vr_agreement_id').val(c.contract_id);
         $('#vr_curr_status_badge').text('Rentout · ' + (c.agreement_no || ''));
+        $('#vr_curr_reg_no').val(c.vehicle_no || '-');
         $('#vr_curr_type').val([c.category_name, c.model_name].filter(Boolean).join(' - '));
         $('#vr_curr_year').val(c.vehicle_year || '-');
         $('#vr_curr_color').val(c.vehicle_color || '-');
@@ -619,7 +571,6 @@ $(function() {
         $('#vr_ag_exp_return_badge').text(c.expected_return_date ? ('Expected Return: ' + fmtDate24(c.expected_return_date, false)) : '');
 
         // Current Vehicle Card
-        $('#vr_curr_veh_card').removeClass('d-none');
         $('#vr_curr_card_no').text(c.vehicle_no || '-');
         $('#vr_curr_card_title').text([c.category_name, c.model_name].filter(Boolean).join(' ') || '-');
         $('#vr_curr_card_year').text(c.vehicle_year || '-');
@@ -794,12 +745,22 @@ $(function() {
                     $('#vr_replaced_by').val(res.replaced_by);
                 }
 
-                // Populate Current Vehicle / Contract dropdown
-                let cHtml = '<option value="">-- Select Active Vehicle / Agreement --</option>';
+                // Populate Customer Search dropdown (distinct customers with active Rentout contracts)
+                const custMap = new Map();
                 allContracts.forEach(c => {
-                    cHtml += `<option value="${c.contract_id}">${c.vehicle_no} (${c.agreement_no}) - ${c.customer_name || ''}</option>`;
+                    if (c.customer_code && !custMap.has(String(c.customer_code))) {
+                        custMap.set(String(c.customer_code), c);
+                    }
                 });
-                $('#vr_curr_reg_select').html(cHtml);
+                let custHtml = '<option value="">-- All Active Customers (' + custMap.size + ') --</option>';
+                custMap.forEach(c => {
+                    const meta = [c.customer_mobile, c.customer_cpr].filter(Boolean).join(' / ');
+                    custHtml += `<option value="${c.customer_code}">${c.customer_name || c.customer_code}${meta ? ' (' + meta + ')' : ''}</option>`;
+                });
+                $('#vr_customer_select').html(custHtml);
+
+                // Populate Agreement dropdown
+                populateAgreementDropdown('', '');
 
                 // Populate Category & Model filters
                 let catHtml = '<option value="">All Categories</option>';
@@ -812,7 +773,7 @@ $(function() {
                 refreshAvailableDropdown();
 
                 if ($.fn.select2) {
-                    $('#vr_curr_reg_select, #vr_filter_category, #vr_filter_model, #vr_new_reg_select').select2({ width: '100%' });
+                    $('#vr_customer_select, #vr_curr_reg_select, #vr_filter_category, #vr_filter_model, #vr_new_reg_select').select2({ width: '100%' });
                 }
 
                 // Preselect if linked from Contract List
@@ -823,16 +784,24 @@ $(function() {
                     target = allContracts.find(c => String(c.agreement_no) === String(preAgreementNo));
                 }
                 if (target) {
-                    $('#vr_curr_reg_select').val(target.contract_id).trigger('change');
-                    populateCurrentContract(target);
+                    $('#vr_customer_select').val(target.customer_code).trigger('change.select2');
+                    populateAgreementDropdown(target.customer_code, target.contract_id);
                 }
             }
         });
     }
 
+    $('#vr_customer_select').on('change', function() {
+        const custCode = $(this).val();
+        populateAgreementDropdown(custCode, '');
+    });
+
     $('#vr_curr_reg_select').on('change', function() {
         const cid = $(this).val();
         const c = allContracts.find(x => String(x.contract_id) === String(cid));
+        if (c && c.customer_code && String($('#vr_customer_select').val()) !== String(c.customer_code)) {
+            $('#vr_customer_select').val(c.customer_code).trigger('change.select2');
+        }
         populateCurrentContract(c || null);
     });
 
@@ -878,7 +847,7 @@ $(function() {
     });
 
     $('#vr_btn_reset').on('click', function() {
-        $('#vr_curr_reg_select').val('').trigger('change');
+        $('#vr_customer_select').val('').trigger('change');
         $('#vr_filter_category').val('').trigger('change');
         $('#vr_parking_location_in').val('');
         $('#vr_check_in_type').val('Replacement');
@@ -904,19 +873,19 @@ $(function() {
         };
 
         if (!payload.agreement_id) {
-            alert('Please select Current Vehicle / Agreement.');
+            showPageAlert('warning', 'Please select a Customer and Agreement.');
             return;
         }
         if (!payload.parking_location_in) {
-            alert('Please select Parking Location In.');
+            showPageAlert('warning', 'Please select Parking Location In.');
             return;
         }
         if (!payload.new_vehicle_id) {
-            alert('Please select Replacement Reg No.');
+            showPageAlert('warning', 'Please select Replacement Reg No.');
             return;
         }
         if (!payload.replacement_date) {
-            alert('Please select Replacement Date.');
+            showPageAlert('warning', 'Please select Replacement Date.');
             return;
         }
 
@@ -928,17 +897,19 @@ $(function() {
             data: JSON.stringify(payload),
             dataType: 'json',
             success: function(res) {
-                $btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save');
+                $btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save Replacement');
                 if (res && res.status) {
-                    alert(res.message || 'Vehicle replaced successfully!');
-                    window.location.href = '/ContractList?val=<?= urlencode($this->encryption->encrypt("3,3-4")) ?>';
+                    showPageAlert('success', res.message || 'Vehicle replaced successfully! Redirecting to Contract List...');
+                    setTimeout(function() {
+                        window.location.href = '/ContractList?val=<?= urlencode($this->encryption->encrypt("3,3-4")) ?>';
+                    }, 1200);
                 } else {
-                    alert((res && res.message) ? res.message : 'Failed to replace vehicle.');
+                    showPageAlert('danger', (res && res.message) ? res.message : 'Failed to replace vehicle.');
                 }
             },
             error: function() {
-                $btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save');
-                alert('Server error while saving vehicle replacement.');
+                $btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save Replacement');
+                showPageAlert('danger', 'Server error while saving vehicle replacement.');
             }
         });
     });

@@ -46,7 +46,7 @@
        </li>
 
        <!-- Contracts -->
-       <li class="menu-item <?php if (in_array($menuRoute, ['ContractList', 'ReturnReport', 'ContractHistoryReport', 'ContractReturnOverdueReport'], true) || in_array($menuSubCode, ['3-4', '6-2', '6-7', '6-10'], true)) {
+       <li class="menu-item <?php if (in_array($menuRoute, ['ContractList', 'VehicleReplacement', 'ReturnReport', 'ContractHistoryReport', 'ContractReturnOverdueReport'], true) || in_array($menuSubCode, ['3-4', '3-12', '6-2', '6-7', '6-10'], true)) {
                               echo 'active';
                             } ?>" data-permission="contract_list_access,expected_returns_access,contract_history_report_access">
          <a href="javascript:void(0)" class="menu-link menu-toggle">
@@ -60,6 +60,14 @@
              <a href="/ContractList?val=<?php echo $this->encryption->encrypt('3,3-4'); ?>" class="menu-link">
                <i class="menu-icon icon-base ri ri-file-list-3-line"></i>
                <div data-i18n="Contract List">Contract List</div>
+             </a>
+           </li>
+           <li class="menu-item <?php if ($menuRoute === 'VehicleReplacement' || $menuSubCode == '3-12') {
+                                  echo 'active';
+                                } ?>" data-permission="contract_list_access">
+             <a href="/VehicleReplacement?val=<?php echo $this->encryption->encrypt('3,3-12'); ?>" class="menu-link">
+               <i class="menu-icon icon-base ri ri-repeat-line"></i>
+               <div data-i18n="Vehicle Replacement">Vehicle Replacement</div>
              </a>
            </li>
            <li class="menu-item <?php if ($menuRoute === 'ReturnReport' || $menuSubCode == '6-2') { echo 'active'; } ?>" data-permission="expected_returns_access">
@@ -454,6 +462,7 @@ if (empty($_GET['embed_return']) || $_GET['embed_return'] !== '1') {
         'Reservation'                 => ['Reservations List', 'View, filter, and convert vehicle reservations.', 'ri-survey-line'],
         'VehicleContract'             => ['Vehicle Contract Generation', 'Generate rental contracts from approved bookings and reservations.', 'ri-file-text-line'],
         'ContractGeneration'          => ['Contract Generation', 'Generate and manage customer vehicle hire agreements.', 'ri-file-text-line'],
+        'VehicleReplacement'          => ['Vehicle Replacement', 'Replace an active contract vehicle with an available fleet vehicle.', 'ri-repeat-line'],
         'MaintenanceRequest'          => ['Maintenance Requests', 'Log and track vehicle maintenance and garage jobs.', 'ri-settings-4-line'],
         'NonRevenueTickets'           => ['Non-Revenue Tickets (Staff Use)', 'Manage internal staff vehicle usage tickets.', 'ri-coupon-3-line'],
         'Quotation'                   => ['Quotations', 'Create and manage customer rental quotations.', 'ri-file-paper-2-line'],

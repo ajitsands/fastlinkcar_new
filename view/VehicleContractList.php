@@ -7471,12 +7471,8 @@ $(document).on('click', '#contractTable li a.replace_contract_btn', function (e)
 
 
     if (status === 'Rentout') {
-        $('#replace_agreement_ref').text(agreement_no);
-        $('#txt_replace_modal_agreement_id').val(id);
-        $('#txt_replace_modal_agreement_no').val(agreement_no);
-        $('#txt_replace_modal_booking_ids').val(booking_ids);
-        
-        openReplaceModal(id, vehicleid, customer_code, model_ids);
+        window.location.href = '/VehicleReplacement?contract_id=' + encodeURIComponent(id);
+        return;
     } else {
         setupDropdown(
             'dropdownContent',

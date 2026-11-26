@@ -381,16 +381,20 @@ class VehicleReplacementController
             }
             $oldOtherJson['parking_location'] = $parkingLocationIn;
 
+            $oldNewStatus = (stripos($parkingLocationIn, 'Workshop') !== false || stripos($parkingLocationIn, 'Garage') !== false)
+                ? 'Maintenance'
+                : 'Parking';
+
             $this->varPDOModelObj->executeQuery(
-                "UPDATE tbl_vehicles SET vehicle_status = 'Parking', other_details_json = :oth WHERE ids = :id",
-                [':oth' => json_encode($oldOtherJson), ':id' => $oldVehId]
+                "UPDATE tbl_vehicles SET vehicle_status = :vstatus, other_details_json = :oth WHERE ids = :id",
+                [':vstatus' => $oldNewStatus, ':oth' => json_encode($oldOtherJson), ':id' => $oldVehId]
             );
 
             $this->varPDOModelObj->logVehicleMovement([
                 'vehicle_id'     => $oldVehId,
                 'action_type'    => 'Replace Return',
                 'old_status'     => 'Rentout',
-                'new_status'     => 'Parking',
+                'new_status'     => $oldNewStatus,
                 'reference_type' => 'Agreement',
                 'reference_id'   => $agreementId,
                 'reference_no'   => $agreementNo,
@@ -543,7 +547,7 @@ class VehicleReplacementController
 
             echo json_encode([
                 'status'  => true,
-                'message' => 'Vehicle replaced successfully! Old vehicle moved to Parking and contract updated.'
+                'message' => 'Vehicle replaced successfully! Old vehicle moved to ' . $oldNewStatus . ' and contract updated.'
             ]);
         } catch (\Exception $e) {
             echo json_encode(['status' => false, 'message' => 'Error replacing vehicle: ' . $e->getMessage()]);

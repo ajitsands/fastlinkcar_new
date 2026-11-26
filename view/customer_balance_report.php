@@ -251,11 +251,12 @@ if (isset($this) && isset($this->encryption)) {
                                     <thead>
                                         <tr>
                                             <th width="4%" class="text-center">#</th>
-                                            <th width="32%">Customer Details</th>
-                                            <th width="16%" class="text-end">Total Debit (Owed)</th>
-                                            <th width="16%" class="text-end">Total Credit (Paid)</th>
-                                            <th width="12%" class="text-center">Status</th>
-                                            <th width="14%" class="text-end">Balance Amount</th>
+                                            <th width="28%">Customer Details</th>
+                                            <th width="13%" class="text-end">Total Debit (Owed)</th>
+                                            <th width="13%" class="text-end">Total Credit (Paid)</th>
+                                            <th width="12%" class="text-end">Overdue Return</th>
+                                            <th width="11%" class="text-center">Status</th>
+                                            <th width="13%" class="text-end">Balance Amount</th>
                                             <th width="6%" class="text-center no-print">Action</th>
                                         </tr>
                                     </thead>
@@ -265,6 +266,7 @@ if (isset($this) && isset($this->encryption)) {
                                             <td colspan="2" class="text-end">Filtered Totals:</td>
                                             <td class="text-end text-danger" id="foot_total_debit">0.000 BHD</td>
                                             <td class="text-end text-success" id="foot_total_credit">0.000 BHD</td>
+                                            <td class="text-end text-danger" id="foot_total_overdue">0.000 BHD</td>
                                             <td class="text-center"></td>
                                             <td class="text-end" id="foot_net_balance">0.000 BHD</td>
                                             <td class="no-print"></td>
@@ -387,14 +389,17 @@ $(document).ready(function() {
                     let totalPayable = 0;
                     let totalDebit = 0;
                     let totalCredit = 0;
+                    let totalOverdue = 0;
                     
                     balancesCache.forEach(row => {
                         let debit = parseFloat(row.total_debit) || 0;
                         let credit = parseFloat(row.total_credit) || 0;
+                        let overdue = parseFloat(row.overdue_amount) || 0;
                         let bal = parseFloat(row.balance) || 0;
                         
                         totalDebit += debit;
                         totalCredit += credit;
+                        totalOverdue += overdue;
                         
                         if (bal > 0) totalReceivable += bal;
                         if (bal < 0) totalPayable += Math.abs(bal);
@@ -411,6 +416,7 @@ $(document).ready(function() {
                     // Update Footer Totals
                     $('#foot_total_debit').text(totalDebit.toFixed(3) + ' BHD');
                     $('#foot_total_credit').text(totalCredit.toFixed(3) + ' BHD');
+                    $('#foot_total_overdue').text(totalOverdue.toFixed(3) + ' BHD');
                     $('#foot_net_balance').html(netBal >= 0 
                         ? `<span class="text-danger">${netBal.toFixed(3)} BHD</span>` 
                         : `<span class="text-success">${Math.abs(netBal).toFixed(3)} (Cr) BHD</span>`);
@@ -467,6 +473,17 @@ $(document).ready(function() {
                 data: 'total_credit', 
                 className: 'text-end text-success fw-semibold', 
                 render: v => parseFloat(v).toFixed(3) + ' BHD'
+            },
+            // Overdue Return Amount
+            {
+                data: 'overdue_amount',
+                className: 'text-end fw-semibold',
+                render: v => {
+                    let ov = parseFloat(v) || 0;
+                    return ov > 0
+                        ? `<span class="text-danger">${ov.toFixed(3)} BHD</span>`
+                        : '<span class="text-muted">0.000 BHD</span>';
+                }
             },
             // Status
             { 
@@ -648,6 +665,7 @@ $(document).ready(function() {
             "CPR / CR",
             "Total Debit (BHD)",
             "Total Credit (BHD)",
+            "Overdue Return (BHD)",
             "Status",
             "Balance Amount (BHD)"
         ];
@@ -667,6 +685,7 @@ $(document).ready(function() {
                 row.customer_cr_cpr || '',
                 parseFloat(row.total_debit || 0).toFixed(3),
                 parseFloat(row.total_credit || 0).toFixed(3),
+                parseFloat(row.overdue_amount || 0).toFixed(3),
                 status,
                 bal.toFixed(3)
             ];

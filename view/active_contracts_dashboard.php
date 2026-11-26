@@ -497,10 +497,11 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                             <th class="text-end">Debit</th>
                                             <th class="text-end">Credit</th>
                                             <th class="text-end">Balance</th>
+                                            <th class="text-center">Print</th>
                                         </tr>
                                     </thead>
                                     <tbody id="qvLedgerBody">
-                                        <tr><td colspan="7" class="text-center text-muted py-2">Loading ledger...</td></tr>
+                                        <tr><td colspan="8" class="text-center text-muted py-2">Loading ledger...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1429,7 +1430,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             });
 
             // Load Contract Ledger
-            $('#qvLedgerBody').html('<tr><td colspan="7" class="text-center text-muted py-2">Loading ledger...</td></tr>');
+            $('#qvLedgerBody').html('<tr><td colspan="8" class="text-center text-muted py-2">Loading ledger...</td></tr>');
             $('#qvLedDebit, #qvLedCredit, #qvLedBalance').text('0.000');
             $.getJSON('/CustomerLedgerController', {
                 action: 'GetContractLedgerData',
@@ -1438,7 +1439,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                 const ld = (typeof lRes === 'string') ? JSON.parse(lRes) : lRes;
                 const rows = (ld && Array.isArray(ld.data)) ? ld.data : (Array.isArray(ld) ? ld : []);
                 if (!rows.length) {
-                    $('#qvLedgerBody').html('<tr><td colspan="7" class="text-center text-muted py-2">No ledger entries found</td></tr>');
+                    $('#qvLedgerBody').html('<tr><td colspan="8" class="text-center text-muted py-2">No ledger entries found</td></tr>');
                     return;
                 }
                 let totD = 0, totC = 0, run = 0;
@@ -1458,6 +1459,20 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                     }
                     const desc = r.description || r.remarks || r.notes || '-';
                     const mBadge = (r.payment_method && r.payment_method !== 'N/A') ? ` <span class="badge bg-label-info">${escapeHtml(r.payment_method)}</span>` : '';
+                    let recNo = '';
+                    const cmMatch = String(r.trans_type || '').match(/[A-Z0-9]+\/\d{4}\/CM\/\d+/i)
+                        || String(r.ref_no || '').match(/[A-Z0-9]+\/\d{4}\/CM\/\d+/i)
+                        || String(desc || '').match(/[A-Z0-9]+\/\d{4}\/CM\/\d+/i);
+                    if (cmMatch) {
+                        recNo = cmMatch[0];
+                    } else if (cred > 0 && r.ref_no && String(r.ref_no).trim() !== '' && String(r.ref_no).trim() !== '-') {
+                        recNo = String(r.ref_no).trim();
+                    } else if (cred > 0 && r.trans_type && String(r.trans_type).includes('/')) {
+                        recNo = String(r.trans_type).trim();
+                    }
+                    const printBtnHtml = recNo
+                        ? `<button type="button" class="btn btn-xs btn-outline-success qv-print-receipt" data-receipt="${escapeHtml(recNo)}" title="Print Receipt ${escapeHtml(recNo)}"><i class="ri-printer-line me-1"></i>Receipt</button>`
+                        : '-';
                     return `
                         <tr>
                             <td>${i + 1}</td>
@@ -1467,6 +1482,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                             <td class="text-end">${deb > 0 ? deb.toFixed(3) : '-'}</td>
                             <td class="text-end text-success">${cred > 0 ? cred.toFixed(3) : '-'}</td>
                             <td class="text-end fw-semibold">${run.toFixed(3)}</td>
+                            <td class="text-center text-nowrap">${printBtnHtml}</td>
                         </tr>
                     `;
                 }).join('');
@@ -1495,6 +1511,16 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                 iframe.src = `${contractListBaseUrl}&embed_return=1&preload=1`;
             }
         }
+
+        $(document).on('click', '.qv-print-receipt', function() {
+            const recNo = $.trim($(this).data('receipt') || '');
+            if (!recNo) return;
+            fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(recNo))
+                .then(r => r.text())
+                .then(token => {
+                    if (token && token.trim()) window.open('/CashMemoPrint?token=' + encodeURIComponent(token.trim()), '_blank');
+                });
+        });
 
         $(document).on('click', '.btn-return-modal', function() {
             const id = parseInt($(this).attr('data-id') || $(this).data('id'), 10);

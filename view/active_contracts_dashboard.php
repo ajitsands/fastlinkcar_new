@@ -485,8 +485,8 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                             </div>
                         </div>
 
-                        <!-- Car Survey OUT & Signatures -->
-                        <div class="row g-3">
+                        <!-- Car Survey (OUT & IN) -->
+                        <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <div class="p-3 rounded border h-100 text-center" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
                                     <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle text-start" style="color: #1b3d94;">
@@ -496,21 +496,57 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                 </div>
                             </div>
                             <div class="col-md-6">
+                                <div class="p-3 rounded border h-100 text-center" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                                    <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle text-start" style="color: #1b3d94;">
+                                        <i class="ri-car-washing-line me-1"></i> Car Survey (IN - Return)
+                                    </div>
+                                    <canvas id="qvSurveyInCanvas" width="360" height="220" class="border rounded bg-white" style="max-width: 100%;"></canvas>
+                                    <div class="mt-2 text-start">
+                                        <div class="small fw-semibold text-muted mb-1">Return Checklist:</div>
+                                        <div class="d-flex flex-wrap gap-1" id="qvReturnChecklistBadges"><span class="text-muted small">-</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Car Images (Rentout & Return) & Related Signatures -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
                                 <div class="p-3 rounded border h-100" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
                                     <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
-                                        <i class="ri-quill-pen-line me-1"></i> Signatures &amp; Images
+                                        <i class="ri-image-line me-1"></i> Car Images (Rentout &amp; Return)
                                     </div>
-                                    <div class="row g-2 text-center small mb-2">
-                                        <div class="col-6">
+                                    <div class="small fw-semibold text-muted mb-1">Rentout Car Images</div>
+                                    <div id="qvRentoutImages" class="d-flex flex-wrap gap-2 mb-3"><span class="text-muted small">No rentout images</span></div>
+                                    <div class="small fw-semibold text-muted mb-1">Return Car Images</div>
+                                    <div id="qvReturnImages" class="d-flex flex-wrap gap-2"><span class="text-muted small">No return images</span></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded border h-100" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                                    <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
+                                        <i class="ri-quill-pen-line me-1"></i> Related Signatures
+                                    </div>
+                                    <div class="row g-2 text-center small">
+                                        <div class="col-4">
                                             <div class="text-muted mb-1">Hirer Signature</div>
                                             <div id="qvHirerSignBox" class="border rounded p-1 bg-white" style="min-height: 55px;">-</div>
+                                            <div class="fw-semibold mt-1 text-truncate" id="qvHirerSignName">-</div>
+                                            <div class="text-muted" style="font-size:10px;" id="qvHirerSignDate">-</div>
                                         </div>
-                                        <div class="col-6">
+                                        <div class="col-4">
                                             <div class="text-muted mb-1">Delivered By</div>
                                             <div id="qvDeliveredSignBox" class="border rounded p-1 bg-white" style="min-height: 55px;">-</div>
+                                            <div class="fw-semibold mt-1 text-truncate" id="qvDeliveredSignName">-</div>
+                                            <div class="text-muted" style="font-size:10px;" id="qvDeliveredSignDate">-</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-muted mb-1">Receiver (Return)</div>
+                                            <div id="qvReceiverSignBox" class="border rounded p-1 bg-white" style="min-height: 55px;">-</div>
+                                            <div class="fw-semibold mt-1 text-truncate" id="qvReceiverSignName">-</div>
+                                            <div class="text-muted" style="font-size:10px;" id="qvReceiverSignDate">-</div>
                                         </div>
                                     </div>
-                                    <div id="qvRentoutImages" class="d-flex flex-wrap gap-2 mt-2"></div>
                                 </div>
                             </div>
                         </div>
@@ -1134,11 +1170,16 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
 
             // Reset extended fields while loading full contract details
             $('#qvKmOut, #qvFuelOut, #qvDtOut, #qvCustDriverName, #qvCustDriverCpr, #qvCustDriverContact, #qvCompanyDriver').text('Loading...');
-            $('#qvChecklistBadges, #qvExtensionsBody, #qvRentoutImages').empty();
+            $('#qvChecklistBadges, #qvExtensionsBody').empty();
+            $('#qvReturnChecklistBadges').html('<span class="text-muted small">-</span>');
+            $('#qvRentoutImages').html('<span class="text-muted small">No rentout images</span>');
+            $('#qvReturnImages').html('<span class="text-muted small">No return images</span>');
             $('#qvExtensionsSection').addClass('d-none');
-            $('#qvHirerSignBox, #qvDeliveredSignBox').html('-');
+            $('#qvHirerSignBox, #qvDeliveredSignBox, #qvReceiverSignBox').html('-');
+            $('#qvHirerSignName, #qvHirerSignDate, #qvDeliveredSignName, #qvDeliveredSignDate, #qvReceiverSignName, #qvReceiverSignDate').text('-');
             if (window.CarSurveyWidget) {
                 CarSurveyWidget.init('qvSurveyOutCanvas', [], { readOnly: true });
+                CarSurveyWidget.init('qvSurveyInCanvas', [], { readOnly: true });
             }
 
             new bootstrap.Modal(document.getElementById('quickViewContractModal')).show();
@@ -1197,27 +1238,61 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
 
                     if (window.CarSurveyWidget) {
                         CarSurveyWidget.init('qvSurveyOutCanvas', Array.isArray(acc.car_survey_out) ? acc.car_survey_out : [], { readOnly: true });
+                        CarSurveyWidget.init('qvSurveyInCanvas', Array.isArray(acc.car_survey_in) ? acc.car_survey_in : [], { readOnly: true });
                     }
 
-                    if (c.hirer_signature) {
-                        const hp = c.hirer_signature.startsWith('/') ? c.hirer_signature : '/' + c.hirer_signature;
-                        $('#qvHirerSignBox').html(`<img src="${hp}" style="max-height:50px; max-width:100%;" onerror="this.parentNode.innerText='-'">`);
-                    }
-                    if (c.delivered_signature) {
-                        const dp = c.delivered_signature.startsWith('/') ? c.delivered_signature : '/' + c.delivered_signature;
-                        $('#qvDeliveredSignBox').html(`<img src="${dp}" style="max-height:50px; max-width:100%;" onerror="this.parentNode.innerText='-'">`);
-                    }
-
-                    let imgs = [];
-                    try { imgs = JSON.parse(c.vehicle_rentout_images || '[]') || []; } catch (e) {}
-                    if (Array.isArray(imgs) && imgs.length > 0) {
-                        $('#qvRentoutImages').html(imgs.map(im => {
-                            const file = (typeof im === 'string') ? im : (im.image || im.file || '');
-                            if (!file) return '';
-                            const src = file.includes('/') ? (file.startsWith('/') ? file : '/' + file) : '/uploads/rentvehicleImages/' + file;
-                            return `<a href="${src}" target="_blank"><img src="${src}" class="rounded border" style="width:64px; height:48px; object-fit:cover;"></a>`;
+                    const retChk = acc.return_checklist || {};
+                    const retChkList = [
+                        ['Tools Kit', retChk.chk_tools],
+                        ['S. Wheel', retChk.chk_spare],
+                        ['W. Cup', retChk.chk_wcup],
+                        ['Radio', retChk.chk_radio],
+                        ['Scratches Mark X', retChk.chk_scratches],
+                        ['Seats Cleanness', retChk.chk_seats]
+                    ];
+                    if (Object.keys(retChk).length > 0) {
+                        $('#qvReturnChecklistBadges').html(retChkList.map(([lbl, val]) => {
+                            const yes = String(val || '').toLowerCase() === 'yes';
+                            return `<span class="badge ${yes ? 'bg-label-success' : 'bg-label-secondary'}">${yes ? '✓' : '✗'} ${lbl}</span>`;
                         }).join(''));
                     }
+
+                    const renderSignImg = (raw) => {
+                        if (!raw) return '-';
+                        const src = (raw.startsWith('data:') || raw.startsWith('http') || raw.startsWith('/')) ? raw : '/' + raw;
+                        return `<img src="${src}" style="max-height:50px; max-width:100%;" onerror="this.parentNode.innerText='-'">`;
+                    };
+                    if (c.hirer_signature) {
+                        $('#qvHirerSignBox').html(renderSignImg(c.hirer_signature));
+                    }
+                    $('#qvHirerSignName').text(c.hirer_name || '-');
+                    $('#qvHirerSignDate').text(c.hirer_signature_date ? formatDateTime(c.hirer_signature_date) : '-');
+
+                    if (c.delivered_signature) {
+                        $('#qvDeliveredSignBox').html(renderSignImg(c.delivered_signature));
+                    }
+                    $('#qvDeliveredSignName').text(c.delivered_signatory || c.delivered_by || '-');
+                    $('#qvDeliveredSignDate').text(c.delivered_signature_date ? formatDateTime(c.delivered_signature_date) : '-');
+
+                    if (c.receiver_signature) {
+                        $('#qvReceiverSignBox').html(renderSignImg(c.receiver_signature));
+                    }
+                    $('#qvReceiverSignName').text(c.receiver_name || '-');
+                    $('#qvReceiverSignDate').text(c.receiver_signature_datetime ? formatDateTime(c.receiver_signature_datetime) : '-');
+
+                    const renderImgThumbs = (jsonStr, defaultFolder, emptyMsg) => {
+                        let arr = [];
+                        try { arr = JSON.parse(jsonStr || '[]') || []; } catch (e) {}
+                        if (!Array.isArray(arr) || !arr.length) return `<span class="text-muted small">${emptyMsg}</span>`;
+                        return arr.map(im => {
+                            const file = (typeof im === 'string') ? im : (im.image || im.file || '');
+                            if (!file) return '';
+                            const src = file.includes('/') ? (file.startsWith('/') ? file : '/' + file) : defaultFolder + file;
+                            return `<a href="${src}" target="_blank"><img src="${src}" class="rounded border" style="width:64px; height:48px; object-fit:cover;"></a>`;
+                        }).join('') || `<span class="text-muted small">${emptyMsg}</span>`;
+                    };
+                    $('#qvRentoutImages').html(renderImgThumbs(c.vehicle_rentout_images, '/uploads/rentvehicleImages/', 'No rentout images'));
+                    $('#qvReturnImages').html(renderImgThumbs(c.vehicle_return_images, '/uploads/returnvehicleImages/', 'No return images'));
                 }
             });
 

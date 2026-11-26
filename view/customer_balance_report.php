@@ -451,6 +451,8 @@ $cbFooterHtml = renderPrintFooterHtml($cbPrintSettings);
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>alertmessage/js/sandsalert.js"></script>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/notyf/notyf.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <script>
 let balancesCache = [];
@@ -887,8 +889,11 @@ $(document).ready(function() {
             <head><meta charset="UTF-8"><style>table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt;} th,td{border:1px solid #cbd5e1;padding:5px 8px;} th{background:#eef3fc;color:#1b3d94;}</style></head>
             <body>
               <table>
-                <tr><td colspan="10" style="font-size:14pt;font-weight:bold;color:#1b3d94;border:none;">${escapeHtml(ps.company_name || 'Fastlink Car Rental')} — Customer Balance Report</td></tr>
-                <tr><td colspan="10" style="font-size:10pt;color:#475569;border:none;">As of Today: ${escapeHtml(k.as_of_date || $('#lbl_as_of_date').text())} | Total Customers: ${k.total_customers || 0} (Active: ${k.active_customers || 0}, Blacklisted: ${k.blacklisted_customers || 0}) | Total Collected: ${parseFloat(k.total_collected || 0).toFixed(3)} BHD | Total Outstanding: ${parseFloat(k.total_outstanding || 0).toFixed(3)} BHD</td></tr>
+                <tr><td colspan="10" style="font-size:14pt;font-weight:bold;color:#1b3d94;border:none;">${escapeHtml(ps.company_name || 'FAST LINK CAR RENTAL')}</td></tr>
+                ${ps.header_subtitle ? `<tr><td colspan="10" style="font-size:10pt;color:#475569;border:none;">${escapeHtml(ps.header_subtitle)}</td></tr>` : ''}
+                ${ps.header_address ? `<tr><td colspan="10" style="font-size:9.5pt;color:#475569;border:none;">${escapeHtml(ps.header_address)} ${ps.header_phone ? ' | Tel: ' + escapeHtml(ps.header_phone) : ''} ${ps.header_email ? ' | ' + escapeHtml(ps.header_email) : ''}</td></tr>` : ''}
+                <tr><td colspan="10" style="font-size:12pt;font-weight:bold;color:#1e293b;border:none;">Customer Balance Report — As of Today: ${escapeHtml(k.as_of_date || $('#lbl_as_of_date').text())}</td></tr>
+                <tr><td colspan="10" style="font-size:9.5pt;color:#475569;border:none;">Customers: ${k.total_customers || 0} (Active: ${k.active_customers || 0}, Blacklisted: ${k.blacklisted_customers || 0}) | Total Collected: ${parseFloat(k.total_collected || 0).toFixed(3)} BHD | Ledger Outstanding: ${parseFloat(k.ledger_outstanding || 0).toFixed(3)} BHD | Overdue: ${parseFloat(k.overdue_outstanding || 0).toFixed(3)} BHD | Total Outstanding: ${parseFloat(k.total_outstanding || 0).toFixed(3)} BHD</td></tr>
                 <tr><td colspan="10" style="border:none;"></td></tr>
                 <tr>
                   <th>#</th><th>Code</th><th>Customer Name</th><th>Mobile</th><th>CPR / CR</th><th>Status</th>
@@ -903,7 +908,7 @@ $(document).ready(function() {
                   <td style="text-align:right;">${totB.toFixed(3)}</td>
                 </tr>
                 <tr><td colspan="10" style="border:none;"></td></tr>
-                <tr><td colspan="10" style="font-size:9pt;color:#64748b;border:none;">${escapeHtml(ps.footer_text || 'Generated from Fastlink Car Rental Portal')}</td></tr>
+                <tr><td colspan="10" style="font-size:9pt;color:#64748b;border:none;">${escapeHtml(ps.footer_text || 'Thank you for choosing Fastlink Car Rental.')} ${ps.footer_note ? ' — ' + escapeHtml(ps.footer_note) : ''}</td></tr>
               </table>
             </body></html>`;
 
@@ -917,62 +922,158 @@ $(document).ready(function() {
         document.body.removeChild(link);
     }
 
+    function hexToRgbArray(hex, fallback) {
+        if (!hex || typeof hex !== 'string') return fallback;
+        const clean = hex.replace('#', '').trim();
+        if (!/^[0-9a-fA-F]{6}$/.test(clean)) return fallback;
+        return [parseInt(clean.slice(0, 2), 16), parseInt(clean.slice(2, 4), 16), parseInt(clean.slice(4, 6), 16)];
+    }
+
     function exportBalancesToPDF() {
         const list = getFilteredBalancesForExport();
         if (!list.length) { alert('No data to export.'); return; }
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            alert('PDF library is loading. Please try again in a moment.');
+            return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'pt', 'a4');
+        const ps = CB_PRINT_SETTINGS || {};
         const k = cbLastKpis || {};
+        const accentRgb = hexToRgbArray(ps.accent_color, [27, 61, 148]);
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const marginX = 32;
+
+        const imgData = ps.logo_base64 || '';
+        const showLogo = Number(ps.show_logo !== undefined ? ps.show_logo : 1) === 1;
+        const logoW = Math.min(130, Math.max(70, Number(ps.logo_width || 120) * 0.8));
+        const logoH = logoW / 2.8;
+
         let totD = 0, totC = 0, totO = 0, totB = 0;
-        const rowsHtml = list.map((row, i) => {
+        const bodyRows = list.map((row, i) => {
             const d = parseFloat(row.total_debit || 0);
             const c = parseFloat(row.total_credit || 0);
             const o = parseFloat(row.overdue_amount || 0);
             const b = parseFloat(row.balance || 0);
             totD += d; totC += c; totO += o; totB += b;
-            return `<tr>
-                <td style="text-align:center;">${i + 1}</td>
-                <td><strong>${escapeHtml(row.customer_name || '')}</strong> (${escapeHtml(row.customer_id || '')})<br><small>${escapeHtml(row.customer_mobile || '')} ${row.customer_cr_cpr ? '· CPR: ' + escapeHtml(row.customer_cr_cpr) : ''}</small><br><small style="color:#b91c1c;">${escapeHtml(buildExportStatusText(row))}</small></td>
-                <td style="text-align:right;">${d.toFixed(3)}</td>
-                <td style="text-align:right;color:#15803d;">${c.toFixed(3)}</td>
-                <td style="text-align:right;color:#b91c1c;">${o.toFixed(3)}</td>
-                <td style="text-align:right;font-weight:bold;">${b.toFixed(3)}</td>
-            </tr>`;
-        }).join('');
+            const contact = [row.customer_mobile, row.customer_cr_cpr ? 'CPR: ' + row.customer_cr_cpr : ''].filter(Boolean).join(' | ');
+            return [
+                String(i + 1),
+                `${row.customer_name || ''} (${row.customer_id || ''})${contact ? '\n' + contact : ''}`,
+                buildExportStatusText(row),
+                d.toFixed(3),
+                c.toFixed(3),
+                o.toFixed(3),
+                b.toFixed(3)
+            ];
+        });
+        bodyRows.push([
+            { content: 'Totals (BHD)', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fillColor: [238, 243, 252] } },
+            { content: totD.toFixed(3), styles: { halign: 'right', fontStyle: 'bold', fillColor: [238, 243, 252] } },
+            { content: totC.toFixed(3), styles: { halign: 'right', fontStyle: 'bold', fillColor: [238, 243, 252] } },
+            { content: totO.toFixed(3), styles: { halign: 'right', fontStyle: 'bold', fillColor: [238, 243, 252] } },
+            { content: totB.toFixed(3), styles: { halign: 'right', fontStyle: 'bold', fillColor: [238, 243, 252] } }
+        ]);
 
-        const pmHtml = Array.isArray(k.payment_methods) && k.payment_methods.length
-            ? k.payment_methods.map(p => `${escapeHtml(p.method)}: <strong>${parseFloat(p.amount || 0).toFixed(3)} BHD</strong>`).join(' | ')
+        const pmLine = Array.isArray(k.payment_methods) && k.payment_methods.length
+            ? k.payment_methods.map(p => `${p.method}: ${parseFloat(p.amount || 0).toFixed(3)} BHD`).join('  |  ')
             : '-';
 
-        const w = window.open('', '_blank');
-        w.document.write(`<!doctype html><html><head><title>Customer Balance Report</title>
-            <style>
-                body{font-family:Arial,sans-serif;padding:18px;font-size:11px;color:#1e293b;}
-                .kpi-strip{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;padding:8px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;}
-                .kpi-box{flex:1;min-width:110px;font-size:10px;}
-                .kpi-box strong{display:block;font-size:12px;color:#1b3d94;}
-                table{width:100%;border-collapse:collapse;margin-top:8px;}
-                th,td{border:1px solid #cbd5e1;padding:5px 7px;vertical-align:top;}
-                th{background:#eef3fc;color:#1b3d94;text-align:left;font-size:10px;text-transform:uppercase;}
-                tfoot td{background:#eef3fc;font-weight:bold;color:#1b3d94;}
-                @media print{body{padding:0;}}
-            </style></head><body>
-            ${CB_PRINT_HEADER_HTML}
-            <div class="kpi-strip">
-                <div class="kpi-box">Customers<strong>${k.total_customers || 0} (Active: ${k.active_customers || 0}, Blacklisted: ${k.blacklisted_customers || 0})</strong></div>
-                <div class="kpi-box">Total Collected<strong>${parseFloat(k.total_collected || 0).toFixed(3)} BHD</strong></div>
-                <div class="kpi-box">Ledger Outstanding<strong>${parseFloat(k.ledger_outstanding || 0).toFixed(3)} BHD</strong></div>
-                <div class="kpi-box">Overdue (Not Returned)<strong>${parseFloat(k.overdue_outstanding || 0).toFixed(3)} BHD</strong></div>
-                <div class="kpi-box">Total Outstanding<strong>${parseFloat(k.total_outstanding || 0).toFixed(3)} BHD</strong></div>
-                <div class="kpi-box">Overpaid<strong>${parseFloat(k.total_overpaid || 0).toFixed(3)} BHD</strong></div>
-            </div>
-            <div style="font-size:10px;margin-bottom:6px;"><strong>Collections by Payment Method:</strong> ${pmHtml}</div>
-            <table>
-                <thead><tr><th>#</th><th>Customer Details &amp; Status</th><th style="text-align:right;">Total Debit</th><th style="text-align:right;">Total Credit</th><th style="text-align:right;">Overdue Return</th><th style="text-align:right;">Balance (BHD)</th></tr></thead>
-                <tbody>${rowsHtml}</tbody>
-                <tfoot><tr><td colspan="2" style="text-align:right;">Totals (BHD)</td><td style="text-align:right;">${totD.toFixed(3)}</td><td style="text-align:right;">${totC.toFixed(3)}</td><td style="text-align:right;">${totO.toFixed(3)}</td><td style="text-align:right;">${totB.toFixed(3)}</td></tr></tfoot>
-            </table>
-            <div style="margin-top:14px;">${CB_PRINT_FOOTER_HTML}</div>
-            <script>window.onload=function(){window.print();};<\/script></body></html>`);
-        w.document.close();
+        doc.autoTable({
+            head: [['#', 'Customer Details', 'Payment & Return Status', 'Debit (BHD)', 'Credit (BHD)', 'Overdue (BHD)', 'Balance (BHD)']],
+            body: bodyRows,
+            startY: 136,
+            theme: 'grid',
+            styles: { fontSize: 8.5, font: 'helvetica', cellPadding: 5, valign: 'middle', lineColor: [215, 222, 235], lineWidth: 0.4 },
+            headStyles: { fillColor: accentRgb, textColor: 255, fontStyle: 'bold' },
+            columnStyles: {
+                0: { cellWidth: 28, halign: 'center' },
+                1: { cellWidth: 220 },
+                2: { cellWidth: 165 },
+                3: { cellWidth: 80, halign: 'right' },
+                4: { cellWidth: 80, halign: 'right' },
+                5: { cellWidth: 85, halign: 'right' },
+                6: { cellWidth: 88, halign: 'right', fontStyle: 'bold' }
+            },
+            alternateRowStyles: { fillColor: [248, 250, 253] },
+            margin: { top: 96, left: marginX, right: marginX, bottom: 48 },
+            didDrawPage: function(data) {
+                if (showLogo && imgData) {
+                    try { doc.addImage(imgData, 'PNG', marginX, 18, logoW, logoH); } catch (e) {}
+                }
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(15);
+                doc.setTextColor(accentRgb[0], accentRgb[1], accentRgb[2]);
+                doc.text(String(ps.company_name || 'FAST LINK CAR RENTAL'), pageWidth / 2, 30, { align: 'center' });
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.setTextColor(80, 90, 105);
+                if (ps.header_subtitle) doc.text(String(ps.header_subtitle), pageWidth / 2, 43, { align: 'center' });
+                if (ps.header_address) doc.text(String(ps.header_address), pageWidth / 2, 55, { align: 'center' });
+
+                const rightX = pageWidth - marginX;
+                let rightY = 26;
+                doc.setFontSize(8);
+                if (ps.header_phone) { doc.text('Tel: ' + String(ps.header_phone), rightX, rightY, { align: 'right' }); rightY += 11; }
+                if (ps.header_email) { doc.text(String(ps.header_email), rightX, rightY, { align: 'right' }); rightY += 11; }
+                if (ps.header_website) { doc.text(String(ps.header_website), rightX, rightY, { align: 'right' }); }
+
+                doc.setDrawColor(accentRgb[0], accentRgb[1], accentRgb[2]);
+                doc.setLineWidth(1.2);
+                doc.line(marginX, 68, pageWidth - marginX, 68);
+
+                if (data.pageNumber === 1) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(12);
+                    doc.setTextColor(30, 41, 59);
+                    doc.text('CUSTOMER BALANCE REPORT', marginX, 86);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(71, 85, 105);
+                    doc.text(`Customers: ${k.total_customers || 0} (Active: ${k.active_customers || 0}, Blacklisted: ${k.blacklisted_customers || 0})  |  Collected: ${parseFloat(k.total_collected || 0).toFixed(3)} BHD  |  Ledger Outst.: ${parseFloat(k.ledger_outstanding || 0).toFixed(3)} BHD  |  Overdue: ${parseFloat(k.overdue_outstanding || 0).toFixed(3)} BHD`, marginX, 102);
+                    doc.text(`Collections by Method: ${pmLine}`, marginX, 116);
+
+                    doc.text(`As of Today: ${k.as_of_date || $('#lbl_as_of_date').text()}`, rightX, 86, { align: 'right' });
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`Total Outstanding: ${parseFloat(k.total_outstanding || 0).toFixed(3)} BHD  |  Overpaid: ${parseFloat(k.total_overpaid || 0).toFixed(3)} BHD`, rightX, 102, { align: 'right' });
+                } else {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10);
+                    doc.setTextColor(71, 85, 105);
+                    doc.text('Customer Balance Report (Cont.)', marginX, 84);
+                }
+
+                const footerY = pageHeight - 28;
+                doc.setDrawColor(203, 213, 225);
+                doc.setLineWidth(0.6);
+                doc.line(marginX, footerY - 10, pageWidth - marginX, footerY - 10);
+                if (Number(ps.show_footer !== undefined ? ps.show_footer : 1) === 1) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(71, 85, 105);
+                    if (ps.footer_text) doc.text(String(ps.footer_text), marginX, footerY);
+                    if (ps.footer_note) {
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(120, 130, 145);
+                        doc.text(String(ps.footer_note), marginX, footerY + 11);
+                    }
+                }
+                let pageStr = 'Page ' + doc.internal.getNumberOfPages();
+                if (typeof doc.putTotalPages === 'function') pageStr += ' of totalPages';
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(8);
+                doc.setTextColor(71, 85, 105);
+                doc.text(pageStr, rightX, footerY, { align: 'right' });
+            }
+        });
+
+        if (typeof doc.putTotalPages === 'function') {
+            doc.putTotalPages('totalPages');
+        }
+        window.open(doc.output('bloburl'), '_blank');
     }
 
     function escapeHtml(text) {

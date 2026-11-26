@@ -97,7 +97,7 @@
                 </div>
               </div>
 
-              <!-- Financial Summary Strip (Matching Previous Layout) -->
+              <!-- Financial Summary Strip (6-Column Previous Layout) -->
               <div class="p-3 rounded border mb-3" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
                 <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
                   <i class="ri-money-dollar-circle-line me-1"></i> Financial Summary
@@ -105,10 +105,30 @@
                 <div class="row g-2 text-center" id="cca_financial_strip"></div>
               </div>
 
-              <!-- Checklist & Car Survey -->
+              <!-- Rentout Handover & Checklist + Driver Details (Previous Layout) -->
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-lg-6">
+                  <div class="p-3 rounded border h-100" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                    <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
+                      <i class="ri-checkbox-multiple-line me-1"></i> Rentout Handover &amp; Checklist (OUT)
+                    </div>
+                    <div class="row g-1 small mb-2" id="cca_handover_grid"></div>
+                    <div class="d-flex flex-wrap gap-1" id="cca_checklist_badges"></div>
+                  </div>
+                </div>
+                <div class="col-12 col-lg-6">
+                  <div class="p-3 rounded border h-100" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                    <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
+                      <i class="ri-steering-2-line me-1"></i> Driver Details
+                    </div>
+                    <div class="row g-1 small" id="cca_driver_grid"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Car Survey (OUT vs IN) -->
               <div class="p-3 rounded border mb-3" style="background-color: #ffffff; border-color: #dbe4ff !important;">
-                <span class="d-block text-uppercase fw-semibold mb-2" style="font-size: 11px; color: #1b3d94;"><i class="ri-checkbox-multiple-line me-1"></i> Vehicle Checklist &amp; Car Survey</span>
-                <div id="cca_checklist_badges" class="d-flex flex-wrap gap-2 mb-3"></div>
+                <span class="d-block text-uppercase fw-semibold mb-2" style="font-size: 11px; color: #1b3d94;"><i class="ri-car-washing-line me-1"></i> Car Survey</span>
                 <div class="row g-3 text-center">
                   <div class="col-md-6">
                     <div class="small fw-semibold text-muted mb-1">Car Survey (OUT)</div>
@@ -343,9 +363,10 @@
             });
     }
 
-    window.openComprehensiveContractAuditModal = function(contractId) {
+    window.openComprehensiveContractAuditModal = function(contractId, extraSummary) {
         if (!contractId) return;
         ccaCurrentData = null;
+        extraSummary = extraSummary || null;
         $('#cca_loading').removeClass('d-none');
         $('#cca_content').addClass('d-none');
         $('#cca-tab-overview-btn').tab('show');
@@ -382,14 +403,25 @@
                 $('#cca_meta_status').html(`<span class="badge bg-label-primary">${ccaEsc(c.agreement_status || '-')}</span>`);
 
                 const ledSum = res.ledger || {};
-                const cTotal = parseFloat(cdj.total_amount || cdj.total_amt || cdj.grand_total || ledSum.total_debit || 0);
-                const cPaid = parseFloat(ledSum.total_credit || 0);
-                const cBal = parseFloat(ledSum.balance || 0);
+                const cTotal = extraSummary && extraSummary.contract_total !== undefined
+                    ? parseFloat(extraSummary.contract_total || 0)
+                    : parseFloat(cdj.total_amount || cdj.total_amt || cdj.grand_total || ledSum.total_debit || 0);
+                const cPaid = extraSummary && extraSummary.received_amount !== undefined
+                    ? parseFloat(extraSummary.received_amount || 0)
+                    : parseFloat(ledSum.total_credit || 0);
+                const ovDays = extraSummary && extraSummary.overdue_days ? parseInt(extraSummary.overdue_days, 10) : 0;
+                const ovAmt = extraSummary && extraSummary.overdue_amount !== undefined ? parseFloat(extraSummary.overdue_amount || 0) : 0;
+                const toCollectExcl = Math.max(0, cTotal - cPaid);
+                const toCollectIncl = Math.max(0, toCollectExcl + ovAmt);
+                const totalVal = cTotal + ovAmt;
+
                 $('#cca_financial_strip').html(`
-                    <div class="col-6 col-md-3"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">Contract / Billed Total</div><div class="fw-bold mt-1 text-dark">${cTotal.toFixed(3)} BHD</div></div></div>
-                    <div class="col-6 col-md-3"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">Total Paid</div><div class="fw-bold mt-1 text-success">${cPaid.toFixed(3)} BHD</div></div></div>
-                    <div class="col-6 col-md-3"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">Outstanding Balance</div><div class="fw-bold mt-1 text-danger">${cBal.toFixed(3)} BHD</div></div></div>
-                    <div class="col-6 col-md-3"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">Replacements</div><div class="fw-bold mt-1 text-primary">${Array.isArray(res.replaced_history) ? res.replaced_history.length : 0}</div></div></div>
+                    <div class="col-6 col-md-2"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">Contract Total</div><div class="fw-bold mt-1">${cTotal.toFixed(3)} BHD</div></div></div>
+                    <div class="col-6 col-md-2"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">Received</div><div class="fw-bold text-success mt-1">${cPaid.toFixed(3)} BHD</div></div></div>
+                    <div class="col-6 col-md-2"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">To Collect (Excl.)</div><div class="fw-bold mt-1" style="color:#1b3d94;">${toCollectExcl.toFixed(3)} BHD</div></div></div>
+                    <div class="col-6 col-md-2"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">Overdue ${ovDays > 0 ? '(' + ovDays + 'd)' : ''}</div><div class="fw-bold text-danger mt-1">${ovAmt.toFixed(3)} BHD</div></div></div>
+                    <div class="col-6 col-md-2"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">To Collect (Incl.)</div><div class="fw-bold text-success mt-1">${toCollectIncl.toFixed(3)} BHD</div></div></div>
+                    <div class="col-6 col-md-2"><div class="p-2 rounded bg-white border h-100"><div class="text-muted small">Total Value</div><div class="fw-bold mt-1" style="color:#1b3d94;">${totalVal.toFixed(3)} BHD</div></div></div>
                 `);
 
                 // Tab 1: Customer & Driver
@@ -397,13 +429,23 @@
                     ['Customer Name', cust.customer_name || c.customer_name || '-'],
                     ['Customer Code', c.customer_code || '-'],
                     ['CPR / CR No', cust.cpr_no || '-'],
-                    ['Mobile', cust.mobile_number || '-'],
+                    ['Phone', cust.mobile_number || '-'],
                     ['Email', cust.customer_email || '-'],
-                    ['Address', cust.customer_address || '-'],
-                    ['Customer Driver', c.customer_driver_name ? (c.customer_driver_name + ' (' + (c.customer_driver_contact_number || '') + ')') : '-'],
-                    ['Company Driver', drv.driver_name || '-']
+                    ['Address', cust.customer_address || '-']
                 ];
-                $('#cca_customer_grid').html(custRows.map(([k, v]) => `<div class="col-5 text-muted">${k}:</div><div class="col-7 fw-semibold text-break">${ccaEsc(v)}</div>`).join(''));
+                $('#cca_customer_grid').html(custRows.map(([k, v]) => `<div class="col-4 text-muted">${k}</div><div class="col-8 fw-semibold text-break">${ccaEsc(v)}</div>`).join(''));
+
+                $('#cca_handover_grid').html(`
+                    <div class="col-4 text-muted">KM Out / In</div><div class="col-8 fw-semibold">${ccaEsc(c.km_out || 0)} / ${ccaEsc(c.km_in || '-')}</div>
+                    <div class="col-4 text-muted">Fuel Out</div><div class="col-8 fw-semibold">${ccaEsc(cdj.fuel_out || cdj.fuel_level || '-')}</div>
+                    <div class="col-4 text-muted">Rentout Time</div><div class="col-8 fw-semibold">${ccaFmtDate24(c.service_start_date_time, false)}</div>
+                `);
+
+                $('#cca_driver_grid').html(`
+                    <div class="col-5 text-muted">Customer Driver</div><div class="col-7 fw-semibold">${ccaEsc(c.customer_driver_name || '-')}</div>
+                    <div class="col-5 text-muted">Driver Mobile</div><div class="col-7 fw-semibold">${ccaEsc(c.customer_driver_contact_number || '-')}</div>
+                    <div class="col-5 text-muted">Company Driver</div><div class="col-7 fw-semibold">${ccaEsc(drv.driver_name || '-')}</div>
+                `);
 
                 // Tab 1: Current Vehicle & Contract Period
                 const rateType = cdj.rate_type || c.service_type || 'Daily';

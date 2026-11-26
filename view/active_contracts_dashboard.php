@@ -1089,11 +1089,11 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
 
         $(document).on('click', '.qv-trigger', function() {
             const id = parseInt($(this).data('id'), 10);
+            const row = allContracts.find(c => c.id === id);
             if (typeof window.openComprehensiveContractAuditModal === 'function') {
-                window.openComprehensiveContractAuditModal(id);
+                window.openComprehensiveContractAuditModal(id, row || null);
                 return;
             }
-            const row = allContracts.find(c => c.id === id);
             if (!row) return;
 
             currentAgreementNo = row.agreement_no;

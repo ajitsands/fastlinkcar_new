@@ -193,7 +193,6 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                               <option value="Main Parking" selected>Main Parking</option>
                               <option value="Showroom">Showroom</option>
                               <option value="Airport Branch">Airport Branch</option>
-                              <option value="Workshop / Garage">Workshop / Garage</option>
                               <option value="Yard">Yard</option>
                             </select>
                             <label for="vr_parking_location_in">Parking Location In *</label>
@@ -784,15 +783,6 @@ $(function() {
         $('#vr_old_km_used').val(diff.toFixed(0));
     }
 
-    function updateOldReturnStatusBadge() {
-        const loc = $('#vr_parking_location_in').val() || '';
-        const targetStatus = /workshop|garage/i.test(loc) ? 'Maintenance' : 'Parking';
-        const agr = selectedContract ? (' · ' + (selectedContract.agreement_no || '')) : '';
-        $('#vr_curr_status_badge').text('Rentout → ' + targetStatus + agr);
-    }
-
-    $('#vr_parking_location_in').on('change', updateOldReturnStatusBadge);
-
     $('#vr_km_in').on('input', updateKmUsed);
 
     // Image queue handlers
@@ -914,7 +904,6 @@ $(function() {
         $('#vr_km_in').val('');
         updateKmUsed();
         $('#vr_parking_location_in').val('Main Parking');
-        updateOldReturnStatusBadge();
 
         // Old Accessories checklist (Direct Contract format)
         const acc = c.old_accessories || {};
@@ -1244,7 +1233,6 @@ $(function() {
         $('#vr_customer_select').val('').trigger('change');
         $('#vr_filter_category').val('').trigger('change');
         $('#vr_parking_location_in').val('Main Parking');
-        updateOldReturnStatusBadge();
         $('#vr_check_in_type').val('Replacement');
         $('#vr_reason').val('');
         oldReturnQueue = [];

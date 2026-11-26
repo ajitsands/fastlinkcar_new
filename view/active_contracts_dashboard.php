@@ -282,23 +282,44 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                 <div class="modal-body">
                     <!-- Top Contract Meta Strip -->
                     <div class="row g-2 mb-3 p-2 rounded border bg-white align-items-center">
-                        <div class="col-sm-6 col-md-3">
+                        <div class="col-6 col-md-2">
                             <div class="text-muted small">Agreement Date</div>
                             <div class="fw-semibold" id="qvAgreementDate">-</div>
                         </div>
-                        <div class="col-sm-6 col-md-3">
+                        <div class="col-6 col-md-3">
                             <div class="text-muted small">Booking / Qtn No</div>
                             <div class="fw-semibold" id="qvBookingNo">-</div>
                         </div>
-                        <div class="col-sm-6 col-md-3">
+                        <div class="col-6 col-md-3">
                             <div class="text-muted small">Company</div>
                             <div class="fw-semibold" id="qvCompanyName">-</div>
                         </div>
-                        <div class="col-sm-6 col-md-3">
+                        <div class="col-6 col-md-2">
+                            <div class="text-muted small">Replacements</div>
+                            <div id="qvReplacementCountInfo"><span class="badge bg-label-secondary">0</span></div>
+                        </div>
+                        <div class="col-6 col-md-2">
                             <div class="text-muted small">Status</div>
                             <div id="qvStatus">-</div>
                         </div>
                     </div>
+
+                    <!-- Modal Tabs -->
+                    <ul class="nav nav-pills mb-3 p-1 rounded border" id="qvModalTabs" role="tablist" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                        <li class="nav-item flex-fill text-center" role="presentation">
+                            <button class="nav-link active fw-semibold w-100 py-1" id="qv-tab-main-btn" data-bs-toggle="tab" data-bs-target="#qvTabMain" type="button" role="tab">
+                                <i class="ri-file-text-line me-1"></i> Contract Details
+                            </button>
+                        </li>
+                        <li class="nav-item flex-fill text-center" role="presentation">
+                            <button class="nav-link fw-semibold w-100 py-1" id="qv-tab-repl-btn" data-bs-toggle="tab" data-bs-target="#qvTabReplacements" type="button" role="tab">
+                                <i class="ri-repeat-line me-1"></i> Replacements <span id="qvReplTabBadge" class="badge bg-secondary ms-1">0</span>
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content p-0">
+                    <div class="tab-pane fade show active" id="qvTabMain" role="tabpanel">
 
                     <div class="row g-3 mb-3">
                         <!-- Customer Information -->
@@ -553,6 +574,13 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                             </div>
                         </div>
                     </div>
+                    </div>
+                    <div class="tab-pane fade" id="qvTabReplacements" role="tabpanel">
+                        <div id="qvReplacementsContainer">
+                            <div class="text-center text-muted py-4">No vehicle replacements occurred on this contract.</div>
+                        </div>
+                    </div>
+                    </div>
                 </div>
                 <div class="modal-footer justify-content-between">
                     <div class="d-flex gap-2">
@@ -633,6 +661,13 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                 <div class="text-center text-muted small py-4">No feedback recorded yet.</div>
                             </div>
                         </div>
+                    </div>
+                    </div>
+                    <div class="tab-pane fade" id="qvTabReplacements" role="tabpanel">
+                        <div id="qvReplacementsContainer">
+                            <div class="text-center text-muted py-4">No vehicle replacements occurred on this contract.</div>
+                        </div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -1181,6 +1216,10 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             $('#qvHirerSignCol, #qvDeliveredSignCol').attr('class', 'col-6');
             $('#qvHirerSignBox, #qvDeliveredSignBox, #qvReceiverSignBox').html('-');
             $('#qvHirerSignName, #qvHirerSignDate, #qvDeliveredSignName, #qvDeliveredSignDate, #qvReceiverSignName, #qvReceiverSignDate').text('-');
+            $('#qvReplacementCountInfo').html('<span class="badge bg-label-secondary">0</span>');
+            $('#qvReplTabBadge').text('0').attr('class', 'badge bg-secondary ms-1');
+            $('#qvReplacementsContainer').html('<div class="text-center text-muted py-4">Loading...</div>');
+            $('#qv-tab-main-btn').tab('show');
             if (window.CarSurveyWidget) {
                 CarSurveyWidget.init('qvSurveyOutCanvas', [], { readOnly: true });
                 CarSurveyWidget.init('qvSurveyInCanvas', [], { readOnly: true });
@@ -1308,6 +1347,84 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                     };
                     $('#qvRentoutImages').html(renderImgThumbs(c.vehicle_rentout_images, '/uploads/rentvehicleImages/', 'No rentout images'));
                     $('#qvReturnImages').html(renderImgThumbs(c.vehicle_return_images, '/uploads/returnvehicleImages/', 'No return images'));
+
+                    // Populate Replacements Info & Tab
+                    let replList = [];
+                    try { replList = JSON.parse(c.replaced_vehicle_json || '[]') || []; } catch (e) {}
+                    if (!Array.isArray(replList)) replList = [];
+                    const rCount = replList.length;
+                    $('#qvReplTabBadge').text(rCount).attr('class', rCount > 0 ? 'badge bg-warning text-dark ms-1' : 'badge bg-secondary ms-1');
+                    if (rCount > 0) {
+                        $('#qvReplacementCountInfo').html(`<button type="button" class="btn btn-xs btn-warning text-dark fw-bold" onclick="document.getElementById('qv-tab-repl-btn').click();">${rCount} Replacement${rCount > 1 ? 's' : ''}</button>`);
+                        const renderChk = (accObj) => {
+                            accObj = accObj || {};
+                            return [
+                                ['Tools Kit', accObj.chk_tools],
+                                ['S. Wheel', accObj.chk_spare],
+                                ['W. Cup', accObj.chk_wcup],
+                                ['Radio', accObj.chk_radio],
+                                ['Scratches Mark X', accObj.chk_scratches],
+                                ['Seats Cleanness', accObj.chk_seats]
+                            ].map(([l, v]) => {
+                                const ok = String(v || '').toLowerCase() === 'yes' || v === true || v === 1 || v === '1';
+                                return `<span class="badge ${ok ? 'bg-label-success' : 'bg-label-secondary'}">${ok ? '✓' : '✗'} ${l}</span>`;
+                            }).join('');
+                        };
+                        const replHtml = replList.map((r, idx) => {
+                            const ov = r.old_vehicle || {};
+                            const nv = r.new_vehicle || {};
+                            return `
+                            <div class="p-3 rounded border mb-3" style="background-color:#f4f7ff; border-color:#cfe0ff !important;">
+                              <div class="d-flex flex-wrap justify-content-between align-items-center pb-2 mb-2 border-bottom border-primary-subtle">
+                                <span class="fw-bold" style="color:#1b3d94;"><i class="ri-repeat-line me-1"></i> Replacement #${idx + 1} ${r.replacement_id ? '(' + escapeHtml(r.replacement_id) + ')' : ''}</span>
+                                <span class="small fw-semibold">${r.replaced_on ? formatDateTime(r.replaced_on) : '-'} · By: ${escapeHtml(r.staff_name || 'Staff')}</span>
+                              </div>
+                              <div class="small text-muted mb-2">
+                                <strong>Parking In:</strong> ${escapeHtml(r.parking_location_in || 'Main Parking')} |
+                                <strong>Check-In Type:</strong> ${escapeHtml(r.check_in_type || 'Replacement')} |
+                                <strong>Out Location:</strong> ${escapeHtml(r.out_location || 'Main Parking')} |
+                                <strong>Reason:</strong> ${escapeHtml(r.remarks || '-')}
+                              </div>
+                              <div class="row g-3">
+                                <div class="col-md-6">
+                                  <div class="p-2 rounded border bg-white h-100">
+                                    <div class="fw-bold text-danger mb-1">Old Vehicle Returned: ${escapeHtml(ov.vehicle_number || '-')} (${escapeHtml(ov.category_name || '')} ${escapeHtml(ov.model_name || '')})</div>
+                                    <div class="small mb-2">KM Out: <strong>${ov.km_out || 0}</strong> → KM In: <strong>${ov.km_in || 0}</strong> (Used: <strong>${ov.km_used || 0}</strong>) | Fuel In: <strong>${escapeHtml(ov.fuel_level_in || '-')}</strong></div>
+                                    <div class="d-flex flex-wrap gap-1 mb-2">${renderChk(ov.accessories)}</div>
+                                    <div class="small fw-semibold text-muted mb-1">Return Images</div>
+                                    <div class="d-flex flex-wrap gap-1 mb-2">${renderImgThumbs(JSON.stringify(ov.old_return_images || []), '/uploads/returnvehicleImages/', 'No return images')}</div>
+                                    <div class="text-center"><canvas id="qvReplOldSurvey_${idx}" width="320" height="190" class="border rounded bg-light" style="max-width:100%;"></canvas></div>
+                                  </div>
+                                </div>
+                                <div class="col-md-6">
+                                  <div class="p-2 rounded border bg-white h-100">
+                                    <div class="fw-bold text-success mb-1">New Vehicle Issued: ${escapeHtml(nv.vehicle_number || '-')} (${escapeHtml(nv.category_name || '')} ${escapeHtml(nv.model_name || '')})</div>
+                                    <div class="small mb-2">KM Out: <strong>${nv.km_out || 0}</strong> | Fuel Out: <strong>${escapeHtml(nv.fuel_level_out || '-')}</strong></div>
+                                    <div class="d-flex flex-wrap gap-1 mb-2">${renderChk(nv.accessories)}</div>
+                                    <div class="small fw-semibold text-muted mb-1">Release Images</div>
+                                    <div class="d-flex flex-wrap gap-1 mb-2">${renderImgThumbs(JSON.stringify(nv.new_rentout_images || []), '/uploads/rentvehicleImages/', 'No release images')}</div>
+                                    <div class="text-center"><canvas id="qvReplNewSurvey_${idx}" width="320" height="190" class="border rounded bg-light" style="max-width:100%;"></canvas></div>
+                                  </div>
+                                </div>
+                              </div>
+                              ${r.staff_signature ? `<div class="mt-2 pt-2 border-top d-flex align-items-center gap-3"><span class="small fw-semibold">Authorized Person Signature (${escapeHtml(r.staff_name || '')}):</span><img src="${r.staff_signature}" style="height:48px;border:1px solid #ddd;border-radius:4px;background:#fff;"></div>` : ''}
+                            </div>`;
+                        }).join('');
+                        $('#qvReplacementsContainer').html(replHtml);
+                        setTimeout(function() {
+                            if (window.CarSurveyWidget) {
+                                replList.forEach((r, idx) => {
+                                    const oMarks = (r.old_vehicle && r.old_vehicle.accessories && r.old_vehicle.accessories.car_survey_in) ? r.old_vehicle.accessories.car_survey_in : [];
+                                    const nMarks = (r.new_vehicle && r.new_vehicle.accessories && r.new_vehicle.accessories.car_survey_out) ? r.new_vehicle.accessories.car_survey_out : [];
+                                    CarSurveyWidget.init('qvReplOldSurvey_' + idx, oMarks, { readOnly: true });
+                                    CarSurveyWidget.init('qvReplNewSurvey_' + idx, nMarks, { readOnly: true });
+                                });
+                            }
+                        }, 150);
+                    } else {
+                        $('#qvReplacementCountInfo').html('<span class="badge bg-label-secondary">0 (None)</span>');
+                        $('#qvReplacementsContainer').html('<div class="text-center text-muted py-4">No vehicle replacements occurred on this contract.</div>');
+                    }
                 }
             });
 

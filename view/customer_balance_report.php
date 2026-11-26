@@ -20,6 +20,12 @@ if (isset($this) && isset($this->encryption)) {
     $enc = new EncryptionClass();
     $encryptedVal = $enc->encrypt("5,5-1");
 }
+
+require_once ROOT_PATH . '/pdf/print_settings_helper.php';
+$cbCompanyId = !empty($_SESSION['company_id']) ? (int)$_SESSION['company_id'] : 1;
+$cbPrintSettings = getPrintSettings(null, $cbCompanyId);
+$cbHeaderHtml = renderPrintHeaderHtml($cbPrintSettings, 'Customer Balance Report', 'As of: ' . date('d M Y, H:i'), 'Generated: ' . date('d/m/Y H:i'));
+$cbFooterHtml = renderPrintFooterHtml($cbPrintSettings);
 ?>
 <!doctype html>
 <html lang="en" class="layout-navbar-fixed layout-menu-fixed layout-wide" dir="ltr" data-skin="default" data-bs-theme="light" data-assets-path="<?= $_ENV['BASE_URL'] ?>assets/" data-template="horizontal-menu-template-no-customizer">
@@ -183,9 +189,14 @@ if (isset($this) && isset($this->encryption)) {
                             <span class="badge bg-label-primary px-3 py-2 fs-6">
                                 <i class="ri ri-calendar-check-line me-1"></i> Report As of Today: <strong id="lbl_as_of_date"><?= date('d M Y, H:i') ?></strong>
                             </span>
-                            <button type="button" id="btn_export_excel" class="btn btn-outline-success btn-sm">
-                                <i class="ri ri-file-excel-2-line me-1"></i> Export to Excel
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button type="button" id="btn_export_excel" class="btn btn-outline-success btn-sm">
+                                    <i class="ri ri-file-excel-2-line me-1"></i> Export to Excel
+                                </button>
+                                <button type="button" id="btn_export_pdf" class="btn btn-outline-danger btn-sm">
+                                    <i class="ri ri-file-pdf-2-line me-1"></i> Export to PDF
+                                </button>
+                            </div>
                         </div>
                         
                         <!-- Summary KPI Metrics Dashboard (Row 1: Customers & Collections) -->
@@ -482,6 +493,7 @@ $(document).ready(function() {
                     
                     // Update KPI Cards from backend kpis
                     const kpis = json.kpis || {};
+                    cbLastKpis = kpis;
                     if (kpis.as_of_date) $('#lbl_as_of_date').text(kpis.as_of_date);
                     $('#kpi_total_customers').text(kpis.total_customers ?? balancesCache.length);
                     $('#kpi_active_customers').text(kpis.active_customers ?? 0);
@@ -812,66 +824,155 @@ $(document).ready(function() {
         w.document.close();
     });
 
-    // Export to Excel / CSV
+    const CB_PRINT_HEADER_HTML = <?= json_encode($cbHeaderHtml, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    const CB_PRINT_FOOTER_HTML = <?= json_encode($cbFooterHtml, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    const CB_PRINT_SETTINGS = <?= json_encode($cbPrintSettings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    let cbLastKpis = {};
+
+    // Export to Excel & PDF
     $('#btn_export_excel').on('click', function() {
-        exportBalancesToCSV();
+        exportBalancesToExcel();
+    });
+    $('#btn_export_pdf').on('click', function() {
+        exportBalancesToPDF();
     });
 
-    function exportBalancesToCSV() {
-        if (!balancesCache || balancesCache.length === 0) {
-            alert('No data to export.');
-            return;
-        }
+    function getFilteredBalancesForExport() {
+        if (!tblBalances) return balancesCache || [];
+        const filtered = tblBalances.rows({ search: 'applied' }).data().toArray();
+        return filtered.length ? filtered : (balancesCache || []);
+    }
 
-        let headers = [
-            "#",
-            "Customer Code",
-            "Customer Name",
-            "Mobile",
-            "CPR / CR",
-            "Total Debit (BHD)",
-            "Total Credit (BHD)",
-            "Overdue Return (BHD)",
-            "Status",
-            "Balance Amount (BHD)"
-        ];
+    function buildExportStatusText(row) {
+        const ledBal = parseFloat(row.ledger_balance || 0);
+        const ovAmt = parseFloat(row.overdue_amount || 0);
+        const bal = parseFloat(row.balance || 0);
+        const parts = [];
+        if (row.is_blacklisted) parts.push('Blacklisted');
+        if (ledBal <= 0 && ovAmt > 0) parts.push('Ledger Paid + Overdue Return Pending');
+        else if (bal > 0) parts.push(ovAmt > 0 ? 'Pending Payment + Overdue Return' : 'Pending Payment');
+        else if (bal < 0) parts.push('Overpaid (Credit)');
+        else parts.push('Settled');
+        return parts.join(' | ');
+    }
 
-        let csvRows = [];
-        csvRows.push(headers.map(h => `"${h}"`).join(','));
+    function exportBalancesToExcel() {
+        const list = getFilteredBalancesForExport();
+        if (!list.length) { alert('No data to export.'); return; }
+        const ps = CB_PRINT_SETTINGS || {};
+        const k = cbLastKpis || {};
+        let totD = 0, totC = 0, totO = 0, totB = 0;
+        const rowsHtml = list.map((row, i) => {
+            const d = parseFloat(row.total_debit || 0);
+            const c = parseFloat(row.total_credit || 0);
+            const o = parseFloat(row.overdue_amount || 0);
+            const b = parseFloat(row.balance || 0);
+            totD += d; totC += c; totO += o; totB += b;
+            return `<tr>
+                <td style="text-align:center;">${i + 1}</td>
+                <td>${escapeHtml(row.customer_id || '')}</td>
+                <td>${escapeHtml(row.customer_name || '')}</td>
+                <td>${escapeHtml(row.customer_mobile || '')}</td>
+                <td>${escapeHtml(row.customer_cr_cpr || '')}</td>
+                <td>${escapeHtml(buildExportStatusText(row))}</td>
+                <td style="text-align:right;">${d.toFixed(3)}</td>
+                <td style="text-align:right;">${c.toFixed(3)}</td>
+                <td style="text-align:right;">${o.toFixed(3)}</td>
+                <td style="text-align:right;font-weight:bold;">${b.toFixed(3)}</td>
+            </tr>`;
+        }).join('');
 
-        balancesCache.forEach((row, i) => {
-            let bal = parseFloat(row.balance) || 0;
-            let status = bal > 0 ? "Pending Payment" : (bal < 0 ? "Credit Balance" : "Settled");
+        const xlsHtml = `
+            <html xmlns:x="urn:schemas-microsoft-com:office:excel">
+            <head><meta charset="UTF-8"><style>table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt;} th,td{border:1px solid #cbd5e1;padding:5px 8px;} th{background:#eef3fc;color:#1b3d94;}</style></head>
+            <body>
+              <table>
+                <tr><td colspan="10" style="font-size:14pt;font-weight:bold;color:#1b3d94;border:none;">${escapeHtml(ps.company_name || 'Fastlink Car Rental')} — Customer Balance Report</td></tr>
+                <tr><td colspan="10" style="font-size:10pt;color:#475569;border:none;">As of Today: ${escapeHtml(k.as_of_date || $('#lbl_as_of_date').text())} | Total Customers: ${k.total_customers || 0} (Active: ${k.active_customers || 0}, Blacklisted: ${k.blacklisted_customers || 0}) | Total Collected: ${parseFloat(k.total_collected || 0).toFixed(3)} BHD | Total Outstanding: ${parseFloat(k.total_outstanding || 0).toFixed(3)} BHD</td></tr>
+                <tr><td colspan="10" style="border:none;"></td></tr>
+                <tr>
+                  <th>#</th><th>Code</th><th>Customer Name</th><th>Mobile</th><th>CPR / CR</th><th>Status</th>
+                  <th>Total Debit (BHD)</th><th>Total Credit (BHD)</th><th>Overdue Return (BHD)</th><th>Balance (BHD)</th>
+                </tr>
+                ${rowsHtml}
+                <tr style="font-weight:bold;background:#eef3fc;">
+                  <td colspan="6" style="text-align:right;">Totals (BHD)</td>
+                  <td style="text-align:right;">${totD.toFixed(3)}</td>
+                  <td style="text-align:right;">${totC.toFixed(3)}</td>
+                  <td style="text-align:right;">${totO.toFixed(3)}</td>
+                  <td style="text-align:right;">${totB.toFixed(3)}</td>
+                </tr>
+                <tr><td colspan="10" style="border:none;"></td></tr>
+                <tr><td colspan="10" style="font-size:9pt;color:#64748b;border:none;">${escapeHtml(ps.footer_text || 'Generated from Fastlink Car Rental Portal')}</td></tr>
+              </table>
+            </body></html>`;
 
-            let rowVals = [
-                i + 1,
-                row.customer_id || '',
-                row.customer_name || '',
-                row.customer_mobile || '',
-                row.customer_cr_cpr || '',
-                parseFloat(row.total_debit || 0).toFixed(3),
-                parseFloat(row.total_credit || 0).toFixed(3),
-                parseFloat(row.overdue_amount || 0).toFixed(3),
-                status,
-                bal.toFixed(3)
-            ];
-
-            let cleanRow = rowVals.map(v => {
-                let s = (v !== null && v !== undefined) ? String(v).replace(/"/g, '""') : '';
-                return `"${s}"`;
-            });
-            csvRows.push(cleanRow.join(','));
-        });
-
-        let csvString = csvRows.join('\r\n');
-        let blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-        let url = URL.createObjectURL(blob);
-        let link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `Customer_Balances_Summary_${new Date().toISOString().slice(0,10)}.csv`);
+        const blob = new Blob(['\ufeff', xlsHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Customer_Balance_Report_${new Date().toISOString().slice(0,10)}.xls`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    function exportBalancesToPDF() {
+        const list = getFilteredBalancesForExport();
+        if (!list.length) { alert('No data to export.'); return; }
+        const k = cbLastKpis || {};
+        let totD = 0, totC = 0, totO = 0, totB = 0;
+        const rowsHtml = list.map((row, i) => {
+            const d = parseFloat(row.total_debit || 0);
+            const c = parseFloat(row.total_credit || 0);
+            const o = parseFloat(row.overdue_amount || 0);
+            const b = parseFloat(row.balance || 0);
+            totD += d; totC += c; totO += o; totB += b;
+            return `<tr>
+                <td style="text-align:center;">${i + 1}</td>
+                <td><strong>${escapeHtml(row.customer_name || '')}</strong> (${escapeHtml(row.customer_id || '')})<br><small>${escapeHtml(row.customer_mobile || '')} ${row.customer_cr_cpr ? '· CPR: ' + escapeHtml(row.customer_cr_cpr) : ''}</small><br><small style="color:#b91c1c;">${escapeHtml(buildExportStatusText(row))}</small></td>
+                <td style="text-align:right;">${d.toFixed(3)}</td>
+                <td style="text-align:right;color:#15803d;">${c.toFixed(3)}</td>
+                <td style="text-align:right;color:#b91c1c;">${o.toFixed(3)}</td>
+                <td style="text-align:right;font-weight:bold;">${b.toFixed(3)}</td>
+            </tr>`;
+        }).join('');
+
+        const pmHtml = Array.isArray(k.payment_methods) && k.payment_methods.length
+            ? k.payment_methods.map(p => `${escapeHtml(p.method)}: <strong>${parseFloat(p.amount || 0).toFixed(3)} BHD</strong>`).join(' | ')
+            : '-';
+
+        const w = window.open('', '_blank');
+        w.document.write(`<!doctype html><html><head><title>Customer Balance Report</title>
+            <style>
+                body{font-family:Arial,sans-serif;padding:18px;font-size:11px;color:#1e293b;}
+                .kpi-strip{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;padding:8px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;}
+                .kpi-box{flex:1;min-width:110px;font-size:10px;}
+                .kpi-box strong{display:block;font-size:12px;color:#1b3d94;}
+                table{width:100%;border-collapse:collapse;margin-top:8px;}
+                th,td{border:1px solid #cbd5e1;padding:5px 7px;vertical-align:top;}
+                th{background:#eef3fc;color:#1b3d94;text-align:left;font-size:10px;text-transform:uppercase;}
+                tfoot td{background:#eef3fc;font-weight:bold;color:#1b3d94;}
+                @media print{body{padding:0;}}
+            </style></head><body>
+            ${CB_PRINT_HEADER_HTML}
+            <div class="kpi-strip">
+                <div class="kpi-box">Customers<strong>${k.total_customers || 0} (Active: ${k.active_customers || 0}, Blacklisted: ${k.blacklisted_customers || 0})</strong></div>
+                <div class="kpi-box">Total Collected<strong>${parseFloat(k.total_collected || 0).toFixed(3)} BHD</strong></div>
+                <div class="kpi-box">Ledger Outstanding<strong>${parseFloat(k.ledger_outstanding || 0).toFixed(3)} BHD</strong></div>
+                <div class="kpi-box">Overdue (Not Returned)<strong>${parseFloat(k.overdue_outstanding || 0).toFixed(3)} BHD</strong></div>
+                <div class="kpi-box">Total Outstanding<strong>${parseFloat(k.total_outstanding || 0).toFixed(3)} BHD</strong></div>
+                <div class="kpi-box">Overpaid<strong>${parseFloat(k.total_overpaid || 0).toFixed(3)} BHD</strong></div>
+            </div>
+            <div style="font-size:10px;margin-bottom:6px;"><strong>Collections by Payment Method:</strong> ${pmHtml}</div>
+            <table>
+                <thead><tr><th>#</th><th>Customer Details &amp; Status</th><th style="text-align:right;">Total Debit</th><th style="text-align:right;">Total Credit</th><th style="text-align:right;">Overdue Return</th><th style="text-align:right;">Balance (BHD)</th></tr></thead>
+                <tbody>${rowsHtml}</tbody>
+                <tfoot><tr><td colspan="2" style="text-align:right;">Totals (BHD)</td><td style="text-align:right;">${totD.toFixed(3)}</td><td style="text-align:right;">${totC.toFixed(3)}</td><td style="text-align:right;">${totO.toFixed(3)}</td><td style="text-align:right;">${totB.toFixed(3)}</td></tr></tfoot>
+            </table>
+            <div style="margin-top:14px;">${CB_PRINT_FOOTER_HTML}</div>
+            <script>window.onload=function(){window.print();};<\/script></body></html>`);
+        w.document.close();
     }
 
     function escapeHtml(text) {

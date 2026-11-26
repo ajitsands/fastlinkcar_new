@@ -548,7 +548,7 @@ $(function() {
         }).join('');
         const xls = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><style>table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt;}th,td{border:1px solid #cbd5e1;padding:5px 8px;}th{background:#eef3fc;color:#1b3d94;}</style></head><body><table>
             <tr><td colspan="10" style="font-size:14pt;font-weight:bold;color:#1b3d94;border:none;">${esc(ps.company_name || 'FAST LINK CAR RENTAL')} — Contract Financials & Status Report</td></tr>
-            <tr><td colspan="10" style="font-size:10pt;color:#475569;border:none;">As of Today: ${esc(k.as_of_date || $('#cf_as_of_date').text())} | Contracts: ${k.total_contracts || 0} | Collected: ${parseFloat(k.total_collected||0).toFixed(3)} BHD | Outstanding: ${parseFloat(k.total_outstanding||0).toFixed(3)} BHD</td></tr>
+            <tr><td colspan="10" style="font-size:10pt;color:#475569;border:none;">As of Date: ${esc(k.as_of_date || $('#cf_as_of_date').text())} | Contracts: ${k.total_contracts || 0} | Collected: ${parseFloat(k.total_collected||0).toFixed(3)} BHD | Outstanding: ${parseFloat(k.total_outstanding||0).toFixed(3)} BHD</td></tr>
             <tr><th>#</th><th>Agreement No</th><th>Contract Status</th><th>Payment Status</th><th>Customer</th><th>Vehicle</th><th>Agreed (BHD)</th><th>Collected (BHD)</th><th>Overdue (BHD)</th><th>Balance (BHD)</th></tr>
             ${rowsHtml}
             <tr style="font-weight:bold;background:#eef3fc;"><td colspan="6" style="text-align:right;">Totals (BHD)</td><td style="text-align:right;">${tA.toFixed(3)}</td><td style="text-align:right;">${tC.toFixed(3)}</td><td style="text-align:right;">${tO.toFixed(3)}</td><td style="text-align:right;">${tB.toFixed(3)}</td></tr>
@@ -635,7 +635,7 @@ $(function() {
                     doc.text('CONTRACT FINANCIALS & STATUS REPORT', marginX, 86);
                     doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105);
                     doc.text(`Total Contracts: ${k.total_contracts || 0} (Active: ${k.active_contracts || 0}, Closed/Returned: ${k.closed_returned_contracts || 0}, Overdue: ${k.overdue_contracts || 0})  |  Agreed: ${parseFloat(k.total_agreed || 0).toFixed(3)} BHD  |  Collected: ${parseFloat(k.total_collected || 0).toFixed(3)} BHD`, marginX, 102);
-                    doc.text(`As of Today: ${k.as_of_date || $('#cf_as_of_date').text()}`, rightX, 86, { align: 'right' });
+                    doc.text(`As of Date: ${k.as_of_date || $('#cf_as_of_date').text()}`, rightX, 86, { align: 'right' });
                     doc.setFont('helvetica', 'bold');
                     doc.text(`Overdue: ${parseFloat(k.total_overdue || 0).toFixed(3)} BHD  |  Total Outstanding: ${parseFloat(k.total_outstanding || 0).toFixed(3)} BHD`, rightX, 102, { align: 'right' });
                 }

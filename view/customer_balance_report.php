@@ -905,7 +905,7 @@ $(document).ready(function() {
                 <tr><td colspan="10" style="font-size:14pt;font-weight:bold;color:#1b3d94;border:none;">${escapeHtml(ps.company_name || 'FAST LINK CAR RENTAL')}</td></tr>
                 ${ps.header_subtitle ? `<tr><td colspan="10" style="font-size:10pt;color:#475569;border:none;">${escapeHtml(ps.header_subtitle)}</td></tr>` : ''}
                 ${ps.header_address ? `<tr><td colspan="10" style="font-size:9.5pt;color:#475569;border:none;">${escapeHtml(ps.header_address)} ${ps.header_phone ? ' | Tel: ' + escapeHtml(ps.header_phone) : ''} ${ps.header_email ? ' | ' + escapeHtml(ps.header_email) : ''}</td></tr>` : ''}
-                <tr><td colspan="10" style="font-size:12pt;font-weight:bold;color:#1e293b;border:none;">Customer Balance Report — As of Today: ${escapeHtml(k.as_of_date || $('#lbl_as_of_date').text())}</td></tr>
+                <tr><td colspan="10" style="font-size:12pt;font-weight:bold;color:#1e293b;border:none;">Customer Balance Report — As of Date: ${escapeHtml(k.as_of_date || $('#lbl_as_of_date').text())}</td></tr>
                 <tr><td colspan="10" style="font-size:9.5pt;color:#475569;border:none;">Customers: ${k.total_customers || 0} (Active: ${k.active_customers || 0}, Blacklisted: ${k.blacklisted_customers || 0}) | Total Collected: ${parseFloat(k.total_collected || 0).toFixed(3)} BHD | Ledger Outstanding: ${parseFloat(k.ledger_outstanding || 0).toFixed(3)} BHD | Overdue: ${parseFloat(k.overdue_outstanding || 0).toFixed(3)} BHD | Total Outstanding: ${parseFloat(k.total_outstanding || 0).toFixed(3)} BHD</td></tr>
                 <tr><td colspan="10" style="border:none;"></td></tr>
                 <tr>
@@ -1049,7 +1049,7 @@ $(document).ready(function() {
                     doc.text(`Customers: ${k.total_customers || 0} (Active: ${k.active_customers || 0}, Blacklisted: ${k.blacklisted_customers || 0})  |  Collected: ${parseFloat(k.total_collected || 0).toFixed(3)} BHD  |  Ledger Outst.: ${parseFloat(k.ledger_outstanding || 0).toFixed(3)} BHD  |  Overdue: ${parseFloat(k.overdue_outstanding || 0).toFixed(3)} BHD`, marginX, 102);
                     doc.text(`Collections by Method: ${pmLine}`, marginX, 116);
 
-                    doc.text(`As of Today: ${k.as_of_date || $('#lbl_as_of_date').text()}`, rightX, 86, { align: 'right' });
+                    doc.text(`As of Date: ${k.as_of_date || $('#lbl_as_of_date').text()}`, rightX, 86, { align: 'right' });
                     doc.setFont('helvetica', 'bold');
                     doc.text(`Total Outstanding: ${parseFloat(k.total_outstanding || 0).toFixed(3)} BHD  |  Overpaid: ${parseFloat(k.total_overpaid || 0).toFixed(3)} BHD`, rightX, 102, { align: 'right' });
                 } else {

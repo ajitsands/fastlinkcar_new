@@ -287,37 +287,23 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                           </div>
                         </div>
 
-                        <!-- Old Vehicle Rentout Images & Return Images Upload -->
-                        <div class="col-12 col-md-6">
-                          <label class="form-label fw-semibold small mb-1 text-muted">Old Vehicle Rentout Images (Previous)</label>
-                          <div id="vr_old_rentout_preview" class="d-flex flex-wrap gap-2 p-2 border rounded bg-light" style="min-height:62px;">
-                            <small class="text-muted fst-italic">No rentout images</small>
-                          </div>
-                        </div>
-                        <div class="col-12 col-md-6">
-                          <label for="vr_old_return_images" class="form-label fw-semibold small mb-1 text-danger">
-                            <i class="ri-camera-line me-1"></i>Capture / Upload Return Images (Old Vehicle)
-                          </label>
-                          <input type="file" id="vr_old_return_images" class="form-control form-control-sm mb-2" multiple accept="image/*" capture="environment">
-                          <div id="vr_old_return_preview" class="d-flex flex-wrap gap-2"></div>
-                        </div>
                       </div>
                     </div>
 
-                    <!-- Current Vehicle Card -->
+                    <!-- Current Vehicle Card + Return Images -->
                     <div class="col-12 col-lg-4">
-                      <div id="vr_curr_veh_card" class="vr-veh-card h-100">
-                        <div class="row g-0 h-100">
+                      <div id="vr_curr_veh_card" class="vr-veh-card mb-3">
+                        <div class="row g-0">
                           <div class="col-5 vr-veh-img-box">
                             <img id="vr_curr_card_img" src="uploads/vehicleImages/default.jpg" onerror="this.onerror=null;this.src='uploads/vehicleImages/default.jpg';" alt="Current Vehicle">
                             <span class="badge bg-danger position-absolute top-0 start-0 m-2" style="font-size:0.65rem;">Rentout</span>
                           </div>
-                          <div class="col-7 p-2 d-flex flex-column justify-content-between">
-                            <div>
+                          <div class="col-7 p-2 d-flex flex-column">
+                            <div class="mb-1">
                               <h6 class="mb-0 fw-bold text-danger text-truncate" id="vr_curr_card_no">-</h6>
                               <small class="fw-semibold text-dark d-block text-truncate" id="vr_curr_card_title">-</small>
                             </div>
-                            <div class="small text-secondary mt-1">
+                            <div class="small text-secondary mt-1" style="line-height: 1.55;">
                               <div><i class="ri-calendar-line me-1"></i>Year: <strong id="vr_curr_card_year">-</strong></div>
                               <div><i class="ri-palette-line me-1"></i>Color: <strong id="vr_curr_card_color">-</strong></div>
                               <div><i class="ri-speed-up-line me-1"></i>KM Out: <strong id="vr_curr_card_km">-</strong></div>
@@ -325,6 +311,23 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                               <div><i class="ri-file-check-line me-1"></i>Pass: <strong id="vr_curr_card_pass">-</strong></div>
                             </div>
                           </div>
+                        </div>
+                      </div>
+
+                      <!-- Old Vehicle Return Images Upload -->
+                      <div class="p-2 rounded border bg-white mb-2">
+                        <label for="vr_old_return_images" class="form-label fw-semibold small mb-1 text-danger">
+                          <i class="ri-camera-line me-1"></i>Capture / Upload Return Images (Old Vehicle)
+                        </label>
+                        <input type="file" id="vr_old_return_images" class="form-control form-control-sm mb-2" multiple accept="image/*" capture="environment">
+                        <div id="vr_old_return_preview" class="d-flex flex-wrap gap-2"></div>
+                      </div>
+
+                      <!-- Old Vehicle Rentout Images (Previous) -->
+                      <div class="p-2 rounded border bg-light">
+                        <label class="form-label fw-semibold small mb-1 text-muted">Old Vehicle Rentout Images (Previous)</label>
+                        <div id="vr_old_rentout_preview" class="d-flex flex-wrap gap-2" style="min-height:48px;">
+                          <small class="text-muted fst-italic">No rentout images</small>
                         </div>
                       </div>
                     </div>
@@ -569,31 +572,23 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                           </div>
                         </div>
 
-                        <!-- New Vehicle Release Images -->
-                        <div class="col-12">
-                          <label for="vr_new_rentout_images" class="form-label fw-semibold small mb-1 text-success">
-                            <i class="ri-camera-line me-1"></i>Capture / Upload Release Images (Replacement Vehicle)
-                          </label>
-                          <input type="file" id="vr_new_rentout_images" class="form-control form-control-sm mb-2" multiple accept="image/*" capture="environment">
-                          <div id="vr_new_rentout_preview" class="d-flex flex-wrap gap-2"></div>
-                        </div>
                       </div>
                     </div>
 
-                    <!-- Replacement Vehicle Card + Insurance & Passing Notification -->
+                    <!-- Replacement Vehicle Card + Insurance & Passing Notification + Release Images -->
                     <div class="col-12 col-lg-4">
-                      <div id="vr_new_veh_card" class="vr-veh-card d-none">
+                      <div id="vr_new_veh_card" class="vr-veh-card d-none mb-2">
                         <div class="row g-0">
                           <div class="col-5 vr-veh-img-box">
                             <img id="vr_new_card_img" src="uploads/vehicleImages/default.jpg" onerror="this.onerror=null;this.src='uploads/vehicleImages/default.jpg';" alt="Replacement Vehicle">
                             <span class="badge bg-success position-absolute top-0 start-0 m-2" style="font-size:0.65rem;">Available</span>
                           </div>
-                          <div class="col-7 p-2 d-flex flex-column justify-content-between">
-                            <div>
+                          <div class="col-7 p-2 d-flex flex-column">
+                            <div class="mb-1">
                               <h6 class="mb-0 fw-bold text-primary text-truncate" id="vr_new_card_no">-</h6>
                               <small class="fw-semibold text-dark d-block text-truncate" id="vr_new_card_title">-</small>
                             </div>
-                            <div class="small text-secondary mt-1">
+                            <div class="small text-secondary mt-1" style="line-height: 1.55;">
                               <div><i class="ri-calendar-line me-1"></i>Year: <strong id="vr_new_card_year">-</strong></div>
                               <div><i class="ri-palette-line me-1"></i>Color: <strong id="vr_new_card_color">-</strong></div>
                               <div><i class="ri-gas-station-line me-1"></i>Fuel: <strong id="vr_new_card_fuel">-</strong></div>
@@ -604,7 +599,16 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                           </div>
                         </div>
                       </div>
-                      <div id="vr_compliance_alert" class="mt-2 d-none"></div>
+                      <div id="vr_compliance_alert" class="mb-2 d-none"></div>
+
+                      <!-- New Vehicle Release Images -->
+                      <div class="p-2 rounded border bg-white">
+                        <label for="vr_new_rentout_images" class="form-label fw-semibold small mb-1 text-success">
+                          <i class="ri-camera-line me-1"></i>Capture / Upload Release Images (Replacement Vehicle)
+                        </label>
+                        <input type="file" id="vr_new_rentout_images" class="form-control form-control-sm mb-2" multiple accept="image/*" capture="environment">
+                        <div id="vr_new_rentout_preview" class="d-flex flex-wrap gap-2"></div>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -612,9 +612,13 @@ try {
         $overdueDays = 0;
         $overdueAmount = 0.0;
 
-        if ($isActiveStatus && $effectiveEndTs && $nowTs > ($effectiveEndTs + 3600)) {
+        $graceAnchorTs = ($effectiveEndTs && date('H:i:s', $effectiveEndTs) === '00:00:00')
+            ? strtotime(date('Y-m-d 23:59:59', $effectiveEndTs))
+            : $effectiveEndTs;
+
+        if ($isActiveStatus && $effectiveEndTs && $nowTs > ($graceAnchorTs + 3600)) {
             $isOverdue = true;
-            $diffSec = $nowTs - $effectiveEndTs;
+            $diffSec = $nowTs - $graceAnchorTs;
             $overdueDays = $isDueToday ? 1 : max(1, (int)ceil($diffSec / 86400));
 
             if (strpos($activeRateType, 'hour') !== false) {

@@ -500,9 +500,12 @@ class ContractReturnOverdueController {
                     $todayStr = date('Y-m-d', $currentTimestamp);
                     $endDateOnly = date('Y-m-d', $expectedReturnTs);
                     $isDueToday = ($endDateOnly === $todayStr);
+                    $graceAnchorTs = (date('H:i:s', $expectedReturnTs) === '00:00:00')
+                        ? strtotime(date('Y-m-d 23:59:59', $expectedReturnTs))
+                        : $expectedReturnTs;
 
-                    if ($currentTimestamp > ($expectedReturnTs + 3600)) { // 1 hr grace period
-                        $diffSec = $currentTimestamp - $expectedReturnTs;
+                    if ($currentTimestamp > ($graceAnchorTs + 3600)) { // 1 hr grace period
+                        $diffSec = $currentTimestamp - $graceAnchorTs;
                         $overdueDays = $isDueToday ? 1 : max(1, (int)ceil($diffSec / 86400));
                         $isOverdue = true;
                         $overdueStatusLabel = "Overdue ({$overdueDays}d)";

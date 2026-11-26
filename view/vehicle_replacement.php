@@ -202,7 +202,7 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                       <div id="vr_curr_veh_card" class="vr-veh-card d-none h-100">
                         <div class="row g-0 h-100">
                           <div class="col-5 vr-veh-img-box">
-                            <img id="vr_curr_card_img" src="uploads/vehicleImages/default.png" onerror="this.src='uploads/vehicleImages/default.png';" alt="Current Vehicle">
+                            <img id="vr_curr_card_img" src="uploads/vehicleImages/default.jpg" onerror="this.onerror=null;this.src='uploads/vehicleImages/default.jpg';" alt="Current Vehicle">
                             <span class="badge bg-danger position-absolute top-0 start-0 m-2" style="font-size:0.65rem;">Rentout</span>
                           </div>
                           <div class="col-7 p-2 d-flex flex-column justify-content-between">
@@ -468,7 +468,7 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                       <div id="vr_new_veh_card" class="vr-veh-card d-none">
                         <div class="row g-0">
                           <div class="col-5 vr-veh-img-box">
-                            <img id="vr_new_card_img" src="uploads/vehicleImages/default.png" onerror="this.src='uploads/vehicleImages/default.png';" alt="Replacement Vehicle">
+                            <img id="vr_new_card_img" src="uploads/vehicleImages/default.jpg" onerror="this.onerror=null;this.src='uploads/vehicleImages/default.jpg';" alt="Replacement Vehicle">
                             <span class="badge bg-success position-absolute top-0 start-0 m-2" style="font-size:0.65rem;">Available</span>
                           </div>
                           <div class="col-7 p-2 d-flex flex-column justify-content-between">
@@ -627,7 +627,7 @@ $(function() {
         $('#vr_curr_card_km').text(c.km_out || '0');
         $('#vr_curr_card_ins').text(fmtDate24(c.next_insurance_date, true));
         $('#vr_curr_card_pass').text(fmtDate24(c.next_passing_date, true));
-        $('#vr_curr_card_img').attr('src', c.last_image ? ('uploads/vehicleImages/' + c.last_image) : 'uploads/vehicleImages/default.png');
+        $('#vr_curr_card_img').attr('src', c.last_image ? ('uploads/vehicleImages/' + c.last_image) : 'uploads/vehicleImages/default.jpg');
 
         updateComplianceNotification();
     }
@@ -693,7 +693,7 @@ $(function() {
         $('#vr_new_card_km').text(v.odo_meter || '0');
         $('#vr_new_card_ins').text(fmtDate24(v.next_insurance_date, true));
         $('#vr_new_card_pass').text(fmtDate24(v.next_passing_date, true));
-        $('#vr_new_card_img').attr('src', v.last_image ? ('uploads/vehicleImages/' + v.last_image) : 'uploads/vehicleImages/default.png');
+        $('#vr_new_card_img').attr('src', v.last_image ? ('uploads/vehicleImages/' + v.last_image) : 'uploads/vehicleImages/default.jpg');
 
         updateComplianceNotification(v);
     }
@@ -761,7 +761,7 @@ $(function() {
             <div class="col-12 col-md-6 col-lg-4">
               <div class="vr-veh-card h-100 p-2 d-flex flex-column justify-content-between">
                 <div class="d-flex gap-2">
-                  <img src="${v.last_image ? ('uploads/vehicleImages/' + v.last_image) : 'uploads/vehicleImages/default.png'}" onerror="this.src='uploads/vehicleImages/default.png';" style="width:90px;height:70px;object-fit:contain;border-radius:6px;border:1px solid #eee;">
+                  <img src="${v.last_image ? ('uploads/vehicleImages/' + v.last_image) : 'uploads/vehicleImages/default.jpg'}" onerror="this.onerror=null;this.src='uploads/vehicleImages/default.jpg';" style="width:90px;height:70px;object-fit:contain;border-radius:6px;border:1px solid #eee;">
                   <div class="flex-grow-1 overflow-hidden">
                     <div class="fw-bold text-primary text-truncate">${v.vehicle_number || '-'}</div>
                     <div class="small fw-semibold text-truncate">${[v.category_name, v.model_name].filter(Boolean).join(' ')}</div>

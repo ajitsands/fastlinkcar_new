@@ -276,6 +276,7 @@ html, body {
               <?php include('templates/VehicleContractList/otp_verify_modal.php'); ?>
               <?php include('templates/VehicleContractList/otp_submit_modal.php'); ?>
                <?php include('templates/VehicleContractList/view_contract_details_modal.php'); ?>
+              <?php include('templates/VehicleContractList/comprehensive_contract_audit_modal.php'); ?>
                 <?php include('templates/VehicleContractList/contract_ledger_modal.php'); ?>
                 <?php include('templates/VehicleContractList/contract_ledger_supporting_modals.php'); ?>
                 <?php include('templates/VehicleStatus/vehicleInfoModal.php'); ?>
@@ -5784,6 +5785,10 @@ $(document).on('click', '#contractTable li a.view_contract_details', function (e
 });
 
 function openviewcontractModal(id,vehicleid,customer_code,model_ids) {
+    if (typeof window.openComprehensiveContractAuditModal === 'function') {
+        window.openComprehensiveContractAuditModal(id);
+        return;
+    }
 
     $.ajax({
         url: '/ContractListController',

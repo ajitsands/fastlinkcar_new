@@ -171,10 +171,11 @@ class ContractHistoryController {
         try {
             // 1. Fetch Contract Main Row
             $stmtContract = $this->varPDOModelObj->selectexecuteQuery(
-                "SELECT c.*, cat.category_name, modl.modal_name AS model_name
+                "SELECT c.*, cat.category_name, modl.modal_name AS model_name, comp.company_name
                  FROM tbl_vehicle_rentout_contracts c
                  LEFT JOIN tbl_vehicle_category cat ON cat.ids = c.vehicle_category_id
                  LEFT JOIN tbl_vehicle_model modl ON modl.ids = c.vehicle_model_id
+                 LEFT JOIN tbl_company comp ON comp.ids = c.company_id
                  WHERE c.ids = :id",
                 [':id' => $agreementId]
             );
@@ -243,6 +244,39 @@ class ContractHistoryController {
             }
             $balance = $totalDebit - $totalCredit;
 
+            // 7. Fetch Invoices related to this Contract
+            $invoices = [];
+            try {
+                $stmtInv = $this->varPDOModelObj->selectexecuteQuery(
+                    "SELECT id, invoice_no, invoice_date, invoice_due_date, vat_total, grand_total, reference_number, draft, created_at
+                     FROM invoices
+                     WHERE reference_number = :agr OR items LIKE :agr_like
+                     ORDER BY id DESC",
+                    [':agr' => $agreementNo, ':agr_like' => '%' . $agreementNo . '%']
+                );
+                $invoices = $stmtInv ? $stmtInv->fetchAll(PDO::FETCH_ASSOC) : [];
+            } catch (\Throwable $th) {
+                $invoices = [];
+            }
+
+            // 8. Fetch Vehicle Movements & Logs
+            $movements = [];
+            try {
+                $stmtMov = $this->varPDOModelObj->selectexecuteQuery(
+                    "SELECT vm.*, v.vehicle_number
+                     FROM tbl_vehicle_movement vm
+                     LEFT JOIN tbl_vehicles v ON v.ids = vm.vehicle_id
+                     WHERE (vm.reference_type = 'Agreement' AND vm.reference_id = :aid) OR vm.reference_no = :agr
+                     ORDER BY vm.ids ASC",
+                    [':aid' => $agreementId, ':agr' => $agreementNo]
+                );
+                $movements = $stmtMov ? $stmtMov->fetchAll(PDO::FETCH_ASSOC) : [];
+            } catch (\Throwable $th) {
+                $movements = [];
+            }
+
+            $violations = !empty($contract['violations_json']) ? (json_decode($contract['violations_json'], true) ?: []) : [];
+
             echo json_encode([
                 'status'            => true,
                 'contract'          => $contract,
@@ -250,6 +284,9 @@ class ContractHistoryController {
                 'current_vehicle'   => $currentVehicle,
                 'replaced_history'  => $replacedHistory,
                 'extensions'        => $extensions,
+                'invoices'          => $invoices,
+                'movements'         => $movements,
+                'violations'        => $violations,
                 'ledger'            => [
                     'entries'       => $ledgerEntries,
                     'total_debit'   => $totalDebit,

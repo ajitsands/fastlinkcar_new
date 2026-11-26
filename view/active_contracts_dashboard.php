@@ -542,7 +542,6 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
 
     <?php include ROOT_PATH . '/view/templates/VehicleContractList/contract_ledger_return_style_modal.php'; ?>
     <?php include ROOT_PATH . '/view/templates/VehicleContractList/return_receipt_modal.php'; ?>
-    <?php include ROOT_PATH . '/view/templates/VehicleContractList/comprehensive_contract_audit_modal.php'; ?>
 
     <!-- Client Feedback Modal -->
     <div class="modal fade" id="feedbackModal" tabindex="-1" aria-hidden="true">
@@ -1090,10 +1089,6 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
         $(document).on('click', '.qv-trigger', function() {
             const id = parseInt($(this).data('id'), 10);
             const row = allContracts.find(c => c.id === id);
-            if (typeof window.openComprehensiveContractAuditModal === 'function') {
-                window.openComprehensiveContractAuditModal(id, row || null);
-                return;
-            }
             if (!row) return;
 
             currentAgreementNo = row.agreement_no;

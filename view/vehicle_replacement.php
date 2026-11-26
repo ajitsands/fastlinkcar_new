@@ -735,7 +735,10 @@ $(function() {
             data: JSON.stringify({ action: 'initData' }),
             dataType: 'json',
             success: function(res) {
-                if (!res || !res.status) return;
+                if (!res || !res.status) {
+                    showPageAlert('danger', (res && res.message) ? res.message : 'Failed to load vehicle replacement data.');
+                    return;
+                }
                 allContracts = res.contracts || [];
                 allCategories = res.categories || [];
                 allModels = res.models || [];

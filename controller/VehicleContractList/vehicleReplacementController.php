@@ -136,11 +136,10 @@ class VehicleReplacementController
                     ct.vehicle_no,
                     ct.vehicle_category_id,
                     ct.vehicle_model_id,
+                    ct.agreement_date,
                     ct.service_start_date_time,
                     ct.service_end_date_time,
-                    ct.date_out,
                     ct.km_out,
-                    ct.total_amount,
                     ct.agreement_status,
                     ct.contract_details_json,
                     ct.vechile_details,
@@ -212,9 +211,9 @@ class VehicleReplacementController
                     'customer_name'         => $c['customer_name'] ?? '',
                     'customer_mobile'       => $c['customer_mobile'] ?? '',
                     'fuel_level_out'        => $cdj['fuel_out'] ?? ($cdj['fuel_level'] ?? ($vehFormatted['fuel_level'] ?? '')),
-                    'agreement_date'        => $c['service_start_date_time'] ?? ($c['date_out'] ?? ''),
+                    'agreement_date'        => $c['service_start_date_time'] ?? ($c['agreement_date'] ?? ''),
                     'expected_return_date'  => $c['service_end_date_time'] ?? '',
-                    'rental_amount'         => number_format((float)($c['total_amount'] ?? 0), 3, '.', ''),
+                    'rental_amount'         => number_format((float)($cdj['total_amount'] ?? ($cdj['total_amt'] ?? ($cdj['grand_total'] ?? ($cdj['rental_amount'] ?? 0)))), 3, '.', ''),
                     'last_replacement_date' => $lastReplacementDate,
                     'total_replacement'     => $totalReplacements,
                     'last_invoice_date'     => $lastInvoices[(string)$c['ids']] ?? '',
@@ -349,7 +348,7 @@ class VehicleReplacementController
             $oldKmIn = isset($data['km_in']) && $data['km_in'] !== '' ? floatval($data['km_in']) : $oldKmOut;
             $oldKmUsed = max(0, $oldKmIn - $oldKmOut);
             $oldFuelIn = trim($data['fuel_level_in'] ?? '');
-            $oldDtOut = $contractRow['date_out'] ?? ($contractRow['service_start_date_time'] ?? date('Y-m-d H:i:s'));
+            $oldDtOut = $contractRow['service_start_date_time'] ?? ($contractRow['agreement_date'] ?? date('Y-m-d H:i:s'));
 
             $stmtOldOther = $this->varPDOModelObj->selectexecuteQuery("SELECT other_details_json FROM tbl_vehicles WHERE ids = :id", [':id' => $oldVehId]);
             $oldOtherRow = $stmtOldOther ? $stmtOldOther->fetch(PDO::FETCH_ASSOC) : null;

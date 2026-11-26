@@ -258,6 +258,35 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                           </div>
                         </div>
 
+                        <!-- Old Vehicle Car Survey (OUT vs IN) -->
+                        <div class="col-12">
+                          <div class="p-2 rounded border bg-white">
+                            <span class="d-block text-uppercase fw-semibold mb-2" style="font-size: 11px; color: #1b3d94;"><i class="ri-car-washing-line me-1"></i>Car Survey (Old Vehicle: OUT vs IN)</span>
+                            <div class="row g-3">
+                              <div class="col-md-6 text-center">
+                                <div class="small fw-semibold text-muted mb-1">OUT (At Rentout - Reference)</div>
+                                <canvas id="vr_old_survey_out_preview" width="360" height="220" class="border rounded bg-light" style="max-width: 100%;"></canvas>
+                              </div>
+                              <div class="col-md-6 text-center">
+                                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+                                  <span class="small fw-semibold text-danger">IN (At Return - Mark Damages)</span>
+                                  <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-primary active" onclick="CarSurveyWidget.setMode('vr_old_survey_in', 'x'); $(this).addClass('active').siblings().removeClass('active');">
+                                      <i class="ri-close-line"></i> &#10005;
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" onclick="CarSurveyWidget.setMode('vr_old_survey_in', 'line'); $(this).addClass('active').siblings().removeClass('active');">
+                                      <i class="ri-pencil-line"></i> Draw
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="CarSurveyWidget.undo('vr_old_survey_in')">Undo</button>
+                                    <button type="button" class="btn btn-outline-danger" onclick="CarSurveyWidget.clear('vr_old_survey_in')">Clear</button>
+                                  </div>
+                                </div>
+                                <canvas id="vr_old_survey_in" width="360" height="220" class="border rounded" style="max-width: 100%; cursor: crosshair; touch-action: none;"></canvas>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
                         <!-- Old Vehicle Rentout Images & Return Images Upload -->
                         <div class="col-12 col-md-6">
                           <label class="form-label fw-semibold small mb-1 text-muted">Old Vehicle Rentout Images (Previous)</label>
@@ -518,6 +547,28 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                           </div>
                         </div>
 
+                        <!-- New Vehicle Car Survey (OUT) -->
+                        <div class="col-12">
+                          <div class="p-2 rounded border bg-white">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
+                              <span class="text-uppercase fw-semibold" style="font-size: 11px; color: #1b3d94;"><i class="ri-car-washing-line me-1"></i>Car Survey (New Issue Vehicle - OUT)</span>
+                              <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary active" onclick="CarSurveyWidget.setMode('vr_new_survey_out', 'x'); $(this).addClass('active').siblings().removeClass('active');">
+                                  <i class="ri-close-line"></i> &#10005;
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" onclick="CarSurveyWidget.setMode('vr_new_survey_out', 'line'); $(this).addClass('active').siblings().removeClass('active');">
+                                  <i class="ri-pencil-line"></i> Draw
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="CarSurveyWidget.undo('vr_new_survey_out')">Undo</button>
+                                <button type="button" class="btn btn-outline-danger" onclick="CarSurveyWidget.clear('vr_new_survey_out')">Clear</button>
+                              </div>
+                            </div>
+                            <div class="text-center">
+                              <canvas id="vr_new_survey_out" width="360" height="220" class="border rounded" style="max-width: 100%; cursor: crosshair; touch-action: none;"></canvas>
+                            </div>
+                          </div>
+                        </div>
+
                         <!-- New Vehicle Release Images -->
                         <div class="col-12">
                           <label for="vr_new_rentout_images" class="form-label fw-semibold small mb-1 text-success">
@@ -645,6 +696,7 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
 <?php include('templates/scripts.php'); ?>
 <script src="../assets/vendor/libs/select2/select2.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script src="../httpdocs/user_js/car_survey_widget.js?v=<?= time() ?>"></script>
 <script>
 $(function() {
     const preContractId = <?= json_encode($preselectContractId) ?>;
@@ -858,6 +910,15 @@ $(function() {
         $('#vr_old_chk_radio').prop('checked', isYes(acc.chk_radio));
         $('#vr_old_chk_scratches').prop('checked', isYes(acc.chk_scratches));
         $('#vr_old_chk_seats').prop('checked', isYes(acc.chk_seats));
+
+        // Initialize Car Survey diagrams (Old OUT reference, Old IN return, New OUT release)
+        if (window.CarSurveyWidget) {
+            setTimeout(function() {
+                CarSurveyWidget.init('vr_old_survey_out_preview', acc.car_survey_out || [], { readOnly: true });
+                CarSurveyWidget.init('vr_old_survey_in', acc.car_survey_in || []);
+                CarSurveyWidget.init('vr_new_survey_out', []);
+            }, 80);
+        }
 
         // Old Rentout Images preview
         const oldImgs = Array.isArray(c.old_rentout_images) ? c.old_rentout_images : [];
@@ -1239,7 +1300,8 @@ $(function() {
                     chk_wcup: $('#vr_old_chk_wcup').is(':checked') ? 'Yes' : 'No',
                     chk_radio: $('#vr_old_chk_radio').is(':checked') ? 'Yes' : 'No',
                     chk_scratches: $('#vr_old_chk_scratches').is(':checked') ? 'Yes' : 'No',
-                    chk_seats: $('#vr_old_chk_seats').is(':checked') ? 'Yes' : 'No'
+                    chk_seats: $('#vr_old_chk_seats').is(':checked') ? 'Yes' : 'No',
+                    car_survey_in: window.CarSurveyWidget ? CarSurveyWidget.getMarks('vr_old_survey_in') : []
                 },
                 old_return_images: oldReturnUploaded,
                 new_vehicle_id: newVehicleId,
@@ -1254,7 +1316,8 @@ $(function() {
                     chk_wcup: $('#vr_new_chk_wcup').is(':checked') ? 'Yes' : 'No',
                     chk_radio: $('#vr_new_chk_radio').is(':checked') ? 'Yes' : 'No',
                     chk_scratches: $('#vr_new_chk_scratches').is(':checked') ? 'Yes' : 'No',
-                    chk_seats: $('#vr_new_chk_seats').is(':checked') ? 'Yes' : 'No'
+                    chk_seats: $('#vr_new_chk_seats').is(':checked') ? 'Yes' : 'No',
+                    car_survey_out: window.CarSurveyWidget ? CarSurveyWidget.getMarks('vr_new_survey_out') : []
                 },
                 new_rentout_images: newRentoutUploaded,
                 staff_name: staffName,

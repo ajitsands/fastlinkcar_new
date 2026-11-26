@@ -84,7 +84,7 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
       <div class="content-wrapper">
         <?php include('templates/menu.php'); ?>
 
-        <div class="container-xxl flex-grow-1 container-p-y">
+        <div class="container-fluid flex-grow-1 container-p-y">
           <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
               <div>

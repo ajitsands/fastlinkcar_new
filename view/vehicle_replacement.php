@@ -213,21 +213,47 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                           </div>
                         </div>
 
-                        <!-- Old Vehicle Checklist -->
+                        <!-- Old Vehicle Checklist (Direct Contract Style) -->
                         <div class="col-12">
                           <div class="p-2 bg-light rounded border">
-                            <span class="small fw-bold text-dark me-3"><i class="ri-checkbox-multiple-line me-1"></i>Old Vehicle Return Checklist:</span>
-                            <div class="form-check form-check-inline mb-0">
-                              <input class="form-check-input" type="checkbox" id="vr_old_chk_tools">
-                              <label class="form-check-label small" for="vr_old_chk_tools">Jack &amp; Tools</label>
-                            </div>
-                            <div class="form-check form-check-inline mb-0">
-                              <input class="form-check-input" type="checkbox" id="vr_old_chk_spare">
-                              <label class="form-check-label small" for="vr_old_chk_spare">Spare Tyre</label>
-                            </div>
-                            <div class="form-check form-check-inline mb-0">
-                              <input class="form-check-input" type="checkbox" id="vr_old_chk_radio">
-                              <label class="form-check-label small" for="vr_old_chk_radio">Radio / Accessories</label>
+                            <div class="small fw-bold text-dark mb-2"><i class="ri-checkbox-multiple-line me-1"></i>Old Vehicle Return Checklist:</div>
+                            <div class="row g-2">
+                              <div class="col-6 col-sm-4 col-md-2">
+                                <div class="form-check mb-0">
+                                  <input class="form-check-input" type="checkbox" id="vr_old_chk_tools">
+                                  <label class="form-check-label small" for="vr_old_chk_tools">Tools Kit</label>
+                                </div>
+                              </div>
+                              <div class="col-6 col-sm-4 col-md-2">
+                                <div class="form-check mb-0">
+                                  <input class="form-check-input" type="checkbox" id="vr_old_chk_spare">
+                                  <label class="form-check-label small" for="vr_old_chk_spare">S. Wheel</label>
+                                </div>
+                              </div>
+                              <div class="col-6 col-sm-4 col-md-2">
+                                <div class="form-check mb-0">
+                                  <input class="form-check-input" type="checkbox" id="vr_old_chk_wcup">
+                                  <label class="form-check-label small" for="vr_old_chk_wcup">W. Cup</label>
+                                </div>
+                              </div>
+                              <div class="col-6 col-sm-4 col-md-2">
+                                <div class="form-check mb-0">
+                                  <input class="form-check-input" type="checkbox" id="vr_old_chk_radio">
+                                  <label class="form-check-label small" for="vr_old_chk_radio">Radio</label>
+                                </div>
+                              </div>
+                              <div class="col-6 col-sm-4 col-md-2">
+                                <div class="form-check mb-0">
+                                  <input class="form-check-input" type="checkbox" id="vr_old_chk_scratches">
+                                  <label class="form-check-label small" for="vr_old_chk_scratches">Scratches Mark X</label>
+                                </div>
+                              </div>
+                              <div class="col-6 col-sm-4 col-md-2">
+                                <div class="form-check mb-0">
+                                  <input class="form-check-input" type="checkbox" id="vr_old_chk_seats">
+                                  <label class="form-check-label small" for="vr_old_chk_seats">Seats Cleanness</label>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -447,21 +473,47 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
                           </div>
                         </div>
 
-                        <!-- Replacement Vehicle Checklist -->
+                        <!-- Replacement Vehicle Checklist (Direct Contract Style) -->
                         <div class="col-12">
                           <div class="p-2 bg-light rounded border">
-                            <span class="small fw-bold text-dark me-3"><i class="ri-checkbox-circle-line me-1"></i>New Vehicle Release Checklist:</span>
-                            <div class="form-check form-check-inline mb-0">
-                              <input class="form-check-input" type="checkbox" id="vr_new_chk_tools" checked>
-                              <label class="form-check-label small" for="vr_new_chk_tools">Jack &amp; Tools</label>
-                            </div>
-                            <div class="form-check form-check-inline mb-0">
-                              <input class="form-check-input" type="checkbox" id="vr_new_chk_spare" checked>
-                              <label class="form-check-label small" for="vr_new_chk_spare">Spare Tyre</label>
-                            </div>
-                            <div class="form-check form-check-inline mb-0">
-                              <input class="form-check-input" type="checkbox" id="vr_new_chk_radio" checked>
-                              <label class="form-check-label small" for="vr_new_chk_radio">Radio / Accessories</label>
+                            <div class="small fw-bold text-dark mb-2"><i class="ri-checkbox-circle-line me-1"></i>New Vehicle Release Checklist:</div>
+                            <div class="row g-2">
+                              <div class="col-6 col-sm-4 col-md-2">
+                                <div class="form-check mb-0">
+                                  <input class="form-check-input" type="checkbox" id="vr_new_chk_tools" checked>
+                                  <label class="form-check-label small" for="vr_new_chk_tools">Tools Kit</label>
+                                </div>
+                              </div>
+                              <div class="col-6 col-sm-4 col-md-2">
+                                <div class="form-check mb-0">
+                                  <input class="form-check-input" type="checkbox" id="vr_new_chk_spare" checked>
+                                  <label class="form-check-label small" for="vr_new_chk_spare">S. Wheel</label>
+                                </div>
+                              </div>
+                              <div class="col-6 col-sm-4 col-md-2">
+                                <div class="form-check mb-0">
+                                  <input class="form-check-input" type="checkbox" id="vr_new_chk_wcup" checked>
+                                  <label class="form-check-label small" for="vr_new_chk_wcup">W. Cup</label>
+                                </div>
+                              </div>
+                              <div class="col-6 col-sm-4 col-md-2">
+                                <div class="form-check mb-0">
+                                  <input class="form-check-input" type="checkbox" id="vr_new_chk_radio" checked>
+                                  <label class="form-check-label small" for="vr_new_chk_radio">Radio</label>
+                                </div>
+                              </div>
+                              <div class="col-6 col-sm-4 col-md-2">
+                                <div class="form-check mb-0">
+                                  <input class="form-check-input" type="checkbox" id="vr_new_chk_scratches">
+                                  <label class="form-check-label small" for="vr_new_chk_scratches">Scratches Mark X</label>
+                                </div>
+                              </div>
+                              <div class="col-6 col-sm-4 col-md-2">
+                                <div class="form-check mb-0">
+                                  <input class="form-check-input" type="checkbox" id="vr_new_chk_seats" checked>
+                                  <label class="form-check-label small" for="vr_new_chk_seats">Seats Cleanness</label>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -797,11 +849,15 @@ $(function() {
         updateKmUsed();
         $('#vr_parking_location_in').val('Main Parking');
 
-        // Old Accessories checklist
+        // Old Accessories checklist (Direct Contract format)
         const acc = c.old_accessories || {};
-        $('#vr_old_chk_tools').prop('checked', acc.chk_tools === 'Yes');
-        $('#vr_old_chk_spare').prop('checked', acc.chk_spare === 'Yes');
-        $('#vr_old_chk_radio').prop('checked', acc.chk_radio === 'Yes');
+        const isYes = v => v === 'Yes' || v === true || v === 1 || v === '1';
+        $('#vr_old_chk_tools').prop('checked', isYes(acc.chk_tools));
+        $('#vr_old_chk_spare').prop('checked', isYes(acc.chk_spare));
+        $('#vr_old_chk_wcup').prop('checked', isYes(acc.chk_wcup));
+        $('#vr_old_chk_radio').prop('checked', isYes(acc.chk_radio));
+        $('#vr_old_chk_scratches').prop('checked', isYes(acc.chk_scratches));
+        $('#vr_old_chk_seats').prop('checked', isYes(acc.chk_seats));
 
         // Old Rentout Images preview
         const oldImgs = Array.isArray(c.old_rentout_images) ? c.old_rentout_images : [];
@@ -1180,7 +1236,10 @@ $(function() {
                 old_accessories: {
                     chk_tools: $('#vr_old_chk_tools').is(':checked') ? 'Yes' : 'No',
                     chk_spare: $('#vr_old_chk_spare').is(':checked') ? 'Yes' : 'No',
-                    chk_radio: $('#vr_old_chk_radio').is(':checked') ? 'Yes' : 'No'
+                    chk_wcup: $('#vr_old_chk_wcup').is(':checked') ? 'Yes' : 'No',
+                    chk_radio: $('#vr_old_chk_radio').is(':checked') ? 'Yes' : 'No',
+                    chk_scratches: $('#vr_old_chk_scratches').is(':checked') ? 'Yes' : 'No',
+                    chk_seats: $('#vr_old_chk_seats').is(':checked') ? 'Yes' : 'No'
                 },
                 old_return_images: oldReturnUploaded,
                 new_vehicle_id: newVehicleId,
@@ -1192,7 +1251,10 @@ $(function() {
                 new_accessories: {
                     chk_tools: $('#vr_new_chk_tools').is(':checked') ? 'Yes' : 'No',
                     chk_spare: $('#vr_new_chk_spare').is(':checked') ? 'Yes' : 'No',
-                    chk_radio: $('#vr_new_chk_radio').is(':checked') ? 'Yes' : 'No'
+                    chk_wcup: $('#vr_new_chk_wcup').is(':checked') ? 'Yes' : 'No',
+                    chk_radio: $('#vr_new_chk_radio').is(':checked') ? 'Yes' : 'No',
+                    chk_scratches: $('#vr_new_chk_scratches').is(':checked') ? 'Yes' : 'No',
+                    chk_seats: $('#vr_new_chk_seats').is(':checked') ? 'Yes' : 'No'
                 },
                 new_rentout_images: newRentoutUploaded,
                 staff_name: staffName,

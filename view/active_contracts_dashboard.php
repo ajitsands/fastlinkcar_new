@@ -497,11 +497,10 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                             <th class="text-end">Debit</th>
                                             <th class="text-end">Credit</th>
                                             <th class="text-end">Balance</th>
-                                            <th class="text-center">Print</th>
                                         </tr>
                                     </thead>
                                     <tbody id="qvLedgerBody">
-                                        <tr><td colspan="8" class="text-center text-muted py-2">Loading ledger...</td></tr>
+                                        <tr><td colspan="7" class="text-center text-muted py-2">Loading ledger...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1430,7 +1429,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
             });
 
             // Load Contract Ledger
-            $('#qvLedgerBody').html('<tr><td colspan="8" class="text-center text-muted py-2">Loading ledger...</td></tr>');
+            $('#qvLedgerBody').html('<tr><td colspan="7" class="text-center text-muted py-2">Loading ledger...</td></tr>');
             $('#qvLedDebit, #qvLedCredit, #qvLedBalance').text('0.000');
             $.getJSON('/CustomerLedgerController', {
                 action: 'GetContractLedgerData',
@@ -1439,7 +1438,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                 const ld = (typeof lRes === 'string') ? JSON.parse(lRes) : lRes;
                 const rows = (ld && Array.isArray(ld.data)) ? ld.data : (Array.isArray(ld) ? ld : []);
                 if (!rows.length) {
-                    $('#qvLedgerBody').html('<tr><td colspan="8" class="text-center text-muted py-2">No ledger entries found</td></tr>');
+                    $('#qvLedgerBody').html('<tr><td colspan="7" class="text-center text-muted py-2">No ledger entries found</td></tr>');
                     return;
                 }
                 let totD = 0, totC = 0, run = 0;
@@ -1470,19 +1469,18 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                     } else if (cred > 0 && r.trans_type && String(r.trans_type).includes('/')) {
                         recNo = String(r.trans_type).trim();
                     }
-                    const printBtnHtml = recNo
-                        ? `<button type="button" class="btn btn-xs btn-outline-success qv-print-receipt" data-receipt="${escapeHtml(recNo)}" title="Print Receipt ${escapeHtml(recNo)}"><i class="ri-printer-line me-1"></i>Receipt</button>`
-                        : '-';
+                    const printIconHtml = recNo
+                        ? ` <button type="button" class="btn btn-xs btn-outline-success py-0 px-1 qv-print-receipt" data-receipt="${escapeHtml(recNo)}" title="Print Receipt ${escapeHtml(recNo)}"><i class="ri-printer-line"></i></button>`
+                        : '';
                     return `
                         <tr>
                             <td>${i + 1}</td>
                             <td class="text-nowrap">${escapeHtml(dtDisp)}</td>
-                            <td><span class="badge bg-label-primary">${escapeHtml(r.trans_type || '-')}</span>${mBadge}</td>
+                            <td class="text-nowrap"><span class="badge bg-label-primary">${escapeHtml(r.trans_type || '-')}</span>${mBadge}${printIconHtml}</td>
                             <td>${escapeHtml(desc)}</td>
                             <td class="text-end">${deb > 0 ? deb.toFixed(3) : '-'}</td>
                             <td class="text-end text-success">${cred > 0 ? cred.toFixed(3) : '-'}</td>
                             <td class="text-end fw-semibold">${run.toFixed(3)}</td>
-                            <td class="text-center text-nowrap">${printBtnHtml}</td>
                         </tr>
                     `;
                 }).join('');

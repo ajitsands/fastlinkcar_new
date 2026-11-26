@@ -280,6 +280,86 @@ if (isset($this) && isset($this->encryption)) {
             </div>
         </div>
     </div>
+
+    <!-- Customer Ledger Modal (Matching Contract List Ledger Modal Style) -->
+    <div class="modal fade" id="cbCustomerLedgerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:95%;">
+            <div class="modal-content">
+                <div class="modal-header text-white py-2" style="background: linear-gradient(135deg, #1b3d94, #2563eb);">
+                    <div>
+                        <h5 class="mb-0 text-white"><i class="ri-book-open-line me-1"></i> Customer Ledger — <span id="cb_led_cust_name">-</span></h5>
+                        <small class="text-white-50">Code: <span id="cb_led_cust_code" class="fw-bold text-white">-</span></small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <!-- Customer Info Card -->
+                    <div class="p-3 rounded border mb-3" style="background-color:#f4f7ff; border-color:#cfe0ff !important;">
+                        <div class="row g-2 small align-items-center">
+                            <div class="col-6 col-md-3"><span class="text-muted">Customer:</span> <strong id="cb_led_info_name">-</strong></div>
+                            <div class="col-6 col-md-2"><span class="text-muted">Mobile:</span> <strong id="cb_led_info_mobile">-</strong></div>
+                            <div class="col-6 col-md-2"><span class="text-muted">CPR / CR:</span> <strong id="cb_led_info_cpr">-</strong></div>
+                            <div class="col-6 col-md-3"><span class="text-muted">Email:</span> <strong id="cb_led_info_email">-</strong></div>
+                            <div class="col-12 col-md-2 text-md-end">
+                                <a href="#" id="cb_led_full_page_link" class="btn btn-xs btn-outline-primary">
+                                    <i class="ri-external-link-line me-1"></i> Full Ledger
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KPI Strip -->
+                    <div class="row g-2 mb-3 text-center">
+                        <div class="col-4">
+                            <div class="p-2 rounded border bg-light">
+                                <div class="small text-muted">Total Debit</div>
+                                <div class="fw-bold text-danger fs-6" id="cb_led_tot_debit">0.000 BHD</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded border bg-light">
+                                <div class="small text-muted">Total Credit</div>
+                                <div class="fw-bold text-success fs-6" id="cb_led_tot_credit">0.000 BHD</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded border bg-light">
+                                <div class="small text-muted">Net Balance</div>
+                                <div class="fw-bold text-primary fs-6" id="cb_led_net_bal">0.000 BHD</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ledger Table -->
+                    <div class="table-responsive border rounded">
+                        <table class="table table-sm table-bordered table-hover align-middle mb-0" style="font-size:12.5px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th>Date</th>
+                                    <th>Agreement No.</th>
+                                    <th>Type / Receipt</th>
+                                    <th>Description</th>
+                                    <th class="text-end">Debit</th>
+                                    <th class="text-end">Credit</th>
+                                    <th class="text-end">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cb_led_tbody">
+                                <tr><td colspan="8" class="text-center text-muted py-3">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer py-2 bg-light justify-content-between">
+                    <button type="button" id="cb_led_btn_print_soa" class="btn btn-sm btn-primary">
+                        <i class="ri-printer-line me-1"></i> Print SOA
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <?php include ROOT_PATH . '/view/templates/scripts.php'; ?>
     <script src="<?= $_ENV['BASE_URL'] ?>assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
@@ -351,35 +431,28 @@ $(document).ready(function() {
                     return meta.row + 1;
                 }
             },
-            // Customer Details Column (Name, Code, Mobile, CPR)
+            // Customer Details Column (Identical to Contract List)
             { 
                 data: null,
                 render: function(data, type, row) {
-                    let url = `/CustomerLedger?val=${ENCRYPTED_LEDGER_VAL}&customer_code=${encodeURIComponent(row.customer_id)}&customer_name=${encodeURIComponent(row.customer_name)}`;
-                    
-                    let codeBadge = row.customer_id 
-                        ? `<span class="badge bg-light text-secondary border" style="font-size:0.75rem;"><i class="ri ri-hashtag me-1"></i>${escapeHtml(row.customer_id)}</span>` 
-                        : '';
-                        
-                    let mobileLine = (row.customer_mobile && row.customer_mobile !== '-') 
-                        ? `<span class="text-muted small"><i class="ri ri-phone-line text-primary me-1"></i>${escapeHtml(row.customer_mobile)}</span>` 
-                        : '';
-                        
-                    let cprLine = (row.customer_cr_cpr && row.customer_cr_cpr !== 'N/A' && row.customer_cr_cpr !== '-') 
-                        ? `<div class="small text-muted mt-1"><i class="ri ri-id-card-line text-danger me-1"></i>CPR: <strong>${escapeHtml(row.customer_cr_cpr)}</strong></div>` 
-                        : '';
+                    if (type === 'filter' || type === 'sort') {
+                        return `${row.customer_name || ''} ${row.customer_id || ''} ${row.customer_mobile || ''} ${row.customer_cr_cpr || ''} ${row.customer_email || ''}`;
+                    }
+                    let meta = [];
+                    if (row.customer_mobile && row.customer_mobile !== '-') meta.push(`<i class="ri-phone-line me-1"></i>${escapeHtml(row.customer_mobile)}`);
+                    if (row.customer_cr_cpr && row.customer_cr_cpr !== 'N/A' && row.customer_cr_cpr !== '-') meta.push(`<i class="ri-id-card-line me-1"></i>${escapeHtml(row.customer_cr_cpr)}`);
+                    if (row.customer_nationality) meta.push(`<i class="ri-global-line me-1"></i>${escapeHtml(row.customer_nationality)}`);
+                    let emailLine = row.customer_email ? `<small class="text-muted d-block text-truncate" style="max-width:220px;"><i class="ri-mail-line me-1"></i>${escapeHtml(row.customer_email)}</small>` : '';
 
                     return `
-                        <div>
-                            <a href="${url}" class="clickable-name fw-bold fs-6" title="Click to view Customer Ledger">
-                                <i class="ri ri-user-line me-1"></i>${escapeHtml(row.customer_name)}
-                            </a>
+                        <div class="d-flex flex-column gap-1">
+                            <div class="d-flex flex-wrap align-items-center gap-1">
+                                <a href="javascript:void(0)" class="clickable-name fw-bold text-dark btn-open-cb-ledger" data-customer="${escapeHtml(row.customer_id || '')}" title="Open Customer Ledger Modal">${escapeHtml(row.customer_name || '-')}</a>
+                                ${row.customer_id ? `<span class="badge bg-label-secondary">${escapeHtml(row.customer_id)}</span>` : ''}
+                            </div>
+                            <small class="text-muted d-flex flex-wrap gap-2">${meta.join(' ')}</small>
+                            ${emailLine}
                         </div>
-                        <div class="mt-1 d-flex flex-wrap align-items-center gap-2">
-                            ${codeBadge}
-                            ${mobileLine}
-                        </div>
-                        ${cprLine}
                     `;
                 }
             },
@@ -417,18 +490,17 @@ $(document).ready(function() {
                     return `<span class="text-secondary">0.000 BHD</span>`;
                 }
             },
-            // Action Column (View Ledger)
+            // Action Column (Open Ledger Modal)
             {
                 data: null,
                 orderable: false,
                 searchable: false,
                 className: 'text-center no-print',
                 render: function(data, type, row) {
-                    let url = `/CustomerLedger?val=${ENCRYPTED_LEDGER_VAL}&customer_code=${encodeURIComponent(row.customer_id)}&customer_name=${encodeURIComponent(row.customer_name)}`;
                     return `
-                        <a href="${url}" class="btn btn-outline-danger btn-xs" title="Open Customer Ledger">
+                        <button type="button" class="btn btn-outline-danger btn-xs btn-open-cb-ledger" data-customer="${escapeHtml(row.customer_id || '')}" title="Open Customer Ledger">
                             <i class="ri ri-file-list-3-line me-1"></i>Ledger
-                        </a>
+                        </button>
                     `;
                 }
             }
@@ -442,6 +514,119 @@ $(document).ready(function() {
             searchPlaceholder: "Search customer name, code, CPR...",
             emptyTable: "No customer balances found."
         }
+    });
+
+    let cbCurrentLedger = { customer: null, entries: [], debit: 0, credit: 0, balance: 0 };
+
+    function fmtCbDate(val) {
+        if (!val || val === '0000-00-00') return '-';
+        const s = String(val).slice(0, 10);
+        const p = s.split('-');
+        if (p.length === 3 && p[0].length === 4) {
+            const ms = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const mi = parseInt(p[1], 10) - 1;
+            if (mi >= 0 && mi < 12) return `${p[2]}-${ms[mi]}-${p[0]}`;
+        }
+        return s;
+    }
+
+    $(document).on('click', '.btn-open-cb-ledger', function() {
+        const custCode = String($(this).data('customer') || '');
+        const row = balancesCache.find(r => String(r.customer_id) === custCode);
+        if (!row) return;
+
+        cbCurrentLedger = { customer: row, entries: [], debit: 0, credit: 0, balance: 0 };
+        $('#cb_led_cust_name, #cb_led_info_name').text(row.customer_name || '-');
+        $('#cb_led_cust_code').text(row.customer_id || '-');
+        $('#cb_led_info_mobile').text(row.customer_mobile || '-');
+        $('#cb_led_info_cpr').text(row.customer_cr_cpr || '-');
+        $('#cb_led_info_email').text(row.customer_email || '-');
+        $('#cb_led_full_page_link').attr('href', `/CustomerLedger?val=${ENCRYPTED_LEDGER_VAL}&customer_code=${encodeURIComponent(row.customer_id)}&customer_name=${encodeURIComponent(row.customer_name)}`);
+
+        $('#cb_led_tot_debit, #cb_led_tot_credit, #cb_led_net_bal').text('0.000 BHD');
+        $('#cb_led_tbody').html('<tr><td colspan="8" class="text-center text-muted py-3">Loading ledger...</td></tr>');
+        new bootstrap.Modal(document.getElementById('cbCustomerLedgerModal')).show();
+
+        $.getJSON('/CustomerLedgerController', { action: 'GetLedgerData', customer_code: row.customer_id }, function(res) {
+            const rows = (res && Array.isArray(res.data)) ? res.data : (Array.isArray(res) ? res : []);
+            if (!rows.length) {
+                $('#cb_led_tbody').html('<tr><td colspan="8" class="text-center text-muted py-3">No ledger entries found.</td></tr>');
+                return;
+            }
+            let totD = 0, totC = 0, run = 0;
+            const html = rows.map((r, i) => {
+                const deb = parseFloat(r.debit || 0);
+                const cred = ((r.cheque_status || '') === 'Bounced') ? 0 : parseFloat(r.credit || 0);
+                totD += deb;
+                totC += cred;
+                run += (deb - cred);
+                const desc = r.description || r.remarks || r.notes || '-';
+                const mBadge = (r.payment_method && r.payment_method !== 'N/A') ? ` <span class="badge bg-label-info">${escapeHtml(r.payment_method)}</span>` : '';
+                let recNo = '';
+                const cmMatch = String(r.trans_type || '').match(/[A-Z0-9]+\/\d{4}\/CM\/\d+/i)
+                    || String(r.ref_no || '').match(/[A-Z0-9]+\/\d{4}\/CM\/\d+/i)
+                    || String(desc || '').match(/[A-Z0-9]+\/\d{4}\/CM\/\d+/i);
+                if (cmMatch) recNo = cmMatch[0];
+                else if (cred > 0 && r.ref_no && String(r.ref_no).trim() !== '' && String(r.ref_no).trim() !== '-') recNo = String(r.ref_no).trim();
+                const printIcon = recNo ? ` <button type="button" class="btn btn-xs btn-outline-success py-0 px-1 cb-print-receipt" data-receipt="${escapeHtml(recNo)}" title="Print Receipt ${escapeHtml(recNo)}"><i class="ri-printer-line"></i></button>` : '';
+                return `<tr>
+                    <td class="text-center">${i + 1}</td>
+                    <td class="text-nowrap">${escapeHtml(fmtCbDate(r.trans_date || r.created_at))}</td>
+                    <td class="text-nowrap fw-semibold">${escapeHtml(r.agreement_no || '-')}</td>
+                    <td class="text-nowrap"><span class="badge bg-label-primary">${escapeHtml(r.trans_type || '-')}</span>${mBadge}${printIcon}</td>
+                    <td>${escapeHtml(desc)}</td>
+                    <td class="text-end text-danger">${deb > 0 ? deb.toFixed(3) : '-'}</td>
+                    <td class="text-end text-success">${cred > 0 ? cred.toFixed(3) : '-'}</td>
+                    <td class="text-end fw-bold">${run.toFixed(3)}</td>
+                </tr>`;
+            }).join('');
+            cbCurrentLedger = { customer: row, entries: rows, debit: totD, credit: totC, balance: run };
+            $('#cb_led_tbody').html(html);
+            $('#cb_led_tot_debit').text(totD.toFixed(3) + ' BHD');
+            $('#cb_led_tot_credit').text(totC.toFixed(3) + ' BHD');
+            $('#cb_led_net_bal').text(run.toFixed(3) + ' BHD');
+        });
+    });
+
+    $(document).on('click', '.cb-print-receipt', function() {
+        const recNo = $.trim($(this).data('receipt') || '');
+        if (!recNo) return;
+        fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent(recNo))
+            .then(r => r.text())
+            .then(token => {
+                if (token && token.trim()) window.open('/CashMemoPrint?token=' + encodeURIComponent(token.trim()), '_blank');
+            });
+    });
+
+    $('#cb_led_btn_print_soa').on('click', function() {
+        if (!cbCurrentLedger.customer) return;
+        const c = cbCurrentLedger.customer;
+        let run = 0;
+        const rowsHtml = cbCurrentLedger.entries.map(r => {
+            const deb = parseFloat(r.debit || 0);
+            const cred = ((r.cheque_status || '') === 'Bounced') ? 0 : parseFloat(r.credit || 0);
+            run += (deb - cred);
+            return `<tr>
+                <td>${escapeHtml(fmtCbDate(r.trans_date || r.created_at))}</td>
+                <td>${escapeHtml(r.agreement_no || '-')}</td>
+                <td>${escapeHtml(r.trans_type || '-')}</td>
+                <td>${escapeHtml(r.description || '-')}</td>
+                <td style="text-align:right;">${deb > 0 ? deb.toFixed(3) : '-'}</td>
+                <td style="text-align:right;">${cred > 0 ? cred.toFixed(3) : '-'}</td>
+                <td style="text-align:right;font-weight:bold;">${run.toFixed(3)}</td>
+            </tr>`;
+        }).join('');
+        const w = window.open('', '_blank');
+        w.document.write(`<!doctype html><html><head><title>SOA - ${escapeHtml(c.customer_name)}</title>
+            <style>body{font-family:Arial,sans-serif;padding:20px;font-size:12px;} table{width:100%;border-collapse:collapse;margin-top:12px;} th,td{border:1px solid #cbd5e1;padding:6px;} th{background:#f1f5f9;text-align:left;} .hdr{display:flex;justify-content:space-between;border-bottom:2px solid #1b3d94;padding-bottom:8px;}</style>
+            </head><body>
+            <div class="hdr"><div><h3 style="margin:0;color:#1b3d94;">STATEMENT OF ACCOUNT (SOA)</h3><div>Customer: <strong>${escapeHtml(c.customer_name)}</strong> (${escapeHtml(c.customer_id)})</div></div>
+            <div style="text-align:right;"><div>Mobile: ${escapeHtml(c.customer_mobile || '-')}</div><div>CPR: ${escapeHtml(c.customer_cr_cpr || '-')}</div></div></div>
+            <table><thead><tr><th>Date</th><th>Agreement</th><th>Type</th><th>Description</th><th style="text-align:right;">Debit</th><th style="text-align:right;">Credit</th><th style="text-align:right;">Balance</th></tr></thead>
+            <tbody>${rowsHtml || '<tr><td colspan="7" style="text-align:center;">No entries</td></tr>'}</tbody>
+            <tfoot><tr><th colspan="4" style="text-align:right;">Totals (BHD)</th><th style="text-align:right;">${cbCurrentLedger.debit.toFixed(3)}</th><th style="text-align:right;">${cbCurrentLedger.credit.toFixed(3)}</th><th style="text-align:right;">${cbCurrentLedger.balance.toFixed(3)}</th></tr></tfoot></table>
+            <script>window.onload=function(){window.print();};<\/script></body></html>`);
+        w.document.close();
     });
 
     // Export to Excel / CSV

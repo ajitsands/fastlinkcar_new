@@ -24,14 +24,18 @@
             $('.select2').select2();
         }
 
-        // Set default dates (start of month to today)
-        const today = new Date();
-        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        
-        $('#filter_to_date').val(today.toISOString().split('T')[0]);
-        $('#filter_from_date').val(startOfMonth.toISOString().split('T')[0]);
+        function getTodayStr() {
+            const d = new Date();
+            return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        }
+
+        // Default: blank Date From (each vehicle from its registration date) till Today
+        $('#filter_to_date').val(getTodayStr());
+        $('#filter_from_date').val('');
 
         loadCompanies();
+        loadVehicles();
+        loadReport();
 
         $('#filter_company').on('change', function () {
             loadVehicles();
@@ -75,8 +79,26 @@
         });
     }
 
-    // Search button click
+    // Search button click & auto-reload on filter/date change
     $('#btnSearch').on('click', function () {
+        loadReport();
+    });
+
+    $('#filter_from_date, #filter_to_date, #filter_vehicle').on('change', function () {
+        loadReport();
+    });
+
+    $('#filter_company').on('change', function () {
+        loadReport();
+    });
+
+    $('#btnReset').on('click', function () {
+        $('#filter_company').val('');
+        $('#filter_vehicle').val('');
+        $('#filter_from_date').val('');
+        const d = new Date();
+        $('#filter_to_date').val(new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0]);
+        loadVehicles();
         loadReport();
     });
 
@@ -87,8 +109,8 @@
         let from_date = $('#filter_from_date').val();
         let to_date = $('#filter_to_date').val();
         
-        if (!from_date || !to_date) {
-            alertSands("Please select both Date From and Date To.", 'error');
+        if (!to_date) {
+            alertSands("Please select Date To.", 'error');
             return;
         }
 
@@ -183,11 +205,11 @@
         // Extract filters for subtitle
         let compText = $('#filter_company option:selected').text();
         let vehText = $('#filter_vehicle option:selected').text();
-        let dateFromRaw = $('#filter_from_date').val() || 'Start';
+        let dateFromRaw = $('#filter_from_date').val();
         let dateToRaw = $('#filter_to_date').val() || 'Now';
 
         function formatFilterDate(dateStr) {
-            if (!dateStr || dateStr === 'Start' || dateStr === 'Now') return dateStr;
+            if (!dateStr || dateStr === 'Now') return dateStr;
             let parts = dateStr.split('-');
             if (parts.length === 3 && parts[0].length === 4) {
                 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -197,7 +219,7 @@
             return dateStr;
         }
 
-        let dateFrom = formatFilterDate(dateFromRaw);
+        let dateFrom = dateFromRaw ? formatFilterDate(dateFromRaw) : 'Since Registration';
         let dateTo = formatFilterDate(dateToRaw);
 
         let filterParts = [];

@@ -142,16 +142,13 @@ if ($action === 'get_report') {
     }
     
     if (!empty($to_date)) {
-        $to_datetime = date('Y-m-d 23:59:59', strtotime($to_date));
+        $to_datetime = ($to_date === date('Y-m-d')) ? date('Y-m-d H:i:s') : date('Y-m-d 23:59:59', strtotime($to_date));
     } else {
-        $to_datetime = date('Y-m-d 23:59:59');
+        $to_datetime = date('Y-m-d H:i:s');
     }
-    
-    if (!empty($from_date)) {
-        $from_datetime = date('Y-m-d 00:00:00', strtotime($from_date));
-    } else {
-        $from_datetime = date('Y-m-01 00:00:00', strtotime($to_datetime));
-    }
+
+    $hasCustomFrom = !empty($from_date);
+    $from_datetime = $hasCustomFrom ? date('Y-m-d 00:00:00', strtotime($from_date)) : '';
     
     $where[] = "l.log_datetime <= ?";
     $params[] = $to_datetime;
@@ -172,6 +169,7 @@ if ($action === 'get_report') {
             v.engine_type,
             v.transmission,
             v.vehicle_status,
+            v.created_on,
             v.is_outsourced,
             oc.company_name as outsourcing_company_name,
             cat.category_name,
@@ -209,6 +207,7 @@ if ($action === 'get_report') {
                 'engine_type' => $log['engine_type'],
                 'transmission' => $log['transmission'],
                 'vehicle_status' => $log['vehicle_status'],
+                'created_on' => $log['created_on'],
                 'is_outsourced' => $log['is_outsourced'],
                 'outsourcing_company_name' => $log['outsourcing_company_name'],
                 'category_name' => $log['category_name'],
@@ -222,18 +221,38 @@ if ($action === 'get_report') {
         ];
     }
     
-    $period_start = strtotime($from_datetime);
+    $global_period_start = $hasCustomFrom ? strtotime($from_datetime) : null;
     $period_end = strtotime($to_datetime);
-    $period_total_secs = $period_end - $period_start;
     
     $html = "";
     if (empty($vehicle_timelines)) {
         $html .= "<tr><td colspan='6' class='text-center'>No vehicles found matching the criteria.</td></tr>";
     } else {
         foreach ($vehicle_timelines as $vid => $timeline) {
+            $vDetails = $vehicle_details[$vid];
+            $regDisplay = (!empty($vDetails['created_on']) && strpos($vDetails['created_on'], '0000-00-00') === false)
+                ? date('d M Y', strtotime($vDetails['created_on']))
+                : date('d M Y', $timeline[0]['time']);
+            $regTs = (!empty($vDetails['created_on']) && strpos($vDetails['created_on'], '0000-00-00') === false)
+                ? strtotime($vDetails['created_on'])
+                : false;
+            $firstLogTs = $timeline[0]['time'];
+            if ($global_period_start !== null) {
+                $period_start = $global_period_start;
+            } else {
+                $period_start = ($regTs && $regTs > 946684800) ? min($regTs, $firstLogTs) : $firstLogTs;
+            }
+            if ($period_start >= $period_end) {
+                continue;
+            }
+
             $rented_secs = 0;
             $maintenance_secs = 0;
             $idle_secs = 0;
+
+            if ($global_period_start === null && $firstLogTs > $period_start) {
+                $idle_secs += min($firstLogTs, $period_end) - $period_start;
+            }
             
             $cnt = count($timeline);
             for ($i = 0; $i < $cnt; $i++) {
@@ -279,6 +298,9 @@ if ($action === 'get_report') {
             $days_total = round($total_tracked_secs / 86400, 1);
             
             $vDetails = $vehicle_details[$vid];
+            $regDisplay = (!empty($vDetails['created_on']) && strpos($vDetails['created_on'], '0000-00-00') === false)
+                ? date('d M Y', strtotime($vDetails['created_on']))
+                : date('d M Y', $timeline[0]['time']);
             $vehNo = htmlspecialchars($vDetails['vehicle_number'] ?? '-');
             $vehBrand = trim((string) ($vDetails['brand_name'] ?? ''));
             $vehModel = trim((string) ($vDetails['model_names'] ?? ''));
@@ -305,7 +327,8 @@ if ($action === 'get_report') {
             $vehicleBadgesHtml .= "<span class='badge bg-label-primary'><i class='ri-settings-3-line me-1'></i>{$vehTrans}</span>";
 
             $vehicleMetaHtml = "<div class='small text-muted mt-1 d-flex flex-wrap align-items-center gap-2'>"
-                . "<span><i class='ri-barcode-line me-1'></i>Chassis: <strong>{$chassis}</strong></span>";
+                . "<span><i class='ri-barcode-line me-1'></i>Chassis: <strong>{$chassis}</strong></span>"
+                . "<span><i class='ri-calendar-check-line me-1'></i>Reg: <strong>{$regDisplay}</strong></span>";
             if ($compName !== '') {
                 $vehicleMetaHtml .= "<span class='text-success'><i class='ri-building-line me-1'></i>{$compName}</span>";
             }

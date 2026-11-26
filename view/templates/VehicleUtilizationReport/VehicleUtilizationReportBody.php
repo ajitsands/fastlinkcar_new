@@ -17,16 +17,19 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label form-label-sm fw-semibold mb-1">Date From</label>
+                        <label class="form-label form-label-sm fw-semibold mb-1">Date From <small class="text-muted fw-normal">(Blank = Reg.)</small></label>
                         <input type="date" class="form-control form-control-sm" id="filter_from_date" name="from_date">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label form-label-sm fw-semibold mb-1">Date To</label>
                         <input type="date" class="form-control form-control-sm" id="filter_to_date" name="to_date">
                     </div>
-                    <div class="col-md-2 d-flex">
-                        <button type="button" id="btnSearch" class="btn btn-sm btn-primary w-100">
+                    <div class="col-md-2 d-flex gap-1">
+                        <button type="button" id="btnSearch" class="btn btn-sm btn-primary flex-grow-1">
                             <i class="ri-search-line me-1"></i> Search
+                        </button>
+                        <button type="button" id="btnReset" class="btn btn-sm btn-outline-secondary" title="Reset to Since Registration - Today">
+                            <i class="ri-refresh-line"></i>
                         </button>
                     </div>
                 </div>

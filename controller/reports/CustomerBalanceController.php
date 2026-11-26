@@ -33,16 +33,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
 
             $customersByKey[$cid] = [
-                'customer_id'          => $cid,
-                'customer_name'        => $c['customer_name'] ?? '',
-                'customer_mobile'      => $c['customer_mobile'] ?? '',
-                'customer_cr_cpr'      => $c['customer_cr_cpr'] ?? '',
-                'customer_email'       => $c['customer_email'] ?? '',
-                'customer_nationality' => $c['customer_nationality'] ?? '',
-                'total_debit'          => 0.0,
-                'total_credit'         => 0.0,
-                'overdue_amount'       => 0.0,
-                'balance'              => 0.0,
+                'customer_id'             => $cid,
+                'customer_name'           => $c['customer_name'] ?? '',
+                'customer_mobile'         => $c['customer_mobile'] ?? '',
+                'customer_cr_cpr'         => $c['customer_cr_cpr'] ?? '',
+                'customer_email'          => $c['customer_email'] ?? '',
+                'customer_nationality'    => $c['customer_nationality'] ?? '',
+                'is_blacklisted'          => $isBlacklisted,
+                'active_contracts_count'  => 0,
+                'overdue_contracts_count' => 0,
+                'bounced_cheques_count'   => 0,
+                'bounced_cheques_amount'  => 0.0,
+                'ledger_debit'            => 0.0,
+                'unposted_debit'          => 0.0,
+                'total_debit'             => 0.0,
+                'total_credit'            => 0.0,
+                'overdue_amount'          => 0.0,
+                'ledger_balance'          => 0.0,
+                'balance'                 => 0.0,
+                'unposted_or_overdue'     => [],
             ];
             $custAlias[$cid] = $cid;
             if (!empty($c['ids'])) {
@@ -57,7 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 contract_ids,
                 agreement_no,
                 payment_method,
+                cheque_status,
                 debit,
+                credit,
                 CASE WHEN COALESCE(cheque_status, '') = 'Bounced' THEN 0 ELSE credit END AS valid_credit
             FROM tbl_customer_ledger
         ");
@@ -69,6 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $custKey = $custAlias[$rawCode] ?? '';
             $deb = (float)($l['debit'] ?? 0);
             $cred = (float)($l['valid_credit'] ?? 0);
+            $rawCred = (float)($l['credit'] ?? 0);
+            $isBounced = (strcasecmp(trim((string)($l['cheque_status'] ?? '')), 'Bounced') === 0);
 
             if ($cred > 0) {
                 $totalCollected += $cred;
@@ -85,6 +98,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             if ($custKey === '' || !isset($customersByKey[$custKey])) {
                 continue;
             }
+            if ($isBounced && $rawCred > 0) {
+                $customersByKey[$custKey]['bounced_cheques_count']++;
+                $customersByKey[$custKey]['bounced_cheques_amount'] += $rawCred;
+            }
+            $customersByKey[$custKey]['ledger_debit'] += $deb;
             $customersByKey[$custKey]['total_debit'] += $deb;
             $customersByKey[$custKey]['total_credit'] += $cred;
 
@@ -111,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $nowTs = time();
         $todayStr = date('Y-m-d', $nowTs);
         $stmtCon = $pdo->query("
-            SELECT ct.ids, ct.agreement_no, ct.customer_code, ct.agreement_status, ct.service_type,
+            SELECT ct.ids, ct.agreement_no, ct.vehicle_no, ct.customer_code, ct.agreement_status, ct.service_type,
                    ct.service_start_date_time, ct.service_end_date_time, ct.contract_details_json,
                    m.price_json AS model_price_json
             FROM tbl_vehicle_rentout_contracts ct
@@ -130,15 +148,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
             $hasDebit = !empty($contractsWithDebit['id_' . $ct['ids']])
                 || (!empty($ct['agreement_no']) && !empty($contractsWithDebit['agr_' . $ct['agreement_no']]));
+            $unpostedAmt = 0.0;
             if (!$hasDebit && $contractAmt > 0) {
+                $unpostedAmt = $contractAmt;
+                $customersByKey[$custKey]['unposted_debit'] += $contractAmt;
                 $customersByKey[$custKey]['total_debit'] += $contractAmt;
             }
 
             // Overdue Return Amount ONLY for active Rentout / Rented / Extended contracts
             $stLower = strtolower(trim($ct['agreement_status'] ?? ''));
             if (!in_array($stLower, ['rentout', 'rented', 'extended'], true)) {
+                if ($unpostedAmt > 0) {
+                    $customersByKey[$custKey]['unposted_or_overdue'][] = [
+                        'agreement_no'   => $ct['agreement_no'] ?? '',
+                        'vehicle_no'     => $ct['vehicle_no'] ?? '',
+                        'status'         => $ct['agreement_status'] ?? '',
+                        'unposted_debit' => round($unpostedAmt, 3),
+                        'overdue_days'   => 0,
+                        'overdue_amount' => 0.0,
+                    ];
+                }
                 continue;
             }
+            $customersByKey[$custKey]['active_contracts_count']++;
 
             $rateType = strtolower($cdj['rate_type'] ?? ($ct['service_type'] ?? 'daily'));
             $unitPrice = (float)($cdj['unit_price'] ?? 0);
@@ -162,6 +194,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
             $expTs = (!empty($expStr) && strpos($expStr, '0000-00-00') === false) ? strtotime($expStr) : false;
             if (!$expTs || $expTs <= 946684800) {
+                if ($unpostedAmt > 0) {
+                    $customersByKey[$custKey]['unposted_or_overdue'][] = [
+                        'agreement_no'   => $ct['agreement_no'] ?? '',
+                        'vehicle_no'     => $ct['vehicle_no'] ?? '',
+                        'status'         => $ct['agreement_status'] ?? '',
+                        'unposted_debit' => round($unpostedAmt, 3),
+                        'overdue_days'   => 0,
+                        'overdue_amount' => 0.0,
+                    ];
+                }
                 continue;
             }
 
@@ -170,6 +212,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 : $expTs;
 
             if ($nowTs <= ($graceAnchorTs + 3600)) {
+                if ($unpostedAmt > 0) {
+                    $customersByKey[$custKey]['unposted_or_overdue'][] = [
+                        'agreement_no'   => $ct['agreement_no'] ?? '',
+                        'vehicle_no'     => $ct['vehicle_no'] ?? '',
+                        'status'         => $ct['agreement_status'] ?? '',
+                        'unposted_debit' => round($unpostedAmt, 3),
+                        'overdue_days'   => 0,
+                        'overdue_amount' => 0.0,
+                    ];
+                }
                 continue; // Within 1-hour grace period
             }
 
@@ -222,7 +274,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             } else {
                 $ovAmt = round($overdueDays * $effDaily, 3);
             }
+            $customersByKey[$custKey]['overdue_contracts_count']++;
             $customersByKey[$custKey]['overdue_amount'] += $ovAmt;
+            $customersByKey[$custKey]['unposted_or_overdue'][] = [
+                'agreement_no'   => $ct['agreement_no'] ?? '',
+                'vehicle_no'     => $ct['vehicle_no'] ?? '',
+                'status'         => $ct['agreement_status'] ?? '',
+                'unposted_debit' => round($unpostedAmt, 3),
+                'overdue_days'   => $overdueDays,
+                'overdue_amount' => round($ovAmt, 3),
+            ];
         }
 
         // 5. Filter & format
@@ -232,12 +293,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $totalOutstanding = 0.0;
         $totalOverpaid = 0.0;
         foreach ($customersByKey as $row) {
+            $row['ledger_debit'] = round($row['ledger_debit'], 3);
+            $row['unposted_debit'] = round($row['unposted_debit'], 3);
             $row['total_debit'] = round($row['total_debit'], 3);
             $row['total_credit'] = round($row['total_credit'], 3);
             $row['overdue_amount'] = round($row['overdue_amount'], 3);
+            $row['bounced_cheques_amount'] = round($row['bounced_cheques_amount'], 3);
+            $row['ledger_balance'] = round($row['total_debit'] - $row['total_credit'], 3);
             $row['balance'] = round(($row['total_debit'] + $row['overdue_amount']) - $row['total_credit'], 3);
 
-            $ledgerBal = $row['total_debit'] - $row['total_credit'];
+            $ledgerBal = $row['ledger_balance'];
             if ($ledgerBal > 0) {
                 $ledgerOutstanding += $ledgerBal;
             }
@@ -248,7 +313,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $totalOverpaid += abs($row['balance']);
             }
 
-            if (abs($row['balance']) > 0.0001 || $row['total_debit'] > 0 || $row['total_credit'] > 0 || $row['overdue_amount'] > 0) {
+            if (abs($row['balance']) > 0.0001 || $row['total_debit'] > 0 || $row['total_credit'] > 0 || $row['overdue_amount'] > 0 || $row['active_contracts_count'] > 0) {
                 $results[] = $row;
             }
         }

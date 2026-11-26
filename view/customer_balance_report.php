@@ -286,6 +286,17 @@ if (isset($this) && isset($this->encryption)) {
                             </div>
                         </div>
 
+                        <!-- Quick Filter Pills -->
+                        <div class="d-flex flex-wrap gap-2 mb-3 no-print" id="cbStatusFilterPills">
+                            <button type="button" class="btn btn-sm btn-primary cb-filter-pill active" data-filter="all">All</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger cb-filter-pill" data-filter="pending">Pending Payment</button>
+                            <button type="button" class="btn btn-sm btn-outline-warning cb-filter-pill" data-filter="overdue">Overdue Return</button>
+                            <button type="button" class="btn btn-sm btn-outline-info cb-filter-pill" data-filter="paid_overdue">Ledger Paid + Overdue</button>
+                            <button type="button" class="btn btn-sm btn-outline-success cb-filter-pill" data-filter="overpaid">Overpaid (Credit)</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary cb-filter-pill" data-filter="settled">Settled</button>
+                            <button type="button" class="btn btn-sm btn-outline-dark cb-filter-pill" data-filter="blacklisted">Blacklisted</button>
+                        </div>
+
                         <!-- Main Report Data Table Card -->
                         <div class="card border shadow-sm">
                             <div class="card-datatable table-responsive">
@@ -293,12 +304,11 @@ if (isset($this) && isset($this->encryption)) {
                                     <thead>
                                         <tr>
                                             <th width="4%" class="text-center">#</th>
-                                            <th width="28%">Customer Details</th>
-                                            <th width="13%" class="text-end">Total Debit (Owed)</th>
-                                            <th width="13%" class="text-end">Total Credit (Paid)</th>
-                                            <th width="12%" class="text-end">Overdue Return</th>
-                                            <th width="11%" class="text-center">Status</th>
-                                            <th width="13%" class="text-end">Balance Amount</th>
+                                            <th width="34%">Customer Details &amp; Status</th>
+                                            <th width="14%" class="text-end">Total Debit (Owed)</th>
+                                            <th width="14%" class="text-end">Total Credit (Paid)</th>
+                                            <th width="14%" class="text-end">Overdue Return</th>
+                                            <th width="14%" class="text-end">Balance Amount</th>
                                             <th width="6%" class="text-center no-print">Action</th>
                                         </tr>
                                     </thead>
@@ -309,7 +319,6 @@ if (isset($this) && isset($this->encryption)) {
                                             <td class="text-end text-danger" id="foot_total_debit">0.000 BHD</td>
                                             <td class="text-end text-success" id="foot_total_credit">0.000 BHD</td>
                                             <td class="text-end text-danger" id="foot_total_overdue">0.000 BHD</td>
-                                            <td class="text-center"></td>
                                             <td class="text-end" id="foot_net_balance">0.000 BHD</td>
                                             <td class="no-print"></td>
                                         </tr>
@@ -374,9 +383,31 @@ if (isset($this) && isset($this->encryption)) {
                         </div>
                     </div>
 
-                    <!-- Ledger Table -->
-                    <div class="table-responsive border rounded">
-                        <table class="table table-sm table-bordered table-hover align-middle mb-0" style="font-size:12.5px;">
+                    <!-- Unposted Contracts & Active Overdue Breakdown (if any) -->
+                    <div id="cb_led_unposted_wrap" class="mb-3 d-none">
+                        <div class="alert alert-warning py-2 px-3 mb-2 small fw-semibold">
+                            <i class="ri-error-warning-line me-1"></i> Unposted Contract Charges / Active Overdue Return Amounts (Not Yet Posted in Ledger):
+                        </div>
+                        <div class="table-responsive border rounded">
+                            <table class="table table-sm table-bordered mb-0" style="font-size:12px;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Agreement No.</th>
+                                        <th>Vehicle</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Unposted Contract Debit</th>
+                                        <th class="text-end">Overdue Days</th>
+                                        <th class="text-end">Overdue Return Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cb_led_unposted_tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Ledger DataTable -->
+                    <div class="table-responsive border rounded p-2">
+                        <table id="cb_led_table" class="table table-sm table-bordered table-hover align-middle mb-0 w-100" style="font-size:12.5px;">
                             <thead class="table-light">
                                 <tr>
                                     <th class="text-center">#</th>
@@ -496,18 +527,47 @@ $(document).ready(function() {
                     return meta.row + 1;
                 }
             },
-            // Customer Details Column (Identical to Contract List)
+            // Customer Details & Status Column (Identical to Contract List + Status Badges)
             { 
                 data: null,
                 render: function(data, type, row) {
+                    const ledBal = parseFloat(row.ledger_balance || 0);
+                    const ovAmt = parseFloat(row.overdue_amount || 0);
+                    const bal = parseFloat(row.balance || 0);
+
                     if (type === 'filter' || type === 'sort') {
-                        return `${row.customer_name || ''} ${row.customer_id || ''} ${row.customer_mobile || ''} ${row.customer_cr_cpr || ''} ${row.customer_email || ''}`;
+                        return `${row.customer_name || ''} ${row.customer_id || ''} ${row.customer_mobile || ''} ${row.customer_cr_cpr || ''} ${row.customer_email || ''} ${row.is_blacklisted ? 'Blacklisted' : ''} ${ovAmt > 0 ? 'Overdue' : ''}`;
                     }
                     let meta = [];
                     if (row.customer_mobile && row.customer_mobile !== '-') meta.push(`<i class="ri-phone-line me-1"></i>${escapeHtml(row.customer_mobile)}`);
                     if (row.customer_cr_cpr && row.customer_cr_cpr !== 'N/A' && row.customer_cr_cpr !== '-') meta.push(`<i class="ri-id-card-line me-1"></i>${escapeHtml(row.customer_cr_cpr)}`);
                     if (row.customer_nationality) meta.push(`<i class="ri-global-line me-1"></i>${escapeHtml(row.customer_nationality)}`);
-                    let emailLine = row.customer_email ? `<small class="text-muted d-block text-truncate" style="max-width:220px;"><i class="ri-mail-line me-1"></i>${escapeHtml(row.customer_email)}</small>` : '';
+                    let emailLine = row.customer_email ? `<small class="text-muted d-block text-truncate" style="max-width:240px;"><i class="ri-mail-line me-1"></i>${escapeHtml(row.customer_email)}</small>` : '';
+
+                    let badges = [];
+                    if (row.is_blacklisted) {
+                        badges.push('<span class="badge bg-dark"><i class="ri-user-forbid-line me-1"></i>Blacklisted</span>');
+                    }
+                    if (ledBal <= 0 && ovAmt > 0) {
+                        badges.push('<span class="badge bg-label-success">Ledger Paid</span>');
+                        badges.push('<span class="badge bg-danger"><i class="ri-time-line me-1"></i>Overdue Return Pending (Unposted)</span>');
+                    } else if (bal > 0) {
+                        badges.push('<span class="badge bg-danger"><i class="ri-alarm-warning-line me-1"></i>Pending Payment</span>');
+                        if (ovAmt > 0) {
+                            badges.push('<span class="badge bg-label-danger"><i class="ri-time-line me-1"></i>Overdue Return</span>');
+                        }
+                    } else if (bal < 0) {
+                        badges.push('<span class="badge bg-success"><i class="ri-checkbox-circle-line me-1"></i>Overpaid (Credit)</span>');
+                    } else {
+                        badges.push('<span class="badge bg-secondary">Settled</span>');
+                    }
+
+                    if ((row.active_contracts_count || 0) > 0) {
+                        badges.push(`<span class="badge bg-label-primary">${row.active_contracts_count} Active</span>`);
+                    }
+                    if ((row.bounced_cheques_count || 0) > 0) {
+                        badges.push(`<span class="badge bg-label-warning text-dark">${row.bounced_cheques_count} Bounced Cheque</span>`);
+                    }
 
                     return `
                         <div class="d-flex flex-column gap-1">
@@ -517,6 +577,7 @@ $(document).ready(function() {
                             </div>
                             <small class="text-muted d-flex flex-wrap gap-2">${meta.join(' ')}</small>
                             ${emailLine}
+                            <div class="d-flex flex-wrap gap-1 mt-1">${badges.join('')}</div>
                         </div>
                     `;
                 }
@@ -525,7 +586,10 @@ $(document).ready(function() {
             { 
                 data: 'total_debit', 
                 className: 'text-end text-danger fw-semibold', 
-                render: v => parseFloat(v).toFixed(3) + ' BHD'
+                render: (v, t, row) => {
+                    const unp = parseFloat(row.unposted_debit || 0);
+                    return parseFloat(v).toFixed(3) + ' BHD' + (unp > 0 ? `<div class="small text-muted fw-normal">Unposted: ${unp.toFixed(3)}</div>` : '');
+                }
             },
             // Total Credit
             { 
@@ -542,17 +606,6 @@ $(document).ready(function() {
                     return ov > 0
                         ? `<span class="text-danger">${ov.toFixed(3)} BHD</span>`
                         : '<span class="text-muted">0.000 BHD</span>';
-                }
-            },
-            // Status
-            { 
-                data: 'balance',
-                className: 'text-center',
-                render: function(v) {
-                    let bal = parseFloat(v);
-                    if (bal > 0) return '<span class="badge bg-danger"><i class="ri ri-alarm-warning-line me-1"></i>Pending Payment</span>';
-                    if (bal < 0) return '<span class="badge bg-success"><i class="ri ri-checkbox-circle-line me-1"></i>Credit Balance</span>';
-                    return '<span class="badge bg-secondary">Settled</span>';
                 }
             },
             // Balance Amount
@@ -592,6 +645,31 @@ $(document).ready(function() {
         }
     });
 
+    let activeStatusFilter = 'all';
+    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+        if (settings.nTable.id !== 'tblBalances' || activeStatusFilter === 'all') return true;
+        const row = tblBalances.row(dataIndex).data();
+        if (!row) return true;
+        const ledBal = parseFloat(row.ledger_balance || 0);
+        const ovAmt = parseFloat(row.overdue_amount || 0);
+        const bal = parseFloat(row.balance || 0);
+        if (activeStatusFilter === 'pending') return bal > 0;
+        if (activeStatusFilter === 'overdue') return ovAmt > 0;
+        if (activeStatusFilter === 'paid_overdue') return ledBal <= 0 && ovAmt > 0;
+        if (activeStatusFilter === 'overpaid') return bal < 0;
+        if (activeStatusFilter === 'settled') return Math.abs(bal) <= 0.0001;
+        if (activeStatusFilter === 'blacklisted') return !!row.is_blacklisted;
+        return true;
+    });
+
+    $(document).on('click', '.cb-filter-pill', function() {
+        $('.cb-filter-pill').removeClass('active btn-primary').addClass('btn-outline-secondary');
+        $(this).addClass('active');
+        activeStatusFilter = $(this).data('filter') || 'all';
+        tblBalances.draw();
+    });
+
+    let cbLedDataTable = null;
     let cbCurrentLedger = { customer: null, entries: [], debit: 0, credit: 0, balance: 0 };
 
     function fmtCbDate(val) {
@@ -619,6 +697,26 @@ $(document).ready(function() {
         $('#cb_led_info_email').text(row.customer_email || '-');
         $('#cb_led_full_page_link').attr('href', `/CustomerLedger?val=${ENCRYPTED_LEDGER_VAL}&customer_code=${encodeURIComponent(row.customer_id)}&customer_name=${encodeURIComponent(row.customer_name)}`);
 
+        // Populate Unposted / Active Overdue section if present
+        const unpList = Array.isArray(row.unposted_or_overdue) ? row.unposted_or_overdue : [];
+        if (unpList.length > 0) {
+            $('#cb_led_unposted_tbody').html(unpList.map(u => `<tr>
+                <td class="fw-semibold">${escapeHtml(u.agreement_no || '-')}</td>
+                <td>${escapeHtml(u.vehicle_no || '-')}</td>
+                <td><span class="badge bg-label-primary">${escapeHtml(u.status || '-')}</span></td>
+                <td class="text-end">${parseFloat(u.unposted_debit || 0).toFixed(3)} BHD</td>
+                <td class="text-end">${u.overdue_days > 0 ? u.overdue_days + 'd' : '-'}</td>
+                <td class="text-end text-danger fw-bold">${parseFloat(u.overdue_amount || 0).toFixed(3)} BHD</td>
+            </tr>`).join(''));
+            $('#cb_led_unposted_wrap').removeClass('d-none');
+        } else {
+            $('#cb_led_unposted_wrap').addClass('d-none');
+        }
+
+        if ($.fn.DataTable.isDataTable('#cb_led_table')) {
+            $('#cb_led_table').DataTable().destroy();
+            cbLedDataTable = null;
+        }
         $('#cb_led_tot_debit, #cb_led_tot_credit, #cb_led_net_bal').text('0.000 BHD');
         $('#cb_led_tbody').html('<tr><td colspan="8" class="text-center text-muted py-3">Loading ledger...</td></tr>');
         new bootstrap.Modal(document.getElementById('cbCustomerLedgerModal')).show();
@@ -626,7 +724,10 @@ $(document).ready(function() {
         $.getJSON('/CustomerLedgerController', { action: 'GetLedgerData', customer_code: row.customer_id }, function(res) {
             const rows = (res && Array.isArray(res.data)) ? res.data : (Array.isArray(res) ? res : []);
             if (!rows.length) {
-                $('#cb_led_tbody').html('<tr><td colspan="8" class="text-center text-muted py-3">No ledger entries found.</td></tr>');
+                $('#cb_led_tbody').html('<tr><td colspan="8" class="text-center text-muted py-3">No posted ledger entries found.</td></tr>');
+                $('#cb_led_tot_debit').text(parseFloat(row.total_debit || 0).toFixed(3) + ' BHD');
+                $('#cb_led_tot_credit').text(parseFloat(row.total_credit || 0).toFixed(3) + ' BHD');
+                $('#cb_led_net_bal').text(parseFloat(row.balance || 0).toFixed(3) + ' BHD');
                 return;
             }
             let totD = 0, totC = 0, run = 0;
@@ -658,9 +759,15 @@ $(document).ready(function() {
             }).join('');
             cbCurrentLedger = { customer: row, entries: rows, debit: totD, credit: totC, balance: run };
             $('#cb_led_tbody').html(html);
-            $('#cb_led_tot_debit').text(totD.toFixed(3) + ' BHD');
-            $('#cb_led_tot_credit').text(totC.toFixed(3) + ' BHD');
-            $('#cb_led_net_bal').text(run.toFixed(3) + ' BHD');
+            cbLedDataTable = $('#cb_led_table').DataTable({
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                ordering: false,
+                language: { search: "_INPUT_", searchPlaceholder: "Search ledger..." }
+            });
+            $('#cb_led_tot_debit').text(parseFloat(row.total_debit || totD).toFixed(3) + ' BHD');
+            $('#cb_led_tot_credit').text(parseFloat(row.total_credit || totC).toFixed(3) + ' BHD');
+            $('#cb_led_net_bal').text(parseFloat(row.balance || run).toFixed(3) + ' BHD');
         });
     });
 

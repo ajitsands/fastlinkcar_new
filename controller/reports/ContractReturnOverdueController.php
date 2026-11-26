@@ -252,6 +252,7 @@ class ContractReturnOverdueController {
                            c.return_date, c.km_in, c.km_out, c.km_used,
                            cust.customer_name AS cust_db_name, cust.customer_mobile, cust.customer_cr_cpr,
                            v.model_names, cat.category_name, modl.modal_name AS model_name,
+                           modl.price_json AS v_price_json,
                            comp.company_name
                     FROM tbl_vehicle_rentout_contracts c
                     LEFT JOIN customer_details cust ON (cust.customer_id = c.customer_code OR cust.ids = c.customer_code)
@@ -351,25 +352,12 @@ class ContractReturnOverdueController {
                 $initialStartFmt = $initialStartTs ? date('d-m-Y H:i', $initialStartTs) : 'N/A';
                 $initialEndFmt   = $initialEndTs ? date('d-m-Y H:i', $initialEndTs) : 'N/A';
 
-                // Initial Contract Amount & Daily Rate
-                $contractAmount = floatval($cd['total_amt'] ?? 0);
-                $unitPrice      = floatval($cd['unit_price'] ?? 0);
-                $rateType       = strtolower($cd['rate_type'] ?? 'daily');
-
-                $dailyRate = 0.0;
-                if ($unitPrice > 0) {
-                    if (strpos($rateType, 'hour') !== false) {
-                        $dailyRate = $unitPrice * 24;
-                    } else if (strpos($rateType, 'month') !== false) {
-                        $dailyRate = $unitPrice / 30;
-                    } else if (strpos($rateType, 'week') !== false) {
-                        $dailyRate = $unitPrice / 7;
-                    } else {
-                        $dailyRate = $unitPrice;
-                    }
-                } else if ($contractAmount > 0 && $initialDuration > 0) {
-                    $dailyRate = $contractAmount / $initialDuration;
-                }
+                // Initial Contract Amount & Active Rate
+                $contractAmount  = floatval($cd['total_amt'] ?? ($cd['grand_total'] ?? 0));
+                $unitPrice       = floatval($cd['unit_price'] ?? 0);
+                $rateType        = strtolower($cd['rate_type'] ?? 'daily');
+                $activeRateType  = $rateType;
+                $activeUnitPrice = $unitPrice;
 
                 // 2. Extensions Analysis
                 $extList = $extensionsByContract[$cId] ?? [];
@@ -399,16 +387,11 @@ class ContractReturnOverdueController {
                             $latestExtEndDateStr = $extEnd;
 
                             $extUnit = floatval($extDetails['unit_price'] ?? 0);
-                            $extRType = strtolower($extDetails['rate_type'] ?? 'daily');
+                            $extRType = strtolower($extDetails['rate_type'] ?? '');
                             if ($extUnit > 0) {
-                                if (strpos($extRType, 'hour') !== false) {
-                                    $dailyRate = $extUnit * 24;
-                                } else if (strpos($extRType, 'month') !== false) {
-                                    $dailyRate = $extUnit / 30;
-                                } else if (strpos($extRType, 'week') !== false) {
-                                    $dailyRate = $extUnit / 7;
-                                } else {
-                                    $dailyRate = $extUnit;
+                                $activeUnitPrice = $extUnit;
+                                if ($extRType !== '') {
+                                    $activeRateType = $extRType;
                                 }
                             }
                         }
@@ -419,6 +402,71 @@ class ContractReturnOverdueController {
                         }
                     }
                 }
+
+                // Extract model pricing configuration (With Driver vs Without Driver)
+                $svcStr = strtolower(trim((string)($contract['service_type'] ?? ($cd['service'] ?? ($cd['service_type'] ?? '')))));
+                $wantsWithDriver = (strpos($svcStr, 'with driver') !== false && strpos($svcStr, 'without') === false);
+                $modelRates = ['hourly' => 0.0, 'daily' => 0.0, 'weekly' => 0.0, 'monthly' => 0.0];
+                $modelFallbackWo = ['hourly' => 0.0, 'daily' => 0.0, 'weekly' => 0.0, 'monthly' => 0.0];
+
+                $priceArr = json_decode($contract['v_price_json'] ?? '[]', true);
+                if (is_array($priceArr)) {
+                    foreach ($priceArr as $pItem) {
+                        $itemName = strtolower((string)($pItem['item'] ?? ''));
+                        $amt = (float)($pItem['amount'] ?? 0);
+                        if ($amt <= 0 || $itemName === '') continue;
+
+                        $isWith = (strpos($itemName, 'with driver') !== false && strpos($itemName, 'without') === false);
+                        $isWithout = (strpos($itemName, 'without driver') !== false);
+
+                        $bucket = null;
+                        if (strpos($itemName, 'hour') !== false) $bucket = 'hourly';
+                        elseif (strpos($itemName, 'day') !== false) $bucket = 'daily';
+                        elseif (strpos($itemName, 'week') !== false) $bucket = 'weekly';
+                        elseif (strpos($itemName, 'month') !== false) $bucket = 'monthly';
+                        if ($bucket === null) continue;
+
+                        if ($wantsWithDriver && $isWith) {
+                            $modelRates[$bucket] = $amt;
+                        } elseif (!$wantsWithDriver && $isWithout) {
+                            $modelRates[$bucket] = $amt;
+                        }
+                        if ($isWithout) {
+                            $modelFallbackWo[$bucket] = $amt;
+                        }
+                    }
+                    foreach ($modelRates as $k => $v) {
+                        if ($v <= 0 && $modelFallbackWo[$k] > 0) {
+                            $modelRates[$k] = $modelFallbackWo[$k];
+                        }
+                    }
+                }
+
+                // Formula fallback rates when model pricing is not configured
+                $formulaDaily = 0.0;
+                if ($activeUnitPrice > 0) {
+                    if (strpos($activeRateType, 'hour') !== false) {
+                        $formulaDaily = $activeUnitPrice * 24;
+                    } elseif (strpos($activeRateType, 'month') !== false) {
+                        $formulaDaily = $activeUnitPrice / 30;
+                    } elseif (strpos($activeRateType, 'week') !== false) {
+                        $formulaDaily = $activeUnitPrice / 7;
+                    } else {
+                        $formulaDaily = $activeUnitPrice;
+                    }
+                } elseif ($contractAmount > 0 && $initialDuration > 0) {
+                    $formulaDaily = $contractAmount / $initialDuration;
+                }
+
+                $formulaHourly  = (strpos($activeRateType, 'hour') !== false && $activeUnitPrice > 0) ? $activeUnitPrice : ($formulaDaily / 24);
+                $formulaWeekly  = (strpos($activeRateType, 'week') !== false && $activeUnitPrice > 0) ? $activeUnitPrice : ($formulaDaily * 7);
+                $formulaMonthly = (strpos($activeRateType, 'month') !== false && $activeUnitPrice > 0) ? $activeUnitPrice : ($formulaDaily * 30);
+
+                $effHourly  = ($modelRates['hourly']  > 0) ? $modelRates['hourly']  : $formulaHourly;
+                $effDaily   = ($modelRates['daily']   > 0) ? $modelRates['daily']   : $formulaDaily;
+                $effWeekly  = ($modelRates['weekly']  > 0) ? $modelRates['weekly']  : $formulaWeekly;
+                $effMonthly = ($modelRates['monthly'] > 0) ? $modelRates['monthly'] : $formulaMonthly;
+                $dailyRate  = $effDaily;
 
                 if ($isExtended && $earliestExtStartTs && $latestExtEndTs) {
                     $extensionPeriodDisplay = date('d-m-Y', $earliestExtStartTs) . ' to ' . date('d-m-Y H:i', $latestExtEndTs) . " ({$totalExtensionDays} Days)";
@@ -449,18 +497,42 @@ class ContractReturnOverdueController {
                 $extraOverdueAmount = 0.0;
 
                 if ($expectedReturnTs && $expectedReturnTs > 946684800) {
+                    $todayStr = date('Y-m-d', $currentTimestamp);
+                    $endDateOnly = date('Y-m-d', $expectedReturnTs);
+                    $isDueToday = ($endDateOnly === $todayStr);
+
                     if ($currentTimestamp > ($expectedReturnTs + 3600)) { // 1 hr grace period
                         $diffSec = $currentTimestamp - $expectedReturnTs;
-                        $overdueDays = max(1, intval(ceil($diffSec / 86400)));
+                        $overdueDays = $isDueToday ? 1 : max(1, (int)ceil($diffSec / 86400));
                         $isOverdue = true;
                         $overdueStatusLabel = "Overdue ({$overdueDays}d)";
                         $overdueBadgeClass  = 'bg-danger';
-                        $extraOverdueAmount = round($overdueDays * $dailyRate, 3);
+
+                        if (strpos($activeRateType, 'hour') !== false) {
+                            $overdueHours = max(1, (int)ceil($diffSec / 3600));
+                            $extraOverdueAmount = round($overdueHours * $effHourly, 3);
+                        } elseif (strpos($activeRateType, 'month') !== false) {
+                            $dtStart = new DateTime('@' . $expectedReturnTs);
+                            $dtNow   = new DateTime('@' . $currentTimestamp);
+                            $diffObj = $dtStart->diff($dtNow);
+                            $completedMonths = ($diffObj->y * 12) + $diffObj->m;
+                            $extraDays = $diffObj->d + (($diffObj->h > 0 || $diffObj->i > 0 || $diffObj->s > 0) ? 1 : 0);
+                            if ($completedMonths === 0 && $extraDays === 0) {
+                                $extraDays = 1;
+                            }
+                            $extraOverdueAmount = round(($completedMonths * $effMonthly) + ($extraDays * $effDaily), 3);
+                        } elseif (strpos($activeRateType, 'week') !== false) {
+                            $completedWeeks = intdiv($overdueDays, 7);
+                            $extraDays = $overdueDays % 7;
+                            $extraOverdueAmount = round(($completedWeeks * $effWeekly) + ($extraDays * $effDaily), 3);
+                        } else {
+                            $extraOverdueAmount = round($overdueDays * $effDaily, 3);
+                        }
                     } else {
                         $isOverdue = false;
                         $overdueDays = 0;
-                        $overdueStatusLabel = 'On Schedule';
-                        $overdueBadgeClass  = 'bg-primary';
+                        $overdueStatusLabel = $isDueToday ? 'Due Today' : 'On Schedule';
+                        $overdueBadgeClass  = $isDueToday ? 'bg-warning' : 'bg-primary';
                         $extraOverdueAmount = 0.0;
                     }
                 }
@@ -591,6 +663,7 @@ class ContractReturnOverdueController {
 
             $sql = "SELECT c.*, cust.customer_name AS cust_db_name, cust.customer_mobile, cust.customer_cr_cpr, cust.customer_address, cust.customer_email,
                            v.model_names, cat.category_name, modl.modal_name AS model_name,
+                           modl.price_json AS v_price_json,
                            comp.company_name
                     FROM tbl_vehicle_rentout_contracts c
                     LEFT JOIN customer_details cust ON (cust.customer_id = c.customer_code OR cust.ids = c.customer_code)

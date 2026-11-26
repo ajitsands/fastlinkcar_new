@@ -821,6 +821,23 @@ function openVehicleProfile(vehicleId) {
         rrPrintContract($(this).data('agreement'));
     });
 
+    function rrFormatLedgerDate(val) {
+        if (!val || val === '-') return '-';
+        const s = String(val).trim();
+        const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(s);
+        if (typeof dayjs !== 'undefined') {
+            const d = dayjs(s);
+            if (d.isValid()) return isDateOnly ? d.format('DD MMM YYYY') : d.format('DD MMM YYYY, HH:mm');
+        }
+        const dt = new Date(s.replace(' ', 'T'));
+        if (!isNaN(dt.getTime())) {
+            return isDateOnly
+                ? dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                : dt.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+        return s;
+    }
+
     let currentRrAgr = '';
     $(document).on('click', '.btn-rr-contract-details', function() {
         const c = $(this).data('contract');
@@ -849,7 +866,7 @@ function openVehicleProfile(vehicleId) {
                 return;
             }
             const html = rows.map(r => `<tr>
-                <td class="text-nowrap">${rrEsc(r.trans_date || '-')}</td>
+                <td class="text-nowrap">${rrEsc(rrFormatLedgerDate(r.trans_date))}</td>
                 <td>${rrEsc(r.trans_type || '-')}</td>
                 <td>${rrEsc(r.ref_no || r.description || '-')}</td>
                 <td class="text-end text-danger">${parseFloat(r.debit || 0) > 0 ? parseFloat(r.debit).toFixed(3) : '-'}</td>

@@ -193,7 +193,7 @@ $cbFooterHtml = renderPrintFooterHtml($cbPrintSettings);
                                 <button type="button" id="btn_export_excel" class="btn btn-outline-success btn-sm">
                                     <i class="ri ri-file-excel-2-line me-1"></i> Export to Excel
                                 </button>
-                                <button type="button" id="btn_export_pdf" class="btn btn-outline-danger btn-sm">
+                                <button type="button" id="btn_export_pdf" class="btn btn-primary btn-sm">
                                     <i class="ri ri-file-pdf-2-line me-1"></i> Export to PDF
                                 </button>
                             </div>

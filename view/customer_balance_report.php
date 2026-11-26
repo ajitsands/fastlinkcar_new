@@ -179,67 +179,109 @@ if (isset($this) && isset($this->encryption)) {
                     <div class="container-fluid flex-grow-1 container-p-y">
           
                         <!-- Action Bar (Global header rendered by menu.php) -->
-                        <div class="d-flex justify-content-end mb-3 gap-2 no-print">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 no-print">
+                            <span class="badge bg-label-primary px-3 py-2 fs-6">
+                                <i class="ri ri-calendar-check-line me-1"></i> Report As of Today: <strong id="lbl_as_of_date"><?= date('d M Y, H:i') ?></strong>
+                            </span>
                             <button type="button" id="btn_export_excel" class="btn btn-outline-success btn-sm">
                                 <i class="ri ri-file-excel-2-line me-1"></i> Export to Excel
                             </button>
                         </div>
                         
-                        <!-- Summary KPI Metrics Cards matching Contract Status & Return Overdue Report -->
-                        <div class="row g-3 mb-4 no-print" id="kpiContainer">
-                            <!-- Total Customers with Balance -->
+                        <!-- Summary KPI Metrics Dashboard (Row 1: Customers & Collections) -->
+                        <div class="row g-3 mb-3 no-print" id="kpiContainer">
                             <div class="col-6 col-md-3">
                                 <div class="card kpi-card kpi-blue h-100 p-3">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="text-muted small fw-semibold">Total Customers</span>
-                                        <div class="kpi-icon-box bg-primary">
-                                            <i class="ri ri-group-line"></i>
-                                        </div>
+                                        <div class="kpi-icon-box bg-primary"><i class="ri ri-group-line"></i></div>
                                     </div>
                                     <h3 class="fw-bold mb-0" id="kpi_total_customers">0</h3>
-                                    <span class="text-muted small">With active ledger records</span>
+                                    <span class="text-muted small">All registered customers</span>
                                 </div>
                             </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card kpi-card kpi-green h-100 p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-muted small fw-semibold">Active Customers</span>
+                                        <div class="kpi-icon-box bg-success"><i class="ri ri-user-follow-line"></i></div>
+                                    </div>
+                                    <h3 class="fw-bold mb-0 text-success" id="kpi_active_customers">0</h3>
+                                    <span class="text-muted small">Non-blacklisted active</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card kpi-card kpi-red h-100 p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-muted small fw-semibold">Blacklisted Customers</span>
+                                        <div class="kpi-icon-box bg-dark"><i class="ri ri-user-forbid-line"></i></div>
+                                    </div>
+                                    <h3 class="fw-bold mb-0 text-dark" id="kpi_blacklisted_customers">0</h3>
+                                    <span class="text-muted small">Restricted / Blacklisted</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card kpi-card kpi-green h-100 p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-muted small fw-semibold">Total Collected</span>
+                                        <div class="kpi-icon-box bg-success"><i class="ri ri-hand-coin-line"></i></div>
+                                    </div>
+                                    <h3 class="fw-bold mb-0 text-success" id="lblTotalCollected">0.000</h3>
+                                    <span class="text-muted small">Valid collections (BHD)</span>
+                                </div>
+                            </div>
+                        </div>
 
-                            <!-- Total Outstanding (Company Receives) -->
+                        <!-- Row 2: Outstanding & Overpaid Breakdown -->
+                        <div class="row g-3 mb-3 no-print">
+                            <div class="col-6 col-md-3">
+                                <div class="card kpi-card kpi-amber h-100 p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-muted small fw-semibold">Ledger Outstanding</span>
+                                        <div class="kpi-icon-box bg-warning"><i class="ri ri-book-open-line"></i></div>
+                                    </div>
+                                    <h3 class="fw-bold mb-0 text-dark" id="lblLedgerOutstanding">0.000</h3>
+                                    <span class="text-muted small">As per ledger &amp; contracts (BHD)</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card kpi-card kpi-red h-100 p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-danger small fw-semibold">Overdue (Not Returned)</span>
+                                        <div class="kpi-icon-box bg-danger"><i class="ri ri-time-line"></i></div>
+                                    </div>
+                                    <h3 class="fw-bold mb-0 text-danger" id="lblOverdueOutstanding">0.000</h3>
+                                    <span class="text-muted small">Unreturned vehicle overdue (BHD)</span>
+                                </div>
+                            </div>
                             <div class="col-6 col-md-3">
                                 <div class="card kpi-card kpi-red pulse-danger h-100 p-3">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="text-danger small fw-bold">Total Outstanding</span>
-                                        <div class="kpi-icon-box bg-danger">
-                                            <i class="ri ri-arrow-down-circle-line"></i>
-                                        </div>
+                                        <div class="kpi-icon-box bg-danger"><i class="ri ri-arrow-down-circle-line"></i></div>
                                     </div>
                                     <h3 class="fw-bold mb-0 text-danger" id="lblTotalReceivable">0.000</h3>
-                                    <span class="text-danger small fw-semibold">Company should receive (BHD)</span>
+                                    <span class="text-danger small fw-semibold">Ledger + Overdue (BHD)</span>
                                 </div>
                             </div>
-
-                            <!-- Total Overpaid (Company Pays) -->
                             <div class="col-6 col-md-3">
                                 <div class="card kpi-card kpi-green h-100 p-3">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="text-muted small fw-semibold">Total Overpaid</span>
-                                        <div class="kpi-icon-box bg-success">
-                                            <i class="ri ri-arrow-up-circle-line"></i>
-                                        </div>
+                                        <span class="text-muted small fw-semibold">Overpaid Amount</span>
+                                        <div class="kpi-icon-box bg-success"><i class="ri ri-arrow-up-circle-line"></i></div>
                                     </div>
                                     <h3 class="fw-bold mb-0 text-success" id="lblTotalPayable">0.000</h3>
                                     <span class="text-muted small">Company should refund (BHD)</span>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Net Balance -->
-                            <div class="col-6 col-md-3">
-                                <div class="card kpi-card kpi-amber h-100 p-3">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="text-muted small fw-semibold">Net Balance</span>
-                                        <div class="kpi-icon-box bg-warning">
-                                            <i class="ri ri-money-dollar-circle-line"></i>
-                                        </div>
-                                    </div>
-                                    <h3 class="fw-bold mb-0 text-dark" id="lblNetBalance">0.000</h3>
-                                    <span class="text-muted small">Net outstanding amount (BHD)</span>
+                        <!-- Row 3: Total Collected by Payment Method -->
+                        <div class="card border shadow-sm mb-4 no-print">
+                            <div class="card-body py-2 px-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <span class="fw-bold small text-dark"><i class="ri ri-bank-card-line text-primary me-1"></i> Total Collected by Payment Method:</span>
+                                <div id="lblPaymentMethodsStrip" class="d-flex flex-wrap gap-2">
+                                    <span class="text-muted small">Loading...</span>
                                 </div>
                             </div>
                         </div>
@@ -407,11 +449,28 @@ $(document).ready(function() {
                     
                     let netBal = totalReceivable - totalPayable;
                     
-                    // Update KPI Cards
-                    $('#kpi_total_customers').text(balancesCache.length);
-                    $('#lblTotalReceivable').text(totalReceivable.toFixed(3));
-                    $('#lblTotalPayable').text(totalPayable.toFixed(3));
-                    $('#lblNetBalance').text(netBal.toFixed(3));
+                    // Update KPI Cards from backend kpis
+                    const kpis = json.kpis || {};
+                    if (kpis.as_of_date) $('#lbl_as_of_date').text(kpis.as_of_date);
+                    $('#kpi_total_customers').text(kpis.total_customers ?? balancesCache.length);
+                    $('#kpi_active_customers').text(kpis.active_customers ?? 0);
+                    $('#kpi_blacklisted_customers').text(kpis.blacklisted_customers ?? 0);
+                    $('#lblTotalCollected').text(parseFloat(kpis.total_collected ?? totalCredit).toFixed(3));
+                    $('#lblLedgerOutstanding').text(parseFloat(kpis.ledger_outstanding ?? 0).toFixed(3));
+                    $('#lblOverdueOutstanding').text(parseFloat(kpis.overdue_outstanding ?? totalOverdue).toFixed(3));
+                    $('#lblTotalReceivable').text(parseFloat(kpis.total_outstanding ?? totalReceivable).toFixed(3));
+                    $('#lblTotalPayable').text(parseFloat(kpis.total_overpaid ?? totalPayable).toFixed(3));
+
+                    const pmList = Array.isArray(kpis.payment_methods) ? kpis.payment_methods : [];
+                    if (pmList.length) {
+                        $('#lblPaymentMethodsStrip').html(pmList.map(pm => `
+                            <span class="badge bg-label-success border px-2 py-1" style="font-size:0.8rem;">
+                                ${escapeHtml(pm.method)}: <strong>${parseFloat(pm.amount || 0).toFixed(3)} BHD</strong>
+                            </span>
+                        `).join(''));
+                    } else {
+                        $('#lblPaymentMethodsStrip').html('<span class="text-muted small">No collections recorded</span>');
+                    }
                     
                     // Update Footer Totals
                     $('#foot_total_debit').text(totalDebit.toFixed(3) + ' BHD');

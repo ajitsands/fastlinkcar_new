@@ -8,17 +8,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     try {
         // 1. Load all customers keyed by customer_id and ids
         $stmtCust = $pdo->query("
-            SELECT ids, customer_id, customer_name, customer_mobile, customer_cr_cpr, customer_email, nationality AS customer_nationality
+            SELECT ids, customer_id, customer_name, customer_mobile, customer_cr_cpr, customer_email, nationality AS customer_nationality, status, is_blacklisted
             FROM customer_details
             ORDER BY customer_name ASC
         ");
         $customersByKey = [];
         $custAlias = [];
+        $totalCustomers = 0;
+        $blacklistedCustomers = 0;
+        $activeCustomers = 0;
         foreach ($stmtCust->fetchAll(PDO::FETCH_ASSOC) as $c) {
             $cid = (string)($c['customer_id'] ?? '');
             if ($cid === '') {
                 continue;
             }
+            $totalCustomers++;
+            $blVal = strtolower(trim((string)($c['is_blacklisted'] ?? '')));
+            $stVal = strtolower(trim((string)($c['status'] ?? '')));
+            $isBlacklisted = ($blVal === '1' || $blVal === 'yes' || $blVal === 'true' || $stVal === 'blacklisted');
+            if ($isBlacklisted) {
+                $blacklistedCustomers++;
+            } elseif ($stVal === '' || $stVal === 'active') {
+                $activeCustomers++;
+            }
+
             $customersByKey[$cid] = [
                 'customer_id'          => $cid,
                 'customer_name'        => $c['customer_name'] ?? '',
@@ -37,25 +50,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
         }
 
-        // 2. Aggregate ledger debits & valid credits per customer and track contracts with debits
+        // 2. Aggregate ledger debits & valid credits per customer and track payment methods
         $stmtLed = $pdo->query("
             SELECT
                 customer_code,
                 contract_ids,
                 agreement_no,
+                payment_method,
                 debit,
                 CASE WHEN COALESCE(cheque_status, '') = 'Bounced' THEN 0 ELSE credit END AS valid_credit
             FROM tbl_customer_ledger
         ");
         $contractsWithDebit = [];
+        $paymentMethodTotals = [];
+        $totalCollected = 0.0;
         foreach ($stmtLed->fetchAll(PDO::FETCH_ASSOC) as $l) {
             $rawCode = (string)($l['customer_code'] ?? '');
             $custKey = $custAlias[$rawCode] ?? '';
+            $deb = (float)($l['debit'] ?? 0);
+            $cred = (float)($l['valid_credit'] ?? 0);
+
+            if ($cred > 0) {
+                $totalCollected += $cred;
+                $pm = trim((string)($l['payment_method'] ?? ''));
+                if ($pm === '' || strtoupper($pm) === 'N/A') {
+                    $pm = 'Other / Unspecified';
+                }
+                if (!isset($paymentMethodTotals[$pm])) {
+                    $paymentMethodTotals[$pm] = 0.0;
+                }
+                $paymentMethodTotals[$pm] += $cred;
+            }
+
             if ($custKey === '' || !isset($customersByKey[$custKey])) {
                 continue;
             }
-            $deb = (float)($l['debit'] ?? 0);
-            $cred = (float)($l['valid_credit'] ?? 0);
             $customersByKey[$custKey]['total_debit'] += $deb;
             $customersByKey[$custKey]['total_credit'] += $cred;
 
@@ -198,17 +227,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         // 5. Filter & format
         $results = [];
+        $ledgerOutstanding = 0.0;
+        $overdueOutstanding = 0.0;
+        $totalOutstanding = 0.0;
+        $totalOverpaid = 0.0;
         foreach ($customersByKey as $row) {
             $row['total_debit'] = round($row['total_debit'], 3);
             $row['total_credit'] = round($row['total_credit'], 3);
             $row['overdue_amount'] = round($row['overdue_amount'], 3);
             $row['balance'] = round(($row['total_debit'] + $row['overdue_amount']) - $row['total_credit'], 3);
+
+            $ledgerBal = $row['total_debit'] - $row['total_credit'];
+            if ($ledgerBal > 0) {
+                $ledgerOutstanding += $ledgerBal;
+            }
+            $overdueOutstanding += $row['overdue_amount'];
+            if ($row['balance'] > 0) {
+                $totalOutstanding += $row['balance'];
+            } elseif ($row['balance'] < 0) {
+                $totalOverpaid += abs($row['balance']);
+            }
+
             if (abs($row['balance']) > 0.0001 || $row['total_debit'] > 0 || $row['total_credit'] > 0 || $row['overdue_amount'] > 0) {
                 $results[] = $row;
             }
         }
 
-        echo json_encode(['status' => 'success', 'data' => $results]);
+        arsort($paymentMethodTotals);
+        $pmList = [];
+        foreach ($paymentMethodTotals as $m => $amt) {
+            $pmList[] = ['method' => $m, 'amount' => round($amt, 3)];
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data'   => $results,
+            'kpis'   => [
+                'as_of_date'            => date('d M Y, H:i'),
+                'total_customers'       => $totalCustomers,
+                'blacklisted_customers' => $blacklistedCustomers,
+                'active_customers'      => $activeCustomers,
+                'total_collected'       => round($totalCollected, 3),
+                'ledger_outstanding'    => round($ledgerOutstanding, 3),
+                'overdue_outstanding'   => round($overdueOutstanding, 3),
+                'total_outstanding'     => round($totalOutstanding, 3),
+                'total_overpaid'        => round($totalOverpaid, 3),
+                'payment_methods'       => $pmList,
+            ]
+        ]);
         exit;
     } catch (PDOException $e) {
         echo json_encode(['status' => 'error', 'message' => "Database Error: " . $e->getMessage()]);

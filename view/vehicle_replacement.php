@@ -86,21 +86,12 @@ $loggedUserName = $_SESSION['user_name'] ?? ($_SESSION['username'] ?? ($_SESSION
 
         <div class="container-fluid flex-grow-1 container-p-y">
           <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
-              <div>
-                <h5 class="mb-0 fw-bold text-uppercase text-dark">
-                  <i class="ri-repeat-line text-primary me-1"></i> VEHICLE REPLACEMENT
-                </h5>
-                <small class="text-muted">Swap an active contract vehicle with an available fleet vehicle</small>
-              </div>
-              <div class="d-flex gap-2">
+            <div class="card-body pt-3">
+              <div class="d-flex justify-content-end mb-2">
                 <a href="/ContractList?val=<?php echo $this->encryption->encrypt('3,3-4'); ?>" class="btn btn-sm btn-outline-secondary">
                   <i class="ri-arrow-left-line me-1"></i> Back to Contract List
                 </a>
               </div>
-            </div>
-
-            <div class="card-body pt-3">
               <form id="vehicleReplacementForm" onsubmit="return false;">
                 <input type="hidden" id="vr_agreement_id" value="">
 

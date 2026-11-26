@@ -2182,6 +2182,56 @@ $this->params[15] = [
                     }
                     $html = '';
                     $printHtml = '<div class="d-none d-print-block"><table class="table table-bordered table-sm text-start" style="font-size: 12px;"><thead><tr><th>Vehicle Details</th><th>Color</th><th>Type</th><th>Status</th><th>Company</th><th>Remarks / Details</th></tr></thead><tbody>';
+
+                    // Batch load contract details, extensions, ledger received, and feedback counts
+                    $agreeNos = [];
+                    foreach ($resultvehicle['data'] as $it) {
+                        if (!empty($it['agreement_no'])) $agreeNos[] = $it['agreement_no'];
+                    }
+                    $agreeNos = array_values(array_unique($agreeNos));
+                    $contractMap = [];
+                    $extMap = [];
+                    $recMap = [];
+                    $fbMap = [];
+
+                    if (!empty($agreeNos)) {
+                        try {
+                            $pdoIc = $this->varPDOModelObj->varDBPDO;
+                            $ph = implode(',', array_fill(0, count($agreeNos), '?'));
+                            $stC = $pdoIc->prepare("SELECT c.ids, c.agreement_no, c.agreement_status, c.customer_code, c.customer_name, c.vehicle_id, c.vehicle_model_id, c.vehicle_no, c.booking_ids, c.service_type, c.service_start_date_time, c.service_end_date_time, c.contract_details_json, m.price_json AS v_price_json, cust.customer_mobile FROM tbl_vehicle_rentout_contracts c LEFT JOIN tbl_vehicle_model m ON m.ids = c.vehicle_model_id LEFT JOIN customer_details cust ON (cust.customer_id = c.customer_code OR cust.ids = c.customer_code) WHERE c.agreement_no IN ($ph)");
+                            $stC->execute($agreeNos);
+                            $cIds = [];
+                            foreach ($stC->fetchAll(PDO::FETCH_ASSOC) as $cr) {
+                                $contractMap[$cr['agreement_no']] = $cr;
+                                $cIds[] = (int)$cr['ids'];
+                            }
+                            if (!empty($cIds)) {
+                                $inC = implode(',', $cIds);
+                                $stE = $pdoIc->query("SELECT * FROM tbl_vehicle_contract_extensions WHERE agreement_ids IN ($inC) ORDER BY extend_end_date ASC, ids ASC");
+                                if ($stE) {
+                                    foreach ($stE->fetchAll(PDO::FETCH_ASSOC) as $er) {
+                                        $extMap[(int)$er['agreement_ids']][] = $er;
+                                    }
+                                }
+                                $stL = $pdoIc->query("SELECT contract_ids, SUM(CASE WHEN COALESCE(cheque_status, '') = 'Bounced' THEN 0 ELSE credit END) AS rec FROM tbl_customer_ledger WHERE contract_ids IN ($inC) GROUP BY contract_ids");
+                                if ($stL) {
+                                    foreach ($stL->fetchAll(PDO::FETCH_ASSOC) as $lr) {
+                                        $recMap[(int)$lr['contract_ids']] = (float)$lr['rec'];
+                                    }
+                                }
+                                try {
+                                    $stF = $pdoIc->query("SELECT contract_id, COUNT(*) AS cnt FROM tbl_contract_feedback WHERE contract_id IN ($inC) GROUP BY contract_id");
+                                    if ($stF) {
+                                        foreach ($stF->fetchAll(PDO::FETCH_ASSOC) as $fr) {
+                                            $fbMap[(int)$fr['contract_id']] = (int)$fr['cnt'];
+                                        }
+                                    }
+                                } catch (\Throwable $e) {}
+                            }
+                        } catch (\Throwable $e) {}
+                    }
+                    $nowTsRr = time();
+                    $todayStrRr = date('Y-m-d', $nowTsRr);
                 foreach ($resultvehicle['data'] as $item) {
                 
                     $images = [];
@@ -2298,12 +2348,150 @@ $this->params[15] = [
                                         <i class="ri ri-information-2-line me-1"></i> Details
                                     </button>
                                     
-                                    <?php if ($item['vehicle_status'] == 'Rentout') { ?>
-                                        <div class="small w-100 mt-2 border-top pt-1">
-                                            <strong>On Rent:</strong> <?= $item['customer_name'] ?? '' ?><br>
-                                            <strong class="text-danger">Agr No:</strong> <?= $item['agreement_no'] ?? '' ?><br>
-                                            <strong class="text-danger">Exp Return:</strong><br>
-                                            <?= !empty($exp_return_date) ? $exp_return_date : '' ?>
+                                    <?php if ($item['vehicle_status'] == 'Rentout') {
+                                        $cInfo = $contractMap[$item['agreement_no'] ?? ''] ?? null;
+                                        $cIdRr = $cInfo ? (int)$cInfo['ids'] : 0;
+                                        $cdRr = $cInfo ? (json_decode($cInfo['contract_details_json'] ?? '', true) ?: []) : [];
+                                        $stDtStr = $cdRr['period_from'] ?? ($cInfo['service_start_date_time'] ?? '');
+                                        $enDtStr = $cdRr['period_to'] ?? ($cInfo['service_end_date_time'] ?? '');
+                                        $stTsRr = !empty($stDtStr) ? strtotime($stDtStr) : false;
+                                        $enTsRr = !empty($enDtStr) ? strtotime($enDtStr) : false;
+                                        $initDurRr = max(1, (int)($cdRr['duration'] ?? (($stTsRr && $enTsRr && $enTsRr > $stTsRr) ? round(($enTsRr - $stTsRr) / 86400) : 1)));
+                                        $baseAmtRr = (float)($cdRr['total_amt'] ?? ($cdRr['grand_total'] ?? 0));
+                                        $activeRateTypeRr = strtolower($cdRr['rate_type'] ?? 'daily');
+                                        $activeUnitPriceRr = (float)($cdRr['unit_price'] ?? 0);
+
+                                        $extAmtRr = 0.0;
+                                        $latestExtEndTsRr = null;
+                                        foreach (($extMap[$cIdRr] ?? []) as $er) {
+                                            $edRr = json_decode($er['extend_details'] ?? '', true) ?: [];
+                                            $extAmtRr += (float)($edRr['total_amt'] ?? 0);
+                                            $eTs = !empty($er['extend_end_date']) ? strtotime($er['extend_end_date']) : (!empty($edRr['period_to']) ? strtotime($edRr['period_to']) : false);
+                                            if ($eTs && ($latestExtEndTsRr === null || $eTs > $latestExtEndTsRr)) {
+                                                $latestExtEndTsRr = $eTs;
+                                                $eu = (float)($edRr['unit_price'] ?? 0);
+                                                if ($eu > 0) {
+                                                    $activeUnitPriceRr = $eu;
+                                                    if (!empty($edRr['rate_type'])) $activeRateTypeRr = strtolower($edRr['rate_type']);
+                                                }
+                                            }
+                                        }
+                                        $effEndTsRr = $latestExtEndTsRr ?: $enTsRr;
+
+                                        // Model pricing & fallback
+                                        $svcStrRr = strtolower(trim((string)($cInfo['service_type'] ?? ($cdRr['service'] ?? ''))));
+                                        $wantsWdRr = (strpos($svcStrRr, 'with driver') !== false && strpos($svcStrRr, 'without') === false);
+                                        $mRatesRr = ['hourly' => 0.0, 'daily' => 0.0, 'weekly' => 0.0, 'monthly' => 0.0];
+                                        $mWoRr = ['hourly' => 0.0, 'daily' => 0.0, 'weekly' => 0.0, 'monthly' => 0.0];
+                                        foreach ((json_decode($cInfo['v_price_json'] ?? '[]', true) ?: []) as $pi) {
+                                            $inm = strtolower((string)($pi['item'] ?? ''));
+                                            $amtPi = (float)($pi['amount'] ?? 0);
+                                            if ($amtPi <= 0 || $inm === '') continue;
+                                            $isW = (strpos($inm, 'with driver') !== false && strpos($inm, 'without') === false);
+                                            $isWo = (strpos($inm, 'without driver') !== false);
+                                            $bk = strpos($inm, 'hour') !== false ? 'hourly' : (strpos($inm, 'day') !== false ? 'daily' : (strpos($inm, 'week') !== false ? 'weekly' : (strpos($inm, 'month') !== false ? 'monthly' : null)));
+                                            if ($bk === null) continue;
+                                            if ($wantsWdRr && $isW) $mRatesRr[$bk] = $amtPi;
+                                            elseif (!$wantsWdRr && $isWo) $mRatesRr[$bk] = $amtPi;
+                                            if ($isWo) $mWoRr[$bk] = $amtPi;
+                                        }
+                                        foreach ($mRatesRr as $k => $v) { if ($v <= 0 && $mWoRr[$k] > 0) $mRatesRr[$k] = $mWoRr[$k]; }
+
+                                        $fDailyRr = $activeUnitPriceRr > 0
+                                            ? (strpos($activeRateTypeRr, 'hour') !== false ? $activeUnitPriceRr * 24 : (strpos($activeRateTypeRr, 'month') !== false ? $activeUnitPriceRr / 30 : (strpos($activeRateTypeRr, 'week') !== false ? $activeUnitPriceRr / 7 : $activeUnitPriceRr)))
+                                            : (($baseAmtRr > 0 && $initDurRr > 0) ? $baseAmtRr / $initDurRr : 0.0);
+                                        $effH = $mRatesRr['hourly'] > 0 ? $mRatesRr['hourly'] : ((strpos($activeRateTypeRr, 'hour') !== false && $activeUnitPriceRr > 0) ? $activeUnitPriceRr : $fDailyRr / 24);
+                                        $effD = $mRatesRr['daily'] > 0 ? $mRatesRr['daily'] : $fDailyRr;
+                                        $effW = $mRatesRr['weekly'] > 0 ? $mRatesRr['weekly'] : ((strpos($activeRateTypeRr, 'week') !== false && $activeUnitPriceRr > 0) ? $activeUnitPriceRr : $fDailyRr * 7);
+                                        $effM = $mRatesRr['monthly'] > 0 ? $mRatesRr['monthly'] : ((strpos($activeRateTypeRr, 'month') !== false && $activeUnitPriceRr > 0) ? $activeUnitPriceRr : $fDailyRr * 30);
+
+                                        $isDueTodayRr = ($effEndTsRr && date('Y-m-d', $effEndTsRr) === $todayStrRr);
+                                        $anchorRr = ($effEndTsRr && date('H:i:s', $effEndTsRr) === '00:00:00') ? strtotime(date('Y-m-d 23:59:59', $effEndTsRr)) : $effEndTsRr;
+                                        $isOvRr = false;
+                                        $ovDaysRr = 0;
+                                        $ovAmtRr = 0.0;
+                                        if ($effEndTsRr && $nowTsRr > ($anchorRr + 3600)) {
+                                            $isOvRr = true;
+                                            $dSec = $nowTsRr - $anchorRr;
+                                            $ovDaysRr = $isDueTodayRr ? 1 : max(1, (int)ceil($dSec / 86400));
+                                            if (strpos($activeRateTypeRr, 'hour') !== false) {
+                                                $ovAmtRr = round(max(1, (int)ceil($dSec / 3600)) * $effH, 3);
+                                            } elseif (strpos($activeRateTypeRr, 'month') !== false) {
+                                                $dfObj = (new DateTime('@' . $effEndTsRr))->diff(new DateTime('@' . $nowTsRr));
+                                                $cM = ($dfObj->y * 12) + $dfObj->m;
+                                                $eD = $dfObj->d + (($dfObj->h > 0 || $dfObj->i > 0 || $dfObj->s > 0) ? 1 : 0);
+                                                if ($cM === 0 && $eD === 0) $eD = 1;
+                                                $ovAmtRr = round(($cM * $effM) + ($eD * $effD), 3);
+                                            } elseif (strpos($activeRateTypeRr, 'week') !== false) {
+                                                $ovAmtRr = round((intdiv($ovDaysRr, 7) * $effW) + (($ovDaysRr % 7) * $effD), 3);
+                                            } else {
+                                                $ovAmtRr = round($ovDaysRr * $effD, 3);
+                                            }
+                                        }
+
+                                        $contractTotRr = round($baseAmtRr + $extAmtRr, 3);
+                                        $recAmtRr = round($recMap[$cIdRr] ?? 0.0, 3);
+                                        $grandTotRr = round($contractTotRr + $ovAmtRr, 3);
+                                        $fbCntRr = $fbMap[$cIdRr] ?? 0;
+                                        $dispUnitRate = $activeUnitPriceRr > 0 ? $activeUnitPriceRr : $effD;
+                                        $contractJsonAttr = htmlspecialchars(json_encode([
+                                            'id' => $cIdRr,
+                                            'agreement_no' => $item['agreement_no'] ?? '',
+                                            'customer_code' => $cInfo['customer_code'] ?? '',
+                                            'customer_name' => $item['customer_name'] ?? '',
+                                            'customer_mobile' => $cInfo['customer_mobile'] ?? '',
+                                            'vehicle_id' => $item['ids'] ?? 0,
+                                            'vehicle_no' => $item['vehicle_number'] ?? '',
+                                            'vehicle_model' => $item['model_names'] ?? '',
+                                            'model_id' => $cInfo['vehicle_model_id'] ?? 0,
+                                            'start_date' => $stTsRr ? date('d M Y, h:i A', $stTsRr) : 'N/A',
+                                            'end_date' => $effEndTsRr ? date('d M Y, h:i A', $effEndTsRr) : ($exp_return_date ?: 'N/A'),
+                                            'rate_type' => ucfirst($activeRateTypeRr),
+                                            'unit_price' => number_format($dispUnitRate, 3, '.', ''),
+                                            'contract_total' => number_format($contractTotRr, 3, '.', ''),
+                                            'received_amount' => number_format($recAmtRr, 3, '.', ''),
+                                            'overdue_days' => $ovDaysRr,
+                                            'overdue_amount' => number_format($ovAmtRr, 3, '.', ''),
+                                            'total_value' => number_format($grandTotRr, 3, '.', ''),
+                                            'is_overdue' => $isOvRr,
+                                            'is_due_today' => $isDueTodayRr,
+                                        ]), ENT_QUOTES, 'UTF-8');
+                                    ?>
+                                        <div class="w-100 mt-2 border-top pt-2" style="font-size: 0.78rem;">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <a href="javascript:void(0)" class="fw-bold text-primary text-decoration-underline btn-rr-print-agreement" data-agreement="<?= htmlspecialchars($item['agreement_no'] ?? '', ENT_QUOTES) ?>">
+                                                    <i class="ri-file-text-line me-1"></i><?= htmlspecialchars($item['agreement_no'] ?? '-') ?>
+                                                </a>
+                                                <?php if ($isOvRr): ?>
+                                                    <span class="badge bg-label-danger">Overdue <?= $ovDaysRr ?>d</span>
+                                                <?php elseif ($isDueTodayRr): ?>
+                                                    <span class="badge bg-label-warning">Due Today</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-label-primary">On Schedule</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div><strong>Customer:</strong> <?= htmlspecialchars($item['customer_name'] ?? '-') ?><?= !empty($cInfo['customer_mobile']) ? ' (' . htmlspecialchars($cInfo['customer_mobile']) . ')' : '' ?></div>
+                                            <div><strong>Period:</strong> <?= $stTsRr ? date('d M Y', $stTsRr) : '-' ?> &rarr; <?= !empty($exp_return_date) ? $exp_return_date : '-' ?></div>
+                                            <div class="mt-1">
+                                                <span class="badge bg-label-info"><?= htmlspecialchars(ucfirst($activeRateTypeRr)) ?></span>
+                                                <strong><?= number_format($dispUnitRate, 3) ?> BHD</strong>
+                                            </div>
+                                            <div class="mt-1 pt-1 border-top d-flex flex-wrap justify-content-between gap-1">
+                                                <span>Total: <strong><?= number_format($contractTotRr, 3) ?></strong></span>
+                                                <span>Paid: <strong class="text-success"><?= number_format($recAmtRr, 3) ?></strong></span>
+                                                <span>Overdue: <strong class="<?= $ovAmtRr > 0 ? 'text-danger' : 'text-muted' ?>"><?= number_format($ovAmtRr, 3) ?></strong></span>
+                                                <span>Grand: <strong class="text-primary"><?= number_format($grandTotRr, 3) ?></strong></span>
+                                            </div>
+                                            <?php if ($cIdRr > 0): ?>
+                                            <div class="d-flex gap-1 mt-2">
+                                                <button type="button" class="btn btn-xs btn-outline-primary flex-fill btn-rr-contract-details" data-contract="<?= $contractJsonAttr ?>">
+                                                    <i class="ri-eye-line me-1"></i>Contract
+                                                </button>
+                                                <button type="button" class="btn btn-xs btn-outline-info flex-fill btn-rr-feedback" data-contract="<?= $contractJsonAttr ?>">
+                                                    <i class="ri-chat-3-line me-1"></i>Feedback <span class="badge bg-info text-white ms-1 rr-fb-count-<?= $cIdRr ?>"><?= $fbCntRr ?></span>
+                                                </button>
+                                            </div>
+                                            <?php endif; ?>
                                         </div>
                                     <?php } else if ($item['vehicle_status'] == 'Staff Use') { ?>
                                         <div class="small w-100 mt-2 border-top pt-1">

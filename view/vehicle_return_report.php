@@ -706,6 +706,236 @@ function openVehicleProfile(vehicleId) {
 }
 </script>
 
+<!-- Contract Quick View Modal -->
+<div class="modal fade" id="rrContractModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1b3d94, #153075);">
+                <h5 class="modal-title text-white"><i class="ri-file-text-line me-2"></i>Contract Details &mdash; <span id="rrCModalAgr">-</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="border rounded p-2 h-100 bg-light-subtle small">
+                            <div><strong>Customer:</strong> <span id="rrCModalCust">-</span></div>
+                            <div><strong>Mobile:</strong> <span id="rrCModalMob">-</span></div>
+                            <div><strong>Vehicle:</strong> <span id="rrCModalVeh">-</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-2 h-100 bg-light-subtle small">
+                            <div><strong>Period:</strong> <span id="rrCModalFrom">-</span> &rarr; <span id="rrCModalTo">-</span></div>
+                            <div><strong>Rate:</strong> <span id="rrCModalRate">-</span></div>
+                            <div><strong>Overdue:</strong> <span id="rrCModalOverdue">-</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-2 text-center mb-3">
+                    <div class="col-3"><div class="border rounded p-2"><div class="small text-muted">Contract Total</div><div class="fw-bold" id="rrCModalTotal">0.000</div></div></div>
+                    <div class="col-3"><div class="border rounded p-2"><div class="small text-muted">Paid</div><div class="fw-bold text-success" id="rrCModalPaid">0.000</div></div></div>
+                    <div class="col-3"><div class="border rounded p-2"><div class="small text-muted">Overdue Amt</div><div class="fw-bold text-danger" id="rrCModalOvAmt">0.000</div></div></div>
+                    <div class="col-3"><div class="border rounded p-2"><div class="small text-muted">Grand Total</div><div class="fw-bold text-primary" id="rrCModalGrand">0.000</div></div></div>
+                </div>
+                <h6 class="fw-bold mb-2" style="color:#1b3d94;">Contract Ledger</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover border-top" style="font-size:12px;">
+                        <thead><tr><th>Date</th><th>Type</th><th>Ref / Remarks</th><th class="text-end">Debit</th><th class="text-end">Credit</th><th class="text-end">Balance</th></tr></thead>
+                        <tbody id="rrCModalLedgerBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary btn-sm" id="rrCModalPrintBtn"><i class="ri-printer-line me-1"></i> Print Contract</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Client Feedback Modal -->
+<div class="modal fade" id="feedbackModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1b3d94, #153075);">
+                <h5 class="modal-title text-white"><i class="ri-chat-3-line me-2"></i>Client Feedback &mdash; <span id="fbModalAgreementNo"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-light border py-2 px-3 mb-3 d-flex justify-content-between align-items-center">
+                    <span><strong>Customer:</strong> <span id="fbModalCustomerName">-</span></span>
+                    <span class="text-muted small" id="fbModalVehicle">-</span>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-5 border-end">
+                        <h6 class="fw-bold mb-3" style="color: #1b3d94;"><i class="ri-add-circle-line me-1"></i>Add Feedback Entry</h6>
+                        <form id="frmFeedback">
+                            <input type="hidden" id="fbContractId">
+                            <input type="hidden" id="fbAgreementNoInput">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Feedback Date <span class="text-danger">*</span></label>
+                                <input type="date" id="fbDate" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Feedback Taken By <span class="text-danger">*</span></label>
+                                <input type="text" id="fbTakenBy" class="form-control form-control-sm" value="<?= htmlspecialchars($_SESSION['profile_name'] ?? ($_SESSION['user_name'] ?? '')) ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Feedback Notes <span class="text-danger">*</span></label>
+                                <textarea id="fbNotes" class="form-control form-control-sm" rows="4" placeholder="Enter client feedback remarks..." required></textarea>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary btn-sm" id="btnSaveFeedback"><i class="ri-save-line me-1"></i> Save Feedback</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0" style="color: #1b3d94;"><i class="ri-history-line me-1"></i>Feedback Timeline</h6>
+                            <span class="badge bg-label-primary" id="fbTotalCountBadge">0 Entries</span>
+                        </div>
+                        <div id="fbHistoryList" class="border rounded p-3 bg-light" style="height: 300px; overflow-y: auto;">
+                            <div class="text-center text-muted small py-4">No feedback recorded yet.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    function rrEsc(s) {
+        return $('<div>').text(s == null ? '' : String(s)).html();
+    }
+    function rrPrintContract(agrNo) {
+        if (!agrNo) return;
+        fetch('/controller/ajax_encrypt_contract.php?contract_no=' + encodeURIComponent($.trim(agrNo)))
+            .then(r => r.text())
+            .then(token => {
+                if (token && token.trim()) window.open('/PrintAgreement?token=' + encodeURIComponent(token.trim()), '_blank');
+            });
+    }
+    $(document).on('click', '.btn-rr-print-agreement', function() {
+        rrPrintContract($(this).data('agreement'));
+    });
+
+    let currentRrAgr = '';
+    $(document).on('click', '.btn-rr-contract-details', function() {
+        const c = $(this).data('contract');
+        if (!c || !c.id) return;
+        currentRrAgr = c.agreement_no || '';
+        $('#rrCModalAgr').text(c.agreement_no || '-');
+        $('#rrCModalCust').text(c.customer_name || '-');
+        $('#rrCModalMob').text(c.customer_mobile || '-');
+        $('#rrCModalVeh').text((c.vehicle_no || '') + ' ' + (c.vehicle_model || ''));
+        $('#rrCModalFrom').text(c.start_date || '-');
+        $('#rrCModalTo').text(c.end_date || '-');
+        $('#rrCModalRate').text((c.rate_type || 'Daily') + ' · ' + (c.unit_price || '0.000') + ' BHD');
+        $('#rrCModalOverdue').text(c.is_overdue ? ('Overdue ' + c.overdue_days + 'd (' + c.overdue_amount + ' BHD)') : (c.is_due_today ? 'Due Today' : 'On Schedule'));
+        $('#rrCModalTotal').text((c.contract_total || '0.000') + ' BHD');
+        $('#rrCModalPaid').text((c.received_amount || '0.000') + ' BHD');
+        $('#rrCModalOvAmt').text((c.overdue_amount || '0.000') + ' BHD');
+        $('#rrCModalGrand').text((c.total_value || '0.000') + ' BHD');
+
+        $('#rrCModalLedgerBody').html('<tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>');
+        new bootstrap.Modal(document.getElementById('rrContractModal')).show();
+
+        $.getJSON('/CustomerLedgerController', { action: 'GetContractLedgerData', contract_id: c.id }, function(res) {
+            const rows = (res && Array.isArray(res.data)) ? res.data : [];
+            if (!rows.length) {
+                $('#rrCModalLedgerBody').html('<tr><td colspan="6" class="text-center text-muted">No ledger entries found.</td></tr>');
+                return;
+            }
+            const html = rows.map(r => `<tr>
+                <td class="text-nowrap">${rrEsc(r.trans_date || '-')}</td>
+                <td>${rrEsc(r.trans_type || '-')}</td>
+                <td>${rrEsc(r.ref_no || r.description || '-')}</td>
+                <td class="text-end text-danger">${parseFloat(r.debit || 0) > 0 ? parseFloat(r.debit).toFixed(3) : '-'}</td>
+                <td class="text-end text-success">${parseFloat(r.credit || 0) > 0 ? parseFloat(r.credit).toFixed(3) : '-'}</td>
+                <td class="text-end fw-bold">${parseFloat(r.running_balance || 0).toFixed(3)}</td>
+            </tr>`).join('');
+            $('#rrCModalLedgerBody').html(html);
+        });
+    });
+
+    $('#rrCModalPrintBtn').on('click', function() {
+        rrPrintContract(currentRrAgr);
+    });
+
+    function renderFbTimeline(items) {
+        const list = Array.isArray(items) ? items : [];
+        $('#fbTotalCountBadge').text(list.length + (list.length === 1 ? ' Entry' : ' Entries'));
+        if (!list.length) {
+            $('#fbHistoryList').html('<div class="text-center text-muted small py-4">No feedback recorded yet.</div>');
+            return;
+        }
+        const html = '<div class="ps-3 border-start border-2 border-primary">' + list.map(fb => `
+            <div class="position-relative mb-3 bg-white border rounded p-2 shadow-xs">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="badge bg-label-primary">${rrEsc(fb.feedback_date || '-')}</span>
+                    <small class="text-muted">By: <strong>${rrEsc(fb.taken_by || '-')}</strong></small>
+                </div>
+                <div class="small text-dark" style="white-space: pre-wrap;">${rrEsc(fb.feedback_notes || '')}</div>
+            </div>
+        `).join('') + '</div>';
+        $('#fbHistoryList').html(html);
+    }
+
+    $(document).on('click', '.btn-rr-feedback', function() {
+        const c = $(this).data('contract');
+        if (!c || !c.id) return;
+        $('#fbContractId').val(c.id);
+        $('#fbAgreementNoInput').val(c.agreement_no || '');
+        $('#fbModalAgreementNo').text(c.agreement_no || '');
+        $('#fbModalCustomerName').text(c.customer_name || '-');
+        $('#fbModalVehicle').text((c.vehicle_no || '') + ' ' + (c.vehicle_model || ''));
+        $('#fbDate').val(new Date().toISOString().split('T')[0]);
+        $('#fbNotes').val('');
+        $('#fbHistoryList').html('<div class="text-center text-muted small py-2">Loading feedback...</div>');
+        new bootstrap.Modal(document.getElementById('feedbackModal')).show();
+
+        fetch('/ActiveContractsDashboardController', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get_feedback', contract_id: c.id })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res && res.status === 'success') renderFbTimeline(res.data || []);
+        });
+    });
+
+    $('#frmFeedback').on('submit', function(e) {
+        e.preventDefault();
+        const cid = parseInt($('#fbContractId').val(), 10);
+        const $btn = $('#btnSaveFeedback').prop('disabled', true);
+        fetch('/ActiveContractsDashboardController', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'save_feedback',
+                contract_id: cid,
+                agreement_no: $('#fbAgreementNoInput').val(),
+                feedback_date: $('#fbDate').val(),
+                taken_by: $('#fbTakenBy').val(),
+                feedback_notes: $('#fbNotes').val()
+            })
+        })
+        .then(r => r.json())
+        .then(res => {
+            $btn.prop('disabled', false);
+            if (res && res.status === 'success') {
+                $('#fbNotes').val('');
+                const items = res.data || [];
+                renderFbTimeline(items);
+                $('.rr-fb-count-' + cid).text(items.length);
+            }
+        });
+    });
+})();
+</script>
 </body>
 
 </html>

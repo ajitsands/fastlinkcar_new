@@ -1365,7 +1365,7 @@ function load_contract_list(
         const qp = new URLSearchParams(window.location.search);
         if (qp.get('embed_return') === '1') {
             window.__embedReturnHandled = true;
-            ['ReturncontractModal', 'extendcontractModal', 'enableOTP', 'customConfirmModalAfterOTPValidation', 'imagePreviewModal', 'imagePreviewModalreturn', 'modalAddViolationHead', 'otpVerifyModal', 'otpSubmitModal', 'customConfirmModal', 'dropdownContent'].forEach(mid => {
+            ['ReturncontractModal', 'extendcontractModal', 'enableOTP', 'otpModal', 'customConfirmModalAfterOTPValidation', 'imagePreviewModal', 'imagePreviewModalreturn', 'modalAddViolationHead', 'customConfirmModal', 'dropdownContent'].forEach(mid => {
                 const el = document.getElementById(mid);
                 if (el && el.parentElement !== document.body) {
                     document.body.appendChild(el);

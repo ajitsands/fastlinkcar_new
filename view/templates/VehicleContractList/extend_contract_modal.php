@@ -131,8 +131,8 @@
                 </div>
               </div>
 
-              <!-- Row 2: Pricing Setup - 4 column blocks -->
-              <div class="mb-3">
+              <!-- Row 2: Pricing Setup (hidden, kept for min-price & rate lookup) -->
+              <div class="mb-3 d-none">
                 <div class="pricing-setup-title">Pricing Setup</div>
                 <div class="d-flex gap-2">
                   <!-- Hour -->

@@ -467,8 +467,11 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                         <tr>
                                             <th>#</th>
                                             <th>Period</th>
-                                            <th>Duration</th>
+                                            <th>Service &amp; Duration</th>
+                                            <th class="text-end">Unit Price</th>
                                             <th class="text-end">Total</th>
+                                            <th>Remarks</th>
+                                            <th>Extended By</th>
                                         </tr>
                                     </thead>
                                     <tbody id="qvExtensionsBody"></tbody>
@@ -1278,9 +1281,19 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                         $('#qvExtensionsBody').html(d.extensions.map((ext, i) => {
                             let ed = {};
                             try { ed = JSON.parse(ext.extend_details || '{}') || {}; } catch (e) {}
-                            return `<tr><td>${i + 1}</td><td>${escapeHtml(ext.extend_start_date || '')} → ${escapeHtml(ext.extend_end_date || '')}</td><td>${escapeHtml((ed.duration || '') + ' ' + (ed.rate_type || ''))}</td><td class="text-end">${Number(ed.total_amt || 0).toFixed(3)}</td></tr>`;
+                            return `<tr>
+                                <td>${i + 1}</td>
+                                <td class="text-nowrap">${escapeHtml(ext.extend_start_date || '')} → ${escapeHtml(ext.extend_end_date || '')}</td>
+                                <td><div>${escapeHtml(ed.service_name || 'Rental')}</div><small class="text-muted">${escapeHtml((ed.duration || '') + ' ' + (ed.rate_type || ''))}</small></td>
+                                <td class="text-end">${Number(ed.unit_price || 0).toFixed(3)}</td>
+                                <td class="text-end fw-semibold">${Number(ed.total_amt || 0).toFixed(3)}</td>
+                                <td>${escapeHtml(ed.booking_notes || '-')}</td>
+                                <td><div>${escapeHtml(ext.made_by || '-')}</div>${ext.made_at ? `<small class="text-muted">${escapeHtml(ext.made_at)}</small>` : ''}</td>
+                            </tr>`;
                         }).join(''));
                         $('#qvExtensionsSection').removeClass('d-none');
+                    } else {
+                        $('#qvExtensionsSection').addClass('d-none');
                     }
 
                     const agStatus = String(c.agreement_status || '').toLowerCase();

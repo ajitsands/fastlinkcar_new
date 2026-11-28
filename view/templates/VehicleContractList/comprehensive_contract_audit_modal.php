@@ -64,6 +64,11 @@
               </button>
             </li>
             <li class="nav-item flex-fill text-center" role="presentation">
+              <button class="nav-link fw-semibold w-100" id="cca-tab-ext-btn" data-bs-toggle="tab" data-bs-target="#ccaTabExtensions" type="button" role="tab">
+                <i class="ri-calendar-event-line me-1"></i> Extensions <span id="cca_ext_badge" class="badge bg-secondary ms-1">0</span>
+              </button>
+            </li>
+            <li class="nav-item flex-fill text-center" role="presentation">
               <button class="nav-link fw-semibold w-100" id="cca-tab-ledger-btn" data-bs-toggle="tab" data-bs-target="#ccaTabLedger" type="button" role="tab">
                 <i class="ri-book-open-line me-1"></i> Complete Ledger, Receipts &amp; SOA
               </button>
@@ -166,6 +171,29 @@
               <div id="cca_replacements_container"></div>
             </div>
 
+            <!-- TAB 2B: CONTRACT EXTENSIONS -->
+            <div class="tab-pane fade" id="ccaTabExtensions" role="tabpanel">
+              <div id="cca_extensions_container">
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>#</th>
+                        <th>Extension Period (From → To)</th>
+                        <th>Service &amp; Duration</th>
+                        <th class="text-end">Unit Price</th>
+                        <th class="text-end">VAT %</th>
+                        <th class="text-end">Total (BHD)</th>
+                        <th>Remarks</th>
+                        <th>Extended By &amp; Date</th>
+                      </tr>
+                    </thead>
+                    <tbody id="cca_extensions_tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
             <!-- TAB 3: COMPLETE LEDGER, RECEIPT PRINT & SOA -->
             <div class="tab-pane fade" id="ccaTabLedger" role="tabpanel">
               <div class="row g-2 mb-3 align-items-center">
@@ -236,23 +264,7 @@
                   </div>
                 </div>
 
-                <div class="col-12 col-lg-6">
-                  <h6 class="fw-bold text-primary border-bottom pb-1 mb-2"><i class="ri-calendar-event-line me-1"></i> Contract Extensions</h6>
-                  <div class="table-responsive mb-3">
-                    <table class="table table-sm table-bordered align-middle mb-0">
-                      <thead class="table-light">
-                        <tr>
-                          <th>Extended Period</th>
-                          <th>Duration</th>
-                          <th class="text-end">Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody id="cca_extensions_tbody"></tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div class="col-12 col-lg-6">
+                <div class="col-12">
                   <h6 class="fw-bold text-danger border-bottom pb-1 mb-2"><i class="ri-alarm-warning-line me-1"></i> Traffic Violations</h6>
                   <div class="table-responsive mb-3">
                     <table class="table table-sm table-bordered align-middle mb-0">
@@ -605,11 +617,29 @@
                 </tr>`).join('') : '<tr><td colspan="6" class="text-center text-muted">No invoices found.</td></tr>');
 
                 const exts = Array.isArray(res.extensions) ? res.extensions : [];
-                $('#cca_extensions_tbody').html(exts.length ? exts.map(x => `<tr>
-                    <td>${ccaFmtDate24(x.extended_from_date || x.from_date, false)} → ${ccaFmtDate24(x.extended_to_date || x.to_date, false)}</td>
-                    <td>${ccaEsc((x.duration || '') + ' ' + (x.rate_type || ''))}</td>
-                    <td class="text-end fw-bold">${parseFloat(x.total_amount || 0).toFixed(3)}</td>
-                </tr>`).join('') : '<tr><td colspan="3" class="text-center text-muted">No extensions.</td></tr>');
+                $('#cca_ext_badge').text(exts.length).toggleClass('bg-primary', exts.length > 0).toggleClass('bg-secondary', exts.length === 0);
+                $('#cca_extensions_tbody').html(exts.length ? exts.map((x, idx) => {
+                    const fromStr = ccaFmtDate24(x.extend_start_date || x.extended_from_date || x.from_date, false);
+                    const toStr   = ccaFmtDate24(x.extend_end_date || x.extended_to_date || x.to_date, false);
+                    const svc     = x.service_name || 'Rental';
+                    const dur     = ((x.duration || '') + ' ' + (x.rate_type || '')).trim();
+                    const uPrice  = parseFloat(x.unit_price || 0).toFixed(3);
+                    const vatPct  = parseFloat(x.vat || 0).toFixed(1) + '%';
+                    const totAmt  = parseFloat(x.total_amount || 0).toFixed(3);
+                    const rem     = x.remarks || '-';
+                    const madeBy  = x.made_by || '-';
+                    const madeAt  = x.made_at ? ccaFmtDate24(x.made_at, false) : '';
+                    return `<tr>
+                        <td>${idx + 1}</td>
+                        <td class="text-nowrap fw-semibold">${fromStr} → ${toStr}</td>
+                        <td><div class="fw-semibold">${ccaEsc(svc)}</div><small class="text-muted">${ccaEsc(dur)}</small></td>
+                        <td class="text-end">${uPrice}</td>
+                        <td class="text-end">${vatPct}</td>
+                        <td class="text-end fw-bold text-primary">${totAmt}</td>
+                        <td>${ccaEsc(rem)}</td>
+                        <td><div class="fw-semibold">${ccaEsc(madeBy)}</div>${madeAt ? `<small class="text-muted">${madeAt}</small>` : ''}</td>
+                    </tr>`;
+                }).join('') : '<tr><td colspan="8" class="text-center text-muted py-4"><i class="ri-information-line me-1"></i>No extensions recorded for this contract.</td></tr>');
 
                 const viols = Array.isArray(res.violations) ? res.violations : [];
                 $('#cca_violations_tbody').html(viols.length ? viols.map(v => `<tr>

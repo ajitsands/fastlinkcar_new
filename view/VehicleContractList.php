@@ -6294,9 +6294,9 @@ function listExtendedListviewcontract(agreement_ids)
                 return `
                         <div>
                             <strong>Total: ${row.total_amt}</strong><br>
-                            <small>Unit Price: ${row.unit_price}</small><small>, VAT: ${row.duration}</small><br>
-                            <small>${row.otp_details}</small>
-                            
+                            <small>Unit Price: ${row.unit_price}</small><small>, VAT: ${row.vat || 0}%</small><br>
+                            <small>${row.otp_details || ''}</small>
+                            ${row.made_by ? `<div class="text-muted"><small>By: ${row.made_by}${row.made_at ? ' (' + row.made_at + ')' : ''}</small></div>` : ''}
                         </div>
                         `;
                 
@@ -7839,9 +7839,9 @@ function listExtendedListReplace(agreement_ids)
                 return `
                         <div>
                             <strong>Total: ${row.total_amt}</strong><br>
-                            <small>Unit Price: ${row.unit_price}</small><small>, VAT: ${row.duration}</small><br>
-                            <small>${row.otp_details}</small>
-                            
+                            <small>Unit Price: ${row.unit_price}</small><small>, VAT: ${row.vat || 0}%</small><br>
+                            <small>${row.otp_details || ''}</small>
+                            ${row.made_by ? `<div class="text-muted"><small>By: ${row.made_by}${row.made_at ? ' (' + row.made_at + ')' : ''}</small></div>` : ''}
                         </div>
                         `;
                 

@@ -256,14 +256,40 @@ class ContractHistoryController {
             // 4. Parse Replacement History
             $replacedHistory = !empty($contract['replaced_vehicle_json']) ? (json_decode($contract['replaced_vehicle_json'], true) ?: []) : [];
 
-            // 5. Fetch Extensions List
+            // 5. Fetch Extensions List with creator user info
             $extensions = [];
             try {
                 $stmtExt = $this->varPDOModelObj->selectexecuteQuery(
                     "SELECT * FROM tbl_vehicle_contract_extensions WHERE agreement_ids = :aid ORDER BY ids ASC",
                     [':aid' => $agreementId]
                 );
-                $extensions = $stmtExt ? $stmtExt->fetchAll(PDO::FETCH_ASSOC) : [];
+                $rawExts = $stmtExt ? $stmtExt->fetchAll(PDO::FETCH_ASSOC) : [];
+
+                $userMap = [];
+                try {
+                    $stmtU = $this->varPDOModelObj->selectexecuteQuery("SELECT user_id, COALESCE(NULLIF(profile_name,''), user_name) AS display_name FROM tbl_users");
+                    if ($stmtU) {
+                        foreach ($stmtU->fetchAll(PDO::FETCH_ASSOC) as $u) {
+                            $userMap[(int)$u['user_id']] = $u['display_name'];
+                        }
+                    }
+                } catch (\Throwable $ignore) {}
+
+                foreach ($rawExts as $ext) {
+                    $ed = json_decode((string)($ext['extend_details'] ?? '{}'), true) ?: [];
+                    $lg = json_decode((string)($ext['extend_log_json'] ?? '{}'), true) ?: [];
+                    $uid = (int)($lg['user_id'] ?? 0);
+                    $ext['service_name'] = $ed['service_name'] ?? '';
+                    $ext['rate_type']    = $ed['rate_type'] ?? ($ext['rate_type'] ?? '');
+                    $ext['duration']     = $ed['duration'] ?? ($ext['duration'] ?? '');
+                    $ext['unit_price']   = $ed['unit_price'] ?? 0;
+                    $ext['vat']          = $ed['vat'] ?? 0;
+                    $ext['total_amount'] = $ed['total_amt'] ?? ($ext['total_amount'] ?? 0);
+                    $ext['remarks']      = $ed['booking_notes'] ?? '';
+                    $ext['made_by']      = $lg['user_name'] ?? ($uid > 0 && isset($userMap[$uid]) ? $userMap[$uid] : ($uid > 0 ? 'User #' . $uid : '-'));
+                    $ext['made_at']      = $lg['datetime'] ?? ($ext['extension_date'] ?? '');
+                    $extensions[] = $ext;
+                }
             } catch (\Throwable $th) {
                 $extensions = [];
             }

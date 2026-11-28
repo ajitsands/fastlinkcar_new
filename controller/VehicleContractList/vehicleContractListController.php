@@ -568,6 +568,16 @@ class VehiclesContractListController
                             ->selectexecuteQuery($etnQuery, $params);
                         
                         $rows = $result->fetchAll(PDO::FETCH_ASSOC);
+
+                        $userDisplayMap = [];
+                        try {
+                            $uStmt = $this->varPDOModelObj->selectexecuteQuery("SELECT user_id, COALESCE(NULLIF(profile_name,''), user_name) AS display_name FROM tbl_users");
+                            if ($uStmt) {
+                                foreach ($uStmt->fetchAll(PDO::FETCH_ASSOC) as $uRow) {
+                                    $userDisplayMap[(int)$uRow['user_id']] = $uRow['display_name'];
+                                }
+                            }
+                        } catch (\Throwable $ignore) {}
                         
                         $data = [];
                         
@@ -578,6 +588,10 @@ class VehiclesContractListController
                             $extend_details = json_decode($row['extend_details'] ?? '{}', true) ?? [];
                             $otp_details = json_decode($row['otp_details'] ?? '{}', true) ?? [];
                             $extend_log_json = json_decode($row['extend_log_json'] ?? '{}', true) ?? [];
+                            $logEntry = (is_array($extend_log_json) && isset($extend_log_json[0])) ? $extend_log_json[0] : $extend_log_json;
+                            $logUid = (int)($logEntry['user_id'] ?? 0);
+                            $madeBy = $logEntry['user_name'] ?? ($logUid > 0 && isset($userDisplayMap[$logUid]) ? $userDisplayMap[$logUid] : ($logUid > 0 ? 'User #' . $logUid : '-'));
+                            $madeAt = $logEntry['datetime'] ?? ($row['extension_date_format'] ?? '');
                         
                             $data[] = [
                         
@@ -621,7 +635,9 @@ class VehiclesContractListController
                                 "booking_notes"         => $extend_details['booking_notes'] ?? '',
                         
                                 "otp_details"           => $otp_details,
-                                "extend_log_json"       => $extend_log_json
+                                "extend_log_json"       => $extend_log_json,
+                                "made_by"               => $madeBy,
+                                "made_at"               => $madeAt
                             ];
                         }
 
@@ -805,13 +821,32 @@ class VehiclesContractListController
                     }
                 
                      $result_extend = $this->varPDOModelObj->selectexecuteQuery(
-                        "SELECT ids,extend_end_date FROM  tbl_vehicle_contract_extensions 
-                         WHERE agreement_ids = :agreementid order by ids desc limit 1",
+                        "SELECT * FROM tbl_vehicle_contract_extensions 
+                         WHERE agreement_ids = :agreementid ORDER BY ids ASC",
                         [':agreementid' => $this->agreementid]
                     );
-                    $extend_row = $result_extend->fetch(PDO::FETCH_ASSOC);
-
-                    $extend_end_date = $extend_row['extend_end_date'] ?? '';
+                    $extRowsAll = $result_extend ? $result_extend->fetchAll(PDO::FETCH_ASSOC) : [];
+                    $extUserMap = [];
+                    if (!empty($extRowsAll)) {
+                        try {
+                            $uStmt2 = $this->varPDOModelObj->selectexecuteQuery("SELECT user_id, COALESCE(NULLIF(profile_name,''), user_name) AS display_name FROM tbl_users");
+                            if ($uStmt2) {
+                                foreach ($uStmt2->fetchAll(PDO::FETCH_ASSOC) as $uRow2) {
+                                    $extUserMap[(int)$uRow2['user_id']] = $uRow2['display_name'];
+                                }
+                            }
+                        } catch (\Throwable $ignore) {}
+                    }
+                    $extensionsList = [];
+                    $extend_end_date = '';
+                    foreach ($extRowsAll as $er) {
+                        $extend_end_date = $er['extend_end_date'] ?? $extend_end_date;
+                        $lg = json_decode((string)($er['extend_log_json'] ?? '{}'), true) ?: [];
+                        $uid = (int)($lg['user_id'] ?? 0);
+                        $er['made_by'] = $lg['user_name'] ?? ($uid > 0 && isset($extUserMap[$uid]) ? $extUserMap[$uid] : ($uid > 0 ? 'User #' . $uid : '-'));
+                        $er['made_at'] = $lg['datetime'] ?? ($er['extension_date'] ?? '');
+                        $extensionsList[] = $er;
+                    }
                     // 5. Final Response
                     $response = [
                         'customer' => $customer ?: [],
@@ -820,6 +855,7 @@ class VehiclesContractListController
                         'price_list' => $price_list,
                         'source'   => 'agreement' ?? 'none',
                         'extend_end_date' => $extend_end_date,
+                        'extensions' => $extensionsList,
                     ];
                 
                     echo json_encode($response);

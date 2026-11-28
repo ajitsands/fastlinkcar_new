@@ -201,7 +201,7 @@
                     </div>
                     </div>
                     <div class="col-12 col-md-4">
-                    <div class="input-group">
+                    <div class="input-group position-relative">
                         <div class="form-floating form-floating-outline flex-grow-1">
                             <input type="text" id="extend_b_to" class="form-control extend_watch-field"
                                    placeholder="dd-mm-yyyy hh:mm"
@@ -210,7 +210,10 @@
                                    oninput="extendFormatDateInput(this)">
                             <label>Extension To (dd-mm-yyyy hh:mm)</label>
                         </div>
-                        <input type="datetime-local" id="extend_b_to_picker" class="form-control" style="max-width:44px; padding-left:6px; padding-right:6px;" title="Pick Extension To Date &amp; Time">
+                        <button type="button" id="btn_extend_b_to_picker" class="btn btn-outline-secondary px-2" title="Pick Extension To Date &amp; Time" onclick="var p=document.getElementById('extend_b_to_picker'); if(p){ if(p.showPicker){ p.showPicker(); } else { p.focus(); p.click(); } }">
+                            <i class="ri-calendar-line"></i>
+                        </button>
+                        <input type="datetime-local" id="extend_b_to_picker" tabindex="-1" style="position:absolute; right:0; bottom:0; width:1px; height:1px; opacity:0; pointer-events:none;">
                     </div>
                     </div>
                     <div class="col-12 col-md-4">

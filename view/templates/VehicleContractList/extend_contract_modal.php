@@ -228,19 +228,23 @@
                         <input type="text" id="extend_b_from" class="form-control extend_watch-field"
                                placeholder="dd-mm-yyyy hh:mm"
                                maxlength="16"
-                               style="font-family:monospace;"
+                               readonly
+                               style="font-family:monospace; background-color:#f8f9fa;"
                                oninput="extendFormatDateInput(this)">
-                        <label>From (dd-mm-yyyy hh:mm)</label>
+                        <label>From Date (Last Contract Date)</label>
                     </div>
                     </div>
                     <div class="col-12 col-md-4">
-                    <div class="form-floating form-floating-outline">
-                        <input type="text" id="extend_b_to" class="form-control extend_watch-field"
-                               placeholder="dd-mm-yyyy hh:mm"
-                               maxlength="16"
-                               style="font-family:monospace;"
-                               oninput="extendFormatDateInput(this)">
-                        <label>To (dd-mm-yyyy hh:mm)</label>
+                    <div class="input-group">
+                        <div class="form-floating form-floating-outline flex-grow-1">
+                            <input type="text" id="extend_b_to" class="form-control extend_watch-field"
+                                   placeholder="dd-mm-yyyy hh:mm"
+                                   maxlength="16"
+                                   style="font-family:monospace;"
+                                   oninput="extendFormatDateInput(this)">
+                            <label>Extension To (dd-mm-yyyy hh:mm)</label>
+                        </div>
+                        <input type="datetime-local" id="extend_b_to_picker" class="form-control" style="max-width:44px; padding-left:6px; padding-right:6px;" title="Pick Extension To Date &amp; Time">
                     </div>
                     </div>
                     <div class="col-12 col-md-4">
@@ -293,8 +297,9 @@
                     <div class="col-12 col-md-4">
                     <div class="form-floating form-floating-outline">
                         <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="extend_b_total" class="form-control">
-                        <label>Total</label>
+                        <label>Total Amount (Editable)</label>
                     </div>
+                    <small class="text-muted" style="font-size:11px;">Auto-calculated; adjust if required</small>
                     </div>
                     <div class="col-12 col-md-4">
                     <div class="form-floating form-floating-outline">
@@ -305,8 +310,8 @@
                     
                     <div class="col-12">
                         <div class="form-floating form-floating-outline">
-                        <textarea class="form-control form-control-sm h-px-100" id="extend_txt_booking_notes" name="extend_txt_booking_notes" placeholder="Notes"></textarea>
-                        <label for="Notes">Notes</label>
+                        <textarea class="form-control form-control-sm h-px-100" id="extend_txt_booking_notes" name="extend_txt_booking_notes" placeholder="Remarks / Notes"></textarea>
+                        <label for="extend_txt_booking_notes">Remarks / Notes</label>
                         </div>
                     </div>
                     

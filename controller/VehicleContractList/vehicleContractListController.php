@@ -864,70 +864,125 @@ class VehiclesContractListController
                                 );
                              if ($this->ReturnData) {
 
-                                    $updateBookingQuery = "
-                                        UPDATE tbl_vehicle_bookings
-                                        SET book_status = 'Extended'
-                                        WHERE ids = :booking_id
-                                    ";
-                                
-                                    $updateBookingParams = [
-                                
-                                        ':booking_id' => $this->booking_ids
-                                
-                                    ];
-                                
-                                    $this->varPDOModelObj->executeQuery(
-                                        $updateBookingQuery,
-                                        $updateBookingParams
-                                    );
-                                     $updateContractQuery = "
-                                        UPDATE  tbl_vehicle_rentout_contracts
-                                        SET agreement_status = 'Extended'
-                                        WHERE ids = :agreement_id
-                                    ";
-                                
-                                    $updateContractParams = [
-                                
-                                        ':agreement_id' => $this->agreementid
-                                
-                                    ];
-                                
-                                    $this->varPDOModelObj->executeQuery(
-                                        $updateContractQuery,
-                                        $updateContractParams
-                                    );
-                                     
-                                    $duration   = (float)($this->contract_details['duration'] ?? 0);
-                                    $unitPrice  = (float)($this->contract_details['unit_price'] ?? 0);
-                                    $vatPercent = (float)($this->contract_details['vat'] ?? 0);
-                                
-                                    $extensionFee = $duration * $unitPrice;
-                                    $vatAmount = ($extensionFee * $vatPercent) / 100;
+                                    $serviceEndDb   = !empty($this->contract_details['period_to']) ? $this->contract_details['period_to'] : null;
+                                    $serviceStartDb = !empty($this->contract_details['period_from']) ? $this->contract_details['period_from'] : null;
+                                    $duration       = (float)($this->contract_details['duration'] ?? 0);
+                                    $unitPrice      = (float)($this->contract_details['unit_price'] ?? 0);
+                                    $vatPercent     = (float)($this->contract_details['vat'] ?? 0);
+                                    $remarksText    = trim((string)($this->contract_details['booking_notes'] ?? ''));
 
-                                    $ledgerCustCode = !empty($this->customer_data['customer_code']) ? $this->customer_data['customer_code'] : ($this->customer_code ?? '');
-                                    $ledgerQtnNo = !empty($this->contract_details['qtn_ref_no']) ? $this->contract_details['qtn_ref_no'] : ($this->agreement_no ?? '');
-                                    $ledgerBookNo = !empty($this->booking_ref_no) ? $this->booking_ref_no : (!empty($this->booking_ids) ? $this->booking_ids : ($this->agreement_no ?? ''));
+                                    $calculatedSubtotal = round($duration * $unitPrice, 3);
+                                    $calculatedVat      = round(($calculatedSubtotal * $vatPercent) / 100, 3);
+                                    $calculatedTotal    = round($calculatedSubtotal + $calculatedVat, 3);
+
+                                    if (isset($this->contract_details['total_amt']) && $this->contract_details['total_amt'] !== '' && is_numeric($this->contract_details['total_amt'])) {
+                                        $submittedTotal = max(0.0, round((float)$this->contract_details['total_amt'], 3));
+                                        if (abs($submittedTotal - $calculatedTotal) > 0.001) {
+                                            $finalTotalAmt = $submittedTotal;
+                                            if ($vatPercent > 0) {
+                                                $extensionFee = round($finalTotalAmt / (1 + ($vatPercent / 100)), 3);
+                                                $vatAmount    = round($finalTotalAmt - $extensionFee, 3);
+                                            } else {
+                                                $extensionFee = $finalTotalAmt;
+                                                $vatAmount    = 0.0;
+                                            }
+                                        } else {
+                                            $extensionFee  = $calculatedSubtotal;
+                                            $vatAmount     = $calculatedVat;
+                                            $finalTotalAmt = $calculatedTotal;
+                                        }
+                                    } else {
+                                        $extensionFee  = $calculatedSubtotal;
+                                        $vatAmount     = $calculatedVat;
+                                        $finalTotalAmt = $calculatedTotal;
+                                    }
+
+                                    $userId    = !empty($this->user_id) ? $this->user_id : ($_SESSION['user_id'] ?? 1);
+                                    $companyId = !empty($this->company_id) ? $this->company_id : ($_SESSION['company_id'] ?? 1);
+                                    $userName  = $_SESSION['profile_name'] ?? ($_SESSION['user_name'] ?? ('User #' . $userId));
+                                    $agreeNo   = !empty($this->agreement_no) ? $this->agreement_no : '';
+                                    $agreeId   = !empty($this->agreementid) ? $this->agreementid : 0;
+                                    $bookId    = !empty($this->booking_ids) ? $this->booking_ids : 0;
+
+                                    $ledgerCustCode    = !empty($this->customer_data['customer_code']) ? $this->customer_data['customer_code'] : ($this->customer_code ?? '');
+                                    $ledgerQtnNo       = !empty($this->contract_details['qtn_ref_no']) ? $this->contract_details['qtn_ref_no'] : $agreeNo;
+                                    $ledgerBookNo      = !empty($this->booking_ref_no) ? $this->booking_ref_no : (!empty($this->booking_ids) ? $this->booking_ids : $agreeNo);
                                     $ledgerServiceName = !empty($this->service_name) ? $this->service_name : (!empty($this->contract_details['service_name']) ? $this->contract_details['service_name'] : 'Rental Fee');
 
-                                    $isZeroCost = ($unitPrice <= 0 || $extensionFee <= 0);
+                                    $isZeroCost = ($finalTotalAmt <= 0);
                                     $transType  = $isZeroCost ? 'Extension (Zero Cost)' : (!empty($ledgerServiceName) ? $ledgerServiceName : 'Rental Fee');
                                     if (empty($transType)) {
                                         $transType = 'Rental Fee';
                                     }
 
-                                    $periodFromStr = !empty($this->contract_details['period_from']) ? $this->contract_details['period_from'] : '';
-                                    $periodToStr   = !empty($this->contract_details['period_to']) ? $this->contract_details['period_to'] : '';
+                                    $periodFromStr = !empty($serviceStartDb) ? $serviceStartDb : '';
+                                    $periodToStr   = !empty($serviceEndDb) ? $serviceEndDb : '';
                                     $rateTypeStr   = !empty($this->contract_details['rate_type']) ? $this->contract_details['rate_type'] : 'Day(s)';
 
-                                    $descRental = $isZeroCost 
-                                        ? "Contract Extension without amount (Zero Cost) for {$duration} {$rateTypeStr} ({$periodFromStr} to {$periodToStr}) - {$ledgerServiceName} (Agreement No: " . ($this->agreement_no ?? '') . ")"
-                                        : 'Auto Post Extension Fee (' . ($this->agreement_no ?? '') . ')';
+                                    if (!empty($bookId)) {
+                                        $updateBookingQuery = "
+                                            UPDATE tbl_vehicle_bookings
+                                            SET book_status = 'Extended',
+                                                book_to_date = COALESCE(:service_end, book_to_date)
+                                            WHERE ids = :booking_id
+                                        ";
+                                        $this->varPDOModelObj->executeQuery($updateBookingQuery, [
+                                            ':service_end' => $serviceEndDb,
+                                            ':booking_id'  => $bookId
+                                        ]);
+                                    }
 
-                                    $userId = !empty($this->user_id) ? $this->user_id : ($_SESSION['user_id'] ?? 1);
-                                    $companyId = !empty($this->company_id) ? $this->company_id : ($_SESSION['company_id'] ?? 1);
-                                    $agreeNo = !empty($this->agreement_no) ? $this->agreement_no : '';
-                                    $agreeId = !empty($this->agreementid) ? $this->agreementid : 0;
-                                    $bookId  = !empty($this->booking_ids) ? $this->booking_ids : 0;
+                                    // Preserve existing contract log_json and append extension log entry
+                                    $existingLogs = [];
+                                    $stmtCurLog = $this->varPDOModelObj->selectexecuteQuery(
+                                        "SELECT log_json FROM tbl_vehicle_rentout_contracts WHERE ids = :agreement_id",
+                                        [':agreement_id' => $agreeId]
+                                    );
+                                    if ($stmtCurLog && ($curLogRow = $stmtCurLog->fetch(PDO::FETCH_ASSOC))) {
+                                        $parsedLog = json_decode((string)($curLogRow['log_json'] ?? ''), true);
+                                        if (is_array($parsedLog)) {
+                                            if (array_keys($parsedLog) === range(0, count($parsedLog) - 1)) {
+                                                $existingLogs = $parsedLog;
+                                            } elseif (!empty($parsedLog)) {
+                                                $existingLogs = [$parsedLog];
+                                            }
+                                        }
+                                    }
+                                    $existingLogs[] = [
+                                        'action'       => 'Contract Extended',
+                                        'datetime'     => date('Y-m-d H:i:s'),
+                                        'user_id'      => $userId,
+                                        'user_name'    => $userName,
+                                        'from_date'    => $periodFromStr,
+                                        'to_date'      => $periodToStr,
+                                        'duration'     => $duration,
+                                        'rate_type'    => $rateTypeStr,
+                                        'service_name' => $ledgerServiceName,
+                                        'unit_price'   => $unitPrice,
+                                        'vat'          => $vatPercent,
+                                        'total_amt'    => $finalTotalAmt,
+                                        'remarks'      => $remarksText,
+                                    ];
+
+                                    $updateContractQuery = "
+                                        UPDATE tbl_vehicle_rentout_contracts
+                                        SET agreement_status = 'Extended',
+                                            service_end_date_time = COALESCE(:service_end, service_end_date_time),
+                                            extend_date = :extension_date,
+                                            log_json = :log_json
+                                        WHERE ids = :agreement_id
+                                    ";
+                                    $this->varPDOModelObj->executeQuery($updateContractQuery, [
+                                        ':service_end'    => $serviceEndDb,
+                                        ':extension_date' => $extension_date,
+                                        ':log_json'       => json_encode($existingLogs),
+                                        ':agreement_id'   => $agreeId
+                                    ]);
+
+                                    $remarksSuffix = $remarksText !== '' ? " | Remarks: {$remarksText}" : '';
+                                    $descRental = $isZeroCost
+                                        ? "Contract Extension without amount (Zero Cost) for {$duration} {$rateTypeStr} ({$periodFromStr} to {$periodToStr}) - {$ledgerServiceName} (Agreement No: {$agreeNo}){$remarksSuffix}"
+                                        : "Auto Post Extension Fee ({$agreeNo}) [{$periodFromStr} to {$periodToStr}, {$duration} {$rateTypeStr}]{$remarksSuffix}";
                                 
                                     // Insert Rental Fee / Zero Cost row
                                     $sqlInsert = "

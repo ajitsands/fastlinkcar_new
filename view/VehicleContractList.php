@@ -1365,7 +1365,7 @@ function load_contract_list(
         const qp = new URLSearchParams(window.location.search);
         if (qp.get('embed_return') === '1') {
             window.__embedReturnHandled = true;
-            ['ReturncontractModal', 'imagePreviewModal', 'imagePreviewModalreturn', 'modalAddViolationHead', 'otpVerifyModal', 'otpSubmitModal', 'customConfirmModal', 'dropdownContent'].forEach(mid => {
+            ['ReturncontractModal', 'extendcontractModal', 'enableOTP', 'customConfirmModalAfterOTPValidation', 'imagePreviewModal', 'imagePreviewModalreturn', 'modalAddViolationHead', 'otpVerifyModal', 'otpSubmitModal', 'customConfirmModal', 'dropdownContent'].forEach(mid => {
                 const el = document.getElementById(mid);
                 if (el && el.parentElement !== document.body) {
                     document.body.appendChild(el);
@@ -1390,14 +1390,43 @@ function load_contract_list(
                 openReturnModal(cId, vehId, custCode, modId);
             };
 
+            window.__openEmbeddedExtend = function(c) {
+                if (!c || !c.contract_id) return;
+                window.__extendSuccess = false;
+                const cId = c.contract_id;
+                const agrNo = c.agreement_no || '';
+                const vehId = c.vehicle_id || '';
+                const custCode = c.customer_code || '';
+                const modId = c.model_id || '';
+                const bkgId = c.booking_ids || '';
+                const bkgNo = c.booking_no || agrNo;
+                $('#agreement_ref').text(agrNo);
+                $('#txt_extend_modal_agreement_id').val(cId);
+                $('#txt_extend_modal_agreement_no').val(agrNo);
+                $('#txt_extend_modal_booking_ids').val(bkgId);
+                $('#txt_extend_modal_booking_nos').val(bkgNo);
+                openExtendContractModal(cId, vehId, custCode, modId);
+            };
+
+            $(document).on('hidden.bs.modal', '#extendcontractModal', function() {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'extendModalClosed',
+                        extended: window.__extendSuccess === true
+                    }, '*');
+                }
+            });
+
             window.addEventListener('message', function(ev) {
                 if (ev.data && ev.data.type === 'openReturnModal' && ev.data.contract) {
                     window.__openEmbeddedReturn(ev.data.contract);
+                } else if (ev.data && ev.data.type === 'openExtendModal' && ev.data.contract) {
+                    window.__openEmbeddedExtend(ev.data.contract);
                 }
             });
 
             if (qp.get('contract_id')) {
-                window.__openEmbeddedReturn({
+                const initPayload = {
                     contract_id: qp.get('contract_id'),
                     agreement_no: qp.get('agreement_no') || '',
                     vehicle_id: qp.get('vehicle_id') || '',
@@ -1405,7 +1434,12 @@ function load_contract_list(
                     model_id: qp.get('model_id') || '',
                     booking_ids: qp.get('booking_ids') || '',
                     booking_no: qp.get('booking_no') || ''
-                });
+                };
+                if (qp.get('auto_action') === 'extend') {
+                    window.__openEmbeddedExtend(initPayload);
+                } else {
+                    window.__openEmbeddedReturn(initPayload);
+                }
             }
 
             if (window.parent && window.parent !== window) {
@@ -4229,17 +4263,22 @@ function populateExtendContractModal(d) {
         // Only difference handled here
         $('#txt_contract_modal_contract_id').val(data.contract.ids || '');
         $('#txt_contract_modal_data_source').val(data.source || '');
-        let rate_type = bookDetails.rate_type_id;
-        let service = bookDetails.service_id;
-        let duration = bookDetails.duration;
-        let unit_price = bookDetails.unit_price;
-        let total_amt = bookDetails.total_amt;
-        let booking_notes = bookDetails.booking_notes;
+        let rate_type = bookDetails.rate_type_id || '';
+        if (!rate_type && bookDetails.rate_type) {
+            const rtLow = String(bookDetails.rate_type).toLowerCase();
+            if (rtLow.includes('hour')) rate_type = 'hour';
+            else if (rtLow.includes('week')) rate_type = 'week';
+            else if (rtLow.includes('month')) rate_type = 'month';
+            else if (rtLow.includes('day')) rate_type = 'day';
+        }
+        let service = bookDetails.service_id || '1';
+        let unit_price = parseFloat(bookDetails.unit_price || 0) || 0;
+        let vat_val = (bookDetails.vat !== undefined && bookDetails.vat !== '') ? parseFloat(bookDetails.vat) : null;
         let extend_end_date = data.extend_end_date;
         let contract_status = contract.agreement_status || '';
 
         // Determine from date based on contract status:
-        // If Extended → use latest extension end date; otherwise use contract service_end_date_time
+        // If Extended → use latest extension end date (or contract service_end_date_time); otherwise use contract service_end_date_time
         let rawFromDate = '';
         if (contract_status === 'Extended' && extend_end_date) {
             rawFromDate = extend_end_date;
@@ -4248,21 +4287,27 @@ function populateExtendContractModal(d) {
         }
         $('#extend_b_from').val(extendDbToDisplay(rawFromDate));
         $('#extend_b_to').val('');
+        $('#extend_b_to_picker').val('');
         $('#extend_b_qtn_ref_no').val(contract.quotation_number || '');
         
-        $('#extend_rate_type').val(rate_type).trigger('change');
-        $('#extend_service').val(service).trigger('change');
-        
+        window.__extendPopulating = true;
+        $('#extend_rate_type').val(rate_type || 'day');
+        $('#extend_service').val(service || '1');
+        updateMinPrice(false);
+
+        const defaultMinRate = parseFloat($('.extend_minprice').val()) || 0;
+        const resolvedRate = unit_price > 0 ? unit_price : defaultMinRate;
+        const serviceVat = parseFloat($('#extend_service option:selected').data('id'));
+        const resolvedVat = (vat_val !== null && !isNaN(vat_val)) ? vat_val : (!isNaN(serviceVat) ? serviceVat : 0);
+
         $('#extend_b_duration').val(0);
-        $('#extend_price').val(0);
-        $('#extend_b_vat').val(0);
-        $('#extend_b_total').val(0);
-        $('#extend_txt_booking_notes').val(booking_notes || '');
-       
-        
-       updateMinPrice();
+        $('#extend_price').val(resolvedRate > 0 ? resolvedRate : 0);
+        $('#extend_b_vat').val(resolvedVat);
+        $('#extend_b_total').val('0.000');
+        $('#extend_txt_booking_notes').val('');
+        window.__extendPopulating = false;
 }     
-function updateMinPrice() {
+function updateMinPrice(populateUnitPrice) {
    
     let rateType = $('#extend_rate_type').val();
     let service = $('#extend_service').val();
@@ -4280,9 +4325,12 @@ function updateMinPrice() {
    
     if (selectedId && $('#' + selectedId).length) {
         let value = $.trim($('#' + selectedId).text());
-      
-        $('.extend_min-price-text').text('Min: ' + (value || '0.000'));
-        $('.extend_minprice').val(value);
+        let numVal = parseFloat(value) || 0;
+        $('.extend_min-price-text').text('Min: ' + (numVal.toFixed(3) || '0.000'));
+        $('.extend_minprice').val(numVal);
+        if (populateUnitPrice && numVal > 0) {
+            $('#extend_price').val(numVal);
+        }
     } else {
         $('.extend_min-price-text').text('Min: 0.000');
         $('.extend_minprice').val(0);
@@ -4290,7 +4338,7 @@ function updateMinPrice() {
 }
 
 $('#extend_rate_type, #extend_service').on('change', function () {
-    updateMinPrice();
+    updateMinPrice(!window.__extendPopulating);
 });
 
 
@@ -4354,6 +4402,27 @@ $(document).on('input', '#extend_b_to, #extend_b_from', function() {
     extendFormatDateInput(this);
 });
 
+$(document).on('change', '#extend_b_to_picker', function() {
+    const v = $(this).val(); // yyyy-mm-ddThh:mm
+    if (!v) return;
+    const parts = v.split('T');
+    if (parts.length === 2) {
+        const dp = parts[0].split('-');
+        const tp = parts[1].substring(0, 5);
+        if (dp.length === 3) {
+            $('#extend_b_to').val(`${dp[2]}-${dp[1]}-${dp[0]} ${tp}`).trigger('change');
+        }
+    }
+});
+
+$(document).on('change blur', '#extend_b_to', function() {
+    const dt = extendDisplayToDate($(this).val());
+    if (dt && !isNaN(dt.getTime())) {
+        const pad = n => String(n).padStart(2, '0');
+        $('#extend_b_to_picker').val(`${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`);
+    }
+});
+
 
 $('.extend_service').on('change', function () {
 
@@ -4363,29 +4432,30 @@ $('.extend_service').on('change', function () {
         $('#extend_b_vat').val(vatValue);
     }
 
-    // optional: trigger recalculation
-    $('#extend_b_vat').trigger('input');
-    
-    
-    
-  
+    extend_line_item_calculation();
 });
 
 
-$('.extend_service, .extend_rate_type, #extend_b_from, #extend_b_to, .extend_price, #extend_b_vat #extend_b_duration')
+$('.extend_service, .extend_rate_type, #extend_b_from, #extend_b_to, .extend_price, #extend_b_vat')
 .on('input change', function () {
     otpVerified = false;
- $('#extend_otpdiv').hide();
- $('#extend_p_otp_minprice_info').text('');
+    $('#extend_otpdiv').hide();
+    $('#extend_p_otp_minprice_info').text('');
     extend_line_item_calculation();
 });
 
+$(document).on('input change', '#extend_b_duration', function () {
+    const dur = parseFloat($(this).val()) || 0;
+    const price = parseFloat($('.extend_price').val()) || 0;
+    const vat = parseFloat($('#extend_b_vat').val()) || 0;
+    const total = (price * dur) * (1 + vat / 100);
+    $('#extend_b_total').val(total.toFixed(DecimalPositions));
+});
 
-$(document).on('input change', '.extend_watch-field', function () {
-   
-   
+
+$(document).on('input change', '.extend_watch-field', function (e) {
+    if (e.target && e.target.id === 'extend_b_duration') return;
     extend_line_item_calculation();
-     
 });
    
 
@@ -4587,6 +4657,7 @@ function extendContract()
                         laddaExtendContract.stop();
                        if (res.status)
                         {
+                            window.__extendSuccess = true;
                             window.__returnSuccess = true;
                             setupDropdown(
                                 'dropdownContent',
@@ -5683,6 +5754,7 @@ function executeReturnContract(customer_code)
                         laddaReturnContract.stop();
                        if (res.status)
                         {
+                            window.__extendSuccess = true;
                             window.__returnSuccess = true;
                             setupDropdown(
                                 'dropdownContent',

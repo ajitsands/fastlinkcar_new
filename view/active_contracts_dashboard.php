@@ -836,6 +836,9 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                 const isActiveRow = (stLow === 'rentout' || stLow === 'extended');
                                 const fbCount = parseInt(row.feedback_count || 0, 10);
                                 const fbBadge = fbCount > 0 ? `<span class="badge rounded-pill bg-primary ms-1" style="font-size:0.65rem; color:#ffffff !important;">${fbCount}</span>` : '';
+                                const extendBtn = isActiveRow
+                                    ? `<button type="button" class="btn btn-outline-primary btn-extend-modal" data-id="${id}" title="Extend Contract"><i class="ri-calendar-todo-line me-1"></i> Extend</button>`
+                                    : '';
                                 const returnBtn = isActiveRow
                                     ? `<button type="button" class="btn btn-outline-success btn-return-modal" data-id="${id}" title="Return Vehicle"><i class="ri-roadster-line me-1"></i> Return</button>`
                                     : '';
@@ -859,6 +862,7 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                             <button type="button" class="btn btn-outline-dark ac-print-btn" data-agreement="${escapeHtml(row.agreement_no || '')}" title="Print Agreement">
                                                 <i class="ri-printer-line"></i>
                                             </button>
+                                            ${extendBtn}
                                             ${returnBtn}
                                         </div>
                                     </div>
@@ -1520,6 +1524,38 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                 });
         });
 
+        $(document).on('click', '.btn-extend-modal', function() {
+            const id = parseInt($(this).attr('data-id') || $(this).data('id'), 10);
+            const row = allContracts.find(c => c.id === id);
+            if (!row) return;
+
+            const qvModal = bootstrap.Modal.getInstance(document.getElementById('quickViewContractModal'));
+            if (qvModal) qvModal.hide();
+
+            const payload = {
+                contract_id: row.id,
+                agreement_no: row.agreement_no || '',
+                vehicle_id: row.vehicle_id || '',
+                customer_code: row.customer_code || '',
+                model_id: row.model_id || '',
+                booking_ids: row.booking_ids || '',
+                booking_no: row.booking_no || row.agreement_no || ''
+            };
+
+            const iframe = document.getElementById('returnModalIframe');
+            if (returnIframeReady && iframe && iframe.contentWindow) {
+                iframe.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                iframe.contentWindow.postMessage({ type: 'openExtendModal', contract: payload }, '*');
+                return;
+            }
+
+            const params = new URLSearchParams(Object.assign({ embed_return: '1', auto_action: 'extend' }, payload));
+            iframe.src = `${contractListBaseUrl}&${params.toString()}`;
+            iframe.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        });
+
         $(document).on('click', '.btn-return-modal', function() {
             const id = parseInt($(this).attr('data-id') || $(this).data('id'), 10);
             const row = allContracts.find(c => c.id === id);
@@ -1555,6 +1591,14 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'returnIframeReady') {
                 returnIframeReady = true;
+            }
+            if (event.data && event.data.type === 'extendModalClosed') {
+                const iframe = document.getElementById('returnModalIframe');
+                iframe.style.display = 'none';
+                document.body.style.overflow = '';
+                if (event.data.extended) {
+                    loadActiveContracts();
+                }
             }
             if (event.data && event.data.type === 'returnModalClosed') {
                 const iframe = document.getElementById('returnModalIframe');

@@ -25,33 +25,7 @@
       </div>
       
       
-      <div class="modal-body p-0">
-        <div class="bs-stepper wizard-modern mt-2" id="extendContractWizard">
-          
-          <div class="bs-stepper-header px-4">
-            <div class="step" data-target="#tab-extend-customer-vehicle">
-              <button type="button" class="step-trigger">
-                <span class="bs-stepper-circle">1</span>
-                <span class="bs-stepper-label">
-                  <span class="bs-stepper-title">Customer & Vehicle Details</span>
-                </span>
-              </button>
-            </div>
-            <div class="line"></div>
-            <div class="step" data-target="#tab-extend-extension">
-              <button type="button" class="step-trigger">
-                <span class="bs-stepper-circle">2</span>
-                <span class="bs-stepper-label">
-                  <span class="bs-stepper-title">Extension Details</span>
-                </span>
-              </button>
-            </div>
-          </div>
-          
-          <div class="bs-stepper-content px-4">
-            
-            <!-- Customer & Vehicle Tab -->
-            <div id="tab-extend-customer-vehicle" class="content">
+      <div class="modal-body p-3">
               <style>
                 .extend-info-card { background: #f4f7fe; border: 1px solid #cbd7f6; border-radius: 8px; padding: 14px; }
                 .extend-info-card .section-title { color: #1b3d94; font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; }
@@ -212,16 +186,8 @@
                 </div>
               </div>
 
-              <div class="d-flex justify-content-end mt-3">
-                <button type="button" class="btn btn-danger btn-next px-5">Next</button>
-              </div>
-            </div>
-
-
-
-            
-            <!-- Extension Tab -->
-            <div id="tab-extend-extension" class="content">
+              <!-- Row 3: Extension Details (Single Page) -->
+              <div class="pricing-setup-title border-top pt-3 mb-3">Extension Details</div>
                 <div class="row g-3">
                     <div class="col-12 col-md-4">
                     <div class="form-floating form-floating-outline">
@@ -322,15 +288,11 @@
                 </div>
 
               </div>
+      </div>
 
-              <div class="d-flex justify-content-between mt-4">
-                <button type="button" class="btn btn-outline-secondary btn-prev">Previous</button>
-                <button class="btn btn-success px-4 ladda-button" id="btn_extend_contract"><span class="ladda-label">Extend Contract</span></button>
-              </div>
-            </div>
-
-          </div>
-        </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-success px-4 ladda-button" id="btn_extend_contract"><span class="ladda-label">Extend Contract</span></button>
       </div>
       
     </div>

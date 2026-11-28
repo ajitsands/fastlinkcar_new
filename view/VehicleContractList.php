@@ -4134,9 +4134,6 @@ function openExtendContractModal(id,vehicleid,customer_code,model_ids) {
         success: function (res) {
           populateExtendContractModal(res);
             new bootstrap.Modal(document.getElementById('extendcontractModal')).show();
-            if (typeof extendStepper !== 'undefined') {
-                extendStepper.to(1);
-            }
         }
     });
 }

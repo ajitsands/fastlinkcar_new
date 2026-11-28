@@ -316,6 +316,11 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                 <i class="ri-repeat-line me-1"></i> Replacements <span id="qvReplTabBadge" class="badge bg-secondary ms-1">0</span>
                             </button>
                         </li>
+                        <li class="nav-item flex-fill text-center" role="presentation">
+                            <button class="nav-link fw-semibold w-100 py-1" id="qv-tab-ext-btn" data-bs-toggle="tab" data-bs-target="#qvTabExtensions" type="button" role="tab">
+                                <i class="ri-calendar-event-line me-1"></i> Extensions <span id="qvExtTabBadge" class="badge bg-secondary ms-1">0</span>
+                            </button>
+                        </li>
                     </ul>
 
                     <div class="tab-content p-0">
@@ -456,29 +461,6 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                             </div>
                         </div>
 
-                        <!-- Extensions (if any) -->
-                        <div class="p-3 rounded border mb-3 d-none" id="qvExtensionsSection" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
-                            <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
-                                <i class="ri-calendar-event-line me-1"></i> Contract Extensions
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-bordered mb-0 small">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Period</th>
-                                            <th>Service &amp; Duration</th>
-                                            <th class="text-end">Unit Price</th>
-                                            <th class="text-end">Total</th>
-                                            <th>Remarks</th>
-                                            <th>Extended By</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="qvExtensionsBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
                         <!-- Contract Ledger Details -->
                         <div class="p-3 rounded border mb-3" id="qvLedgerSection" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
                             <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-primary-subtle flex-wrap gap-2">
@@ -583,6 +565,32 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                             <div class="text-center text-muted py-4">No vehicle replacements occurred on this contract.</div>
                         </div>
                     </div>
+                    <div class="tab-pane fade" id="qvTabExtensions" role="tabpanel">
+                        <div class="p-3 rounded border" style="background-color: #f4f7ff; border-color: #cfe0ff !important;">
+                            <div class="fw-semibold mb-2 pb-1 border-bottom border-primary-subtle" style="color: #1b3d94;">
+                                <i class="ri-calendar-event-line me-1"></i> Contract Extensions
+                            </div>
+                            <div class="table-responsive bg-white rounded border">
+                                <table class="table table-sm table-bordered table-hover align-middle mb-0 small">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Period (From → To)</th>
+                                            <th>Service &amp; Duration</th>
+                                            <th class="text-end">Unit Price</th>
+                                            <th class="text-end">VAT %</th>
+                                            <th class="text-end">Total (BHD)</th>
+                                            <th>Remarks</th>
+                                            <th>Extended By</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="qvExtensionsBody">
+                                        <tr><td colspan="8" class="text-center text-muted py-4">No extensions recorded on this contract.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                     </div>
                 </div>
                 <div class="modal-footer justify-content-between">
@@ -664,13 +672,6 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                                 <div class="text-center text-muted small py-4">No feedback recorded yet.</div>
                             </div>
                         </div>
-                    </div>
-                    </div>
-                    <div class="tab-pane fade" id="qvTabReplacements" role="tabpanel">
-                        <div id="qvReplacementsContainer">
-                            <div class="text-center text-muted py-4">No vehicle replacements occurred on this contract.</div>
-                        </div>
-                    </div>
                     </div>
                 </div>
             </div>
@@ -1277,23 +1278,39 @@ $contractListVal = $this->encryption->encrypt('3,3-4');
                     $('#qvCustDriverContact').text(drvPhones || '-');
                     $('#qvCompanyDriver').text(drv.driver_name && drv.driver_name !== 'Select Driver' ? `${drv.driver_name}${drv.driver_mobile ? ' (' + drv.driver_mobile + ')' : ''}` : '-');
 
-                    if (Array.isArray(d.extensions) && d.extensions.length > 0) {
-                        $('#qvExtensionsBody').html(d.extensions.map((ext, i) => {
+                    function fmtExtDate(val) {
+                        if (!val) return '-';
+                        const s = String(val).replace('T', ' ').trim();
+                        const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
+                        if (!m) return escapeHtml(s);
+                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        const mon = months[parseInt(m[2], 10) - 1] || m[2];
+                        const time = (m[4] !== undefined && m[5] !== undefined) ? ` ${m[4]}:${m[5]}` : '';
+                        return `${m[3]} ${mon} ${m[1]}${time}`;
+                    }
+
+                    const extsArr = Array.isArray(d.extensions) ? d.extensions : [];
+                    $('#qvExtTabBadge').text(extsArr.length).toggleClass('bg-primary', extsArr.length > 0).toggleClass('bg-secondary', extsArr.length === 0);
+                    if (extsArr.length > 0) {
+                        $('#qvExtensionsBody').html(extsArr.map((ext, i) => {
                             let ed = {};
                             try { ed = JSON.parse(ext.extend_details || '{}') || {}; } catch (e) {}
+                            const fromFmt = fmtExtDate(ext.extend_start_date);
+                            const toFmt   = fmtExtDate(ext.extend_end_date);
+                            const madeAtFmt = ext.made_at ? fmtExtDate(ext.made_at) : '';
                             return `<tr>
                                 <td>${i + 1}</td>
-                                <td class="text-nowrap">${escapeHtml(ext.extend_start_date || '')} → ${escapeHtml(ext.extend_end_date || '')}</td>
+                                <td class="text-nowrap fw-semibold">${fromFmt} → ${toFmt}</td>
                                 <td><div>${escapeHtml(ed.service_name || 'Rental')}</div><small class="text-muted">${escapeHtml((ed.duration || '') + ' ' + (ed.rate_type || ''))}</small></td>
                                 <td class="text-end">${Number(ed.unit_price || 0).toFixed(3)}</td>
-                                <td class="text-end fw-semibold">${Number(ed.total_amt || 0).toFixed(3)}</td>
+                                <td class="text-end">${Number(ed.vat || 0).toFixed(1)}%</td>
+                                <td class="text-end fw-semibold text-primary">${Number(ed.total_amt || 0).toFixed(3)}</td>
                                 <td>${escapeHtml(ed.booking_notes || '-')}</td>
-                                <td><div>${escapeHtml(ext.made_by || '-')}</div>${ext.made_at ? `<small class="text-muted">${escapeHtml(ext.made_at)}</small>` : ''}</td>
+                                <td><div class="fw-semibold">${escapeHtml(ext.made_by || '-')}</div>${madeAtFmt ? `<small class="text-muted">${madeAtFmt}</small>` : ''}</td>
                             </tr>`;
                         }).join(''));
-                        $('#qvExtensionsSection').removeClass('d-none');
                     } else {
-                        $('#qvExtensionsSection').addClass('d-none');
+                        $('#qvExtensionsBody').html('<tr><td colspan="8" class="text-center text-muted py-4">No extensions recorded on this contract.</td></tr>');
                     }
 
                     const agStatus = String(c.agreement_status || '').toLowerCase();

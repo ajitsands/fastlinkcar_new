@@ -958,8 +958,7 @@ class VehiclesContractListController
                                     if (!empty($bookId)) {
                                         $updateBookingQuery = "
                                             UPDATE tbl_vehicle_bookings
-                                            SET book_status = 'Extended',
-                                                book_to_date = COALESCE(:service_end, book_to_date)
+                                            SET book_to_date = COALESCE(:service_end, book_to_date)
                                             WHERE ids = :booking_id
                                         ";
                                         $this->varPDOModelObj->executeQuery($updateBookingQuery, [
@@ -1002,8 +1001,7 @@ class VehiclesContractListController
 
                                     $updateContractQuery = "
                                         UPDATE tbl_vehicle_rentout_contracts
-                                        SET agreement_status = 'Extended',
-                                            service_end_date_time = COALESCE(:service_end, service_end_date_time),
+                                        SET service_end_date_time = COALESCE(:service_end, service_end_date_time),
                                             extend_date = :extension_date,
                                             log_json = :log_json
                                         WHERE ids = :agreement_id

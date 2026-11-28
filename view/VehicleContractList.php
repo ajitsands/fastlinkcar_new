@@ -4274,14 +4274,8 @@ function populateExtendContractModal(d) {
         let extend_end_date = data.extend_end_date;
         let contract_status = contract.agreement_status || '';
 
-        // Determine from date based on contract status:
-        // If Extended → use latest extension end date (or contract service_end_date_time); otherwise use contract service_end_date_time
-        let rawFromDate = '';
-        if (contract_status === 'Extended' && extend_end_date) {
-            rawFromDate = extend_end_date;
-        } else {
-            rawFromDate = contract.service_end_date_time || '';
-        }
+        // Determine from date: use latest extension end date if available, otherwise contract service_end_date_time
+        let rawFromDate = extend_end_date || contract.service_end_date_time || '';
         $('#extend_b_from').val(extendDbToDisplay(rawFromDate)).trigger('change');
         $('#extend_b_to').val('');
         $('#extend_b_to_picker').val('');

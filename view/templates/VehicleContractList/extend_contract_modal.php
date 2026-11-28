@@ -223,7 +223,7 @@
                     </div>
                     <div class="col-12 col-md-4">
                     <div class="form-floating form-floating-outline">
-                        <select class="extend_rate_type form-select form-select-sm extend_watch-field" id="extend_rate_type" disabled style="background-color:#f8f9fa;">
+                        <select class="extend_rate_type form-select form-select-sm extend_watch-field" id="extend_rate_type">
                         <option value="0">Select</option>
                         <option value="hour">Hourly</option>
                         <option value="day">Daily</option>
@@ -236,7 +236,7 @@
                     
                     <div class="col-12 col-md-4">
                     <div class="form-floating form-floating-outline">
-                        <select class="extend_service form-select form-select-sm extend_watch-field" id="extend_service" disabled style="background-color:#f8f9fa;">
+                        <select class="extend_service form-select form-select-sm extend_watch-field" id="extend_service">
                         <option value="0">Select Service</option>
                         <option value="1" data-id="10">Rental Without Driver</option>
                         <option value="2" data-id="0">Rental With Driver</option>
@@ -256,7 +256,7 @@
                         Min: 0.000
                         </span>
                         <!-- Input -->
-                        <input type="text" class="extend_price nav form-control form-control-sm extend_watch-field" value="0" readonly style="padding-top:12px; background-color:#f8f9fa;" id="extend_price" >
+                        <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" class="extend_price nav form-control form-control-sm extend_watch-field" value="0" style="padding-top:12px;" id="extend_price">
                         <label class="form-label small">Unit Price</label>
                     </div>
                     <input type="hidden" class="extend_minprice nav form-control" value="0">

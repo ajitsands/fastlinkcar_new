@@ -979,10 +979,12 @@ class VehiclesContractListController
                                         ':agreement_id'   => $agreeId
                                     ]);
 
+                                    $periodFromDisp = !empty($periodFromStr) ? date('d M Y H:i', strtotime($periodFromStr)) : '';
+                                    $periodToDisp   = !empty($periodToStr) ? date('d M Y H:i', strtotime($periodToStr)) : '';
                                     $remarksSuffix = $remarksText !== '' ? " | Remarks: {$remarksText}" : '';
                                     $descRental = $isZeroCost
-                                        ? "Contract Extension without amount (Zero Cost) for {$duration} {$rateTypeStr} ({$periodFromStr} to {$periodToStr}) - {$ledgerServiceName} (Agreement No: {$agreeNo}){$remarksSuffix}"
-                                        : "Auto Post Extension Fee ({$agreeNo}) [{$periodFromStr} to {$periodToStr}, {$duration} {$rateTypeStr}]{$remarksSuffix}";
+                                        ? "Contract Extension without amount (Zero Cost) for {$duration} {$rateTypeStr} ({$periodFromDisp} to {$periodToDisp}) - {$ledgerServiceName} (Agreement No: {$agreeNo}){$remarksSuffix}"
+                                        : "Auto Post Extension Fee ({$agreeNo}) [{$periodFromDisp} to {$periodToDisp}, {$duration} {$rateTypeStr}]{$remarksSuffix}";
                                 
                                     // Insert Rental Fee / Zero Cost row
                                     $sqlInsert = "
@@ -1047,7 +1049,7 @@ class VehiclesContractListController
                                             ':trans_date'             => date('Y-m-d'),
                                             ':ledger_name'            => 'VAT',
                                             ':amount'                 => $vatAmount,
-                                            ':description'            => 'Auto Post VAT of Extension Fee (' . $agreeNo . ')',
+                                            ':description'            => 'Auto Post VAT of Extension Fee (' . $agreeNo . ') [' . $periodFromDisp . ' to ' . $periodToDisp . ']',
                                             ':user_ids'               => $userId,
                                             ':company_ids'            => $companyId,
                                             ':trans_date_time'        => date('Y-m-d H:i:s'),

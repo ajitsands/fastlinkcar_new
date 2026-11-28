@@ -190,14 +190,19 @@
               <div class="pricing-setup-title border-top pt-3 mb-3">Extension Details</div>
                 <div class="row g-3">
                     <div class="col-12 col-md-4">
-                    <div class="form-floating form-floating-outline">
-                        <input type="text" id="extend_b_from" class="form-control extend_watch-field"
-                               placeholder="dd-mm-yyyy hh:mm"
-                               maxlength="16"
-                               readonly
-                               style="font-family:monospace; background-color:#f8f9fa;"
-                               oninput="extendFormatDateInput(this)">
-                        <label>From Date (Last Contract Date)</label>
+                    <div class="input-group position-relative">
+                        <div class="form-floating form-floating-outline flex-grow-1">
+                            <input type="text" id="extend_b_from" class="form-control extend_watch-field"
+                                   placeholder="dd-mm-yyyy hh:mm"
+                                   maxlength="16"
+                                   style="font-family:monospace;"
+                                   oninput="extendFormatDateInput(this)">
+                            <label>From Date (dd-mm-yyyy hh:mm)</label>
+                        </div>
+                        <button type="button" id="btn_extend_b_from_picker" class="btn btn-outline-secondary px-2" title="Pick From Date &amp; Time" onclick="var p=document.getElementById('extend_b_from_picker'); if(p){ if(p.showPicker){ p.showPicker(); } else { p.focus(); p.click(); } }">
+                            <i class="ri-calendar-line"></i>
+                        </button>
+                        <input type="datetime-local" id="extend_b_from_picker" tabindex="-1" style="position:absolute; right:0; bottom:0; width:1px; height:1px; opacity:0; pointer-events:none;">
                     </div>
                     </div>
                     <div class="col-12 col-md-4">
@@ -218,7 +223,7 @@
                     </div>
                     <div class="col-12 col-md-4">
                     <div class="form-floating form-floating-outline">
-                        <select class="extend_rate_type form-select form-select-sm extend_watch-field" id="extend_rate_type" >
+                        <select class="extend_rate_type form-select form-select-sm extend_watch-field" id="extend_rate_type" disabled style="background-color:#f8f9fa;">
                         <option value="0">Select</option>
                         <option value="hour">Hourly</option>
                         <option value="day">Daily</option>
@@ -231,7 +236,7 @@
                     
                     <div class="col-12 col-md-4">
                     <div class="form-floating form-floating-outline">
-                        <select class="extend_service form-select form-select-sm extend_watch-field" id="extend_service">
+                        <select class="extend_service form-select form-select-sm extend_watch-field" id="extend_service" disabled style="background-color:#f8f9fa;">
                         <option value="0">Select Service</option>
                         <option value="1" data-id="10">Rental Without Driver</option>
                         <option value="2" data-id="0">Rental With Driver</option>
@@ -241,7 +246,7 @@
                     </div>
                     <div class="col-12 col-md-4">
                     <div class="form-floating form-floating-outline">
-                        <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="extend_b_duration" class="form-control extend_watch-field">
+                        <input type="text" id="extend_b_duration" class="form-control extend_watch-field" readonly style="background-color:#f8f9fa;">
                         <label>Duration</label>
                     </div>
                     </div>
@@ -251,14 +256,14 @@
                         Min: 0.000
                         </span>
                         <!-- Input -->
-                        <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" class="extend_price nav form-control form-control-sm extend_watch-field" value="0" style="padding-top:12px;" id="extend_price" >
+                        <input type="text" class="extend_price nav form-control form-control-sm extend_watch-field" value="0" readonly style="padding-top:12px; background-color:#f8f9fa;" id="extend_price" >
                         <label class="form-label small">Unit Price</label>
                     </div>
                     <input type="hidden" class="extend_minprice nav form-control" value="0">
                     </div>
                     <div class="col-12 col-md-4">
                         <div class="form-floating form-floating-outline">
-                        <input type="text" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" id="extend_b_vat" class="form-control extend_watch-field">
+                        <input type="text" id="extend_b_vat" class="form-control extend_watch-field" readonly style="background-color:#f8f9fa;">
                         <label>VAT %</label>
                     </div>
                     </div>

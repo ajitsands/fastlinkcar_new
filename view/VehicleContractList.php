@@ -4282,7 +4282,7 @@ function populateExtendContractModal(d) {
         } else {
             rawFromDate = contract.service_end_date_time || '';
         }
-        $('#extend_b_from').val(extendDbToDisplay(rawFromDate));
+        $('#extend_b_from').val(extendDbToDisplay(rawFromDate)).trigger('change');
         $('#extend_b_to').val('');
         $('#extend_b_to_picker').val('');
         $('#extend_b_qtn_ref_no').val(contract.quotation_number || '');
@@ -4397,6 +4397,27 @@ $(document).on('blur','#extend_b_to',function(){
 // Ensure the date formatter is bound via jQuery as well (fallback for inline oninput)
 $(document).on('input', '#extend_b_to, #extend_b_from', function() {
     extendFormatDateInput(this);
+});
+
+$(document).on('change', '#extend_b_from_picker', function() {
+    const v = $(this).val(); // yyyy-mm-ddThh:mm
+    if (!v) return;
+    const parts = v.split('T');
+    if (parts.length === 2) {
+        const dp = parts[0].split('-');
+        const tp = parts[1].substring(0, 5);
+        if (dp.length === 3) {
+            $('#extend_b_from').val(`${dp[2]}-${dp[1]}-${dp[0]} ${tp}`).trigger('change');
+        }
+    }
+});
+
+$(document).on('change blur', '#extend_b_from', function() {
+    const dt = extendDisplayToDate($(this).val());
+    if (dt && !isNaN(dt.getTime())) {
+        const pad = n => String(n).padStart(2, '0');
+        $('#extend_b_from_picker').val(`${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`);
+    }
 });
 
 $(document).on('change', '#extend_b_to_picker', function() {
